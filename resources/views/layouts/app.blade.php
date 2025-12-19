@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Panel del Administrador')</title>
+    
+    {{-- Fuentes --}}
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    {{-- Vite (Tailwind + JS principal) --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    {{-- Alpine.js (Global para interactividad) --}}
+    <script src="//unpkg.com/alpinejs" defer></script>
+    
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Fondo de cuadrícula (Grid) */
+        .bg-grid-slate {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23cbd5e1' fill-opacity='0.4'%3E%3Cpath opacity='0.5' d='M0 38.59l2.83-2.829-1.414-1.415L0 35.758v2.832zM38.59 40l-2.83-2.828 1.414-1.414L40 38.586V40h-1.41zM0 1.414L1.414 0l1.415 1.414L0 4.242V1.414zM38.586 0l1.414 1.414-2.828 2.828L35.758 0h2.828z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Scrollbar personalizado fino */
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.6); border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.8); }
+
+        /* x-cloak evita que los elementos se vean antes de que cargue Alpine.js */
+        [x-cloak] { display: none !important; }
+    </style>
+    
+    @stack('styles')
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased bg-grid-slate">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        {{-- ================= SIDEBAR ================= --}}
+        <aside class="w-72 shrink-0 bg-slate-900 text-white hidden md:flex flex-col shadow-2xl relative z-30">
+            {{-- Línea degradada superior --}}
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+            
+            <div class="h-20 flex items-center px-8 bg-slate-900/50 backdrop-blur-sm border-b border-white/5 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-indigo-500/40">A</div>
+                    <div><span class="font-bold text-lg tracking-wide block leading-tight">Panel del administrador</span></div>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scroll">
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">Plataforma</p>
+                
+                {{-- DASHBOARD --}}
+                <a href="{{ route('admin.dashboard') }}" 
+                   class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all overflow-hidden {{ request()->routeIs('admin.dashboard') ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    @if(request()->routeIs('admin.dashboard'))
+                        <div class="absolute inset-y-0 left-0 w-1 bg-blue-500 rounded-r-full"></div>
+                    @endif
+                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Administración</p>
+                
+                {{-- GESTIONAR USUARIOS --}}
+                <a href="{{ route('admin.users.index') }}" 
+                   class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all overflow-hidden {{ request()->routeIs('admin.users.*') ? 'bg-indigo-600/10 text-indigo-300 border border-indigo-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    @if(request()->routeIs('admin.users.*'))
+                        <div class="absolute inset-y-0 left-0 w-1 bg-indigo-500 rounded-r-full"></div>
+                    @endif
+                    <svg class="w-5 h-5 group-hover:text-indigo-400 transition-colors {{ request()->routeIs('admin.users.*') ? 'text-indigo-400' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span class="font-semibold">Gestionar usuarios</span>
+                </a>
+
+                {{-- LISTADO DE ACTAS --}}
+                <a href="{{ route('admin.actas.index') }}" 
+                   class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all overflow-hidden {{ request()->routeIs('admin.actas.*') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    @if(request()->routeIs('admin.actas.*'))
+                        <div class="absolute inset-y-0 left-0 w-1 bg-emerald-500 rounded-r-full"></div>
+                    @endif
+                    <svg class="w-5 h-5 group-hover:text-emerald-400 transition-colors {{ request()->routeIs('admin.actas.*') ? 'text-emerald-400' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span class="font-medium">Listado de actas</span>
+                </a>
+            </nav>
+
+            {{-- Logout --}}
+            <div class="p-4 bg-slate-950/50 border-t border-slate-800 shrink-0">
+                <form action="{{ route('logout') }}" method="POST" id="logout-form">
+                    @csrf
+                    <button type="submit" class="w-full flex items-center justify-center gap-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 py-2.5 rounded-lg transition-all text-xs font-bold border border-transparent hover:border-red-500/20">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        {{-- ================= CONTENIDO PRINCIPAL ================= --}}
+        <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+            
+            {{-- Header Superior --}}
+            <header class="h-20 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-20 shadow-sm">
+                <div>
+                    @yield('header-content')
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="h-8 w-px bg-slate-200 mx-2"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-bold text-slate-700">{{ Auth::user()->name }}</p>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">{{ Auth::user()->role }}</p>
+                        </div>
+                        <div class="h-10 w-10 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold shadow-md border-2 border-slate-100 uppercase">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            {{-- Zona de Contenido --}}
+            <div class="flex-1 overflow-y-auto p-8 custom-scroll">
+                @yield('content')
+            </div>
+
+        </main>
+    </div>
+    
+    {{-- Scripts adicionales (Lucide Icons Global) --}}
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+
+    @stack('scripts')
+</body>
+</html>
