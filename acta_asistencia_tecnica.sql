@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3307
--- Tiempo de generación: 26-12-2025 a las 16:24:18
+-- Tiempo de generación: 26-12-2025 a las 21:56:18
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -252,10 +252,7 @@ INSERT INTO `actas` (`id`, `user_id`, `fecha`, `establecimiento_id`, `responsabl
 (196, NULL, '2025-12-21', 118, 'EPIFANIA ALEJANDRINA GARAYAR CASAVILCA', 'Reactivación de módulo', 'Virtual', 'Yañez Medina Lida Graciela', 'asistencia', 'actas_firmadas/T8jns2RQNk0kM69XSsYuu19YTQNjgNWqlvUTRp4Y.pdf', 1, 'actas/1766322371_6947f0c34daa6_img1.png', NULL, NULL, NULL, NULL, '2025-12-21 13:06:11', '2025-12-21 13:45:11'),
 (197, NULL, '2025-12-21', 119, 'AMELIA FERNANDA SORIA SARAVIA', 'Ingreso de nuevo personal', 'Virtual', 'Donayre Salinas Jordan Roberto', 'asistencia', 'actas_firmadas/gVk5CzhOmsVS0furQUrA51cpCaNPR7j74wQrbxgV.pdf', 1, 'actas/1766324689_6947f9d19fb62_img1.png', NULL, NULL, NULL, NULL, '2025-12-21 13:44:49', '2025-12-21 13:45:26'),
 (198, NULL, '2025-12-22', 130, 'VILLAMARES RAMOS EDWIN JESUS', 'Reactivación de módulo', 'Presencial', 'Donayre Salinas Jordan Roberto', 'asistencia', 'actas_firmadas/HAAqKipJaqUfWONF6Vz2to2jFaDYiqnxoHQt3w7r.pdf', 1, 'actas/1766442956_6949c7cc556c2_img1.jpeg', 'actas/1766442956_6949c7cc61704_img2.jpeg', NULL, NULL, NULL, '2025-12-22 11:58:57', '2025-12-24 20:55:57'),
-(199, NULL, '2025-12-24', 24, 'SANDY DANIEL CALDERA POLANCO', 'Otros', 'Presencial', 'Donayre Salinas Jordan Roberto', 'asistencia', 'actas_firmadas/kVm71et4lyXD9NOEH2H6C0l9cuUCJElYJYcPTIBU.pdf', 1, 'evidencias/MNDGU19xMb4r9qF3D0powTsZU8u7TB8MnN6FI42x.png', NULL, NULL, NULL, NULL, '2025-12-24 21:29:26', '2025-12-26 12:54:58'),
-(200, 6, '2025-12-26', 93, 'ROXANA MELCHORITA CASTILLA GUILLÉN', 'Monitoreo de Servicios', 'Presencial', 'Donayre Salinas Jordan Roberto', 'monitoreo', NULL, 0, NULL, NULL, NULL, NULL, NULL, '2025-12-26 15:42:37', '2025-12-26 15:42:37'),
-(201, 6, '2025-12-26', 77, 'AMELIA LOPEZ ALVA', 'Monitoreo de Servicios', 'Presencial', 'Donayre Salinas Jordan Roberto', 'monitoreo', NULL, 0, NULL, NULL, NULL, NULL, NULL, '2025-12-26 15:43:54', '2025-12-26 15:43:54'),
-(202, 6, '2025-12-26', 130, 'VILLAMARES RAMOS EDWIN JESUS', 'Monitoreo de Servicios', 'Presencial', 'Donayre Salinas Jordan Roberto', 'monitoreo', NULL, 0, NULL, NULL, NULL, NULL, NULL, '2025-12-26 16:20:40', '2025-12-26 16:20:40');
+(199, NULL, '2025-12-24', 24, 'SANDY DANIEL CALDERA POLANCO', 'Otros', 'Presencial', 'Donayre Salinas Jordan Roberto', 'asistencia', 'actas_firmadas/kVm71et4lyXD9NOEH2H6C0l9cuUCJElYJYcPTIBU.pdf', 1, 'evidencias/MNDGU19xMb4r9qF3D0powTsZU8u7TB8MnN6FI42x.png', NULL, NULL, NULL, NULL, '2025-12-24 21:29:26', '2025-12-26 12:54:58');
 
 -- --------------------------------------------------------
 
@@ -1010,7 +1007,39 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (14, '2025_12_17_154440_add_is_active_to_users_table', 7),
 (15, '2025_12_20_015422_update_users_table_structure', 8),
 (16, '2025_12_26_080238_add_user_id_and_tipo_to_actas_table', 9),
-(17, '2025_12_26_085221_create_monitoreo_detalles_table', 10);
+(17, '2025_12_26_085221_create_monitoreo_detalles_table', 10),
+(18, '2025_12_26_120434_create_monitoreos_table', 11),
+(19, '2025_12_26_121536_rename_acta_id_to_monitoreo_id_in_detalles', 12),
+(20, '2025_12_26_150656_create_monitoreo_programacion_table', 13),
+(22, '2025_12_26_153508_update_monitoreo_programacion_table', 14),
+(23, '2025_12_26_155922_simplify_monitoreos_table', 15);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `monitoreos`
+--
+
+CREATE TABLE `monitoreos` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `establecimiento_id` bigint(20) UNSIGNED NOT NULL,
+  `fecha` date NOT NULL,
+  `responsable` varchar(191) NOT NULL,
+  `implementador` varchar(191) NOT NULL,
+  `firmado` tinyint(1) NOT NULL DEFAULT 0,
+  `firmado_pdf` varchar(191) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `monitoreos`
+--
+
+INSERT INTO `monitoreos` (`id`, `user_id`, `establecimiento_id`, `fecha`, `responsable`, `implementador`, `firmado`, `firmado_pdf`, `created_at`, `updated_at`) VALUES
+(1, 6, 116, '2025-12-26', 'MARIA DEL CARMEN TAIPE HUAYRA', 'Donayre Salinas Jordan Roberto', 0, NULL, '2025-12-26 21:02:39', '2025-12-26 21:02:39'),
+(2, 6, 127, '2025-12-26', 'BERTHA LUISA HERRERA LEVANO', 'Donayre Salinas Jordan Roberto', 0, NULL, '2025-12-26 21:40:01', '2025-12-26 21:40:01');
 
 -- --------------------------------------------------------
 
@@ -1020,12 +1049,47 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 
 CREATE TABLE `monitoreo_detalles` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `acta_id` bigint(20) UNSIGNED NOT NULL,
+  `monitoreo_id` bigint(20) UNSIGNED NOT NULL,
   `modulo_nombre` varchar(191) NOT NULL,
   `contenido` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`contenido`)),
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `monitoreo_programacion`
+--
+
+CREATE TABLE `monitoreo_programacion` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `monitoreo_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `rrhh_nombre` varchar(191) DEFAULT NULL,
+  `rrhh_dni` varchar(8) DEFAULT NULL,
+  `rrhh_telefono` varchar(191) DEFAULT NULL,
+  `rrhh_correo` varchar(191) DEFAULT NULL,
+  `odoo` varchar(191) DEFAULT NULL,
+  `quien_programa_nombre` varchar(191) DEFAULT NULL,
+  `quien_programa_dni` varchar(8) DEFAULT NULL,
+  `quien_programa_telefono` varchar(191) DEFAULT NULL,
+  `quien_programa_correo` varchar(191) DEFAULT NULL,
+  `capacitacion` varchar(191) DEFAULT NULL,
+  `mes_sistema` varchar(191) DEFAULT NULL,
+  `servicios` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`servicios`)),
+  `comentarios` text DEFAULT NULL,
+  `entrevistado_nombre` varchar(191) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `monitoreo_programacion`
+--
+
+INSERT INTO `monitoreo_programacion` (`id`, `monitoreo_id`, `created_at`, `updated_at`, `rrhh_nombre`, `rrhh_dni`, `rrhh_telefono`, `rrhh_correo`, `odoo`, `quien_programa_nombre`, `quien_programa_dni`, `quien_programa_telefono`, `quien_programa_correo`, `capacitacion`, `mes_sistema`, `servicios`, `comentarios`, `entrevistado_nombre`) VALUES
+(1, 1, '2025-12-26 21:03:31', '2025-12-26 21:03:31', 'DONAYRE SALINAS JORDAN', '71883059', '965346430', 'jordan_ds14@hotmail.com', 'SI', NULL, NULL, NULL, NULL, 'SI', '2026-03', NULL, 'EXCELENTE.', NULL),
+(2, 2, '2025-12-26 21:40:28', '2025-12-26 21:40:28', 'DONAYRE SALINAS JORDAN', '71883059', '965346430', 'jordan_ds14@hotmail.com', 'SI', NULL, NULL, NULL, NULL, 'SI', '2026-03', NULL, 'PRUEBA 2', NULL);
 
 -- --------------------------------------------------------
 
@@ -1694,11 +1758,26 @@ ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indices de la tabla `monitoreos`
+--
+ALTER TABLE `monitoreos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `monitoreos_user_id_foreign` (`user_id`),
+  ADD KEY `monitoreos_establecimiento_id_foreign` (`establecimiento_id`);
+
+--
 -- Indices de la tabla `monitoreo_detalles`
 --
 ALTER TABLE `monitoreo_detalles`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `monitoreo_detalles_acta_id_foreign` (`acta_id`);
+  ADD KEY `monitoreo_detalles_monitoreo_id_foreign` (`monitoreo_id`);
+
+--
+-- Indices de la tabla `monitoreo_programacion`
+--
+ALTER TABLE `monitoreo_programacion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `monitoreo_programacion_monitoreo_id_foreign` (`monitoreo_id`);
 
 --
 -- Indices de la tabla `observaciones`
@@ -1744,7 +1823,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT de la tabla `actas`
 --
 ALTER TABLE `actas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=203;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=200;
 
 --
 -- AUTO_INCREMENT de la tabla `actividades`
@@ -1780,13 +1859,25 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT de la tabla `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+
+--
+-- AUTO_INCREMENT de la tabla `monitoreos`
+--
+ALTER TABLE `monitoreos`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `monitoreo_detalles`
 --
 ALTER TABLE `monitoreo_detalles`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `monitoreo_programacion`
+--
+ALTER TABLE `monitoreo_programacion`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `observaciones`
@@ -1830,10 +1921,23 @@ ALTER TABLE `acuerdos`
   ADD CONSTRAINT `acuerdos_acta_id_foreign` FOREIGN KEY (`acta_id`) REFERENCES `actas` (`id`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `monitoreos`
+--
+ALTER TABLE `monitoreos`
+  ADD CONSTRAINT `monitoreos_establecimiento_id_foreign` FOREIGN KEY (`establecimiento_id`) REFERENCES `establecimientos` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `monitoreos_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Filtros para la tabla `monitoreo_detalles`
 --
 ALTER TABLE `monitoreo_detalles`
-  ADD CONSTRAINT `monitoreo_detalles_acta_id_foreign` FOREIGN KEY (`acta_id`) REFERENCES `actas` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `monitoreo_detalles_monitoreo_id_foreign` FOREIGN KEY (`monitoreo_id`) REFERENCES `monitoreos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `monitoreo_programacion`
+--
+ALTER TABLE `monitoreo_programacion`
+  ADD CONSTRAINT `monitoreo_programacion_monitoreo_id_foreign` FOREIGN KEY (`monitoreo_id`) REFERENCES `monitoreos` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `observaciones`

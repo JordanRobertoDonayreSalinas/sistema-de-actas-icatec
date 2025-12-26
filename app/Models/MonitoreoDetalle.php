@@ -12,13 +12,16 @@ class MonitoreoDetalle extends Model
     protected $table = 'monitoreo_detalles';
 
     protected $fillable = [
-        'monitoreo_id', // CAMBIADO: Antes era acta_id
+        'monitoreo_id', // Correcto: Referencia a la nueva tabla monitoreos
         'modulo_nombre',
         'contenido',
     ];
 
+    /**
+     * Los atributos que deben ser convertidos a tipos nativos.
+     */
     protected $casts = [
-        'contenido' => 'array',
+        'contenido' => 'array', // Correcto: Permite manejar el JSON como un array de PHP
     ];
 
     /**
@@ -26,7 +29,8 @@ class MonitoreoDetalle extends Model
      */
     public function monitoreo()
     {
-        // CAMBIADO: Ahora pertenece al nuevo modelo Monitoreo
+        // Correcto: Se vincula al nuevo modelo Monitoreo
+        // Se especifica 'monitoreo_id' para evitar ambigüedades tras la migración
         return $this->belongsTo(Monitoreo::class, 'monitoreo_id');
     }
 }

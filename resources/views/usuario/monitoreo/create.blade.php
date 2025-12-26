@@ -17,9 +17,14 @@
 
         .input-auto-fill { background-color: #f0f9ff !important; border-color: #bae6fd !important; color: #0369a1 !important; font-weight: 700; }
         
-        .tabla-monitoreo { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; }
-        .tabla-monitoreo thead th { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 10px; }
-        .tabla-monitoreo tbody td { border: 1px solid #e2e8f0; padding: 8px; background: white; }
+        /* Tabla de Equipo de Trabajo */
+        .tabla-equipo { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .tabla-equipo th { background-color: #f8fafc; padding: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; border-bottom: 2px solid #e2e8f0; }
+        .tabla-equipo td { padding: 8px 12px; background: white; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        
+        /* Estilos para inputs dentro de la tabla */
+        .input-table { font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fcfcfc; }
+        .input-table:focus { border-color: #6366f1; outline: none; background: white; }
     </style>
 @endpush
 
@@ -38,31 +43,74 @@
 <div class="py-8 bg-slate-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4">
         
-        {{-- EL FORMULARIO AHORA SE ENFOCA EN LA CABECERA --}}
-        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.store') }}" method="POST" enctype="multipart/form-data"
+        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.store') }}" method="POST"
               class="bg-white shadow-xl rounded-3xl p-10 border border-slate-200 animate-fade-in">
             @csrf
 
-            {{-- 1. BLOQUE IMPLEMENTADOR (DATOS LOGUEADO) --}}
-            <div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100 shadow-sm">
-                <div class="flex items-center gap-4">
-                    <div class="h-14 w-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
-                        <i data-lucide="user-check" class="w-8 h-8"></i>
+            {{-- 1. BLOQUE IMPLEMENTADOR Y EQUIPO --}}
+            <div class="mb-12">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    {{-- IMPLEMENTADOR PRINCIPAL --}}
+                    <div class="flex flex-col gap-4 p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100 shadow-sm">
+                        <div class="flex items-center gap-4">
+                            <div class="h-14 w-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <i data-lucide="user-check" class="w-8 h-8"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Implementador Responsable (Titular)</p>
+                                <h2 class="text-lg font-bold text-slate-800 leading-tight">{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }}, {{ Auth::user()->name }}</h2>
+                                <input type="hidden" name="implementador" value="{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center bg-white px-4 py-2 rounded-xl border border-indigo-100">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Fecha del Acta</label>
+                            <input type="date" name="fecha" value="{{ date('Y-m-d') }}" class="text-xs font-bold text-indigo-600 border-none p-0 focus:ring-0 text-right cursor-pointer">
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Implementador Responsable</p>
-                        <h2 class="text-lg font-bold text-slate-800 leading-tight">{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }}, {{ Auth::user()->name }}</h2>
-                        <input type="hidden" name="implementador" value="{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}">
+
+                    {{-- AGREGAR EQUIPO DE TRABAJO --}}
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <i data-lucide="users" class="w-4 h-4"></i> Equipo de Trabajo
+                            </p>
+                            <div class="relative w-full md:w-2/3">
+                                <select id="select_equipo" class="w-full text-xs border-slate-200 rounded-lg p-2 focus:ring-indigo-500 shadow-sm">
+                                    <option value="">Seleccione personal para agregar...</option>
+                                    @foreach($usuariosRegistrados as $u)
+                                        @if($u->id !== Auth::id()) 
+                                        <option value="{{ $u->id }}" data-full="{{ $u->apellido_paterno }} {{ $u->apellido_materno }}, {{ $u->name }}">
+                                            {{ $u->apellido_paterno }} {{ $u->apellido_materno }}, {{ $u->name }}
+                                        </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                            <table class="tabla-equipo" id="tabla_equipo_trabajo">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">Nombre</th>
+                                        <th class="text-center">Cargo</th>
+                                        <th class="text-center">Institución</th>
+                                        <th width="40"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body_equipo">
+                                    <tr id="empty_row">
+                                        <td colspan="4" class="text-center text-slate-400 italic py-6 text-xs">No hay equipo adicional seleccionado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-                <div class="bg-white px-6 py-3 rounded-xl border border-indigo-100 text-right">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fecha del Acta</label>
-                    <input type="date" name="fecha" value="{{ date('Y-m-d') }}" 
-                           class="text-sm font-bold text-indigo-600 border-none p-0 focus:ring-0 text-right cursor-pointer">
                 </div>
             </div>
 
-            {{-- 2. LOCALIZACIÓN Y RESPONSABLE --}}
+            {{-- 2. LOCALIZACIÓN --}}
             <div class="mb-12">
                 <h3 class="text-slate-800 font-black uppercase text-sm tracking-widest mb-6 flex items-center gap-2">
                     <span class="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center text-xs">01</span>
@@ -91,7 +139,6 @@
                     </div>
                 </div>
 
-                {{-- Ubicación Geográfica y Categoría --}}
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 p-6 bg-slate-50 rounded-3xl border border-slate-200 border-dashed">
                     @foreach(['Distrito' => 'distrito', 'Provincia' => 'provincia', 'Microred' => 'microred', 'Red' => 'red', 'Categoría' => 'categoria'] as $label => $id)
                     <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
@@ -102,34 +149,15 @@
                 </div>
             </div>
 
-
-            {{-- BOTÓN DE GUARDADO Y PASO A MÓDULOS --}}
             <div class="flex justify-center border-t border-slate-100 pt-10">
                 <button type="submit" id="btnGuardar" class="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-black text-lg shadow-2xl hover:bg-indigo-700 hover:-translate-y-1 transition-all active:scale-95 flex items-center gap-4">
                     <i data-lucide="arrow-right-circle" class="w-7 h-7"></i> 
                     CONTINUAR A MÓDULOS
                 </button>
             </div>
-
         </form>
     </div>
 </div>
-
-{{-- TEMPLATE PARA FILAS --}}
-<template id="p-row-template">
-    <tr class="animate-fade-in group">
-        <td class="text-center font-bold text-slate-400 bg-slate-50/30"></td>
-        <td><input type="text" data-name="dni" maxlength="8" required class="w-full border-none focus:ring-0 p-2 text-sm"></td>
-        <td><input type="text" data-name="nombres" required class="w-full border-none focus:ring-0 p-2 text-sm uppercase"></td>
-        <td><input type="text" data-name="cargo" required class="w-full border-none focus:ring-0 p-2 text-sm"></td>
-        <td><input type="text" data-name="modulo" class="w-full border-none focus:ring-0 p-2 text-sm"></td>
-        <td class="text-center">
-            <button type="button" class="btn-del p-2 text-slate-300 hover:text-red-500 transition-colors">
-                <i data-lucide="trash-2" class="w-5 h-5"></i>
-            </button>
-        </td>
-    </tr>
-</template>
 @endsection
 
 @push('scripts')
@@ -140,7 +168,7 @@
 $(function() {
     const buscarUrl = "{{ route('establecimientos.buscar') }}";
     
-    // AUTOCOMPLETE
+    // AUTOCOMPLETE ESTABLECIMIENTOS
     $("#establecimiento_search").autocomplete({
         minLength: 2,
         source: function(req, res) { $.getJSON(buscarUrl, { term: req.term }, res); },
@@ -157,43 +185,64 @@ $(function() {
         }
     });
 
-    // TABLA DINÁMICA
-    const $tbody = $('#tabla-p-body');
-    const $tpl = $('#p-row-template');
+    // LÓGICA EQUIPO DE TRABAJO
+    const $bodyEquipo = $('#body_equipo');
+    const $selectEquipo = $('#select_equipo');
 
-    function addRow() {
-        const $clone = $($tpl.html());
-        $tbody.append($clone);
-        reindex();
+    $selectEquipo.on('change', function() {
+        const id = $(this).val();
+        if (!id) return;
+
+        const nombre = $(this).find(':selected').data('full');
+
+        // Verificar duplicados
+        if ($(`input[name="equipo[${id}][id]"]`).length > 0) {
+            Swal.fire({ icon: 'warning', title: 'Ya agregado', text: 'Este personal ya está en la lista' });
+            $(this).val('');
+            return;
+        }
+
+        $('#empty_row').hide();
+
+        const row = `
+            <tr class="animate-fade-in group">
+                <td class="font-bold text-slate-700">
+                    <input type="hidden" name="equipo[${id}][id]" value="${id}">
+                    <input type="hidden" name="equipo[${id}][nombre]" value="${nombre}">
+                    ${nombre}
+                </td>
+                <td class="text-center">
+                    <input type="text" name="equipo[${id}][cargo]" value="Implementador" class="input-table w-full text-center">
+                </td>
+                <td class="text-center">
+                    <select name="equipo[${id}][institucion]" class="input-table w-full">
+                        <option value="DIRESA">DIRESA</option>
+                        <option value="MINSA">MINSA</option>
+                    </select>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn-remove-eq text-slate-300 hover:text-red-500 transition-colors">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+
+        $bodyEquipo.append(row);
         lucide.createIcons();
-    }
-
-    function reindex() {
-        $tbody.find('tr').each(function(i) {
-            $(this).find('td:first').text(i + 1);
-            $(this).find('input').each(function() {
-                const name = $(this).data('name');
-                $(this).attr('name', `participantes[${i}][${name}]`);
-            });
-        });
-    }
-
-    $('#btn-add-p').click(addRow);
-    $tbody.on('click', '.btn-del', function() { $(this).closest('tr').remove(); reindex(); });
-    addRow(); 
-
-    // IMÁGENES PREVIEW
-    $('#drop-area').click(() => $('#imagenes').click());
-    $('#imagenes').change(function() {
-        $('#thumbnails').empty();
-        Array.from(this.files).slice(0, 5).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => $('#thumbnails').append(`<div class="aspect-square rounded-xl overflow-hidden border shadow-sm"><img src="${e.target.result}" class="w-full h-full object-cover"></div>`);
-            reader.readAsDataURL(file);
-        });
+        $(this).val(''); 
     });
 
-    // CONFIRMACIÓN
+    $bodyEquipo.on('click', '.btn-remove-eq', function() {
+        $(this).closest('tr').remove();
+        if ($bodyEquipo.find('tr').length === 1 && $bodyEquipo.find('#empty_row').length > 0) {
+            $('#empty_row').show();
+        } else if ($bodyEquipo.find('tr').length === 0) {
+             $bodyEquipo.append('<tr id="empty_row"><td colspan="4" class="text-center text-slate-400 italic py-6 text-xs">No hay equipo adicional seleccionado</td></tr>');
+        }
+    });
+
+    // CONFIRMACIÓN AL SUBMIT
     $('#monitoreoForm').on('submit', function(e) {
         e.preventDefault();
         Swal.fire({
