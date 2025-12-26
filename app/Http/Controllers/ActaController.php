@@ -7,43 +7,28 @@ use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Acta;
 use App\Models\Establecimiento;
+use App\Models\User; 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ActaController extends Controller
 {
-    protected $maxImages = 5;
-
     public function index(Request $request)
     {
-        // Consulta base con relación a establecimiento
         $query = Acta::with('establecimiento');
 
-        // Filtro por implementador (exacto)
         if ($request->filled('implementador')) {
             $query->where('implementador', $request->input('implementador'));
         }
-
-        // Filtro por provincia (relación)
         if ($request->filled('provincia')) {
             $query->whereHas('establecimiento', function ($q) use ($request) {
                 $q->where('provincia', $request->input('provincia'));
             });
         }
-        
-        // Filtro por estado firmado
         if ($request->filled('firmado')) {
             $val = $request->input('firmado');
-
-            if ($val == '1') {
-                $query->where('firmado', 1);
-            } elseif ($val == '0') {
-                $query->where(function ($q) {
-                    $q->where('firmado', 0)
-                      ->orWhereNull('firmado');
-                });
-            }
+            $val == '1' ? $query->where('firmado', 1) : $query->where('firmado', 0)->orWhereNull('firmado');
         }
-        
-        // Rango de fechas
         if ($request->filled('fecha_inicio')) {
             $query->whereDate('fecha', '>=', $request->input('fecha_inicio'));
         }
@@ -51,283 +36,187 @@ class ActaController extends Controller
             $query->whereDate('fecha', '<=', $request->input('fecha_fin'));
         }
 
-        // 1. Clonamos la consulta CON FILTROS para obtener los conteos
-        $queryParaCuentas = $query->clone();
-
-        // 2. Obtenemos los conteos específicos
-        $countFirmadas = (clone $queryParaCuentas)->where('firmado', 1)->count();
-        $countPendientes = (clone $queryParaCuentas)->where(function ($q) {
-            $q->where('firmado', 0)
-              ->orWhereNull('firmado');
+        $countFirmadas = (clone $query)->where('firmado', 1)->count();
+        $countPendientes = (clone $query)->where(function ($q) {
+            $q->where('firmado', 0)->orWhereNull('firmado');
         })->count();
 
-        // 3. Paginamos la consulta original
-        $actas = $query->orderByDesc('id')
-                      ->paginate(10)
-                      ->appends($request->query());
+        $actas = $query->orderByDesc('id')->paginate(10)->appends($request->query());
+        $implementadores = Acta::distinct()->orderBy('implementador')->pluck('implementador');
+        $provincias = Establecimiento::distinct()->orderBy('provincia')->pluck('provincia');
 
-        // Datos para selects de filtro
-        $implementadores = Acta::select('implementador')
-            ->whereNotNull('implementador')
-            ->distinct()
-            ->orderBy('implementador')
-            ->pluck('implementador');
-
-        $provincias = Establecimiento::select('provincia')
-            ->whereNotNull('provincia')
-            ->distinct()
-            ->orderBy('provincia')
-            ->pluck('provincia');
-
-        // 4. Pasamos las nuevas variables a la vista
-        return view('actas.index', compact(
-            'actas', 
-            'implementadores', 
-            'provincias', 
-            'countFirmadas', 
-            'countPendientes'
-        ));
+        return view('usuario.asistencia.index', compact('actas', 'implementadores', 'provincias', 'countFirmadas', 'countPendientes'));
     }
 
     public function create()
     {
-        // Apunta al archivo resources/views/acta_asistencia.blade.php
-        return view('acta_asistencia');
+        $usuariosRegistrados = User::where('status', 'active')->orderBy('apellido_paterno')->get();
+        return view('usuario.asistencia.create', compact('usuariosRegistrados'));
     }
 
     public function store(Request $request)
     {
-        $request->validate(array_merge([
+        $request->validate([
             'fecha' => 'required|date',
             'establecimiento_id' => 'required|exists:establecimientos,id',
-            'responsable' => 'required|string|max:255',
-            'tema' => 'required|string',
-            'modalidad' => 'required|string',
-            'implementador' => 'required|string',
-            'imagenes.*' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ], $this->individualImageValidationRules()));
+            'responsable' => 'required|string',
+            'tema' => 'required',
+            'modalidad' => 'required',
+            'implementador' => 'required',
+            'imagenes.*' => 'image|mimes:jpeg,png,jpg|max:2048'
+        ]);
 
-        // Crear acta con campos básicos
-        $acta = new Acta($request->only(['fecha','establecimiento_id','responsable','tema','modalidad','implementador']));
+        try {
+            DB::beginTransaction();
 
-        // Asegurar que exista el directorio 'actas'
-        if (!Storage::disk('public')->exists('actas')) {
-            Storage::disk('public')->makeDirectory('actas');
-        }
+            $acta = Acta::create($request->only([
+                'fecha', 'establecimiento_id', 'responsable', 'tema', 'modalidad', 'implementador'
+            ]));
 
-        // Procesar imágenes
-        $newFiles = $this->collectNewImageFiles($request);
-        foreach ($newFiles as $index => $file) {
-            if (!$file) continue;
-            $i = $index + 1;
-            $filename = time() . '_' . uniqid() . "_img{$i}." . $file->getClientOriginalExtension();
-            $file->storeAs('actas', $filename, 'public');
-            $acta->{'imagen'.$i} = 'actas/' . $filename;
-        }
-
-        $acta->save();
-
-        // Guardar participantes
-        if ($request->has('participantes')) {
-            foreach ($request->participantes as $p) {
-                $acta->participantes()->create([
-                    'dni' => $p['dni'] ?? null,
-                    'apellidos' => $p['apellidos'] ?? null,
-                    'nombres' => $p['nombres'] ?? null,
-                    'cargo' => $p['cargo'] ?? null,
-                    'modulo' => $p['modulo'] ?? null,
-                    'unidad_ejecutora' => $p['unidad_ejecutora'] ?? null,
-                ]);
+            if ($request->hasFile('imagenes')) {
+                foreach ($request->file('imagenes') as $index => $file) {
+                    if ($index < 5) {
+                        $campo = 'imagen' . ($index + 1);
+                        $acta->$campo = $file->store('evidencias', 'public');
+                    }
+                }
+                $acta->save();
             }
-        }
 
-        // Actividades
-        if ($request->has('actividades')) {
-            foreach ($request->actividades as $a) {
-                $acta->actividades()->create([
-                    'descripcion' => $a['descripcion'] ?? '',
-                ]);
+            if ($request->has('participantes')) {
+                foreach ($request->participantes as $p) { $acta->participantes()->create($p); }
             }
-        }
-
-        // Acuerdos
-        if ($request->has('acuerdos')) {
-            foreach ($request->acuerdos as $ac) {
-                $acta->acuerdos()->create([
-                    'descripcion' => $ac['descripcion'] ?? '',
-                ]);
+            if ($request->has('actividades')) {
+                foreach ($request->actividades as $a) { $acta->actividades()->create($a); }
             }
-        }
-
-        // Observaciones
-        if ($request->has('observaciones')) {
-            foreach ($request->observaciones as $o) {
-                $acta->observaciones()->create([
-                    'descripcion' => $o['descripcion'] ?? '',
-                ]);
+            if ($request->has('acuerdos')) {
+                foreach ($request->acuerdos as $ac) { $acta->acuerdos()->create($ac); }
             }
-        }
+            if ($request->has('observaciones')) {
+                foreach ($request->observaciones as $obs) { $acta->observaciones()->create($obs); }
+            }
 
-        // Actualizar responsable en establecimiento
-        if ($establecimiento = Establecimiento::find($request->establecimiento_id)) {
-            $establecimiento->responsable = $request->responsable;
-            $establecimiento->save();
+            DB::commit();
+            return redirect()->route('usuario.actas.index')->with('success', 'Acta guardada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors('Error al guardar: ' . $e->getMessage())->withInput();
         }
+    }
 
-        // Redirigir usando el nuevo nombre de ruta admin.actas.index
-        return redirect()->route('admin.actas.index')->with('success', '✅ Acta registrada correctamente.');
+    /**
+     * MÉTODO EDIT: Carga el acta y la lista de usuarios para el selector
+     */
+    public function edit($id)
+    {
+        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])->findOrFail($id);
+        
+        // CORRECCIÓN: Buscamos los usuarios para que el selector del Implementador no falle
+        $usuariosRegistrados = User::where('status', 'active')
+            ->orderBy('apellido_paterno', 'asc')
+            ->get();
+
+        return view('usuario.asistencia.edit', compact('acta', 'usuariosRegistrados'));
+    }
+
+    /**
+     * MÉTODO UPDATE: Maneja el sistema de slots para no perder imágenes
+     */
+    public function update(Request $request, $id)
+    {
+        $acta = Acta::findOrFail($id);
+        
+        $request->validate([
+            'fecha' => 'required|date',
+            'establecimiento_id' => 'required|exists:establecimientos,id',
+            'imagenes.*' => 'image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            // 1. Actualizar campos básicos
+            $acta->update($request->only(['fecha', 'establecimiento_id', 'responsable', 'tema', 'modalidad', 'implementador']));
+
+            // 2. BORRADO SELECTIVO: Limpiar slots marcados por el usuario
+            if ($request->has('eliminar_imagenes')) {
+                foreach ($request->eliminar_imagenes as $campo) {
+                    if ($acta->$campo) {
+                        Storage::disk('public')->delete($acta->$campo);
+                        $acta->$campo = null; // Liberamos el slot
+                    }
+                }
+            }
+
+            // 3. CARGA EN SLOTS VACÍOS: Rellenar huecos disponibles con fotos nuevas
+            if ($request->hasFile('imagenes')) {
+                $nuevosArchivos = $request->file('imagenes');
+                $archivoIndex = 0;
+
+                // Recorremos los 5 slots buscando cuáles están libres (null)
+                for ($i = 1; $i <= 5; $i++) {
+                    $campo = 'imagen' . $i;
+                    if (is_null($acta->$campo) && isset($nuevosArchivos[$archivoIndex])) {
+                        $path = $nuevosArchivos[$archivoIndex]->store('evidencias', 'public');
+                        $acta->$campo = $path;
+                        $archivoIndex++;
+                    }
+                }
+            }
+            $acta->save();
+
+            // 4. RELACIONES: Limpieza y Re-inserción (Evita duplicados y desorden)
+            $acta->participantes()->delete();
+            if ($request->has('participantes')) {
+                foreach ($request->participantes as $p) { $acta->participantes()->create($p); }
+            }
+
+            $acta->actividades()->delete();
+            if ($request->has('actividades')) {
+                foreach ($request->actividades as $a) { $acta->actividades()->create($a); }
+            }
+
+            $acta->acuerdos()->delete();
+            if ($request->has('acuerdos')) {
+                foreach ($request->acuerdos as $ac) { $acta->acuerdos()->create($ac); }
+            }
+
+            $acta->observaciones()->delete();
+            if ($request->has('observaciones')) {
+                foreach ($request->observaciones as $obs) { $acta->observaciones()->create($obs); }
+            }
+
+            DB::commit();
+            return redirect()->route('usuario.actas.index')->with('success', 'Acta actualizada correctamente.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors('Error al actualizar: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function show($id)
     {
-        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])
-            ->findOrFail($id);
-
-        return view('actas.show', compact('acta'));
+        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])->findOrFail($id);
+        return view('usuario.asistencia.show', compact('acta'));
     }
 
     public function generarPDF($id)
     {
-        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])
-            ->findOrFail($id);
-
-        $pdf = Pdf::loadView('actas.pdf', compact('acta'))->setPaper('a4', 'portrait');
+        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])->findOrFail($id);
+        $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))->setPaper('a4', 'portrait');
         return $pdf->stream("acta_{$acta->id}.pdf");
-    }
-
-    public function edit(Acta $acta)
-    {
-        $acta->load(['participantes','actividades','acuerdos','observaciones']);
-        return view('actas.edit', compact('acta'));
-    }
-
-    public function update(Request $request, Acta $acta)
-    {
-        $request->validate(array_merge([
-            'fecha' => 'required|date',
-            'establecimiento_id' => 'required|exists:establecimientos,id',
-            'responsable' => 'required|string|max:255',
-            'tema' => 'required|string',
-            'modalidad' => 'required|string',
-            'implementador' => 'required|string',
-            'imagenes.*' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ], $this->individualImageValidationRules()));
-
-        $acta->update($request->only(['fecha','establecimiento_id','responsable','tema','modalidad','implementador']));
-
-        $newFiles = $this->collectNewImageFiles($request);
-        foreach ($newFiles as $index => $file) {
-            if (!$file) continue;
-            $i = $index + 1;
-            $campo = 'imagen' . $i;
-
-            if (!empty($acta->$campo) && Storage::disk('public')->exists($acta->$campo)) {
-                Storage::disk('public')->delete($acta->$campo);
-            }
-
-            $filename = time() . '_' . uniqid() . "_img{$i}." . $file->getClientOriginalExtension();
-            $file->storeAs('actas', $filename, 'public');
-            $acta->$campo = 'actas/' . $filename;
-        }
-
-        $acta->save();
-
-        // Actualizar relaciones (Borrar y crear)
-        $acta->participantes()->delete();
-        if ($request->has('participantes')) {
-            foreach ($request->participantes as $p) {
-                $acta->participantes()->create($p);
-            }
-        }
-
-        $acta->actividades()->delete();
-        if ($request->has('actividades')) {
-            foreach ($request->actividades as $a) {
-                $acta->actividades()->create($a);
-            }
-        }
-
-        $acta->acuerdos()->delete();
-        if ($request->has('acuerdos')) {
-            foreach ($request->acuerdos as $ac) {
-                $acta->acuerdos()->create($ac);
-            }
-        }
-
-        $acta->observaciones()->delete();
-        if ($request->has('observaciones')) {
-            foreach ($request->observaciones as $o) {
-                $acta->observaciones()->create($o);
-            }
-        }
-
-        if ($establecimiento = Establecimiento::find($request->establecimiento_id)) {
-            $establecimiento->responsable = $request->responsable;
-            $establecimiento->save();
-        }
-
-        return redirect()->route('admin.actas.index')->with('success', '✅ Acta actualizada correctamente.');
-    }
-
-    public function destroy(Acta $acta)
-    {
-        for ($i = 1; $i <= $this->maxImages; $i++) {
-            $campo = 'imagen' . $i;
-            if (!empty($acta->$campo) && Storage::disk('public')->exists($acta->$campo)) {
-                Storage::disk('public')->delete($acta->$campo);
-            }
-        }
-
-        $acta->delete();
-
-        return redirect()->route('admin.actas.index')->with('success', 'Acta eliminada correctamente.');
-    }
-
-    protected function individualImageValidationRules()
-    {
-        $rules = [];
-        for ($i = 1; $i <= $this->maxImages; $i++) {
-            $rules["imagen{$i}"] = 'nullable|image|mimes:jpg,jpeg,png|max:2048';
-        }
-        return $rules;
-    }
-
-    protected function collectNewImageFiles(Request $request)
-    {
-        $max = $this->maxImages;
-        $newFiles = array_fill(0, $max, null);
-
-        if ($request->hasFile('imagenes')) {
-            foreach ($request->file('imagenes') as $i => $file) {
-                if ($i >= $max) break;
-                $newFiles[$i] = $file;
-            }
-        }
-
-        for ($i = 1; $i <= $max; $i++) {
-            $field = "imagen{$i}";
-            if ($request->hasFile($field)) {
-                $newFiles[$i - 1] = $request->file($field);
-            }
-        }
-
-        return $newFiles;
     }
 
     public function subirPDF(Request $request, $id)
     {
-        $request->validate([
-            'pdf_firmado' => 'required|mimes:pdf|max:20480', 
-        ]);
-
+        $request->validate(['pdf_firmado' => 'required|mimes:pdf|max:20480']);
         $acta = Acta::findOrFail($id);
+        if ($acta->firmado_pdf && Storage::disk('public')->exists($acta->firmado_pdf)) {
+            Storage::disk('public')->delete($acta->firmado_pdf);
+        }
         $path = $request->file('pdf_firmado')->store('actas_firmadas', 'public');
-
-        $acta->update([
-            'firmado_pdf' => $path,
-            'firmado' => true,
-        ]);
-
-        return redirect()->back()->with('success', 'El acta firmada fue subida correctamente.');
+        $acta->update(['firmado_pdf' => $path, 'firmado' => true]);
+        return redirect()->back()->with('success', '✅ El acta firmada fue subida correctamente.');
     }
 }

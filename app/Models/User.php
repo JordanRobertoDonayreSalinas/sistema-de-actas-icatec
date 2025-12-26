@@ -2,33 +2,31 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
+     * Atributos habilitados para asignación masiva.
+     * Se han incluido los campos de apellidos y el estado (status).
      */
     protected $fillable = [
-        'name',
-        'email',    // <--- ¡AGREGA ESTO OTRA VEZ! (La base de datos lo exige)
-        'username', // <--- MANTÉN ESTE TAMBIÉN
+        'name',             // Representa los "Nombres"
+        'apellido_paterno', // Nuevo
+        'apellido_materno', // Nuevo
+        'email',
+        'username',         // DNI
         'password',
         'role',
+        'status',           // Nuevo (para activo/inactivo)
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
+     * Atributos ocultos para la serialización (por ejemplo, al convertir a JSON).
      */
     protected $hidden = [
         'password',
@@ -36,15 +34,22 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Casteo de atributos.
      */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime', 
+            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Opcional: Accessor para obtener el nombre completo fácilmente.
+     * Uso: $user->full_name
+     */
+    public function getFullNameAttribute()
+    {
+        return "{$this->name} {$this->apellido_paterno} {$this->apellido_materno}";
     }
 }

@@ -16,9 +16,9 @@ class LoginController extends Controller
     // 2. Procesar el Login
     public function login(Request $request)
     {
-        // --- VALIDACIÓN CON MENSAJES EN ESPAÑOL ---
+        // --- VALIDACIÓN ---
         $credentials = $request->validate([
-            'username' => ['required', 'string', 'size:8'], // DNI: 8 dígitos exactos
+            'username' => ['required', 'string', 'size:8'], 
             'password' => ['required'],
         ], [
             'username.required' => 'Por favor, ingresa tu usuario.',
@@ -30,23 +30,22 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // --- LÓGICA DE ROLES ---
-            // Obtenemos el usuario que acaba de entrar
             $user = Auth::user();
 
-            // Decidimos a dónde enviarlo según su rol
-            // NOTA: Asegúrate de tener una ruta llamada 'admin.dashboard' en tu web.php
+            // --- LÓGICA DE REDIRECCIÓN POR ROLES ---
             if ($user->role === 'admin') {
                 $rutaDestino = route('admin.dashboard'); 
             } else {
-                $rutaDestino = route('actas.index');
+                // CAMBIO: Ahora apunta a la ruta del dashboard de usuario normal
+                // Asegúrate de haber definido 'usuario.dashboard' en web.php
+                $rutaDestino = route('usuario.dashboard'); 
             }
 
-            // --- RESPUESTA PARA LA ANIMACIÓN (AJAX) ---
+            // --- RESPUESTA PARA AJAX (JSON) ---
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true, 
-                    'redirect' => $rutaDestino // Redirección dinámica
+                    'redirect' => $rutaDestino
                 ]);
             }
 
@@ -54,9 +53,7 @@ class LoginController extends Controller
             return redirect()->intended($rutaDestino); 
         }
 
-        // --- SI FALLA EL LOGIN (Credenciales incorrectas) ---
-        
-        // Error para la animación (AJAX)
+        // --- SI FALLA EL LOGIN ---
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => false, 
@@ -64,7 +61,6 @@ class LoginController extends Controller
             ], 422);
         }
 
-        // Error normal (recarga la página)
         return back()->withErrors([
             'username' => 'El usuario o la contraseña son incorrectos.',
         ])->onlyInput('username');

@@ -5,53 +5,71 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActaController;
+use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EstablecimientoController;
+use App\Http\Controllers\UsuarioController; 
 
-/*
-|--------------------------------------------------------------------------
-| CONFIGURACIÓN DE VERBOS PERSONALIZADOS
-|--------------------------------------------------------------------------
-| Cambiamos los verbos globales para que los recursos generen las URLs en español.
-*/
 Route::resourceVerbs([
     'create' => 'crear-acta',
-    'edit'   => 'editar-acta', // Corregido a 'editar-acta' según tu última petición
+    'edit'   => 'editar-acta',
 ]);
 
-/*
-|--------------------------------------------------------------------------
-| 1. AUTENTICACIÓN
-|--------------------------------------------------------------------------
-*/
 Route::controller(LoginController::class)->group(function () {
-    Route::get('/actas-asistencia-tecnica/login', 'showLoginForm')->name('login');
-    Route::post('/actas-asistencia-tecnica/login', 'login');
+    Route::get('/actas/login', 'showLoginForm')->name('login');
+    Route::post('/actas/login', 'login');
     Route::post('/logout', 'logout')->name('logout');
 });
 
-/*
-|--------------------------------------------------------------------------
-| 2. SISTEMA PROTEGIDO (Requiere Login)
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/', function () {
-        if (Auth::user()->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-        return redirect()->route('admin.actas.index'); 
+        return Auth::user()->role === 'admin' 
+            ? redirect()->route('admin.dashboard') 
+            : redirect()->route('usuario.dashboard'); 
     });
 
-    // =========================================================================
-    // B. MÓDULO ADMINISTRADOR (URLs con prefijo /admin)
-    // =========================================================================
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('usuario')->name('usuario.')->group(function () {
         
-        // Dashboard Principal -> admin.dashboard
-        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [UsuarioController::class, 'index'])->name('dashboard');
+        Route::get('/mi-perfil', [UsuarioController::class, 'perfil'])->name('perfil');
+        Route::put('/mi-perfil', [UsuarioController::class, 'perfilUpdate'])->name('perfil.update');
 
-        // GESTIÓN DE USUARIOS: /admin/gestionar-usuarios
+        // --- ASISTENCIA TÉCNICA ---
+        Route::prefix('listado-actas')->name('actas.')->group(function () {
+            Route::get('/', [ActaController::class, 'index'])->name('index');
+            Route::get('/crear-acta', [ActaController::class, 'create'])->name('create');
+            Route::post('/', [ActaController::class, 'store'])->name('store');
+            Route::get('/{acta}/editar-acta', [ActaController::class, 'edit'])->name('edit');
+            Route::put('/{acta}', [ActaController::class, 'update'])->name('update');
+            Route::get('/{acta}', [ActaController::class, 'show'])->name('show');
+            Route::get('/{id}/pdf', [ActaController::class, 'generarPDF'])->name('generarPDF');
+            Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
+        });
+
+        // --- MONITOREO (Sistema Modular) ---
+        Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
+            Route::get('/', [MonitoreoController::class, 'index'])->name('index');
+            Route::get('/crear-acta', [MonitoreoController::class, 'create'])->name('create');
+            Route::post('/', [MonitoreoController::class, 'store'])->name('store');
+            Route::get('/{monitoreo}/editar-acta', [MonitoreoController::class, 'edit'])->name('edit');
+            Route::put('/{monitoreo}', [MonitoreoController::class, 'update'])->name('update');
+            Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
+
+            // PASO 2: Panel General y Redirección a Módulos Específicos
+            Route::get('/{id}/modulos', [MonitoreoController::class, 'gestionarModulos'])->name('modulos');
+            
+            // RUTA DINÁMICA PARA REDIRECCIÓN A FORMULARIOS INDEPENDIENTES
+            Route::get('/{id}/modulo/{seccion}', [MonitoreoController::class, 'cargarSeccionModulo'])->name('seccion');
+            
+            Route::post('/{id}/guardar-detalle', [MonitoreoController::class, 'guardarDetalle'])->name('guardarDetalle');
+
+            Route::get('/{id}/pdf', [MonitoreoController::class, 'generarPDF'])->name('pdf');
+            Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
+        });
+    });
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
         Route::prefix('gestionar-usuarios')->name('users.')->group(function () {
             Route::get('/', [AdminController::class, 'usersIndex'])->name('index');
             Route::get('/crear-usuario', [AdminController::class, 'usersCreate'])->name('create');
@@ -61,22 +79,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{user}', [AdminController::class, 'usersDestroy'])->name('destroy');
             Route::patch('/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggleStatus');
         });
-
-        // LISTADO DE ACTAS: /admin/listado-actas
-        // create -> /admin/listado-actas/crear-acta
-        // edit   -> /admin/listado-actas/{id}/editar-acta
-        Route::resource('listado-actas', ActaController::class)
-            ->names('actas')
-            ->parameters(['listado-actas' => 'acta']);
     });
 
-    // =========================================================================
-    // C. MÓDULO OPERATIVO Y UTILIDADES
-    // =========================================================================
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
-
-    Route::controller(ActaController::class)->group(function () {
-        Route::get('/acta-asistencia-tecnica/{id}/pdf', 'generarPDF')->name('actas.generarPDF');
-        Route::post('/acta-asistencia-tecnica/{id}/subir-pdf', 'subirPDF')->name('actas.subirPDF');
-    });
 });
