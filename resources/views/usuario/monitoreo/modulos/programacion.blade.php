@@ -171,16 +171,6 @@
                     <textarea name="contenido[comentarios]" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner">{{ $acta->programacion->comentarios ?? '' }}</textarea>
                 </div>
 
-                {{-- FIRMA DINÁMICA --}}
-                <div class="pt-16 pb-10 flex flex-col items-center">
-                    <div class="w-80 space-y-4 text-center">
-                        <div id="firma_visual" class="text-sm font-black uppercase text-slate-800 min-h-[20px] tracking-wide">
-                            {{ $acta->programacion->rrhh_nombre ?? '..........................................................' }}
-                        </div>
-                        <div class="h-[2px] bg-slate-900 w-full shadow-sm"></div>
-                        <p class="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em]">Firma del Entrevistado</p>
-                    </div>
-                </div>
 
                 <button type="submit" class="w-full bg-slate-900 text-white py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-indigo-600 transition-all shadow-xl flex items-center justify-center gap-4 group">
                     <i data-lucide="save" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>

@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Monitoreo; 
+use App\Models\CabeceraMonitoreo;
 use App\Models\Establecimiento;
 use App\Models\User;
-use App\Models\MonitoreoDetalle; 
-use App\Models\MonitoreoProgramacion; 
-use App\Models\MonitoreoEquipo; // NUEVO: Importamos el modelo de equipo
+use App\Models\MonitoreoModulos; 
+use App\Models\MonitoreoEquipo; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -17,11 +16,11 @@ use Illuminate\Support\Facades\DB;
 class MonitoreoController extends Controller
 {
     /**
-     * Listado principal de monitoreos del usuario.
+     * Listado principal de monitoreos con filtros mejorados.
      */
     public function index(Request $request)
     {
-        $query = Monitoreo::with('establecimiento')
+        $query = CabeceraMonitoreo::with(['establecimiento', 'equipo'])
                     ->where('user_id', Auth::id());
 
         if ($request->filled('implementador')) {
@@ -34,28 +33,59 @@ class MonitoreoController extends Controller
             });
         }
 
-        $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
+        if ($request->filled('fecha_inicio') && $request->filled('fecha_fin')) {
+            $query->whereBetween('fecha', [$request->fecha_inicio, $request->fecha_fin]);
+        }
 
+        $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
         $countCompletados = (clone $query)->where('firmado', 1)->count();
-        $implementadores = Monitoreo::distinct()->pluck('implementador');
+        $implementadores = CabeceraMonitoreo::distinct()->pluck('implementador');
         $provincias = Establecimiento::distinct()->pluck('provincia');
 
         return view('usuario.monitoreo.index', compact('monitoreos', 'countCompletados', 'implementadores', 'provincias'));
     }
 
-    /**
-     * Formulario de creación (Paso 1).
-     */
     public function create()
     {
-        $usuariosRegistrados = User::where('status', 'active')
-                                    ->orderBy('apellido_paterno')
-                                    ->get();
-        return view('usuario.monitoreo.create', compact('usuariosRegistrados'));
+        return view('usuario.monitoreo.create');
+    }
+
+    public function buscarFiltro(Request $request)
+    {
+        $term = $request->term;
+        $equipo = MonitoreoEquipo::where('doc', 'LIKE', "%$term%")
+                    ->orWhere('apellido_paterno', 'LIKE', "%$term%")
+                    ->limit(10)
+                    ->get();
+                    
+        return response()->json($equipo);
+    }
+
+    public function buscarMiembroEquipo($doc)
+    {
+        try {
+            $miembro = MonitoreoEquipo::where('doc', $doc)->first();
+            
+            if ($miembro) {
+                return response()->json([
+                    'exists' => true,
+                    'doc' => $miembro->doc,
+                    'apellido_paterno' => $miembro->apellido_paterno,
+                    'apellido_materno' => $miembro->apellido_materno,
+                    'nombres' => $miembro->nombres,
+                    'cargo' => $miembro->cargo,
+                    'institucion' => $miembro->institucion
+                ]);
+            }
+            
+            return response()->json(['exists' => false]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
-     * GUARDAR PASO 1: Crea la cabecera y el equipo de trabajo.
+     * GUARDAR PASO 1: Crea cabecera, actualiza maestro IPRESS y registra equipo.
      */
     public function store(Request $request)
     {
@@ -63,52 +93,70 @@ class MonitoreoController extends Controller
             'establecimiento_id' => 'required|exists:establecimientos,id',
             'fecha' => 'required|date',
             'responsable' => 'required|string|max:255',
+            'categoria' => 'nullable|string|max:50',
             'implementador' => 'required|string',
-            'equipo' => 'nullable|array', // Validación para el equipo de trabajo
+            'equipo' => 'required|array|min:1', 
         ]);
 
         try {
             DB::beginTransaction();
 
-            // 1. Crear cabecera
-            $monitoreo = new Monitoreo();
+            // 1. ACTUALIZAR TABLA MAESTRA DE ESTABLECIMIENTOS (Para sugerir en futuras actas)
+            $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
+            $establecimiento->update([
+                'responsable' => strtoupper($request->responsable),
+                'categoria'   => strtoupper($request->categoria),
+            ]);
+
+            // 2. CREAR CABECERA DEL ACTA CON DATOS HISTÓRICOS (SNAPSHOT)
+            $monitoreo = new CabeceraMonitoreo();
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
-            $monitoreo->responsable = $request->responsable;
-            $monitoreo->implementador = $request->implementador;
+            
+            // Guardamos los datos actuales para el histórico de esta acta específica
+            // Asegúrate de que estos campos existan en tu tabla 'mon_cabecera_monitoreo'
+            $monitoreo->responsable = strtoupper($request->responsable);
+            $monitoreo->categoria_congelada = strtoupper($request->categoria); // Campo histórico
+            
+            $monitoreo->implementador = $request->implementador; 
             $monitoreo->user_id = Auth::id();
             $monitoreo->save();
 
-            // 2. Guardar Equipo de Trabajo (Tabla Independiente)
-            if ($request->has('equipo')) {
-                foreach ($request->equipo as $persona) {
-                    MonitoreoEquipo::create([
-                        'monitoreo_id'    => $monitoreo->id,
-                        'user_id'         => $persona['id'],
-                        'nombre_completo' => $persona['nombre'],
-                        'cargo'           => $persona['cargo'] ?? 'Implementador',
-                        'institucion'     => $persona['institucion'] ?? 'DIRESA',
-                    ]);
+            // 3. PROCESAR EQUIPO DE TRABAJO
+            foreach ($request->equipo as $persona) {
+                if (!empty($persona['doc'])) {
+                    MonitoreoEquipo::updateOrCreate(
+                        ['doc' => $persona['doc']], 
+                        [
+                            'cabecera_monitoreo_id' => $monitoreo->id, 
+                            'tipo_doc'              => $persona['tipo_doc'] ?? 'DNI',
+                            'apellido_paterno'      => strtoupper($persona['apellido_paterno']),
+                            'apellido_materno'      => strtoupper($persona['apellido_materno']),
+                            'nombres'               => strtoupper($persona['nombres']),
+                            'cargo'                 => strtoupper($persona['cargo'] ?? 'MONITOR'),
+                            'institucion'           => strtoupper($persona['institucion'] ?? 'DIRESA'),
+                        ]
+                    );
                 }
             }
 
             DB::commit();
 
             return redirect()->route('usuario.monitoreo.modulos', $monitoreo->id)
-                             ->with('success', 'Cabecera y equipo de trabajo registrados.');
+                             ->with('success', 'Acta iniciada y datos del establecimiento actualizados.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors('Error al crear el monitoreo: ' . $e->getMessage())->withInput();
+            return back()->withErrors('Error: ' . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * PANEL DE MÓDULOS: Detecta el progreso de cada tabla independiente.
+     * PANEL DE MÓDULOS.
      */
     public function gestionarModulos($id)
     {
-        $acta = Monitoreo::with(['establecimiento', 'programacion', 'equipo']) 
+        $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo']) 
                     ->where('user_id', Auth::id())
                     ->findOrFail($id);
 
@@ -123,47 +171,42 @@ class MonitoreoController extends Controller
             'prenatal'       => '08. Atención Prenatal',
         ];
 
-        $modulosGuardados = [];
-        if ($acta->programacion) $modulosGuardados[] = 'programacion';
+        $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->pluck('modulo_nombre')
+                            ->toArray();
 
         return view('usuario.monitoreo.modulos', compact('acta', 'modulos', 'modulosGuardados'));
     }
 
     /**
-     * GUARDAR DETALLE: Procesa el array 'contenido' hacia la tabla correspondiente.
+     * GUARDAR DETALLE.
      */
     public function guardarDetalle(Request $request, $id)
     {
         $modulo = $request->input('modulo_nombre');
         $datos = $request->input('contenido');
 
+        if (!$modulo) {
+            return back()->withErrors('No se especificó el nombre del módulo.');
+        }
+
         try {
-            if ($modulo === 'programacion') {
-                MonitoreoProgramacion::updateOrCreate(
-                    ['monitoreo_id' => $id],
-                    $datos
-                );
-            } else {
-                MonitoreoDetalle::updateOrCreate(
-                    ['monitoreo_id' => $id, 'modulo_nombre' => $modulo],
-                    ['contenido' => $datos]
-                );
-            }
+            MonitoreoModulos::updateOrCreate(
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
+                ['contenido' => $datos]
+            );
 
             return redirect()->route('usuario.monitoreo.modulos', $id)
-                             ->with('success', "Datos del componente $modulo guardados.");
+                             ->with('success', "Datos del módulo guardados correctamente.");
 
         } catch (\Exception $e) {
-            return back()->withErrors('Error al guardar: ' . $e->getMessage());
+            return back()->withErrors('Error: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Carga la vista de cada sección.
-     */
     public function cargarSeccionModulo($id, $seccion)
     {
-        $acta = Monitoreo::with(['establecimiento', $seccion])->findOrFail($id);
+        $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
         
         $vistas = [
             'programacion'   => 'usuario.monitoreo.modulos.programacion',
@@ -178,21 +221,16 @@ class MonitoreoController extends Controller
 
         if (!array_key_exists($seccion, $vistas)) abort(404);
 
-        return view($vistas[$seccion], compact('acta', 'seccion'));
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                    ->where('modulo_nombre', $seccion)
+                    ->first();
+
+        return view($vistas[$seccion], compact('acta', 'seccion', 'detalle'));
     }
 
-    /**
-     * GENERAR PDF CONSOLIDADO
-     */
     public function generarPDF($id)
     {
-        // Cargamos el monitoreo con Equipo de Trabajo y Programación
-        $acta = Monitoreo::with([
-            'establecimiento', 
-            'user', 
-            'programacion',
-            'equipo' // Cargamos la relación del equipo para el PDF
-        ])->findOrFail($id);
+        $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
 
         $logoPath = public_path('img/logo.png'); 
         $logoBase64 = '';
@@ -204,21 +242,18 @@ class MonitoreoController extends Controller
         $pdf = Pdf::loadView('usuario.monitoreo.pdf', compact('acta', 'logoBase64'))
                   ->setPaper('a4', 'portrait');
 
-        $filename = "MONITOREO_" . str_replace(' ', '_', $acta->establecimiento->nombre) . "_" . $acta->fecha . ".pdf";
-
-        return $pdf->stream($filename);
+        return $pdf->stream("ACTA_MONITOREO_{$acta->id}.pdf");
     }
 
-    /**
-     * Subida de PDF firmado.
-     */
     public function subirPDF(Request $request, $id)
     {
         $request->validate(['pdf_firmado' => 'required|mimes:pdf|max:10240']);
-        $monitoreo = Monitoreo::where('user_id', Auth::id())->findOrFail($id);
+        $monitoreo = CabeceraMonitoreo::where('user_id', Auth::id())->findOrFail($id);
 
         if ($request->hasFile('pdf_firmado')) {
-            if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
+            if ($monitoreo->firmado_pdf) {
+                Storage::disk('public')->delete($monitoreo->firmado_pdf);
+            }
             $path = $request->file('pdf_firmado')->store('monitoreos_firmados', 'public');
             
             $monitoreo->update([
@@ -227,6 +262,6 @@ class MonitoreoController extends Controller
             ]);
         }
 
-        return back()->with('success', 'El documento firmado ha sido cargado.');
+        return back()->with('success', 'Archivo cargado con éxito.');
     }
 }

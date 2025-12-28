@@ -6,6 +6,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\MonitoreoController;
+use App\Http\Controllers\EditMonitoreoController; //
 use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\UsuarioController; 
 
@@ -14,6 +15,7 @@ Route::resourceVerbs([
     'edit'   => 'editar-acta',
 ]);
 
+// --- AUTENTICACIÓN ---
 Route::controller(LoginController::class)->group(function () {
     Route::get('/actas/login', 'showLoginForm')->name('login');
     Route::post('/actas/login', 'login');
@@ -28,13 +30,17 @@ Route::middleware(['auth'])->group(function () {
             : redirect()->route('usuario.dashboard'); 
     });
 
+    // Búsqueda global de establecimientos (Autocomplete)
+    Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
+
+    // --- RUTAS DE USUARIO ---
     Route::prefix('usuario')->name('usuario.')->group(function () {
         
         Route::get('/dashboard', [UsuarioController::class, 'index'])->name('dashboard');
         Route::get('/mi-perfil', [UsuarioController::class, 'perfil'])->name('perfil');
         Route::put('/mi-perfil', [UsuarioController::class, 'perfilUpdate'])->name('perfil.update');
 
-        // --- ASISTENCIA TÉCNICA ---
+        // --- ASISTENCIA TÉCNICA (Listado Simple) ---
         Route::prefix('listado-actas')->name('actas.')->group(function () {
             Route::get('/', [ActaController::class, 'index'])->name('index');
             Route::get('/crear-acta', [ActaController::class, 'create'])->name('create');
@@ -46,30 +52,38 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
         });
 
-        // --- MONITOREO (Sistema Modular) ---
+        // --- MONITOREO (Sistema Profesional) ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
+            // Rutas gestionadas por MonitoreoController (Listado y Creación)
             Route::get('/', [MonitoreoController::class, 'index'])->name('index');
             Route::get('/crear-acta', [MonitoreoController::class, 'create'])->name('create');
             Route::post('/', [MonitoreoController::class, 'store'])->name('store');
-            Route::get('/{monitoreo}/editar-acta', [MonitoreoController::class, 'edit'])->name('edit');
-            Route::put('/{monitoreo}', [MonitoreoController::class, 'update'])->name('update');
             Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
 
-            // PASO 2: Panel General y Redirección a Módulos Específicos
+            // --- NUEVAS RUTAS: GESTIONADAS POR EditMonitoreoController ---
+            Route::get('/{id}/editar-acta', [EditMonitoreoController::class, 'edit'])->name('edit'); //
+            Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update'); //
+
+            // --- GESTIÓN DE EQUIPO (Buscadores) ---
+            Route::get('/equipo/buscar-filtro', [MonitoreoController::class, 'buscarFiltro'])->name('equipo.filtro');
+            Route::get('/equipo/buscar/{doc}', [MonitoreoController::class, 'buscarMiembroEquipo'])->name('equipo.buscar');
+
+            // GESTIÓN POR PASOS / MÓDULOS
             Route::get('/{id}/modulos', [MonitoreoController::class, 'gestionarModulos'])->name('modulos');
-            
-            // RUTA DINÁMICA PARA REDIRECCIÓN A FORMULARIOS INDEPENDIENTES
             Route::get('/{id}/modulo/{seccion}', [MonitoreoController::class, 'cargarSeccionModulo'])->name('seccion');
-            
             Route::post('/{id}/guardar-detalle', [MonitoreoController::class, 'guardarDetalle'])->name('guardarDetalle');
 
-            Route::get('/{id}/pdf', [MonitoreoController::class, 'generarPDF'])->name('pdf');
+            // REPORTES PDF
+            Route::get('/{id}/pdf/modulo/{modulo}', [MonitoreoController::class, 'generarPdfModulo'])->name('pdf.modulo');
+            Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
         });
     });
 
+    // --- RUTAS DE ADMINISTRADOR ---
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        
         Route::prefix('gestionar-usuarios')->name('users.')->group(function () {
             Route::get('/', [AdminController::class, 'usersIndex'])->name('index');
             Route::get('/crear-usuario', [AdminController::class, 'usersCreate'])->name('create');
@@ -80,6 +94,4 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggleStatus');
         });
     });
-
-    Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
 });

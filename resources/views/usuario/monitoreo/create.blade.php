@@ -1,159 +1,150 @@
 @extends('layouts.usuario')
 
-@section('title', 'Nueva Acta de Monitoreo')
+@section('title', 'Crear Acta de Monitoreo')
 
 @push('styles')
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <style>
-        @keyframes fade-in { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
-        .animate-fade-in { animation: fade-in 0.3s ease forwards; }
+        @keyframes fade-in { from {opacity:0; transform:translateY(15px);} to {opacity:1; transform:translateY(0);} }
+        .animate-fade-in { animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         .ui-autocomplete { 
-            border-radius: 0.75rem; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-            border: 1px solid #e2e8f0; 
-            z-index: 9999 !important; 
+            border-radius: 1.25rem !important; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important; 
+            border: 1px solid #e2e8f0 !important; 
+            z-index: 9999 !important; padding: 0.5rem !important; background: white !important;
         }
 
-        .input-auto-fill { background-color: #f0f9ff !important; border-color: #bae6fd !important; color: #0369a1 !important; font-weight: 700; }
+        .ui-menu-item-wrapper { padding: 10px 15px !important; border-radius: 0.75rem !important; font-size: 12px !important; font-weight: 600 !important; }
+        .ui-state-active { background: #6366f1 !important; color: white !important; border: none !important; }
+
+        .tabla-contenedor { overflow-x: auto; }
+        .tabla-profesional { width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
+        .tabla-profesional th { padding: 0.75rem; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 10px; text-align: left; }
+        .tabla-profesional td { padding: 0.75rem; background: #ffffff; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .tabla-profesional td:first-child { border-left: 1px solid #f1f5f9; border-radius: 1rem 0 0 1rem; }
+        .tabla-profesional td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 1rem 1rem 0; }
         
-        /* Tabla de Equipo de Trabajo */
-        .tabla-equipo { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .tabla-equipo th { background-color: #f8fafc; padding: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; border-bottom: 2px solid #e2e8f0; }
-        .tabla-equipo td { padding: 8px 12px; background: white; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        .input-inline { 
+            width: 100%; border: 1px solid #e2e8f0; background: #f8fafc; padding: 0.5rem 0.75rem; 
+            border-radius: 0.75rem; font-size: 11px; font-weight: 700; text-transform: uppercase; 
+        }
+        .input-inline:focus { background: white; border-color: #6366f1; outline: none; }
         
-        /* Estilos para inputs dentro de la tabla */
-        .input-table { font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fcfcfc; }
-        .input-table:focus { border-color: #6366f1; outline: none; background: white; }
+        .info-grid-estab { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 1rem; }
+        .info-box-estab { background: #f8fafc; border: 1px solid #f1f5f9; padding: 0.6rem 0.75rem; border-radius: 1rem; }
+        .info-label { display: block; font-size: 7px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+        .info-value { display: block; font-size: 10px; font-weight: 800; color: #334155; text-transform: uppercase; }
+        
+        /* Estilo para resaltar que son editables */
+        .info-editable { background: #fff !important; border: 1px solid #6366f1 !important; ring: 2px; ring-color: #indigo-100; }
+        .input-editable { color: #6366f1 !important; font-weight: 900 !important; }
     </style>
 @endpush
 
-@section('header-content')
-    <div class="flex flex-col">
-        <h1 class="text-xl font-bold text-slate-800 tracking-tight italic">Nueva Acta de Monitoreo</h1>
-        <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-            <span>Operaciones</span>
-            <span class="text-slate-300">•</span>
-            <span>Paso 1: Cabecera del Acta</span>
-        </div>
-    </div>
-@endsection
-
 @section('content')
-<div class="py-8 bg-slate-50 min-h-screen">
-    <div class="max-w-7xl mx-auto px-4">
-        
-        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.store') }}" method="POST"
-              class="bg-white shadow-xl rounded-3xl p-10 border border-slate-200 animate-fade-in">
+<div class="py-6 bg-slate-50 min-h-screen">
+    <div class="max-w-full mx-auto px-4">
+        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.store') }}" method="POST" class="animate-fade-in">
             @csrf
+            
+            <input type="hidden" name="implementador" id="implementador_input">
 
-            {{-- 1. BLOQUE IMPLEMENTADOR Y EQUIPO --}}
-            <div class="mb-12">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    
-                    {{-- IMPLEMENTADOR PRINCIPAL --}}
-                    <div class="flex flex-col gap-4 p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100 shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div class="h-14 w-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
-                                <i data-lucide="user-check" class="w-8 h-8"></i>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                {{-- COLUMNA IZQUIERDA --}}
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="p-6 bg-slate-900 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="h-11 w-11 rounded-xl bg-indigo-500 flex items-center justify-center">
+                                <i data-lucide="user-check" class="w-5 h-5 text-white"></i>
                             </div>
-                            <div class="flex-1">
-                                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Implementador Responsable (Titular)</p>
-                                <h2 class="text-lg font-bold text-slate-800 leading-tight">{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }}, {{ Auth::user()->name }}</h2>
-                                <input type="hidden" name="implementador" value="{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}">
+                            <div>
+                                <p class="text-[8px] font-black text-indigo-300 uppercase tracking-widest">Implementador</p>
+                                <h2 class="text-sm font-bold uppercase">{{ Auth::user()->name }} {{ Auth::user()->apellido_paterno }}{{ Auth::user()->apellido_materno }}</h2>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center bg-white px-4 py-2 rounded-xl border border-indigo-100">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Fecha del Acta</label>
-                            <input type="date" name="fecha" value="{{ date('Y-m-d') }}" class="text-xs font-bold text-indigo-600 border-none p-0 focus:ring-0 text-right cursor-pointer">
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Fecha de Monitoreo</label>
+                            <input type="date" name="fecha" value="{{ date('Y-m-d') }}" required class="w-full bg-transparent border-none p-0 text-lg font-black text-white focus:ring-0">
                         </div>
                     </div>
 
-                    {{-- AGREGAR EQUIPO DE TRABAJO --}}
-                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                <i data-lucide="users" class="w-4 h-4"></i> Equipo de Trabajo
-                            </p>
-                            <div class="relative w-full md:w-2/3">
-                                <select id="select_equipo" class="w-full text-xs border-slate-200 rounded-lg p-2 focus:ring-indigo-500 shadow-sm">
-                                    <option value="">Seleccione personal para agregar...</option>
-                                    @foreach($usuariosRegistrados as $u)
-                                        @if($u->id !== Auth::id()) 
-                                        <option value="{{ $u->id }}" data-full="{{ $u->apellido_paterno }} {{ $u->apellido_materno }}, {{ $u->name }}">
-                                            {{ $u->apellido_paterno }} {{ $u->apellido_materno }}, {{ $u->name }}
-                                        </option>
-                                        @endif
-                                    @endforeach
-                                </select>
+                    <div class="p-6 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
+                        <h3 class="text-slate-800 font-black text-[10px] uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <i data-lucide="hospital" class="w-4 h-4 text-indigo-600"></i> Datos del Establecimiento
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="relative">
+                                <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block">Buscar IPRESS</label>
+                                <input type="text" id="establecimiento_search" required autocomplete="off" placeholder="Nombre o IPRESS"
+                                       class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 outline-none font-bold text-xs">
+                                <input type="hidden" name="establecimiento_id" id="establecimiento_id" required>
+                            </div>
+
+                            <div class="info-grid-estab">
+                                <div class="info-box-estab info-editable">
+                                    <span class="info-label text-indigo-600">Categoría (Editable)</span>
+                                    <input type="text" id="categoria" name="categoria" class="info-value input-editable bg-transparent border-none p-0 w-full focus:ring-0" placeholder="—">
+                                </div>
+                                <div class="info-box-estab"><span class="info-label">Red</span><input type="text" id="red" readonly class="info-value bg-transparent border-none p-0 w-full focus:ring-0" value="—"></div>
+                                <div class="info-box-estab"><span class="info-label">Microred</span><input type="text" id="microred" readonly class="info-value bg-transparent border-none p-0 w-full focus:ring-0" value="—"></div>
+                                <div class="info-box-estab"><span class="info-label">Provincia</span><input type="text" id="provincia" readonly class="info-value bg-transparent border-none p-0 w-full focus:ring-0" value="—"></div>
+                                <div class="info-box-estab col-span-2"><span class="info-label">Distrito</span><input type="text" id="distrito" readonly class="info-value bg-transparent border-none p-0 w-full focus:ring-0" value="—"></div>
+                            </div>
+
+                            <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                                <label class="text-[9px] font-black text-indigo-600 uppercase mb-2 block">Jefe de Establecimiento (Editable)</label>
+                                <input type="text" name="responsable" id="responsable" required 
+                                       class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg focus:border-indigo-500 font-bold text-xs uppercase text-slate-700">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- COLUMNA DERECHA --}}
+                <div class="lg:col-span-8">
+                    <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200 h-full flex flex-col">
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+                            <h3 class="text-slate-800 font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                                <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i> Equipo de Monitoreo
+                            </h3>
+                            <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl shadow-xl w-full md:w-auto">
+                                <input type="text" id="buscar_miembro_inteligente" placeholder="DOC o Apellido Paterno" class="text-[11px] border-none bg-transparent focus:ring-0 font-bold w-full md:w-64 pl-4 text-white">
+                                <button type="button" id="btn_manual_add" class="bg-indigo-600 text-white p-2 rounded-xl"><i data-lucide="plus" class="w-4 h-4"></i></button>
                             </div>
                         </div>
 
-                        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                            <table class="tabla-equipo" id="tabla_equipo_trabajo">
+                        <div class="tabla-contenedor flex-1">
+                            <table class="tabla-profesional">
                                 <thead>
                                     <tr>
-                                        <th class="text-left">Nombre</th>
-                                        <th class="text-center">Cargo</th>
-                                        <th class="text-center">Institución</th>
-                                        <th width="40"></th>
+                                        <th width="100">Tipo Doc.</th>
+                                        <th width="120">N° Documento</th>
+                                        <th>Ap. Paterno</th>
+                                        <th>Ap. Materno</th>
+                                        <th>Nombres</th>
+                                        <th>Cargo</th>
+                                        <th>Institución</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="body_equipo">
                                     <tr id="empty_row">
-                                        <td colspan="4" class="text-center text-slate-400 italic py-6 text-xs">No hay equipo adicional seleccionado</td>
+                                        <td colspan="8" class="text-center py-20 text-slate-300 italic text-xs uppercase font-black opacity-30">Añada integrantes al equipo</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            {{-- 2. LOCALIZACIÓN --}}
-            <div class="mb-12">
-                <h3 class="text-slate-800 font-black uppercase text-sm tracking-widest mb-6 flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center text-xs">01</span>
-                    Localización y Responsable del EESS
-                </h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div class="relative group">
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2 ml-1">Buscar Establecimiento de Salud:</label>
-                        <div class="relative">
-                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors"></i>
-                            <input type="text" id="establecimiento_search" placeholder="Ingrese nombre o código RENIPRESS..." 
-                                   class="w-full pl-12 pr-4 py-4 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all shadow-sm font-medium">
-                        </div>
-                        <input type="hidden" name="establecimiento_id" id="establecimiento_id">
-                    </div>
-
-                    <div class="relative">
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2 ml-1">Jefe / Responsable del Establecimiento:</label>
-                        <div class="relative">
-                            <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                            <input type="text" name="responsable" id="responsable" required 
-                                   class="w-full pl-12 pr-4 py-4 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none transition-all shadow-sm font-bold"
-                                   placeholder="Se cargará automáticamente...">
+                        <div class="mt-8 flex justify-end">
+                            <button type="submit" class="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-sm shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
+                                <span>GUARDAR ACTA</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 p-6 bg-slate-50 rounded-3xl border border-slate-200 border-dashed">
-                    @foreach(['Distrito' => 'distrito', 'Provincia' => 'provincia', 'Microred' => 'microred', 'Red' => 'red', 'Categoría' => 'categoria'] as $label => $id)
-                    <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">{{ $label }}</label>
-                        <input type="text" id="{{ $id }}" readonly class="w-full bg-transparent border-none p-0 text-slate-600 font-bold text-xs focus:ring-0 cursor-default" value="—">
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <div class="flex justify-center border-t border-slate-100 pt-10">
-                <button type="submit" id="btnGuardar" class="bg-indigo-600 text-white px-12 py-5 rounded-2xl font-black text-lg shadow-2xl hover:bg-indigo-700 hover:-translate-y-1 transition-all active:scale-95 flex items-center gap-4">
-                    <i data-lucide="arrow-right-circle" class="w-7 h-7"></i> 
-                    CONTINUAR A MÓDULOS
-                </button>
             </div>
         </form>
     </div>
@@ -165,94 +156,158 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-$(function() {
-    const buscarUrl = "{{ route('establecimientos.buscar') }}";
-    
-    // AUTOCOMPLETE ESTABLECIMIENTOS
+$(document).ready(function() {
+    lucide.createIcons();
+
+    // 1. AUTOCOMPLETE ESTABLECIMIENTO
     $("#establecimiento_search").autocomplete({
         minLength: 2,
-        source: function(req, res) { $.getJSON(buscarUrl, { term: req.term }, res); },
+        source: "{{ route('establecimientos.buscar') }}",
+        focus: function(event, ui) {
+            // Evita que el campo de búsqueda cambie mientras navegas con flechas
+            return false;
+        },
         select: function(e, ui) {
             $("#establecimiento_id").val(ui.item.id);
             $("#distrito").val(ui.item.distrito || '—');
             $("#provincia").val(ui.item.provincia || '—');
-            $("#microred").val(ui.item.microred || '—');
-            $("#red").val(ui.item.red || '—');
             $("#categoria").val(ui.item.categoria || '—');
-            $("#responsable").val(ui.item.responsable || '').addClass('input-auto-fill');
-            $(this).val(ui.item.value);
+            $("#red").val(ui.item.red || '—');
+            $("#microred").val(ui.item.microred || '—');
+            $("#responsable").val(ui.item.responsable || '');
+            
+            // Forzar que el cursor se mueva al campo categoría por si desea editarlo
+            setTimeout(() => $("#categoria").focus(), 100);
+            return true;
+        }
+    });
+
+    // 2. BUSCADOR INTELIGENTE DE PERSONAL
+    $("#buscar_miembro_inteligente").autocomplete({
+        minLength: 2,
+        source: function(request, response) {
+            $.ajax({
+                url: "{{ route('usuario.monitoreo.equipo.filtro') }}",
+                data: { term: request.term },
+                success: function(data) {
+                    response($.map(data, function(item) {
+                        return {
+                            label: (item.apellido_paterno || '') + " " + (item.apellido_materno || '') + ", " + (item.nombres || ''),
+                            doc: item.doc || item.documento,
+                            data: item
+                        };
+                    }));
+                }
+            });
+        },
+        select: function(event, ui) {
+            addMiembroRow(ui.item.data, false);
+            $(this).val('');
             return false;
         }
     });
 
-    // LÓGICA EQUIPO DE TRABAJO
-    const $bodyEquipo = $('#body_equipo');
-    const $selectEquipo = $('#select_equipo');
+    // 3. AGREGAR MANUAL POR DOC
+    $('#btn_manual_add').on('click', function() {
+        Swal.fire({
+            title: 'Agregar Integrante',
+            text: 'Ingrese el número de documento',
+            input: 'text',
+            inputAttributes: { maxlength: 12 },
+            showCancelButton: true,
+            confirmButtonText: 'Buscar / Crear',
+            confirmButtonColor: '#4f46e5',
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                $.get("/usuario/monitoreo/equipo/buscar/" + result.value, function(data) {
+                    addMiembroRow(data.exists ? data : { doc: result.value, tipo_doc: 'DNI' }, !data.exists);
+                });
+            }
+        });
+    });
 
-    $selectEquipo.on('change', function() {
-        const id = $(this).val();
-        if (!id) return;
-
-        const nombre = $(this).find(':selected').data('full');
-
-        // Verificar duplicados
-        if ($(`input[name="equipo[${id}][id]"]`).length > 0) {
-            Swal.fire({ icon: 'warning', title: 'Ya agregado', text: 'Este personal ya está en la lista' });
-            $(this).val('');
-            return;
-        }
-
+    function addMiembroRow(data, isNew) {
         $('#empty_row').hide();
+        const doc = data.doc || data.documento;
+        if ($(`#row_${doc}`).length > 0) return;
+
+        const tipoDoc = data.tipo_doc || 'DNI';
 
         const row = `
-            <tr class="animate-fade-in group">
-                <td class="font-bold text-slate-700">
-                    <input type="hidden" name="equipo[${id}][id]" value="${id}">
-                    <input type="hidden" name="equipo[${id}][nombre]" value="${nombre}">
-                    ${nombre}
+            <tr id="row_${doc}" class="animate-fade-in">
+                <td>
+                    <select name="equipo[${doc}][tipo_doc]" class="input-inline border-slate-200 py-1">
+                        <option value="DNI" ${tipoDoc == 'DNI' ? 'selected' : ''}>DNI</option>
+                        <option value="PASS" ${tipoDoc == 'PASS' ? 'selected' : ''}>PASS</option>
+                        <option value="DIE" ${tipoDoc == 'DIE' ? 'selected' : ''}>DIE</option>
+                    </select>
                 </td>
-                <td class="text-center">
-                    <input type="text" name="equipo[${id}][cargo]" value="Implementador" class="input-table w-full text-center">
+                <td>
+                    <div class="flex flex-col leading-tight">
+                        <span class="text-indigo-600 font-bold text-xs">${doc}</span>
+                        <input type="hidden" name="equipo[${doc}][doc]" value="${doc}">
+                        <span class="badge-status ${isNew?'status-new':'status-reg'}">${isNew?'Nuevo':'Registrado'}</span>
+                    </div>
                 </td>
-                <td class="text-center">
-                    <select name="equipo[${id}][institucion]" class="input-table w-full">
-                        <option value="DIRESA">DIRESA</option>
-                        <option value="MINSA">MINSA</option>
+                <td><input type="text" name="equipo[${doc}][apellido_paterno]" value="${data.apellido_paterno || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
+                <td><input type="text" name="equipo[${doc}][apellido_materno]" value="${data.apellido_materno || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
+                <td><input type="text" name="equipo[${doc}][nombres]" value="${data.nombres || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
+                <td><input type="text" name="equipo[${doc}][cargo]" value="${data.cargo || ''}" class="input-inline border-slate-200" required placeholder="CARGO"></td>
+                <td>
+                    <select name="equipo[${doc}][institucion]" class="input-inline border-slate-200">
+                        <option value="DIRESA" ${data.institucion == 'DIRESA' ? 'selected' : ''}>DIRESA</option>
+                        <option value="MINSA" ${data.institucion == 'MINSA' ? 'selected' : ''}>MINSA</option>
+                        <option value="U.E HOSPITAL DE APOYO NASCA" ${data.institucion == 'U.E HOSPITAL DE APOYO NASCA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO NASCA</option>
+                        <option value="U.E HOSPITAL DE APOYO DE PALPA" ${data.institucion == 'U.E HOSPITAL DE APOYO DE PALPA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO DE PALPA</option>
+                        <option value="U.E HOSPITAL SAN JOSE DE CHINCHA" ${data.institucion == 'U.E HOSPITAL SAN JOSE DE CHINCHA' ? 'selected' : ''}>U.E HOSPITAL SAN JOSE DE CHINCHA</option>
+                        <option value="U.E HOSPITAL SAN JUAN DE DIOS DE PISCO" ${data.institucion == 'U.E HOSPITAL SAN JUAN DE DIOS PISCO' ? 'selected' : ''}>U.E HOSPITAL SAN JUAN DE DIOS PISCO</option>
+                        <option value="U.E RED DE SALUD ICA" ${data.institucion == 'U.E RED DE SALUD ICA' ? 'selected' : ''}>U.E RED DE SALUD ICA</option>
+                        <option value="OTRO" ${data.institucion == 'OTRO' ? 'selected' : ''}>OTRO</option>
                     </select>
                 </td>
                 <td class="text-center">
-                    <button type="button" class="btn-remove-eq text-slate-300 hover:text-red-500 transition-colors">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
+                    <button type="button" onclick="$(this).closest('tr').remove()" class="text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
-            </tr>
-        `;
-
-        $bodyEquipo.append(row);
+            </tr>`;
+        $('#body_equipo').append(row);
         lucide.createIcons();
-        $(this).val(''); 
-    });
+    }
 
-    $bodyEquipo.on('click', '.btn-remove-eq', function() {
-        $(this).closest('tr').remove();
-        if ($bodyEquipo.find('tr').length === 1 && $bodyEquipo.find('#empty_row').length > 0) {
-            $('#empty_row').show();
-        } else if ($bodyEquipo.find('tr').length === 0) {
-             $bodyEquipo.append('<tr id="empty_row"><td colspan="4" class="text-center text-slate-400 italic py-6 text-xs">No hay equipo adicional seleccionado</td></tr>');
-        }
-    });
-
-    // CONFIRMACIÓN AL SUBMIT
+    // 4. ENVÍO DEL FORMULARIO
     $('#monitoreoForm').on('submit', function(e) {
         e.preventDefault();
+        
+        if ($('#body_equipo tr').not('#empty_row').length === 0) {
+            Swal.fire('Atención', 'Añada integrantes al equipo antes de continuar.', 'warning');
+            return;
+        }
+
+        // Convertir todos los campos editables a MAYÚSCULAS para la DB
+        // Incluye explícitamente categoría y responsable
+        $(this).find('input[type="text"]').not('#implementador_input').each(function() {
+            $(this).val($(this).val().toUpperCase().trim());
+        });
+
+        // FORMATEAR IMPLEMENTADOR (Proper Case)
+        function toProperCase(str) {
+            return str.toLowerCase().replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+        }
+
+        let rawName = "{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}";
+        $('#implementador_input').val(toProperCase(rawName));
+
         Swal.fire({
-            title: '¿Guardar Cabecera?',
-            text: "Se registrará el inicio del acta y pasaremos a llenar los módulos.",
+            title: '¿Confirmar Registro?',
+            text: "Se guardará el acta y se proseguira con el registro de los modulos",
             icon: 'question',
             showCancelButton: true,
+            confirmButtonText: 'Sí, guardar',
             confirmButtonColor: '#4f46e5',
-            confirmButtonText: 'Sí, continuar'
-        }).then((res) => { if(res.isConfirmed) this.submit(); });
+        }).then((result) => { 
+            if (result.isConfirmed) {
+                this.submit(); 
+            }
+        });
     });
 });
 </script>

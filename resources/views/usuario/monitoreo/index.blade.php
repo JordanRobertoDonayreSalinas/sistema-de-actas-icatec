@@ -39,7 +39,7 @@
 
     <div x-data="{ open: {{ $filtersAreActive ? 'true' : 'false' }} }" class="w-full">
 
-        {{-- ==================== TARJETA AZUL SUPERIOR (Monitoreo) ====================== --}}
+        {{-- ==================== TARJETA AZUL SUPERIOR ====================== --}}
         <div class="bg-gradient-to-r from-blue-600 to-indigo-500 p-5 rounded-2xl shadow-xl mb-6 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
@@ -64,7 +64,6 @@
                         <span x-text="open ? 'Ocultar Filtros' : 'Mostrar Filtros'"></span>
                     </button>
 
-                    {{-- Ruta para crear monitoreo --}}
                     <a href="{{ route('usuario.monitoreo.create') }}"
                         class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg bg-white text-blue-700 hover:bg-blue-50 border border-transparent">
                         <i data-lucide="activity" class="w-5 h-5"></i>
@@ -134,7 +133,9 @@
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">#</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Fecha</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Establecimiento</th>
-                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Tipo</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Categoria</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Distrito</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Provincia</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Implementador</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-right">Acciones</th>
                         </tr>
@@ -146,25 +147,45 @@
                                 <td class="px-3 py-3 text-slate-600">
                                     {{ \Carbon\Carbon::parse($monitoreo->fecha)->format('d/m/Y') }}
                                 </td>
-                                <td class="px-3 py-3 font-semibold text-slate-800">{{ $monitoreo->establecimiento->nombre ?? '—' }}</td>
                                 <td class="px-3 py-3">
-                                    <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold text-[9px] uppercase tracking-tighter">Monitoreo</span>
+                                    <div class="flex flex-col">
+                                        <span class="font-semibold text-slate-800">{{ $monitoreo->establecimiento->nombre ?? '—' }}</span>
+                                        <span class="text-[9px] text-slate-400 uppercase font-medium">Jefe: {{ $monitoreo->responsable ?? '—' }}</span>
+                                    </div>
                                 </td>
-                                <td class="px-3 py-3 text-slate-500">{{ $monitoreo->implementador }}</td>
+                                <td class="px-3 py-3">
+                                    {{-- Muestra la categoría guardada en el acta, si no existe (actas antiguas) muestra la actual --}}
+                                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-bold text-[9px] border border-indigo-200">
+                                        {{ $monitoreo->categoria_congelada ?? ($monitoreo->establecimiento->categoria ?? '—') }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-3 text-slate-600">
+                                    {{ $monitoreo->establecimiento->distrito ?? '—' }}
+                                </td>
+                                <td class="px-3 py-3 text-slate-600">
+                                    {{ $monitoreo->establecimiento->provincia ?? '—' }}
+                                </td>
+                                <td class="px-3 py-3 text-slate-500 italic">
+                                    {{ $monitoreo->implementador }}
+                                </td>
                                 <td class="px-3 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        <a href="#" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="PDF">
+                                        {{-- Botón PDF --}}
+                                        <a href="{{ route('usuario.monitoreo.pdf', $monitoreo->id) }}" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Ver PDF">
                                             <i data-lucide="file-text" class="w-4 h-4"></i>
                                         </a>
                                         
-                                        <a href="#" class="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Editar">
+                                        {{-- Botón Editar --}}
+                                        <a href="{{ route('usuario.monitoreo.edit', $monitoreo->id) }}" 
+                                           class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" 
+                                           title="Editar Acta">
                                             <i data-lucide="pencil" class="w-4 h-4"></i>
                                         </a>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No se encontraron registros de monitoreo</td></tr>
+                            <tr><td colspan="8" class="px-6 py-12 text-center text-slate-400">No se encontraron registros de monitoreo</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -181,7 +202,16 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         @if (session('success'))
-            Swal.fire({ icon: 'success', title: '¡Éxito!', text: @json(session('success')), confirmButtonColor: '#3b82f6', timer: 3000, toast: true, position: 'top-end', showConfirmButton: false });
+            Swal.fire({ 
+                icon: 'success', 
+                title: '¡Éxito!', 
+                text: @json(session('success')), 
+                confirmButtonColor: '#3b82f6', 
+                timer: 3000, 
+                toast: true, 
+                position: 'top-end', 
+                showConfirmButton: false 
+            });
         @endif
     </script>
 @endpush
