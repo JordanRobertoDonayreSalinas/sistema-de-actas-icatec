@@ -17,10 +17,11 @@ class MonitoreoController extends Controller
 {
     /**
      * Listado principal de monitoreos con filtros de búsqueda y paginación.
+     * Se cargan los 'detalles' para el contador dinámico de firmas en la vista.
      */
     public function index(Request $request)
     {
-        $query = CabeceraMonitoreo::with(['establecimiento', 'equipo'])
+        $query = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'detalles'])
                     ->where('user_id', Auth::id());
 
         if ($request->filled('implementador')) {
@@ -39,6 +40,7 @@ class MonitoreoController extends Controller
 
         $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
         
+        // Conteo de actas donde el acta final consolidada ya fue firmada
         $countCompletados = (clone $query)->where('firmado', 1)->count();
         $implementadores = CabeceraMonitoreo::distinct()->pluck('implementador');
         $provincias = Establecimiento::distinct()->pluck('provincia');
@@ -83,7 +85,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * AJAX: Busca un miembro específico por DNI.
+     * AJAX: Busca un miembro específico por DNI para carga rápida.
      */
     public function buscarMiembroEquipo($doc)
     {
@@ -244,7 +246,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * Eliminar Acta de Monitoreo.
+     * Eliminar Acta de Monitoreo y sus archivos asociados.
      */
     public function destroy($id)
     {
@@ -252,14 +254,16 @@ class MonitoreoController extends Controller
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
             
-            // Eliminar archivos físicos asociados (firmas y evidencias)
+            // Eliminar archivos físicos asociados
             $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->get();
             foreach($modulos as $m) {
                 if($m->pdf_firmado_path) Storage::disk('public')->delete($m->pdf_firmado_path);
                 if(isset($m->contenido['foto_evidencia'])) Storage::disk('public')->delete($m->contenido['foto_evidencia']);
             }
+
+            if($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
             
-            $monitoreo->delete(); // OnCascade debería borrar equipo y módulos
+            $monitoreo->delete(); 
             
             DB::commit();
             return redirect()->route('usuario.monitoreo.index')->with('success', 'Acta eliminada correctamente.');

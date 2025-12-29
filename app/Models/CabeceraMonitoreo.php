@@ -4,65 +4,65 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CabeceraMonitoreo extends Model
 {
     use HasFactory;
 
+    /**
+     * Tabla asociada al modelo.
+     */
     protected $table = 'mon_cabecera_monitoreo';
 
+    /**
+     * Atributos asignables masivamente.
+     */
     protected $fillable = [
         'user_id',
         'establecimiento_id',
+        'categoria_congelada',
+        'responsable_congelado',
         'fecha',
         'responsable',
-        'categoria_congelada',
         'implementador',
         'firmado',
-        'firmado_pdf',
+        'firmado_pdf'
     ];
 
-    public function setImplementadorAttribute($value)
+    /**
+     * Relación con el establecimiento.
+     * Un monitoreo pertenece a un establecimiento de salud.
+     */
+    public function establecimiento(): BelongsTo
     {
-        $this->attributes['implementador'] = ucwords(mb_strtolower($value, 'UTF-8'));
+        return $this->belongsTo(Establecimiento::class, 'establecimiento_id');
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function establecimiento()
-    {
-        return $this->belongsTo(Establecimiento::class);
-    }
-
-    public function equipo()
+    /**
+     * Relación con el equipo de monitoreo.
+     * Un acta puede tener varios miembros del equipo evaluador.
+     */
+    public function equipo(): HasMany
     {
         return $this->hasMany(MonitoreoEquipo::class, 'cabecera_monitoreo_id');
     }
 
     /**
-     * RELACIÓN PARA EQUIPOS DE CÓMPUTO
-     * Definimos 'equipos' como alias para facilitar el llamado en las vistas modulares
+     * RELACIÓN VITAL: Detalles de los módulos.
+     * Aquí se guarda la configuración de módulos activos y las rutas de los PDF firmados.
      */
-    public function equipos()
+    public function detalles(): HasMany
     {
-        return $this->hasMany(EquipoComputo::class, 'cabecera_monitoreo_id');
+        return $this->hasMany(MonitoreoModulos::class, 'cabecera_monitoreo_id');
     }
 
-    public function equiposComputo() 
+    /**
+     * Relación con el usuario que creó el registro.
+     */
+    public function user(): BelongsTo
     {
-        return $this->equipos();
-    }
-
-    public function respuestasEntrevistas()
-    {
-        return $this->hasMany(RespuestaEntrevistado::class, 'cabecera_monitoreo_id');
-    }
-
-    public function participantes()
-    {
-        return $this->hasMany(Participante::class, 'cabecera_monitoreo_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

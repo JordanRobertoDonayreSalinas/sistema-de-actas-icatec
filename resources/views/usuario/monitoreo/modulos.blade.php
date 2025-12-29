@@ -34,6 +34,16 @@
             this.currentModule = slug;
             this.currentModuleName = name;
             this.showModal = true;
+        },
+        init() {
+            // Este observador detecta cambios en 'activos' y regenera los iconos
+            this.$watch('activos', () => {
+                this.$nextTick(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                });
+            });
         }
      }">
     

@@ -19,6 +19,19 @@
             top: 0; left: 0; width: 100%; height: 100%;
         }
         [x-cloak] { display: none !important; }
+
+        .progress-bar-container {
+            width: 80px;
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
     </style>
 @endpush
 
@@ -39,7 +52,7 @@
 
     <div x-data="{ open: {{ $filtersAreActive ? 'true' : 'false' }} }" class="w-full">
 
-        {{-- ==================== TARJETA AZUL SUPERIOR ====================== --}}
+        {{-- TARJETA AZUL SUPERIOR --}}
         <div class="bg-gradient-to-r from-blue-600 to-indigo-500 p-5 rounded-2xl shadow-xl mb-6 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
@@ -73,7 +86,7 @@
             </div>
         </div>
 
-        {{-- ========================== FILTROS ============================== --}}
+        {{-- FILTROS --}}
         <form x-show="open" x-cloak 
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
@@ -124,7 +137,7 @@
             </div>
         </form>
 
-        {{-- ======================== TABLA ========================= --}}
+        {{-- TABLA --}}
         <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -133,15 +146,49 @@
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">#</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Fecha</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Establecimiento</th>
-                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Categoria</th>
-                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Distrito</th>
-                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Provincia</th>
-                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Implementador</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Estado Firmas</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs">
                         @forelse($monitoreos as $monitoreo)
+                            @php
+                                $misDetalles = $monitoreo->detalles ?? collect();
+
+                                // 1. Intentar obtener configuración guardada
+                                $configMod = $misDetalles->where('modulo_nombre', 'config_modulos')->first();
+                                
+                                $activosKeys = [];
+                                if ($configMod) {
+                                    $activosKeys = is_array($configMod->contenido) 
+                                        ? $configMod->contenido 
+                                        : json_decode($configMod->contenido, true);
+                                }
+
+                                // LÓGICA DE CONTINGENCIA: Si no hay configuración guardada, asume los 18 por defecto
+                                if (empty($activosKeys)) {
+                                    $activosKeys = [
+                                        'gestion_administrativa', 'citas', 'triaje', 'consulta_medicina', 
+                                        'consulta_odontologia', 'consulta_nutricion', 'consulta_psicologia', 
+                                        'cred', 'inmunizaciones', 'atencion_prenatal', 'planificacion_familiar', 
+                                        'parto', 'puerperio', 'fua_electronico', 'farmacia', 
+                                        'referencias', 'laboratorio', 'urgencias'
+                                    ];
+                                }
+
+                                $activosKeys = array_filter((array)$activosKeys); // Limpieza de nulos
+                                $totalHabilitados = count($activosKeys);
+
+                                // 2. Contar firmas reales filtrando solo las que pertenecen a módulos activos
+                                $firmadosCount = $misDetalles->filter(function($detalle) use ($activosKeys) {
+                                    return in_array($detalle->modulo_nombre, $activosKeys) 
+                                        && !empty($detalle->pdf_firmado_path);
+                                })->count();
+
+                                $porcentaje = $totalHabilitados > 0 ? ($firmadosCount / $totalHabilitados) * 100 : 0;
+                                $estaFinalizado = ($totalHabilitados > 0 && $firmadosCount === $totalHabilitados);
+                            @endphp
+
                             <tr class="hover:bg-blue-50/30 transition-colors group">
                                 <td class="px-3 py-3 font-mono font-bold text-slate-700">{{ $monitoreo->id }}</td>
                                 <td class="px-3 py-3 text-slate-600">
@@ -150,32 +197,42 @@
                                 <td class="px-3 py-3">
                                     <div class="flex flex-col">
                                         <span class="font-semibold text-slate-800">{{ $monitoreo->establecimiento->nombre ?? '—' }}</span>
-                                        <span class="text-[9px] text-slate-400 uppercase font-medium">Jefe: {{ $monitoreo->responsable ?? '—' }}</span>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200">
+                                                {{ $monitoreo->categoria_congelada ?? '—' }}
+                                            </span>
+                                            <span class="text-[9px] text-slate-400 uppercase font-medium">{{ $monitoreo->establecimiento->distrito }}</span>
+                                        </div>
                                     </div>
                                 </td>
+                                
+                                {{-- COLUMNA DE ESTADO DINÁMICO --}}
                                 <td class="px-3 py-3">
-                                    {{-- Muestra la categoría guardada en el acta, si no existe (actas antiguas) muestra la actual --}}
-                                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 font-bold text-[9px] border border-indigo-200">
-                                        {{ $monitoreo->categoria_congelada ?? ($monitoreo->establecimiento->categoria ?? '—') }}
-                                    </span>
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="flex items-center gap-1 {{ $estaFinalizado ? 'text-emerald-600 font-black' : 'text-orange-500 font-bold' }} text-[10px] uppercase tracking-tighter">
+                                                <i data-lucide="{{ $estaFinalizado ? 'check-circle-2' : 'clock' }}" class="w-3 h-3"></i>
+                                                {{ $estaFinalizado ? 'Firmado' : 'En Proceso' }}
+                                            </span>
+                                            <span class="text-[10px] font-mono font-bold text-slate-500">{{ $firmadosCount }}/{{ $totalHabilitados }}</span>
+                                        </div>
+                                        <div class="progress-bar-container">
+                                            <div class="progress-bar-fill {{ $estaFinalizado ? 'bg-emerald-500' : 'bg-orange-400' }}" 
+                                                 style="width: {{ $porcentaje }}%"></div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-3 py-3 text-slate-600">
-                                    {{ $monitoreo->establecimiento->distrito ?? '—' }}
-                                </td>
-                                <td class="px-3 py-3 text-slate-600">
-                                    {{ $monitoreo->establecimiento->provincia ?? '—' }}
-                                </td>
-                                <td class="px-3 py-3 text-slate-500 italic">
-                                    {{ $monitoreo->implementador }}
-                                </td>
+
                                 <td class="px-3 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        {{-- Botón PDF --}}
+                                        <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" 
+                                           class="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-all" 
+                                           title="Gestionar Módulos">
+                                            <i data-lucide="layers" class="w-4 h-4"></i>
+                                        </a>
                                         <a href="{{ route('usuario.monitoreo.pdf', $monitoreo->id) }}" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Ver PDF">
                                             <i data-lucide="file-text" class="w-4 h-4"></i>
                                         </a>
-                                        
-                                        {{-- Botón Editar --}}
                                         <a href="{{ route('usuario.monitoreo.edit', $monitoreo->id) }}" 
                                            class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" 
                                            title="Editar Acta">
@@ -185,7 +242,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8" class="px-6 py-12 text-center text-slate-400">No se encontraron registros de monitoreo</td></tr>
+                            <tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">No se encontraron registros de monitoreo</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -201,6 +258,10 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+        
         @if (session('success'))
             Swal.fire({ 
                 icon: 'success', 
