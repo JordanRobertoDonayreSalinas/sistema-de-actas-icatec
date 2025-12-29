@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class MonitoreoController extends Controller
 {
     /**
-     * Listado principal de monitoreos con filtros mejorados.
+     * Listado principal de monitoreos.
      */
     public function index(Request $request)
     {
@@ -65,7 +65,6 @@ class MonitoreoController extends Controller
     {
         try {
             $miembro = MonitoreoEquipo::where('doc', $doc)->first();
-            
             if ($miembro) {
                 return response()->json([
                     'exists' => true,
@@ -77,7 +76,6 @@ class MonitoreoController extends Controller
                     'institucion' => $miembro->institucion
                 ]);
             }
-            
             return response()->json(['exists' => false]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error: ' . $e->getMessage()], 500);
@@ -85,7 +83,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * GUARDAR PASO 1: Crea cabecera, actualiza maestro IPRESS y registra equipo.
+     * GUARDAR PASO 1: Cabecera e Histórico.
      */
     public function store(Request $request)
     {
@@ -101,28 +99,21 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. ACTUALIZAR TABLA MAESTRA DE ESTABLECIMIENTOS (Para sugerir en futuras actas)
             $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
             $establecimiento->update([
                 'responsable' => strtoupper($request->responsable),
                 'categoria'   => strtoupper($request->categoria),
             ]);
 
-            // 2. CREAR CABECERA DEL ACTA CON DATOS HISTÓRICOS (SNAPSHOT)
             $monitoreo = new CabeceraMonitoreo();
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
-            
-            // Guardamos los datos actuales para el histórico de esta acta específica
-            // Asegúrate de que estos campos existan en tu tabla 'mon_cabecera_monitoreo'
             $monitoreo->responsable = strtoupper($request->responsable);
-            $monitoreo->categoria_congelada = strtoupper($request->categoria); // Campo histórico
-            
+            $monitoreo->categoria_congelada = strtoupper($request->categoria); 
             $monitoreo->implementador = $request->implementador; 
             $monitoreo->user_id = Auth::id();
             $monitoreo->save();
 
-            // 3. PROCESAR EQUIPO DE TRABAJO
             foreach ($request->equipo as $persona) {
                 if (!empty($persona['doc'])) {
                     MonitoreoEquipo::updateOrCreate(
@@ -141,9 +132,8 @@ class MonitoreoController extends Controller
             }
 
             DB::commit();
-
             return redirect()->route('usuario.monitoreo.modulos', $monitoreo->id)
-                             ->with('success', 'Acta iniciada y datos del establecimiento actualizados.');
+                             ->with('success', 'Acta iniciada correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -152,71 +142,114 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * PANEL DE MÓDULOS.
+     * PANEL DE MÓDULOS (18 Módulos + Gestión de Toggles).
      */
     public function gestionarModulos($id)
     {
-        $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo']) 
-                    ->where('user_id', Auth::id())
-                    ->findOrFail($id);
+        $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo'])->findOrFail($id);
 
-        $modulos = [
-            'programacion'   => '01. Programación de consultorios y turnos',
-            'ventanilla'     => '02. Ventanilla única',
-            'caja'           => '03. Caja',
-            'triaje'         => '04. Triaje',
-            'medicina'       => '05. Consulta Externa: Medicina',
-            'cred'           => '06. Control de Crecimiento y Desarrollo',
-            'inmunizaciones' => '07. Inmunizaciones',
-            'prenatal'       => '08. Atención Prenatal',
+        $modulosMaster = [
+            'gestion_administrativa' => ['nombre' => '01. Gestión Administrativa', 'icon' => 'folder-kanban'],
+            'citas'                  => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
+            'triaje'                 => ['nombre' => '03. Triaje', 'icon' => 'stethoscope'],
+            'consulta_medicina'      => ['nombre' => '04. Consulta Externa: Medicina', 'icon' => 'user-cog'],
+            'consulta_odontologia'   => ['nombre' => '05. Consulta Externa: Odontología', 'icon' => 'smile'],
+            'consulta_nutricion'     => ['nombre' => '06. Consulta Externa: Nutrición', 'icon' => 'apple'],
+            'consulta_psicologia'    => ['nombre' => '07. Consulta Externa: Psicología', 'icon' => 'brain'],
+            'cred'                   => ['nombre' => '08. CRED', 'icon' => 'baby'],
+            'inmunizaciones'         => ['nombre' => '09. Inmunizaciones', 'icon' => 'syringe'],
+            'atencion_prenatal'      => ['nombre' => '10. Atención Prenatal', 'icon' => 'heart-pulse'],
+            'planificacion_familiar' => ['nombre' => '11. Planificación Familiar', 'icon' => 'users'],
+            'parto'                  => ['nombre' => '12. Parto', 'icon' => 'bed'],
+            'puerperio'              => ['nombre' => '13. Puerperio', 'icon' => 'home'],
+            'fua_electronico'        => ['nombre' => '14. FUA Electrónico', 'icon' => 'file-digit'],
+            'farmacia'               => ['nombre' => '15. Farmacia', 'icon' => 'pill'],
+            'referencias'            => ['nombre' => '16. Referencias y Contrareferencias', 'icon' => 'map-pinned'],
+            'laboratorio'            => ['nombre' => '17. Laboratorio', 'icon' => 'test-tube-2'],
+            'urgencias'              => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
         ];
 
+        // Módulos que ya tienen datos guardados
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', '!=', 'config_modulos')
                             ->pluck('modulo_nombre')
                             ->toArray();
 
-        return view('usuario.monitoreo.modulos', compact('acta', 'modulos', 'modulosGuardados'));
+        // Configuración de módulos ACTIVOS para esta acta
+        $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                    ->where('modulo_nombre', 'config_modulos')
+                    ->first();
+        
+        // Si no hay configuración, todos están activos por defecto
+        $modulosActivos = $config ? $config->contenido : array_keys($modulosMaster);
+
+        return view('usuario.monitoreo.modulos', compact('acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos'));
     }
 
     /**
-     * GUARDAR DETALLE.
+     * AJAX: Guarda la configuración de módulos activos (toggles).
+     */
+    public function toggleModulos(Request $request, $id)
+    {
+        try {
+            MonitoreoModulos::updateOrCreate(
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => 'config_modulos'],
+                ['contenido' => $request->modulos_activos] // Array de slugs
+            );
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * GUARDAR CONTENIDO DE UN MÓDULO.
      */
     public function guardarDetalle(Request $request, $id)
     {
         $modulo = $request->input('modulo_nombre');
         $datos = $request->input('contenido');
 
-        if (!$modulo) {
-            return back()->withErrors('No se especificó el nombre del módulo.');
-        }
+        if (!$modulo) return back()->withErrors('Módulo no identificado.');
 
         try {
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
                 ['contenido' => $datos]
             );
-
             return redirect()->route('usuario.monitoreo.modulos', $id)
-                             ->with('success', "Datos del módulo guardados correctamente.");
-
+                             ->with('success', "Módulo guardado correctamente.");
         } catch (\Exception $e) {
             return back()->withErrors('Error: ' . $e->getMessage());
         }
     }
 
+    /**
+     * CARGAR VISTA DE MÓDULO ESPECÍFICO.
+     */
     public function cargarSeccionModulo($id, $seccion)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
         
         $vistas = [
-            'programacion'   => 'usuario.monitoreo.modulos.programacion',
-            'ventanilla'     => 'usuario.monitoreo.modulos.ventanilla',
-            'caja'           => 'usuario.monitoreo.modulos.caja',
-            'triaje'         => 'usuario.monitoreo.modulos.triaje',
-            'medicina'       => 'usuario.monitoreo.modulos.medicina',
-            'cred'           => 'usuario.monitoreo.modulos.cred',
-            'inmunizaciones' => 'usuario.monitoreo.modulos.inmunizaciones',
-            'prenatal'       => 'usuario.monitoreo.modulos.prenatal',
+            'gestion_administrativa' => 'usuario.monitoreo.modulos.gestion_administrativa',
+            'citas'                  => 'usuario.monitoreo.modulos.citas',
+            'triaje'                 => 'usuario.monitoreo.modulos.triaje',
+            'consulta_medicina'      => 'usuario.monitoreo.modulos.medicina',
+            'consulta_odontologia'   => 'usuario.monitoreo.modulos.odontologia',
+            'consulta_nutricion'     => 'usuario.monitoreo.modulos.nutricion',
+            'consulta_psicologia'    => 'usuario.monitoreo.modulos.psicologia',
+            'cred'                   => 'usuario.monitoreo.modulos.cred',
+            'inmunizaciones'         => 'usuario.monitoreo.modulos.inmunizaciones',
+            'atencion_prenatal'      => 'usuario.monitoreo.modulos.prenatal',
+            'planificacion_familiar' => 'usuario.monitoreo.modulos.planificacion',
+            'parto'                  => 'usuario.monitoreo.modulos.parto',
+            'puerperio'              => 'usuario.monitoreo.modulos.puerperio',
+            'fua_electronico'        => 'usuario.monitoreo.modulos.fua',
+            'farmacia'               => 'usuario.monitoreo.modulos.farmacia',
+            'referencias'            => 'usuario.monitoreo.modulos.referencias',
+            'laboratorio'            => 'usuario.monitoreo.modulos.laboratorio',
+            'urgencias'              => 'usuario.monitoreo.modulos.urgencias',
         ];
 
         if (!array_key_exists($seccion, $vistas)) abort(404);
@@ -228,21 +261,18 @@ class MonitoreoController extends Controller
         return view($vistas[$seccion], compact('acta', 'seccion', 'detalle'));
     }
 
+    /**
+     * PDF Y CARGA DE FIRMADOS.
+     */
     public function generarPDF($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
-
         $logoPath = public_path('img/logo.png'); 
-        $logoBase64 = '';
-        if (file_exists($logoPath)) {
-            $logoData = base64_encode(file_get_contents($logoPath));
-            $logoBase64 = 'data:image/png;base64,' . $logoData;
-        }
+        $logoBase64 = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : '';
 
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf', compact('acta', 'logoBase64'))
-                  ->setPaper('a4', 'portrait');
-
-        return $pdf->stream("ACTA_MONITOREO_{$acta->id}.pdf");
+        return Pdf::loadView('usuario.monitoreo.pdf', compact('acta', 'logoBase64'))
+                  ->setPaper('a4', 'portrait')
+                  ->stream("ACTA_MONITOREO_{$acta->id}.pdf");
     }
 
     public function subirPDF(Request $request, $id)
@@ -251,17 +281,10 @@ class MonitoreoController extends Controller
         $monitoreo = CabeceraMonitoreo::where('user_id', Auth::id())->findOrFail($id);
 
         if ($request->hasFile('pdf_firmado')) {
-            if ($monitoreo->firmado_pdf) {
-                Storage::disk('public')->delete($monitoreo->firmado_pdf);
-            }
+            if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
             $path = $request->file('pdf_firmado')->store('monitoreos_firmados', 'public');
-            
-            $monitoreo->update([
-                'firmado_pdf' => $path, 
-                'firmado' => true
-            ]);
+            $monitoreo->update(['firmado_pdf' => $path, 'firmado' => true]);
         }
-
         return back()->with('success', 'Archivo cargado con éxito.');
     }
 }

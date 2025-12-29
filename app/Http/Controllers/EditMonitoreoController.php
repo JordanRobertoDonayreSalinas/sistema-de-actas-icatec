@@ -26,13 +26,14 @@ class EditMonitoreoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Validación de datos de entrada
+        // 1. Validación de datos de entrada
         $request->validate([
             'establecimiento_id' => 'required|exists:establecimientos,id',
             'fecha'              => 'required|date',
             'responsable'        => 'required|string|max:255',
             'categoria'          => 'nullable|string|max:50',
-            'equipo'             => 'nullable|array'
+            'equipo'             => 'nullable|array',
+            'redirect_to'        => 'nullable|string' // Nuevo campo para flujo de navegación
         ]);
 
         try {
@@ -40,24 +41,24 @@ class EditMonitoreoController extends Controller
 
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
 
-            // 1. ACTUALIZAR TABLA MAESTRA DE ESTABLECIMIENTOS (Consistencia futura)
+            // 2. ACTUALIZAR TABLA MAESTRA DE ESTABLECIMIENTOS (Consistencia para futuras actas)
             $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
             $establecimiento->update([
                 'responsable' => strtoupper($request->responsable),
                 'categoria'   => strtoupper($request->categoria),
             ]);
 
-            // 2. ACTUALIZAR CABECERA DEL ACTA (Snapshot Histórico)
+            // 3. ACTUALIZAR CABECERA DEL ACTA (Snapshot Histórico para esta acta)
             $monitoreo->update([
                 'establecimiento_id' => $request->establecimiento_id,
                 'fecha'              => $request->fecha,
                 'responsable'        => strtoupper($request->responsable),
-                'categoria_congelada'=> strtoupper($request->categoria), // Guardamos el histórico
+                'categoria_congelada'=> strtoupper($request->categoria), 
                 'implementador'      => $request->implementador,
             ]);
 
-            // 3. SINCRONIZAR EQUIPO DE MONITOREO
-            // Eliminamos los registros previos del equipo para esta acta
+            // 4. SINCRONIZAR EQUIPO DE MONITOREO
+            // Eliminamos y recreamos para mantener la integridad de la edición
             MonitoreoEquipo::where('cabecera_monitoreo_id', $id)->delete();
 
             if ($request->has('equipo') && is_array($request->equipo)) {
@@ -79,8 +80,14 @@ class EditMonitoreoController extends Controller
 
             DB::commit();
 
+            // 5. FLUJO DE REDIRECCIÓN DINÁMICO
+            if ($request->input('redirect_to') === 'modulos') {
+                return redirect()->route('usuario.monitoreo.modulos', $id)
+                                 ->with('success', "Datos de cabecera actualizados. Puedes continuar con los módulos.");
+            }
+
             return redirect()->route('usuario.monitoreo.index')
-                             ->with('success', "¡Acta #{$id} actualizada y datos de IPRESS sincronizados!.");
+                             ->with('success', "¡Acta #{$id} actualizada correctamente!.");
 
         } catch (\Exception $e) {
             DB::rollBack();
