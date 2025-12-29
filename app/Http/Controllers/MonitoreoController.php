@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class MonitoreoController extends Controller
 {
     /**
-     * Listado principal de monitoreos.
+     * Listado principal de monitoreos con filtros de búsqueda.
      */
     public function index(Request $request)
     {
@@ -45,26 +45,54 @@ class MonitoreoController extends Controller
         return view('usuario.monitoreo.index', compact('monitoreos', 'countCompletados', 'implementadores', 'provincias'));
     }
 
+    /**
+     * Muestra la vista de creación de nueva acta.
+     */
     public function create()
     {
         return view('usuario.monitoreo.create');
     }
 
+    /**
+     * AJAX: Buscador inteligente para equipo de monitoreo.
+     * SOLUCIÓN DUPLICADOS: Usa groupBy('doc') para que cada persona salga una sola vez.
+     */
     public function buscarFiltro(Request $request)
     {
-        $term = $request->term;
-        $equipo = MonitoreoEquipo::where('doc', 'LIKE', "%$term%")
-                    ->orWhere('apellido_paterno', 'LIKE', "%$term%")
+        $term = trim($request->term);
+        if (empty($term)) return response()->json([]);
+
+        // Usamos MAX() para que MySQL permita el agrupamiento en modo estricto
+        $equipo = MonitoreoEquipo::select(
+                        'doc', 
+                        DB::raw('MAX(tipo_doc) as tipo_doc'),
+                        DB::raw('MAX(apellido_paterno) as apellido_paterno'),
+                        DB::raw('MAX(apellido_materno) as apellido_materno'),
+                        DB::raw('MAX(nombres) as nombres'),
+                        DB::raw('MAX(cargo) as cargo'),
+                        DB::raw('MAX(institucion) as institucion')
+                    )
+                    ->where(function($q) use ($term) {
+                        $q->where('doc', 'LIKE', "%$term%")
+                          ->orWhere('apellido_paterno', 'LIKE', "%$term%");
+                    })
+                    ->groupBy('doc') // Asegura unicidad por DNI
                     ->limit(10)
                     ->get();
                     
         return response()->json($equipo);
     }
 
+    /**
+     * Busca un miembro específico por DNI para carga rápida en formularios.
+     */
     public function buscarMiembroEquipo($doc)
     {
         try {
-            $miembro = MonitoreoEquipo::where('doc', $doc)->first();
+            $miembro = MonitoreoEquipo::where('doc', trim($doc))
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+
             if ($miembro) {
                 return response()->json([
                     'exists' => true,
@@ -83,7 +111,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * GUARDAR PASO 1: Cabecera e Histórico.
+     * GUARDAR PASO 1: Cabecera e Integrantes.
      */
     public function store(Request $request)
     {
@@ -101,33 +129,32 @@ class MonitoreoController extends Controller
 
             $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
             $establecimiento->update([
-                'responsable' => strtoupper($request->responsable),
-                'categoria'   => strtoupper($request->categoria),
+                'responsable' => mb_strtoupper(trim($request->responsable), 'UTF-8'),
+                'categoria'   => mb_strtoupper(trim($request->categoria), 'UTF-8'),
             ]);
 
             $monitoreo = new CabeceraMonitoreo();
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
-            $monitoreo->responsable = strtoupper($request->responsable);
-            $monitoreo->categoria_congelada = strtoupper($request->categoria); 
-            $monitoreo->implementador = $request->implementador; 
+            $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
+            $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8'); 
+            $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8'); 
             $monitoreo->user_id = Auth::id();
             $monitoreo->save();
 
             foreach ($request->equipo as $persona) {
                 if (!empty($persona['doc'])) {
-                    MonitoreoEquipo::updateOrCreate(
-                        ['doc' => $persona['doc']], 
-                        [
-                            'cabecera_monitoreo_id' => $monitoreo->id, 
-                            'tipo_doc'              => $persona['tipo_doc'] ?? 'DNI',
-                            'apellido_paterno'      => strtoupper($persona['apellido_paterno']),
-                            'apellido_materno'      => strtoupper($persona['apellido_materno']),
-                            'nombres'               => strtoupper($persona['nombres']),
-                            'cargo'                 => strtoupper($persona['cargo'] ?? 'MONITOR'),
-                            'institucion'           => strtoupper($persona['institucion'] ?? 'DIRESA'),
-                        ]
-                    );
+                    // Tras la migración, cada fila tiene su propio ID
+                    MonitoreoEquipo::create([
+                        'cabecera_monitoreo_id' => $monitoreo->id, 
+                        'tipo_doc'              => $persona['tipo_doc'] ?? 'DNI',
+                        'doc'                   => trim($persona['doc']),
+                        'apellido_paterno'      => mb_strtoupper(trim($persona['apellido_paterno']), 'UTF-8'),
+                        'apellido_materno'      => mb_strtoupper(trim($persona['apellido_materno']), 'UTF-8'),
+                        'nombres'               => mb_strtoupper(trim($persona['nombres']), 'UTF-8'),
+                        'cargo'                 => mb_strtoupper(trim($persona['cargo'] ?? 'MONITOR'), 'UTF-8'),
+                        'institucion'           => mb_strtoupper(trim($persona['institucion'] ?? 'DIRESA'), 'UTF-8'),
+                    ]);
                 }
             }
 
@@ -169,18 +196,15 @@ class MonitoreoController extends Controller
             'urgencias'              => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
         ];
 
-        // Módulos que ya tienen datos guardados
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->where('modulo_nombre', '!=', 'config_modulos')
                             ->pluck('modulo_nombre')
                             ->toArray();
 
-        // Configuración de módulos ACTIVOS para esta acta
         $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', 'config_modulos')
                     ->first();
         
-        // Si no hay configuración, todos están activos por defecto
         $modulosActivos = $config ? $config->contenido : array_keys($modulosMaster);
 
         return view('usuario.monitoreo.modulos', compact('acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos'));
@@ -194,7 +218,7 @@ class MonitoreoController extends Controller
         try {
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => 'config_modulos'],
-                ['contenido' => $request->modulos_activos] // Array de slugs
+                ['contenido' => $request->modulos_activos] 
             );
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
@@ -262,7 +286,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * PDF Y CARGA DE FIRMADOS.
+     * GENERAR PDF DEL ACTA.
      */
     public function generarPDF($id)
     {
@@ -275,6 +299,9 @@ class MonitoreoController extends Controller
                   ->stream("ACTA_MONITOREO_{$acta->id}.pdf");
     }
 
+    /**
+     * SUBIR PDF FIRMADO.
+     */
     public function subirPDF(Request $request, $id)
     {
         $request->validate(['pdf_firmado' => 'required|mimes:pdf|max:10240']);
