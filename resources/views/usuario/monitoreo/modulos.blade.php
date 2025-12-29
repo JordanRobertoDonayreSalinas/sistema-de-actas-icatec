@@ -12,7 +12,6 @@
             } else {
                 this.activos.push(slug);
             }
-            // Guardado automático vía AJAX
             try {
                 await fetch('{{ route('usuario.monitoreo.toggle', $acta->id) }}', {
                     method: 'POST',
@@ -27,7 +26,6 @@
             }
         },
         init() {
-            // Este observador detecta cuando el array 'activos' cambia y re-renderiza los iconos
             this.$watch('activos', () => {
                 this.$nextTick(() => {
                     if (typeof lucide !== 'undefined') {
@@ -78,6 +76,11 @@
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Active o desactive módulos según la cartera de servicios de la IPRESS</p>
                 </div>
                 <div class="flex flex-col items-end">
+                    @php
+                        $completadosCount = count(array_intersect($modulosActivos, $modulosGuardados));
+                        $totalActivos = count($modulosActivos);
+                        $porcentaje = $totalActivos > 0 ? ($completadosCount / $totalActivos) * 100 : 0;
+                    @endphp
                     <span class="text-[11px] font-black text-indigo-600 bg-indigo-50 px-5 py-2 rounded-full uppercase tracking-widest border border-indigo-100 shadow-sm">
                         <span x-text="activos.filter(a => {{ json_encode($modulosGuardados) }}.includes(a)).length"></span> / <span x-text="activos.length"></span> Completados
                     </span>
@@ -114,7 +117,11 @@
                 @endphp
 
                 @foreach($modulosLinks as $slug => $data)
-                @php $isCompleted = in_array($slug, $modulosGuardados); @endphp
+                @php 
+                    $isCompleted = in_array($slug, $modulosGuardados); 
+                    // Construimos el nombre de la ruta dinámicamente
+                    $routeName = "usuario.monitoreo.{$slug}.index";
+                @endphp
                 
                 <div class="relative bg-white border rounded-[2.5rem] flex items-center shadow-sm transition-all duration-500 group"
                      :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'border-emerald-200 bg-white' : 'border-slate-200 bg-white' }}' : 'border-slate-100 bg-slate-50/50 grayscale'">
@@ -133,22 +140,35 @@
                     <div class="flex flex-1 items-center overflow-hidden">
                         {{-- Módulo Activo --}}
                         <template x-if="activos.includes('{{ $slug }}')">
-                            <a href="{{ route('usuario.monitoreo.seccion', ['id' => $acta->id, 'seccion' => $slug]) }}" 
-                               class="flex items-center gap-6 p-4 flex-1 rounded-[2rem] hover:bg-slate-50 transition-colors">
-                                <div class="h-16 w-16 rounded-2xl {{ $isCompleted ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-500' }} flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                                    <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8"></i>
+                            @if(Route::has($routeName))
+                                <a href="{{ route($routeName, $acta->id) }}" 
+                                   class="flex items-center gap-6 p-4 flex-1 rounded-[2rem] hover:bg-slate-50 transition-colors">
+                                    <div class="h-16 w-16 rounded-2xl {{ $isCompleted ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-500' }} flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                                        <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[13px] font-black text-slate-800 uppercase tracking-tight">{{ $data['nombre'] }}</p>
+                                        <p class="text-[9px] font-bold {{ $isCompleted ? 'text-emerald-500' : 'text-slate-400' }} uppercase mt-1.5 flex items-center gap-2">
+                                            @if($isCompleted)
+                                                <i data-lucide="check-circle-2" class="w-3 h-3"></i> Registro verificado
+                                            @else
+                                                <i data-lucide="circle-dashed" class="w-3 h-3"></i> Pendiente de evaluación
+                                            @endif
+                                        </p>
+                                    </div>
+                                </a>
+                            @else
+                                {{-- Fallback por si la ruta no existe aún --}}
+                                <div class="flex items-center gap-6 p-4 flex-1 opacity-50 cursor-help" title="Módulo en desarrollo (Ruta no definida)">
+                                    <div class="h-16 w-16 rounded-2xl bg-orange-50 text-orange-400 flex items-center justify-center">
+                                        <i data-lucide="construction" class="w-8 h-8"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[13px] font-black text-slate-500 uppercase tracking-tight">{{ $data['nombre'] }}</p>
+                                        <p class="text-[9px] font-bold text-orange-400 uppercase mt-1.5 italic">Próximamente</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-[13px] font-black text-slate-800 uppercase tracking-tight">{{ $data['nombre'] }}</p>
-                                    <p class="text-[9px] font-bold {{ $isCompleted ? 'text-emerald-500' : 'text-slate-400' }} uppercase mt-1.5 flex items-center gap-2">
-                                        @if($isCompleted)
-                                            <i data-lucide="check-circle-2" class="w-3 h-3"></i> Registro verificado
-                                        @else
-                                            <i data-lucide="circle-dashed" class="w-3 h-3"></i> Pendiente de evaluación
-                                        @endif
-                                    </p>
-                                </div>
-                            </a>
+                            @endif
                         </template>
 
                         {{-- Módulo Desactivado --}}
