@@ -57,20 +57,19 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
             
             // 1. BUSCADORES MAESTROS (Filtros AJAX)
-            // Se colocan primero para evitar que coincidan con rutas de ID /{id}
+            // Se colocan al inicio para que el motor de rutas no los confunda con /{id}
             Route::get('/profesional/buscar/{doc}', [GestionAdministrativaController::class, 'buscarProfesional'])->name('profesional.buscar');
             Route::get('/equipo/buscar/{doc}', [MonitoreoController::class, 'buscarMiembroEquipo'])->name('equipo.buscar');
             Route::get('/equipo/buscar-filtro', [MonitoreoController::class, 'buscarFiltro'])->name('equipo.filtro');
 
-            // 2. RUTAS DE CABECERA Y CONTROL
+            // 2. RUTAS DE CONTROL GENERAL
             Route::get('/', [MonitoreoController::class, 'index'])->name('index');
             Route::get('/crear-acta', [MonitoreoController::class, 'create'])->name('create');
             Route::post('/', [MonitoreoController::class, 'store'])->name('store');
-            Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
             Route::get('/{id}/modulos', [MonitoreoController::class, 'gestionarModulos'])->name('modulos');
             Route::post('/{id}/toggle-modulos', [MonitoreoController::class, 'toggleModulos'])->name('toggle');
 
-            // 3. EDICIÓN DE ACTA
+            // 3. EDICIÓN DE CABECERA (EditMonitoreoController)
             Route::get('/{id}/editar-acta', [EditMonitoreoController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update');
 
@@ -80,13 +79,16 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/gestion_administrativa/{id}', [GestionAdministrativaController::class, 'index'])->name('gestion_administrativa.index');
                 Route::post('/gestion_administrativa/{id}', [GestionAdministrativaController::class, 'store'])->name('gestion_administrativa.store');
                 
-                // Módulos futuros (Citas, Triaje, etc. se agregarán aquí)
+                // Los siguientes módulos se agregarán aquí siguiendo esta estructura
             });
 
-            // 5. REPORTES PDF
+            // 5. REPORTES Y PDF
             Route::get('/{id}/pdf/modulo/{modulo}', [MonitoreoController::class, 'generarPdfModulo'])->name('pdf.modulo');
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
+
+            // 6. VISUALIZACIÓN (Al final para evitar capturar rutas previas con el slug)
+            Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
         });
     });
 

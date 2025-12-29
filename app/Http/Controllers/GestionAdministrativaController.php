@@ -14,17 +14,18 @@ use Illuminate\Support\Facades\Log;
 class GestionAdministrativaController extends Controller
 {
     /**
-     * Busca un profesional en la tabla mon_profesionales (Maestro).
-     * Replicando la lógica de filtrado del equipo de monitoreo.
+     * Busca un profesional en la tabla maestra 'mon_profesionales'.
+     * Esta lógica permite el autocompletado en el formulario mediante AJAX.
      */
     public function buscarProfesional($doc)
     {
-        // Limpiamos el documento de espacios para evitar fallos de match
+        // 1. Limpieza del DNI para asegurar el match exacto en la BD
         $dni = trim($doc);
         
-        // Registro en log para auditoría técnica (opcional)
+        // Log para seguimiento técnico verificable en storage/logs/laravel.log
         Log::info("Filtrando profesional en tabla maestra mon_profesionales: " . $dni);
 
+        // 2. Consulta al modelo Profesional (vinculado a mon_profesionales)
         $profesional = Profesional::where('doc', $dni)->first();
 
         if ($profesional) {
@@ -43,14 +44,14 @@ class GestionAdministrativaController extends Controller
     }
 
     /**
-     * Carga la vista del módulo 01: Gestión Administrativa.
+     * Carga la interfaz del Módulo 01: Gestión Administrativa.
      */
     public function index($id)
     {
-        // Cargamos el acta con su IPRESS relacionada
-        $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
+        // Carga el acta incluyendo la relación de equiposComputo para evitar consultas lentas
+        $acta = CabeceraMonitoreo::with(['establecimiento', 'equiposComputo'])->findOrFail($id);
         
-        // Buscamos si ya existen datos previos guardados para este módulo
+        // Recupera los datos guardados previamente en formato JSON
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', 'gestion_administrativa')
                     ->first();
@@ -59,12 +60,11 @@ class GestionAdministrativaController extends Controller
     }
 
     /**
-     * Procesa el guardado completo del módulo 01.
-     * Sincroniza la tabla maestra de profesionales y el inventario de equipos.
+     * Procesa el guardado masivo y la sincronización con el maestro de profesionales.
      */
     public function store(Request $request, $id)
     {
-        // Validación de seguridad para la foto de evidencia (Máximo 2MB)
+        // Validación de imagen y campos obligatorios mínimos
         $request->validate([
             'foto_evidencia' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
@@ -73,26 +73,26 @@ class GestionAdministrativaController extends Controller
             DB::beginTransaction();
 
             $modulo = 'gestion_administrativa';
-            $datos = $request->input('contenido');
+            $datos = $request->input('contenido', []);
 
-            // 1. SINCRONIZACIÓN CON MAESTRO DE PROFESIONALES (RRHH)
-            // Replicamos la lógica de mon_equipo_monitoreo para mantener actualizado el maestro
+            // 1. SINCRONIZACIÓN CON EL MAESTRO DE PROFESIONALES (RRHH)
             if (isset($datos['rrhh']) && !empty($datos['rrhh']['doc'])) {
                 Profesional::updateOrCreate(
                     ['doc' => trim($datos['rrhh']['doc'])],
                     [
                         'tipo_doc'         => $datos['rrhh']['tipo_doc'] ?? 'DNI',
-                        'apellido_paterno' => strtoupper(trim($datos['rrhh']['apellido_paterno'])),
-                        'apellido_materno' => strtoupper(trim($datos['rrhh']['apellido_materno'])),
-                        'nombres'          => strtoupper(trim($datos['rrhh']['nombres'])),
+                        // mb_strtoupper garantiza que "Ñ" y tildes se procesen bien en XAMPP
+                        'apellido_paterno' => mb_strtoupper(trim($datos['rrhh']['apellido_paterno']), 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper(trim($datos['rrhh']['apellido_materno']), 'UTF-8'),
+                        'nombres'          => mb_strtoupper(trim($datos['rrhh']['nombres']), 'UTF-8'),
                         'email'            => strtolower(trim($datos['rrhh']['email'] ?? '')),
                         'telefono'         => trim($datos['rrhh']['telefono'] ?? ''),
                     ]
                 );
             }
 
-            // 2. GESTIÓN DE EQUIPOS DE CÓMPUTO
-            // Limpiamos registros anteriores de este módulo específico para evitar duplicidad al actualizar
+            // 2. GESTIÓN RELACIONAL DE EQUIPOS DE CÓMPUTO
+            // Se limpian registros previos para permitir actualizaciones limpias (Borrar y Crear)
             EquipoComputo::where('cabecera_monitoreo_id', $id)
                          ->where('modulo', $modulo)
                          ->delete();
@@ -103,7 +103,7 @@ class GestionAdministrativaController extends Controller
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $modulo,
-                            'descripcion' => strtoupper(trim($eq['descripcion'])),
+                            'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
                             'cantidad'    => $eq['cantidad'] ?? 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
                             'propio'      => $eq['propio'] ?? 'SI',
@@ -112,29 +112,26 @@ class GestionAdministrativaController extends Controller
                 }
             }
 
-            // 3. PROCESAMIENTO DE EVIDENCIA FOTOGRÁFICA
-            // Buscamos si ya existe una foto guardada para no perderla si no se sube una nueva
+            // 3. PERSISTENCIA DE EVIDENCIA FOTOGRÁFICA
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo_nombre', $modulo)
                                 ->first();
 
             if ($request->hasFile('foto_evidencia')) {
-                // Si el usuario sube una foto nueva y ya había una anterior, borramos la vieja del disco
+                // Borrado de archivo físico antiguo para ahorrar espacio en disco
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                     Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
                 }
-                
-                // Guardar nuevo archivo
                 $path = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
                 $datos['foto_evidencia'] = $path;
             } else {
-                // Si no se subió un archivo nuevo, persistimos la ruta de la foto que ya estaba guardada
+                // Si no se subió una nueva, rescatamos la ruta de la foto guardada anteriormente
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                     $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'];
                 }
             }
 
-            // 4. GUARDADO FINAL EN TABLA DE MÓDULOS (JSON)
+            // 4. GUARDADO FINAL EN TABLA DE MÓDULOS (Formato JSON)
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
                 ['contenido' => $datos]

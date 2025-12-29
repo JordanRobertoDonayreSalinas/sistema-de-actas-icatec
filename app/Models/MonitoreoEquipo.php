@@ -16,13 +16,12 @@ class MonitoreoEquipo extends Model
 
     /**
      * CONFIGURACIÓN DE LLAVE PRIMARIA
-     * Como tu tabla ya tiene una primaria y Laravel no la encuentra, 
-     * definimos 'doc' como la llave. Si 'doc' no es la única llave, 
-     * desactivamos el incremento para que Laravel no busque un 'id' inexistente.
+     * Tras la migración, la llave primaria es 'id' (por defecto en Laravel).
+     * Por lo tanto, ELIMINAMOS o comentamos las líneas anteriores que apuntaban a 'doc'.
      */
-    protected $primaryKey = 'doc'; 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    // protected $primaryKey = 'doc'; <-- ELIMINADO
+    // public $incrementing = false; <-- ELIMINADO
+    // protected $keyType = 'string'; <-- ELIMINADO
 
     /**
      * Atributos asignables masivamente.
@@ -40,7 +39,6 @@ class MonitoreoEquipo extends Model
 
     /**
      * Relación con la Cabecera del Monitoreo.
-     * Un integrante pertenece a una única acta/cabecera.
      */
     public function cabecera()
     {

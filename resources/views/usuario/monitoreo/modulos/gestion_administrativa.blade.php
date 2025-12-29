@@ -13,7 +13,7 @@
     .table-custom thead th { @apply text-[9px] font-black text-slate-400 uppercase tracking-widest px-4 pb-2; }
     .table-custom tbody td { @apply bg-slate-50/50 py-3 px-4 first:rounded-l-2xl last:rounded-r-2xl border-y border-slate-100; }
     [x-cloak] { display: none !important; }
-    /* Estilo idéntico al filtro de equipo para datos de mon_profesionales */
+    /* Resaltado de datos jalados de mon_profesionales */
     .text-fetched { border-color: #3b82f6 !important; background-color: #eff6ff !important; color: #1d4ed8 !important; font-weight: 800 !important; }
 </style>
 @endpush
@@ -42,7 +42,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8 space-y-8">
                 
-                {{-- CARD: RESPONSABLE RRHH (FILTRO) --}}
+                {{-- CARD: RESPONSABLE RRHH (FILTRO MAESTRO) --}}
                 <div class="glass-panel p-10">
                     <div class="flex items-center gap-4 mb-10">
                         <div class="h-12 w-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
@@ -55,14 +55,16 @@
                         <div class="md:col-span-4">
                             <label class="label-field">Tipo Doc.</label>
                             <select name="contenido[rrhh][tipo_doc]" class="input-field bg-white">
-                                <option value="DNI">DNI</option>
-                                <option value="C.E">C.E</option>
+                                <option value="DNI" {{ (isset($detalle->contenido['rrhh']['tipo_doc']) && $detalle->contenido['rrhh']['tipo_doc'] == 'DNI') ? 'selected' : '' }}>DNI</option>
+                                <option value="C.E" {{ (isset($detalle->contenido['rrhh']['tipo_doc']) && $detalle->contenido['rrhh']['tipo_doc'] == 'C.E') ? 'selected' : '' }}>C.E</option>
                             </select>
                         </div>
                         <div class="md:col-span-8">
-                            <label class="label-field">Número de Documento (Enter para filtrar)</label>
+                            <label class="label-field">DNI / Documento (Escriba 8 dígitos para filtrar)</label>
                             <div class="relative">
-                                <input type="text" id="doc_rrhh" name="contenido[rrhh][doc]" class="input-field font-mono text-lg" placeholder="00000000" autocomplete="off" value="{{ $detalle->contenido['rrhh']['doc'] ?? '' }}">
+                                <input type="text" id="doc_rrhh" name="contenido[rrhh][doc]" 
+                                    class="input-field font-mono text-lg" placeholder="00000000" maxlength="15" autocomplete="off" 
+                                    value="{{ $detalle->contenido['rrhh']['doc'] ?? '' }}">
                                 <div id="rrhh-loading" class="absolute right-4 top-3.5 hidden">
                                     <div class="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
                                 </div>
@@ -72,30 +74,35 @@
                         <div id="rrhh_results" class="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 mt-4 border-t border-slate-50">
                             <div>
                                 <label class="label-field">Apellido Paterno</label>
-                                <input type="text" name="contenido[rrhh][apellido_paterno]" class="input-field uppercase search-target" required value="{{ $detalle->contenido['rrhh']['apellido_paterno'] ?? '' }}">
+                                <input type="text" name="contenido[rrhh][apellido_paterno]" class="input-field uppercase search-target" required 
+                                    value="{{ $detalle->contenido['rrhh']['apellido_paterno'] ?? '' }}">
                             </div>
                             <div>
                                 <label class="label-field">Apellido Materno</label>
-                                <input type="text" name="contenido[rrhh][apellido_materno]" class="input-field uppercase search-target" required value="{{ $detalle->contenido['rrhh']['apellido_materno'] ?? '' }}">
+                                <input type="text" name="contenido[rrhh][apellido_materno]" class="input-field uppercase search-target" required 
+                                    value="{{ $detalle->contenido['rrhh']['apellido_materno'] ?? '' }}">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="label-field">Nombres Completos</label>
-                                <input type="text" name="contenido[rrhh][nombres]" class="input-field uppercase search-target" required value="{{ $detalle->contenido['rrhh']['nombres'] ?? '' }}">
+                                <input type="text" name="contenido[rrhh][nombres]" class="input-field uppercase search-target" required 
+                                    value="{{ $detalle->contenido['rrhh']['nombres'] ?? '' }}">
                             </div>
                             <div>
                                 <label class="label-field">Email</label>
-                                <input type="email" name="contenido[rrhh][email]" class="input-field lowercase" value="{{ $detalle->contenido['rrhh']['email'] ?? '' }}">
+                                <input type="email" name="contenido[rrhh][email]" class="input-field lowercase" 
+                                    value="{{ $detalle->contenido['rrhh']['email'] ?? '' }}">
                             </div>
                             <div>
                                 <label class="label-field">Celular / Teléfono</label>
-                                <input type="text" name="contenido[rrhh][telefono]" class="input-field" value="{{ $detalle->contenido['rrhh']['telefono'] ?? '' }}">
+                                <input type="text" name="contenido[rrhh][telefono]" class="input-field" 
+                                    value="{{ $detalle->contenido['rrhh']['telefono'] ?? '' }}">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- CARD: EQUIPOS --}}
-                <div class="glass-panel p-10" x-data="{ items: {{ json_encode($acta->equipos()->where('modulo', 'gestion_administrativa')->get() ?? []) }} }">
+                <div class="glass-panel p-10" x-data="{ items: {{ json_encode($acta->equiposComputo()->where('modulo', 'gestion_administrativa')->get()->values() ?? []) }} }">
                     <div class="flex justify-between items-center mb-8">
                         <h3 class="text-xl font-bold text-slate-800 uppercase tracking-tight flex items-center gap-3">
                             <i data-lucide="monitor" class="w-6 h-6 text-slate-400"></i> Inventario Tecnológico
@@ -186,11 +193,9 @@
 
             $('#rrhh-loading').removeClass('hidden');
             
-            // Lógica de URL idéntica a equipo_monitoreo para evitar 404 en subcarpetas
+            // CONSTRUCCIÓN DE URL SEGURA
             let urlTemplate = "{{ route('usuario.monitoreo.profesional.buscar', ':doc') }}";
             let urlFinal = urlTemplate.replace(':doc', doc);
-
-            console.log("Petición a:", urlFinal);
 
             $.ajax({
                 url: urlFinal,
@@ -198,33 +203,35 @@
                 dataType: 'json',
                 success: function(data) {
                     $('#rrhh-loading').addClass('hidden');
-                    console.log("Datos recibidos:", data);
                     
                     if (data.exists) {
-                        // Selección directa por atributo NAME para máxima compatibilidad
+                        // JALAR DATOS Y BLOQUEAR CAMPOS
                         $('input[name="contenido[rrhh][apellido_paterno]"]').val(data.apellido_paterno).addClass('text-fetched').prop('readonly', true);
                         $('input[name="contenido[rrhh][apellido_materno]"]').val(data.apellido_materno).addClass('text-fetched').prop('readonly', true);
                         $('input[name="contenido[rrhh][nombres]"]').val(data.nombres).addClass('text-fetched').prop('readonly', true);
                         $('input[name="contenido[rrhh][email]"]').val(data.email).prop('readonly', false);
                         $('input[name="contenido[rrhh][telefono]"]').val(data.telefono).prop('readonly', false);
                         
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Profesional sincronizado', showConfirmButton: false, timer: 1500 });
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Personal Identificado', showConfirmButton: false, timer: 1500 });
                     } else {
-                        // Limpiar y habilitar si no existe (Flujo igual a equipo)
+                        // LIMPIAR Y HABILITAR PARA REGISTRO NUEVO
                         $('.search-target').val('').removeClass('text-fetched').prop('readonly', false);
                         $('input[name="contenido[rrhh][email]"]').val('').prop('readonly', false);
                         $('input[name="contenido[rrhh][telefono]"]').val('').prop('readonly', false);
-                        console.warn("DNI no registrado en mon_profesionales");
                     }
                 },
                 error: function(xhr) {
                     $('#rrhh-loading').addClass('hidden');
-                    console.error("Error en AJAX:", xhr.status, xhr.responseText);
+                    console.error("Error AJAX:", xhr.status);
                 }
             });
         }
 
-        // Doble disparador: Enter y Blur
+        // DISPARADORES
+        $('#doc_rrhh').on('keyup', function() {
+            if ($(this).val().trim().length === 8) ejecutarFiltro();
+        });
+
         $('#doc_rrhh').on('keydown', function(e) {
             if (e.keyCode === 13) {
                 e.preventDefault();

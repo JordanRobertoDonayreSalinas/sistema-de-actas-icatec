@@ -144,13 +144,11 @@
                         <div class="mt-8 flex flex-wrap justify-end gap-3">
                             <a href="{{ route('usuario.monitoreo.index') }}" class="px-6 py-4 rounded-2xl font-black text-xs text-slate-400 hover:bg-slate-100 transition-all uppercase">Cancelar</a>
                             
-                            {{-- Botón para ir a los módulos directamente --}}
                             <button type="button" onclick="submitForm('modulos')" class="bg-slate-800 text-white px-8 py-4 rounded-2xl font-black text-xs shadow-xl hover:bg-slate-900 transition-all flex items-center gap-3">
                                 <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
                                 <span>GUARDAR Y EDITAR MÓDULOS</span>
                             </button>
 
-                            {{-- Botón para guardar y volver al index --}}
                             <button type="button" onclick="submitForm('index')" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
                                 <i data-lucide="save" class="w-4 h-4"></i>
                                 <span>SOLO ACTUALIZAR CABECERA</span>
@@ -169,10 +167,26 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Función para manejar el envío según el botón presionado
+    // 1. FUNCIÓN GLOBAL DE ENVÍO (SOLUCIÓN AL ERROR DE RECARGA)
     function submitForm(destination) {
+        const form = $('#monitoreoForm');
+        
+        // Seteamos el destino en el input oculto
         $('#redirect_to').val(destination);
-        $('#monitoreoForm').submit();
+
+        // Convertimos todo a mayúsculas antes de procesar
+        form.find('input[type="text"]').not('#implementador_input').each(function() {
+            $(this).val($(this).val().toUpperCase().trim());
+        });
+
+        // Validamos que haya al menos un miembro
+        if ($('#body_equipo tr').length === 0) {
+            Swal.fire('Atención', 'Debe agregar al menos un miembro al equipo de monitoreo.', 'warning');
+            return;
+        }
+
+        // Enviamos el formulario directamente (esto evita el conflicto con e.preventDefault)
+        document.getElementById('monitoreoForm').submit();
     }
 
     $(document).ready(function() {
@@ -195,7 +209,6 @@
         $("#establecimiento_search").autocomplete({
             minLength: 2,
             source: "{{ route('establecimientos.buscar') }}",
-            focus: function(event, ui) { return false; },
             select: function(e, ui) {
                 $("#establecimiento_id").val(ui.item.id);
                 $("#distrito").val(ui.item.distrito || '—');
@@ -208,7 +221,7 @@
             }
         });
 
-        // Buscador Miembros
+        // Buscador Inteligente de Miembros
         $("#buscar_miembro_inteligente").autocomplete({
             minLength: 2,
             source: function(request, response) {
@@ -233,26 +246,34 @@
             }
         });
 
-        // Manual Add
+        // Agregar manual mediante SweetAlert
         $('#btn_manual_add').on('click', function() {
             Swal.fire({
                 title: 'Agregar Integrante',
+                text: 'Ingrese el número de documento:',
                 input: 'text',
                 showCancelButton: true,
-                confirmButtonText: 'Buscar',
+                confirmButtonText: 'Buscar / Agregar',
                 confirmButtonColor: '#4f46e5',
             }).then((result) => {
                 if (result.isConfirmed && result.value) {
-                    $.get("/usuario/monitoreo/equipo/buscar/" + result.value, function(data) {
-                        addMiembroRow(data.exists ? data : { doc: result.value, tipo_doc: 'DNI' }, !data.exists);
+                    const dni = result.value.trim();
+                    // Buscamos si ya existe en la base de datos maestra
+                    $.get("/usuario/monitoreo/equipo/buscar/" + dni, function(data) {
+                        addMiembroRow(data.exists ? data : { doc: dni, tipo_doc: 'DNI' }, !data.exists);
+                    }).fail(function() {
+                        // Si falla la ruta de búsqueda, lo agregamos como nuevo de todos modos
+                        addMiembroRow({ doc: dni, tipo_doc: 'DNI' }, true);
                     });
                 }
             });
         });
 
+        // Función para renderizar la fila del equipo
         function addMiembroRow(data, isNew) {
-            const doc = data.doc || data.documento;
-            if ($(`#row_${doc}`).length > 0) return;
+            const doc = (data.doc || data.documento || "").toString();
+            if (!doc || $(`#row_${doc}`).length > 0) return;
+            
             const tipoDoc = data.tipo_doc || 'DNI';
 
             const row = `
@@ -264,10 +285,13 @@
                             <option value="DIE" ${tipoDoc == 'DIE' ? 'selected' : ''}>DIE</option>
                         </select>
                     </td>
-                    <td><span class="text-indigo-600 font-bold text-xs">${doc}</span><input type="hidden" name="equipo[${doc}][doc]" value="${doc}"></td>
-                    <td><input type="text" name="equipo[${doc}][apellido_paterno]" value="${data.apellido_paterno || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
-                    <td><input type="text" name="equipo[${doc}][apellido_materno]" value="${data.apellido_materno || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
-                    <td><input type="text" name="equipo[${doc}][nombres]" value="${data.nombres || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
+                    <td>
+                        <span class="text-indigo-600 font-bold text-xs">${doc}</span>
+                        <input type="hidden" name="equipo[${doc}][doc]" value="${doc}">
+                    </td>
+                    <td><input type="text" name="equipo[${doc}][apellido_paterno]" value="${data.apellido_paterno || ''}" class="input-inline" required ${isNew ? '' : 'readonly'}></td>
+                    <td><input type="text" name="equipo[${doc}][apellido_materno]" value="${data.apellido_materno || ''}" class="input-inline" required ${isNew ? '' : 'readonly'}></td>
+                    <td><input type="text" name="equipo[${doc}][nombres]" value="${data.nombres || ''}" class="input-inline" required ${isNew ? '' : 'readonly'}></td>
                     <td><input type="text" name="equipo[${doc}][cargo]" value="${data.cargo || ''}" class="input-inline" required></td>
                     <td>
                         <select name="equipo[${doc}][institucion]" class="input-inline">
@@ -276,24 +300,20 @@
                             <option value="U.E HOSPITAL DE APOYO NASCA" ${data.institucion == 'U.E HOSPITAL DE APOYO NASCA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO NASCA</option>
                             <option value="U.E HOSPITAL DE APOYO DE PALPA" ${data.institucion == 'U.E HOSPITAL DE APOYO DE PALPA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO DE PALPA</option>
                             <option value="U.E HOSPITAL SAN JOSE DE CHINCHA" ${data.institucion == 'U.E HOSPITAL SAN JOSE DE CHINCHA' ? 'selected' : ''}>U.E HOSPITAL SAN JOSE DE CHINCHA</option>
-                            <option value="U.E HOSPITAL SAN JUAN DE DIOS DE PISCO" ${data.institucion == 'U.E HOSPITAL SAN JUAN DE DIOS PISCO' ? 'selected' : ''}>U.E HOSPITAL SAN JUAN DE DIOS PISCO</option>
+                            <option value="U.E HOSPITAL SAN JUAN DE DIOS PISCO" ${data.institucion == 'U.E HOSPITAL SAN JUAN DE DIOS PISCO' ? 'selected' : ''}>U.E HOSPITAL SAN JUAN DE DIOS PISCO</option>
                             <option value="U.E RED DE SALUD ICA" ${data.institucion == 'U.E RED DE SALUD ICA' ? 'selected' : ''}>U.E RED DE SALUD ICA</option>
                             <option value="OTRO" ${data.institucion == 'OTRO' ? 'selected' : ''}>OTRO</option>
                         </select>
                     </td>
-                    <td class="text-center"><button type="button" onclick="$(this).closest('tr').remove()" class="text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                    <td class="text-center">
+                        <button type="button" onclick="$(this).closest('tr').remove()" class="text-red-400 hover:text-red-600">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
                 </tr>`;
             $('#body_equipo').append(row);
             lucide.createIcons();
         }
-
-        $('#monitoreoForm').on('submit', function(e) {
-            e.preventDefault();
-            $(this).find('input[type="text"]').not('#implementador_input').each(function() {
-                $(this).val($(this).val().toUpperCase().trim());
-            });
-            this.submit();
-        });
     });
 </script>
 @endpush
