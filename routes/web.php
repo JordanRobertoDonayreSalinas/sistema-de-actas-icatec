@@ -2,27 +2,33 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+
+// Importación de Controladores
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EditMonitoreoController;
 use App\Http\Controllers\GestionAdministrativaController; 
+use App\Http\Controllers\GestionAdministrativaPdfController;
+use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de firmas
 use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\UsuarioController; 
 
+// --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
     'create' => 'crear-acta',
     'edit'   => 'editar-acta',
 ]);
 
-// --- AUTENTICACIÓN ---
+// --- AUTENTICACIÓN PÚBLICA ---
 Route::controller(LoginController::class)->group(function () {
     Route::get('/actas/login', 'showLoginForm')->name('login');
     Route::post('/actas/login', 'login');
     Route::post('/logout', 'logout')->name('logout');
 });
 
+// --- RUTAS PROTEGIDAS (Middleware Auth) ---
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/', function () {
@@ -31,17 +37,16 @@ Route::middleware(['auth'])->group(function () {
             : redirect()->route('usuario.dashboard'); 
     });
 
-    // Búsqueda global de establecimientos (Autocomplete)
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
 
-    // --- RUTAS DE USUARIO ---
+    // --- GRUPO USUARIO (Monitor / Técnico) ---
     Route::prefix('usuario')->name('usuario.')->group(function () {
         
         Route::get('/dashboard', [UsuarioController::class, 'index'])->name('dashboard');
         Route::get('/mi-perfil', [UsuarioController::class, 'perfil'])->name('perfil');
         Route::put('/mi-perfil', [UsuarioController::class, 'perfilUpdate'])->name('perfil.update');
 
-        // --- ASISTENCIA TÉCNICA (Listado Simple) ---
+        // --- SECCIÓN: ASISTENCIA TÉCNICA ---
         Route::prefix('listado-actas')->name('actas.')->group(function () {
             Route::get('/', [ActaController::class, 'index'])->name('index');
             Route::get('/crear-acta', [ActaController::class, 'create'])->name('create');
@@ -53,49 +58,45 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
         });
 
-        // --- MONITOREO (SISTEMA PROFESIONAL) ---
+        // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
             
-            // 1. BUSCADORES MAESTROS (Filtros AJAX)
-            // Se colocan al inicio para que el motor de rutas no los confunda con /{id}
             Route::get('/profesional/buscar/{doc}', [GestionAdministrativaController::class, 'buscarProfesional'])->name('profesional.buscar');
             Route::get('/equipo/buscar/{doc}', [MonitoreoController::class, 'buscarMiembroEquipo'])->name('equipo.buscar');
             Route::get('/equipo/buscar-filtro', [MonitoreoController::class, 'buscarFiltro'])->name('equipo.filtro');
 
-            // 2. RUTAS DE CONTROL GENERAL
             Route::get('/', [MonitoreoController::class, 'index'])->name('index');
             Route::get('/crear-acta', [MonitoreoController::class, 'create'])->name('create');
             Route::post('/', [MonitoreoController::class, 'store'])->name('store');
             Route::get('/{id}/modulos', [MonitoreoController::class, 'gestionarModulos'])->name('modulos');
             Route::post('/{id}/toggle-modulos', [MonitoreoController::class, 'toggleModulos'])->name('toggle');
 
-            // 3. EDICIÓN DE CABECERA (EditMonitoreoController)
+            // --- GESTIÓN DE FIRMAS POR MÓDULO (Controlador especializado) ---
+            // 1. Ruta para procesar la subida del archivo
+            Route::post('/{id}/subir-pdf-firmado', [FirmasMonitoreoController::class, 'subir'])->name('subir-pdf-firmado');
+            // 2. Ruta para visualizar el PDF cargado en el navegador
+            Route::get('/{id}/ver-pdf-firmado/{modulo}', [FirmasMonitoreoController::class, 'ver'])->name('ver-pdf-firmado');
+
             Route::get('/{id}/editar-acta', [EditMonitoreoController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update');
 
-            // 4. --- MÓDULOS TÉCNICOS INDEPENDIENTES ---
-            Route::prefix('modulo')->group(function () {
-                // Módulo 01: Gestión Administrativa
-                Route::get('/gestion_administrativa/{id}', [GestionAdministrativaController::class, 'index'])->name('gestion_administrativa.index');
-                Route::post('/gestion_administrativa/{id}', [GestionAdministrativaController::class, 'store'])->name('gestion_administrativa.store');
-                
-                // Los siguientes módulos se agregarán aquí siguiendo esta estructura
+            // Módulo 01: Gestión Administrativa
+            Route::prefix('modulo/gestion-administrativa')->name('gestion-administrativa.')->group(function () {
+                Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+                Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
             });
 
-            // 5. REPORTES Y PDF
-            Route::get('/{id}/pdf/modulo/{modulo}', [MonitoreoController::class, 'generarPdfModulo'])->name('pdf.modulo');
+            // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
-
-            // 6. VISUALIZACIÓN (Al final para evitar capturar rutas previas con el slug)
             Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
         });
     });
 
-    // --- RUTAS DE ADMINISTRADOR ---
+    // --- GRUPO ADMINISTRADOR ---
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-        
         Route::prefix('gestionar-usuarios')->name('users.')->group(function () {
             Route::get('/', [AdminController::class, 'usersIndex'])->name('index');
             Route::get('/crear-usuario', [AdminController::class, 'usersCreate'])->name('create');

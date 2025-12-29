@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
 use App\Models\Establecimiento;
-use App\Models\User;
 use App\Models\MonitoreoModulos; 
 use App\Models\MonitoreoEquipo; 
 use Illuminate\Http\Request;
@@ -12,11 +11,12 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MonitoreoController extends Controller
 {
     /**
-     * Listado principal de monitoreos con filtros de búsqueda.
+     * Listado principal de monitoreos con filtros de búsqueda y paginación.
      */
     public function index(Request $request)
     {
@@ -38,6 +38,7 @@ class MonitoreoController extends Controller
         }
 
         $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
+        
         $countCompletados = (clone $query)->where('firmado', 1)->count();
         $implementadores = CabeceraMonitoreo::distinct()->pluck('implementador');
         $provincias = Establecimiento::distinct()->pluck('provincia');
@@ -46,7 +47,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * Muestra la vista de creación de nueva acta.
+     * Vista de creación de nueva acta (Paso 1).
      */
     public function create()
     {
@@ -54,15 +55,13 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * AJAX: Buscador inteligente para equipo de monitoreo.
-     * SOLUCIÓN DUPLICADOS: Usa groupBy('doc') para que cada persona salga una sola vez.
+     * AJAX: Buscador inteligente para equipo de monitoreo (Autocomplete).
      */
     public function buscarFiltro(Request $request)
     {
         $term = trim($request->term);
         if (empty($term)) return response()->json([]);
 
-        // Usamos MAX() para que MySQL permita el agrupamiento en modo estricto
         $equipo = MonitoreoEquipo::select(
                         'doc', 
                         DB::raw('MAX(tipo_doc) as tipo_doc'),
@@ -76,7 +75,7 @@ class MonitoreoController extends Controller
                         $q->where('doc', 'LIKE', "%$term%")
                           ->orWhere('apellido_paterno', 'LIKE', "%$term%");
                     })
-                    ->groupBy('doc') // Asegura unicidad por DNI
+                    ->groupBy('doc')
                     ->limit(10)
                     ->get();
                     
@@ -84,7 +83,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * Busca un miembro específico por DNI para carga rápida en formularios.
+     * AJAX: Busca un miembro específico por DNI.
      */
     public function buscarMiembroEquipo($doc)
     {
@@ -144,7 +143,6 @@ class MonitoreoController extends Controller
 
             foreach ($request->equipo as $persona) {
                 if (!empty($persona['doc'])) {
-                    // Tras la migración, cada fila tiene su propio ID
                     MonitoreoEquipo::create([
                         'cabecera_monitoreo_id' => $monitoreo->id, 
                         'tipo_doc'              => $persona['tipo_doc'] ?? 'DNI',
@@ -169,7 +167,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * PANEL DE MÓDULOS (18 Módulos + Gestión de Toggles).
+     * PANEL CENTRAL DE GESTIÓN MODULAR (18 Módulos).
      */
     public function gestionarModulos($id)
     {
@@ -201,17 +199,22 @@ class MonitoreoController extends Controller
                             ->pluck('modulo_nombre')
                             ->toArray();
 
+        $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->whereNotNull('pdf_firmado_path')
+                            ->pluck('modulo_nombre')
+                            ->toArray();
+
         $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', 'config_modulos')
                     ->first();
         
         $modulosActivos = $config ? $config->contenido : array_keys($modulosMaster);
 
-        return view('usuario.monitoreo.modulos', compact('acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos'));
+        return view('usuario.monitoreo.modulos', compact('acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'));
     }
 
     /**
-     * AJAX: Guarda la configuración de módulos activos (toggles).
+     * AJAX: Guarda la configuración persistente de los interruptores del panel.
      */
     public function toggleModulos(Request $request, $id)
     {
@@ -227,80 +230,64 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * GUARDAR CONTENIDO DE UN MÓDULO.
+     * Muestra el resumen de una acta completa (Vista Previa).
      */
-    public function guardarDetalle(Request $request, $id)
+    public function show($id)
     {
-        $modulo = $request->input('modulo_nombre');
-        $datos = $request->input('contenido');
+        $monitoreo = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'user'])->findOrFail($id);
+        
+        $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                    ->where('modulo_nombre', '!=', 'config_modulos')
+                    ->get();
 
-        if (!$modulo) return back()->withErrors('Módulo no identificado.');
+        return view('usuario.monitoreo.show', compact('monitoreo', 'detalles'));
+    }
 
+    /**
+     * Eliminar Acta de Monitoreo.
+     */
+    public function destroy($id)
+    {
         try {
-            MonitoreoModulos::updateOrCreate(
-                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
-                ['contenido' => $datos]
-            );
-            return redirect()->route('usuario.monitoreo.modulos', $id)
-                             ->with('success', "Módulo guardado correctamente.");
+            DB::beginTransaction();
+            $monitoreo = CabeceraMonitoreo::findOrFail($id);
+            
+            // Eliminar archivos físicos asociados (firmas y evidencias)
+            $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->get();
+            foreach($modulos as $m) {
+                if($m->pdf_firmado_path) Storage::disk('public')->delete($m->pdf_firmado_path);
+                if(isset($m->contenido['foto_evidencia'])) Storage::disk('public')->delete($m->contenido['foto_evidencia']);
+            }
+            
+            $monitoreo->delete(); // OnCascade debería borrar equipo y módulos
+            
+            DB::commit();
+            return redirect()->route('usuario.monitoreo.index')->with('success', 'Acta eliminada correctamente.');
         } catch (\Exception $e) {
-            return back()->withErrors('Error: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Error al eliminar: ' . $e->getMessage());
         }
     }
 
     /**
-     * CARGAR VISTA DE MÓDULO ESPECÍFICO.
-     */
-    public function cargarSeccionModulo($id, $seccion)
-    {
-        $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
-        
-        $vistas = [
-            'gestion_administrativa' => 'usuario.monitoreo.modulos.gestion_administrativa',
-            'citas'                  => 'usuario.monitoreo.modulos.citas',
-            'triaje'                 => 'usuario.monitoreo.modulos.triaje',
-            'consulta_medicina'      => 'usuario.monitoreo.modulos.medicina',
-            'consulta_odontologia'   => 'usuario.monitoreo.modulos.odontologia',
-            'consulta_nutricion'     => 'usuario.monitoreo.modulos.nutricion',
-            'consulta_psicologia'    => 'usuario.monitoreo.modulos.psicologia',
-            'cred'                   => 'usuario.monitoreo.modulos.cred',
-            'inmunizaciones'         => 'usuario.monitoreo.modulos.inmunizaciones',
-            'atencion_prenatal'      => 'usuario.monitoreo.modulos.prenatal',
-            'planificacion_familiar' => 'usuario.monitoreo.modulos.planificacion',
-            'parto'                  => 'usuario.monitoreo.modulos.parto',
-            'puerperio'              => 'usuario.monitoreo.modulos.puerperio',
-            'fua_electronico'        => 'usuario.monitoreo.modulos.fua',
-            'farmacia'               => 'usuario.monitoreo.modulos.farmacia',
-            'referencias'            => 'usuario.monitoreo.modulos.referencias',
-            'laboratorio'            => 'usuario.monitoreo.modulos.laboratorio',
-            'urgencias'              => 'usuario.monitoreo.modulos.urgencias',
-        ];
-
-        if (!array_key_exists($seccion, $vistas)) abort(404);
-
-        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', $seccion)
-                    ->first();
-
-        return view($vistas[$seccion], compact('acta', 'seccion', 'detalle'));
-    }
-
-    /**
-     * GENERAR PDF DEL ACTA.
+     * MOTOR PDF: Generar Acta Consolidada.
      */
     public function generarPDF($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
-        $logoPath = public_path('img/logo.png'); 
-        $logoBase64 = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+        
+        $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                    ->where('modulo_nombre', '!=', 'config_modulos')
+                    ->get()
+                    ->keyBy('modulo_nombre');
 
-        return Pdf::loadView('usuario.monitoreo.pdf', compact('acta', 'logoBase64'))
+        return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))
                   ->setPaper('a4', 'portrait')
-                  ->stream("ACTA_MONITOREO_{$acta->id}.pdf");
+                  ->stream("ACTA_CONSOLIDADA_NRO_{$acta->id}.pdf");
     }
 
     /**
-     * SUBIR PDF FIRMADO.
+     * SUBIR PDF CONSOLIDADO FIRMADO.
      */
     public function subirPDF(Request $request, $id)
     {
@@ -309,9 +296,9 @@ class MonitoreoController extends Controller
 
         if ($request->hasFile('pdf_firmado')) {
             if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
-            $path = $request->file('pdf_firmado')->store('monitoreos_firmados', 'public');
+            $path = $request->file('pdf_firmado')->store('monitoreos_firmados/consolidados', 'public');
             $monitoreo->update(['firmado_pdf' => $path, 'firmado' => true]);
         }
-        return back()->with('success', 'Archivo cargado con éxito.');
+        return back()->with('success', 'Acta consolidada cargada con éxito.');
     }
 }
