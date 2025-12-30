@@ -1,9 +1,9 @@
 @extends('layouts.usuario')
 
-@section('title', 'Panel de Gestión Modular - ' . $acta->establecimiento->nombre)
+@section('title', 'Gestión Modular | ' . $acta->establecimiento->nombre)
 
 @section('content')
-<div class="py-12 bg-[#f8fafc] min-h-screen" 
+<div class="py-12 bg-[#f4f7fa] min-h-screen" 
      x-data="{ 
         activos: {{ json_encode($modulosActivos) }},
         modulosFirmados: {{ json_encode($modulosFirmados ?? []) }},
@@ -27,7 +27,7 @@
                     body: JSON.stringify({ modulos_activos: this.activos })
                 });
             } catch (error) {
-                console.error('Error al guardar configuración:', error);
+                console.error('Error de sincronización:', error);
             }
         },
         openUpload(slug, name) {
@@ -37,211 +37,207 @@
         },
         init() {
             this.$watch('activos', () => {
-                this.$nextTick(() => {
-                    if (typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-                });
+                this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
             });
         }
      }">
     
-    <div class="max-w-5xl mx-auto px-6">
+    <div class="max-w-6xl mx-auto px-6">
         
-        {{-- ENCABEZADO --}}
-        <div class="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-2xl shadow-slate-200/60 mb-10 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-full -mr-20 -mt-20 opacity-60"></div>
-            
-            <div class="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+        {{-- ENCABEZADO EJECUTIVO --}}
+        <div class="bg-indigo-900 rounded-[2.5rem] p-10 shadow-2xl mb-12 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10 text-white">
                 <div class="flex items-center gap-8">
-                    <div class="h-20 w-20 rounded-3xl bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200">
-                        <i data-lucide="layout-dashboard" class="text-white w-10 h-10"></i>
+                    <div class="h-20 w-20 rounded-3xl bg-indigo-500 flex items-center justify-center shadow-lg border border-indigo-400">
+                        <i data-lucide="layout-grid" class="text-white w-10 h-10"></i>
                     </div>
                     <div>
-                        <div class="flex items-center gap-3">
-                            <span class="px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase tracking-[0.15em]">SISTEMA MODULAR</span>
-                            <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">ID #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="px-3 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Panel Activo</span>
+                            <span class="text-indigo-200 text-[11px] font-bold uppercase tracking-widest">ID Registro #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                         </div>
-                        <h2 class="text-3xl font-black text-slate-900 mt-2 italic tracking-tight">{{ $acta->establecimiento->nombre }}</h2>
+                        <h2 class="text-3xl font-black tracking-tight uppercase italic">{{ $acta->establecimiento->nombre }}</h2>
+                        <p class="text-indigo-300/80 text-xs font-bold mt-1 uppercase tracking-widest">Gestión de Cumplimiento y Certificación Modular</p>
                     </div>
                 </div>
-                <a href="{{ route('usuario.monitoreo.index') }}" class="group flex items-center gap-3 px-8 py-4 rounded-2xl border-2 border-slate-100 text-slate-400 font-black text-xs hover:bg-slate-50 transition-all uppercase tracking-widest">
-                    <i data-lucide="chevron-left" class="w-4 h-4"></i> Volver
+                <a href="{{ route('usuario.monitoreo.index') }}" class="group flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/10 hover:bg-white hover:text-indigo-900 border border-white/20 transition-all font-black text-xs uppercase tracking-widest">
+                    <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i> Volver
                 </a>
             </div>
         </div>
 
-        {{-- CUERPO DEL PANEL --}}
-        <div class="space-y-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between px-6 gap-4">
-                <div class="space-y-1">
-                    <h3 class="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em]">Módulos de Evaluación Técnica</h3>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Active los módulos que desea evaluar para esta IPRESS</p>
-                </div>
+        {{-- GRID DE MÓDULOS --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            @foreach($modulosMaster as $slug => $data)
+            @php 
+                $isCompleted = in_array($slug, $modulosGuardados); 
+                $isSigned = in_array($slug, $modulosFirmados ?? []); 
+                $routeSlug = str_replace('_', '-', $slug);
+                $routeName = "usuario.monitoreo.{$routeSlug}.index";
+                $pdfRouteName = "usuario.monitoreo.{$routeSlug}.pdf";
+                $hasRoute = Route::has($routeName);
+                $viewSignedRoute = Route::has('usuario.monitoreo.ver-pdf-firmado') ? route('usuario.monitoreo.ver-pdf-firmado', [$acta->id, $slug]) : '#';
+            @endphp
+            
+            <div class="relative bg-white rounded-[2.5rem] border-2 transition-all duration-500 group overflow-hidden flex flex-col"
+                 :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'border-emerald-200' : 'border-indigo-100' }} shadow-xl' : 'border-transparent bg-slate-100 opacity-60 grayscale'">
                 
-                <div class="flex flex-col items-end">
-                    <span class="text-[11px] font-black text-indigo-600 bg-indigo-50 px-5 py-2 rounded-full uppercase tracking-widest border border-indigo-100 shadow-sm">
-                        <span x-text="activos.filter(a => modulosGuardados.includes(a)).length"></span> / <span x-text="activos.length"></span> Completados
-                    </span>
-                    <div class="w-48 h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
-                        <div class="h-full bg-indigo-500 transition-all duration-1000" 
-                             :style="`width: ${(activos.filter(a => modulosGuardados.includes(a)).length / (activos.length || 1)) * 100}%` "></div>
+                {{-- CABECERA: Icono y Switch --}}
+                <div class="p-6 pb-0 flex justify-between items-start z-10">
+                    <div :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'bg-emerald-500' : 'bg-indigo-600' }}' : 'bg-slate-300'"
+                         class="h-14 w-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-500">
+                        <i data-lucide="{{ $data['icon'] }}" class="w-7 h-7"></i>
                     </div>
+
+                    <button @click="toggle('{{ $slug }}')" 
+                            :class="activos.includes('{{ $slug }}') ? 'bg-indigo-600' : 'bg-slate-400'"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shadow-inner">
+                        <span :class="activos.includes('{{ $slug }}') ? 'translate-x-6' : 'translate-x-1'"
+                              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300"></span>
+                    </button>
                 </div>
-            </div>
 
-            {{-- GRID DE MÓDULOS --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                @foreach($modulosMaster as $slug => $data)
-                @php 
-                    $isCompleted = in_array($slug, $modulosGuardados); 
-                    $isSigned = in_array($slug, $modulosFirmados ?? []); 
-                    $routeSlug = str_replace('_', '-', $slug);
-                    $routeName = "usuario.monitoreo.{$routeSlug}.index";
-                    $pdfRouteName = "usuario.monitoreo.{$routeSlug}.pdf";
-                    
-                    $hasRoute = Route::has($routeName);
-                    $hasPdfRoute = Route::has($pdfRouteName);
-                    $viewSignedRoute = route('usuario.monitoreo.ver-pdf-firmado', [$acta->id, $slug]);
-                @endphp
-                
-                <div class="relative bg-white border rounded-[2.5rem] flex items-center shadow-sm transition-all duration-500 group"
-                     :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-200 bg-white' }}' : 'border-slate-100 bg-slate-100/50 opacity-60 grayscale cursor-not-allowed'">
-                    
-                    {{-- TOGGLE --}}
-                    <div class="absolute -top-3 -right-2 z-20">
-                        <button @click="toggle('{{ $slug }}')" 
-                                :class="activos.includes('{{ $slug }}') ? 'bg-indigo-600' : 'bg-slate-300'"
-                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shadow-md">
-                            <span :class="activos.includes('{{ $slug }}') ? 'translate-x-6' : 'translate-x-1'"
-                                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
-                        </button>
-                    </div>
-
-                    <div class="flex flex-1 items-center overflow-hidden">
-                        {{-- MÓDULO HABILITADO --}}
-                        <template x-if="activos.includes('{{ $slug }}')">
-                            <div class="flex items-center w-full">
-                                @if($hasRoute)
-                                    <a href="{{ route($routeName, $acta->id) }}" class="flex items-center gap-6 p-4 flex-1 rounded-[2rem] hover:bg-white hover:shadow-inner transition-all">
-                                        <div class="h-16 w-16 rounded-2xl {{ $isCompleted ? 'bg-emerald-500 text-white' : 'bg-indigo-50 text-indigo-500' }} flex items-center justify-center group-hover:scale-105 transition-all">
-                                            <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-[13px] font-black text-slate-800 uppercase tracking-tight">{{ $data['nombre'] }}</p>
-                                            <div class="flex items-center gap-2 mt-1">
-                                                <p class="text-[9px] font-bold {{ $isCompleted ? 'text-emerald-500' : 'text-slate-400' }} uppercase">
-                                                    {{ $isCompleted ? 'Completado' : 'Habilitado - Click para evaluar' }}
-                                                </p>
-                                                @if($isSigned)
-                                                    <span class="px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-md uppercase flex items-center gap-1">
-                                                        <i data-lucide="check" class="w-2 h-2"></i> Firmado
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </a>
-                                @else
-                                    <div class="flex items-center gap-6 p-4 flex-1 opacity-50">
-                                        <div class="h-16 w-16 rounded-2xl bg-slate-200 text-slate-400 flex items-center justify-center">
-                                            <i data-lucide="settings-2" class="w-8 h-8"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-[13px] font-black text-slate-500 uppercase tracking-tight">{{ $data['nombre'] }}</p>
-                                            <p class="text-[9px] font-bold text-slate-400 uppercase italic mt-1">En desarrollo técnico</p>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </template>
-
-                        {{-- MÓDULO INHABILITADO --}}
-                        <template x-if="!activos.includes('{{ $slug }}')">
-                            <div class="flex items-center gap-6 p-4 flex-1 select-none">
-                                <div class="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-sm">
-                                    <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8 text-slate-300"></i>
-                                </div>
-                                <div>
-                                    <p class="text-[13px] font-black text-slate-300 uppercase tracking-tight">{{ $data['nombre'] }}</p>
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-1.5 flex items-center gap-2">
-                                        <i data-lucide="lock" class="w-3 h-3"></i> Módulo Inactivo
-                                    </p>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-
-                    {{-- ACCIONES DE PDF (Solo visibles si está habilitado y completado) --}}
-                    <div class="flex items-center gap-2 px-4" x-show="activos.includes('{{ $slug }}') && {{ $isCompleted ? 'true' : 'false' }}">
-                        @if($hasPdfRoute)
-                        <a href="{{ route($pdfRouteName, $acta->id) }}" target="_blank" class="h-9 w-9 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-indigo-600 transition-all shadow-sm">
-                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                {{-- CUERPO: Link Directo --}}
+                <div class="flex-1">
+                    <template x-if="activos.includes('{{ $slug }}')">
+                        @if($hasRoute)
+                        <a href="{{ route($routeName, $acta->id) }}" class="block p-6 group/link">
+                            <h3 class="text-slate-800 text-sm font-black uppercase tracking-tight leading-tight mb-2 group-hover/link:text-indigo-600 transition-colors">
+                                {{ $data['nombre'] }}
+                            </h3>
+                            <span class="text-[9px] font-black uppercase tracking-widest {{ $isCompleted ? 'text-emerald-500' : 'text-indigo-500' }}">
+                                {{ $isCompleted ? '✓ Evaluación Registrada' : '● Módulo Habilitado' }}
+                            </span>
                         </a>
+                        @else
+                        <div class="p-6 opacity-50">
+                            <h3 class="text-slate-500 text-sm font-black uppercase tracking-tight leading-tight mb-2">{{ $data['nombre'] }}</h3>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase italic">En desarrollo técnico</span>
+                        </div>
                         @endif
-                        
-                        <button @click="openUpload('{{ $slug }}', '{{ $data['nombre'] }}')" class="h-9 w-9 rounded-xl {{ $isSigned ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white' }} flex items-center justify-center hover:scale-105 transition-all shadow-sm">
-                            <i data-lucide="{{ $isSigned ? 'refresh-cw' : 'upload' }}" class="w-4 h-4"></i>
-                        </button>
+                    </template>
+
+                    <template x-if="!activos.includes('{{ $slug }}')">
+                        <div class="p-6">
+                            <h3 class="text-slate-400 text-sm font-black uppercase tracking-tight leading-tight mb-2">{{ $data['nombre'] }}</h3>
+                            <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center gap-2">
+                                <i data-lucide="lock" class="w-3 h-3"></i> Inactivo
+                            </span>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- ACCIONES DE ARCHIVOS (Solo si hay datos registrados) --}}
+                <div class="p-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2" 
+                     x-show="activos.includes('{{ $slug }}') && modulosGuardados.includes('{{ $slug }}')">
+                    
+                    @if(Route::has($pdfRouteName))
+                    <a href="{{ route($pdfRouteName, $acta->id) }}" target="_blank" class="h-10 w-10 bg-white text-slate-600 border border-slate-200 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm" title="Previsualizar Reporte">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    </a>
+                    @endif
+                    
+                    {{-- BOTÓN CERTIFICAR: Rediseñado para impacto ejecutivo --}}
+                    <button @click="openUpload('{{ $slug }}', '{{ $data['nombre'] }}')" 
+                            class="flex-1 h-10 px-4 {{ $isSigned ? 'bg-emerald-600' : 'bg-slate-900' }} text-white rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-md group/btn" 
+                            title="Certificar mediante PDF Firmado">
+                        <i data-lucide="{{ $isSigned ? 'shield-check' : 'file-signature' }}" class="w-4 h-4 {{ $isSigned ? 'text-emerald-200' : 'text-indigo-300' }}"></i>
+                        <span class="text-[9px] font-black uppercase tracking-[0.1em]">
+                            {{ $isSigned ? 'Módulo Firmado' : 'Firmar Módulo' }}
+                        </span>
+                    </button>
+
+                    @if($isSigned)
+                    <a href="{{ $viewSignedRoute }}" target="_blank" class="h-10 w-10 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Ver Documento Escaneado">
+                        <i data-lucide="eye" class="w-5 h-5"></i>
+                    </a>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        {{-- BOTÓN CONSOLIDADO --}}
+        <div class="mt-20 mb-10">
+            <a href="{{ route('usuario.monitoreo.pdf', $acta->id) }}" target="_blank" 
+               class="group w-full bg-indigo-950 text-white p-10 rounded-[3rem] shadow-2xl flex items-center justify-between hover:bg-black transition-all duration-500 relative overflow-hidden">
+                <div class="flex items-center gap-10 relative z-10">
+                    <div class="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-all duration-500 border border-white/20">
+                        <i data-lucide="award" class="w-8 h-8"></i>
+                    </div>
+                    <div class="text-left">
+                        <h4 class="text-2xl font-black uppercase tracking-tighter leading-none mb-2">Acta Consolidada</h4>
+                        <p class="text-[10px] text-indigo-300 group-hover:text-white/70 font-bold uppercase tracking-[0.2em]">Generar reporte final de asistencia técnica</p>
                     </div>
                 </div>
-                @endforeach
-            </div>
-
-            {{-- BOTÓN CONSOLIDADO --}}
-            <div class="pt-12">
-                <a href="{{ route('usuario.monitoreo.pdf', $acta->id) }}" target="_blank" 
-                   class="w-full group bg-slate-900 text-white p-10 rounded-[3.5rem] font-black shadow-2xl flex items-center justify-between hover:bg-black hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
-                    <div class="flex items-center gap-8 relative z-10">
-                        <div class="h-16 w-16 bg-indigo-500 rounded-3xl flex items-center justify-center group-hover:rotate-6 transition-all duration-500">
-                            <i data-lucide="file-check" class="w-8 h-8 text-white"></i>
-                        </div>
-                        <div class="text-left">
-                            <p class="text-lg uppercase tracking-[0.3em] leading-none">Generar Acta Consolidada</p>
-                            <p class="text-[11px] text-slate-400 font-bold uppercase mt-3 italic">Unificar todos los módulos habilitados</p>
-                        </div>
-                    </div>
-                    <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
-                        <i data-lucide="arrow-right" class="w-7 h-7"></i>
-                    </div>
-                </a>
-            </div>
+                <i data-lucide="arrow-right" class="mr-6 w-8 h-8 group-hover:translate-x-2 transition-transform"></i>
+            </a>
         </div>
     </div>
 
     {{-- MODAL DE SUBIDA --}}
     <div x-show="showModal" 
-         class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
-         x-cloak
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-90"
-         x-transition:enter-end="opacity-100 scale-100">
+         class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md" 
+         x-cloak 
+         x-transition
+         x-data="{ fileName: '' }"> {{-- Inicializamos el nombre del archivo vacío --}}
         
-        <div class="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden" @click.away="showModal = false">
-            <div class="bg-indigo-600 p-8 text-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="text-xl font-black uppercase tracking-tight" x-text="currentModuleName"></h3>
-                        <p class="text-indigo-200 text-xs font-bold uppercase mt-2">Documento Escaneado / Firmado</p>
-                    </div>
-                    <button @click="showModal = false" class="text-white/50 hover:text-white transition-colors">
-                        <i data-lucide="x" class="w-6 h-6"></i>
-                    </button>
-                </div>
+        <div class="bg-white rounded-[3rem] shadow-2xl max-w-md w-full overflow-hidden" @click.away="showModal = false; fileName = ''">
+            <div class="bg-slate-900 p-10 text-white relative">
+                <h3 class="text-2xl font-black uppercase tracking-tight" x-text="currentModuleName"></h3>
+                <p class="text-indigo-400 text-[10px] font-black uppercase mt-2 tracking-widest">Carga de Evidencia Firmada</p>
+                <button @click="showModal = false; fileName = ''" class="absolute top-10 right-10 text-white/50 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
             </div>
-            
-            <form action="{{ route('usuario.monitoreo.subir-pdf-firmado', $acta->id) }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+
+            <form action="{{ route('usuario.monitoreo.subir-pdf-firmado', $acta->id) }}" method="POST" enctype="multipart/form-data" class="p-10 space-y-8">
                 @csrf
                 <input type="hidden" name="modulo" :value="currentModule">
                 
-                <div class="border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center justify-center group hover:border-indigo-400 transition-all cursor-pointer relative">
-                    <input type="file" name="pdf_firmado" accept="application/pdf" required class="absolute inset-0 opacity-0 cursor-pointer">
-                    <i data-lucide="file-up" class="w-12 h-12 text-slate-300 group-hover:text-indigo-500 mb-4 transition-colors"></i>
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Seleccionar archivo PDF firmado</span>
+                <div class="border-4 border-dashed rounded-[2.5rem] p-12 flex flex-col items-center justify-center transition-all cursor-pointer relative"
+                     :class="fileName ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'">
+                    
+                    {{-- Input de archivo con listener de cambio --}}
+                    <input type="file" 
+                           name="pdf_firmado" 
+                           accept="application/pdf" 
+                           required 
+                           class="absolute inset-0 opacity-0 cursor-pointer"
+                           @change="fileName = $event.target.files[0].name">
+
+                    {{-- Icono dinámico: Cambia si hay archivo --}}
+                    <template x-if="!fileName">
+                        <div class="text-center">
+                            <i data-lucide="upload-cloud" class="w-12 h-12 text-slate-300 mb-4 mx-auto"></i>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Seleccionar Acta en PDF</span>
+                        </div>
+                    </template>
+
+                    {{-- Vista de confirmación: Muestra el nombre del archivo --}}
+                    <template x-if="fileName">
+                        <div class="text-center animate-bounce-short">
+                            <i data-lucide="file-check" class="w-12 h-12 text-emerald-500 mb-4 mx-auto"></i>
+                            <p class="text-xs font-black text-emerald-700 uppercase tracking-tight">Archivo listo para cargar:</p>
+                            <p class="text-[11px] font-bold text-slate-600 mt-1 break-all" x-text="fileName"></p>
+                        </div>
+                    </template>
                 </div>
 
-                <div class="flex gap-4 mt-8">
-                    <button type="button" @click="showModal = false" class="flex-1 px-6 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-xs uppercase hover:bg-slate-200 transition-all">Cancelar</button>
-                    <button type="submit" class="flex-1 px-6 py-4 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase shadow-lg hover:bg-indigo-700 transition-all">Subir Firma</button>
+                <div class="space-y-3">
+                    <button type="submit" 
+                            class="w-full py-5 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase shadow-xl hover:bg-slate-900 transition-all tracking-[0.2em]"
+                            :disabled="!fileName"
+                            :class="!fileName ? 'opacity-50 cursor-not-allowed' : ''">
+                        Confirmar Certificación
+                    </button>
+                    
+                    <button type="button" 
+                            @click="showModal = false; fileName = ''" 
+                            class="w-full py-3 text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-slate-600 transition-colors">
+                        Cancelar
+                    </button>
                 </div>
             </form>
         </div>
