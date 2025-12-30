@@ -55,7 +55,7 @@
                     </select>
                 </div>
 
-                <div id="section_programador" class="{{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'NO') ? '' : 'hidden' }} mt-6 p-8 bg-orange-50/30 rounded-[2.5rem] border-2 border-dashed border-orange-200 animate-in fade-in zoom-in duration-300">
+                <div id="section_programador" class="{{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'NO') ? '' : 'hidden' }} mt-6 p-8 bg-orange-50/30 rounded-[2.5rem] border-2 border-dashed border-orange-200">
                     <p class="text-orange-700 font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
                         <i data-lucide="user-cog" class="w-4 h-4"></i> ¿Quién programa los turnos y consultorios?
                     </p>
@@ -77,8 +77,8 @@
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">4. Entidad Capacitadora</label>
                         <select name="contenido[inst_que_lo_capacito]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all">
                             <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
-                            <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA / GERESA</option>
-                            <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS / PRIVADOS</option>
+                            <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
+                            <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
                         </select>
                     </div>
                 </div>
@@ -127,32 +127,38 @@
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-indigo-400 mb-6 flex items-center gap-2">
                             <i data-lucide="message-square" class="w-5 h-5"></i> Comentarios
                         </h3>
-                        <textarea name="contenido[comentarios]" rows="5" class="w-full bg-white/5 border-2 border-white/10 rounded-3xl p-6 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/20 shadow-inner" placeholder="OBSERVACIONES...">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
+                        <textarea name="contenido[comentarios]" rows="5" class="w-full bg-white/5 border-2 border-white/10 rounded-3xl p-6 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/20 shadow-inner">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
                     </div>
                     
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-red-400 mb-6 flex items-center gap-2">
                             <i data-lucide="camera" class="w-5 h-5"></i> Evidencia Fotográfica
                         </h3>
+                        
+                        {{-- VISTA PREVIA DE IMAGEN EXISTENTE --}}
+                        @if(isset($detalle->contenido['foto_evidencia']))
+                            <div class="mb-6 relative group w-full max-w-xs">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
+                                <div class="rounded-3xl overflow-hidden border-4 border-indigo-500/30 shadow-2xl">
+                                    <img src="{{ asset('storage/' . $detalle->contenido['foto_evidencia']) }}" 
+                                         class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700">
+                                </div>
+                                <div class="absolute -top-2 -right-2 bg-emerald-500 text-white p-2 rounded-full shadow-lg">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="relative group">
                             <input type="file" name="foto_evidencia" id="foto_evidencia" {{ isset($detalle->contenido['foto_evidencia']) ? '' : 'required' }} accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
                             <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2.5rem] p-10 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all duration-500 shadow-inner">
                                 <i data-lucide="upload-cloud" id="upload-icon" class="w-10 h-10 text-indigo-400 mb-4"></i>
                                 <span id="file-name-display" class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center leading-relaxed">
-                                    {{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA CAMBIAR IMAGEN' : 'SELECCIONAR IMAGEN CORPORATIVA' }}
+                                    {{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA REEMPLAZAR IMAGEN' : 'SUBIR FOTO DE EVIDENCIA' }}
                                 </span>
                                 <img id="img-preview" src="#" alt="Vista previa" class="hidden mt-4 w-32 h-32 object-cover rounded-2xl border-2 border-indigo-500 shadow-2xl">
                             </div>
                         </div>
-                        @if(isset($detalle->contenido['foto_evidencia']))
-                            <div class="mt-4 flex items-center gap-3 bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20">
-                                <i data-lucide="image-check" class="text-emerald-400 w-6 h-6"></i>
-                                <div>
-                                    <span class="block text-[10px] font-black text-emerald-400 uppercase tracking-widest">Imagen Verificada</span>
-                                    <p class="text-[9px] text-emerald-500/60 font-bold uppercase italic tracking-tighter">Archivo almacenado correctamente</p>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -179,8 +185,6 @@
     </div>
 </div>
 
-
-
 <script>
     function toggleProgramador(val) {
         const section = document.getElementById('section_programador');
@@ -200,14 +204,13 @@
                 preview.src = e.target.result;
                 preview.classList.remove('hidden');
                 icon.classList.add('hidden');
-                fileName.innerText = "ARCHIVO SELECCIONADO: " + input.files[0].name.toUpperCase();
+                fileName.innerText = "NUEVA IMAGEN: " + input.files[0].name.toUpperCase();
                 dropzone.classList.add('bg-indigo-500/10', 'border-indigo-500');
             }
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    // CONTROL DE ENVÍO
     document.getElementById('form-monitoreo-final').onsubmit = function() {
         const btn = document.getElementById('btn-submit-action');
         const icon = document.getElementById('icon-save-loader');
@@ -215,11 +218,10 @@
         btn.disabled = true;
         btn.classList.add('opacity-50', 'cursor-not-allowed');
         
-        // Cambiar icono a loader si lucide existe
         icon.innerHTML = '<i data-lucide="loader-2" class="w-8 h-8 text-white animate-spin"></i>';
         if (typeof lucide !== 'undefined') lucide.createIcons();
         
-        return true; // Permitir envío al controlador
+        return true;
     };
 </script>
 @endsection

@@ -55,10 +55,10 @@
                     <div>
                         <div class="flex items-center gap-3 mb-2">
                             <span class="px-3 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Panel Activo</span>
-                            <span class="text-indigo-200 text-[11px] font-bold uppercase tracking-widest">ID Registro #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                            <span class="text-indigo-200 text-[11px] font-bold uppercase tracking-widest">ACTA DE MONITOREO N°{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                         </div>
                         <h2 class="text-3xl font-black tracking-tight uppercase italic">{{ $acta->establecimiento->nombre }}</h2>
-                        <p class="text-indigo-300/80 text-xs font-bold mt-1 uppercase tracking-widest">Gestión de Cumplimiento y Certificación Modular</p>
+                        <p class="text-indigo-300/80 text-xs font-bold mt-1 uppercase tracking-widest">Resumen de modulos activos en el establecimiento</p>
                     </div>
                 </div>
                 <a href="{{ route('usuario.monitoreo.index') }}" class="group flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/10 hover:bg-white hover:text-indigo-900 border border-white/20 transition-all font-black text-xs uppercase tracking-widest">

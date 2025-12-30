@@ -14,7 +14,7 @@
             </div>
             <div>
                 <span id="badge_text_{{$prefix}}" class="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] block mb-1 leading-none">Módulo de Identidad</span>
-                <p id="sub_text_{{$prefix}}" class="text-[11px] text-slate-400 font-bold uppercase tracking-tight italic">Validación de Personal en el Sistema</p>
+                <p id="sub_text_{{$prefix}}" class="text-[11px] text-slate-400 font-bold uppercase tracking-tight italic">Validación de datos del profesional</p>
             </div>
         </div>
         
@@ -44,7 +44,6 @@
                 <div class="relative group/input">
                     <input type="text" name="contenido[{{$prefix}}][doc]" id="doc_{{$prefix}}" 
                            value="{{ $detalle->contenido[$prefix]['doc'] ?? '' }}" 
-                           placeholder="00000000"
                            class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-black text-slate-700 tracking-widest text-sm shadow-sm">
                     <i data-lucide="fingerprint" class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200 group-focus-within/input:text-indigo-400 transition-colors"></i>
                 </div>
@@ -57,8 +56,8 @@
                     <select name="contenido[{{$prefix}}][tipo_doc]" id="tipo_{{$prefix}}" 
                             class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-600 text-sm cursor-pointer appearance-none shadow-sm">
                         @php $tDoc = $detalle->contenido[$prefix]['tipo_doc'] ?? 'DNI'; @endphp
-                        <option value="DNI" {{ $tDoc == 'DNI' ? 'selected' : '' }}>DOCUMENTO (DNI)</option>
-                        <option value="CE" {{ $tDoc == 'CE' ? 'selected' : '' }}>EXTRANJERÍA (C.E.)</option>
+                        <option value="DNI" {{ $tDoc == 'DNI' ? 'selected' : '' }}>DNI</option>
+                        <option value="CE" {{ $tDoc == 'CE' ? 'selected' : '' }}>C.E.</option>
                     </select>
                     <i data-lucide="chevron-down" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none"></i>
                 </div>
@@ -90,11 +89,10 @@
 
             {{-- EMAIL --}}
             <div class="md:col-span-4">
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Email Corporativo</label>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Email</label>
                 <div class="relative group/input">
                     <input type="email" name="contenido[{{$prefix}}][email]" id="email_{{$prefix}}" 
                            value="{{ $detalle->contenido[$prefix]['email'] ?? '' }}" 
-                           placeholder="ejemplo@minsa.gob.pe"
                            class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-indigo-600 text-sm shadow-sm">
                     <i data-lucide="mail" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-200 group-focus-within/input:text-indigo-400 transition-colors"></i>
                 </div>
@@ -159,8 +157,8 @@
         
         if(doc.length < 8) {
             Swal.fire({
-                title: 'DNI Inválido',
-                text: 'Ingrese un número de documento válido.',
+                title: 'N° DOC Inválido',
+                text: 'Ingrese un N° DOC válido.',
                 icon: 'error',
                 confirmButtonColor: '#0f172a'
             });
