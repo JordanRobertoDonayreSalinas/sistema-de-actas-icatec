@@ -154,25 +154,37 @@
                     </div>
                     
                     <div>
+                        @php
+                            // Normalize foto_evidencia to array format
+                            $fotosActuales = [];
+                            if (isset($detalle->contenido['foto_evidencia'])) {
+                                $fotoVal = $detalle->contenido['foto_evidencia'];
+                                if (is_array($fotoVal)) {
+                                    $fotosActuales = $fotoVal;
+                                } elseif (!empty($fotoVal)) {
+                                    $fotosActuales = [$fotoVal];
+                                }
+                            }
+                        @endphp
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-red-400 mb-6 flex items-center gap-2">
                             <i data-lucide="camera" class="w-5 h-5"></i> Evidencia Fotográfica
                         </h3>
                         <div class="relative group">
-                            <input type="file" name="foto_evidencia" id="foto_evidencia" {{ isset($detalle->contenido['foto_evidencia']) ? '' : 'required' }} accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
+                            <input type="file" name="foto_evidencia[]" id="foto_evidencia" {{ (count($fotosActuales) > 0) ? '' : 'required' }} accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
                             <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2.5rem] p-10 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all duration-500 shadow-inner">
                                 <i data-lucide="upload-cloud" id="upload-icon" class="w-10 h-10 text-indigo-400 mb-4"></i>
                                 <span id="file-name-display" class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center leading-relaxed">
-                                    {{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA CAMBIAR IMAGEN' : 'SELECCIONAR IMAGEN CORPORATIVA' }}
+                                    {{ count($fotosActuales) > 0 ? 'CLICK PARA AGREGAR/REEMPLAZAR IMÁGENES' : 'SELECCIONAR HASTA 5 IMÁGENES' }}
                                 </span>
-                                <img id="img-preview" src="#" alt="Vista previa" class="hidden mt-4 w-32 h-32 object-cover rounded-2xl border-2 border-indigo-500 shadow-2xl">
+                                <div id="img-previews" class="hidden mt-4 grid grid-cols-3 gap-3"></div>
                             </div>
                         </div>
-                        @if(isset($detalle->contenido['foto_evidencia']))
+                        @if(count($fotosActuales) > 0)
                             <div class="mt-4 flex items-center gap-3 bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20">
                                 <i data-lucide="image-check" class="text-emerald-400 w-6 h-6"></i>
                                 <div>
-                                    <span class="block text-[10px] font-black text-emerald-400 uppercase tracking-widest">Imagen Verificada</span>
-                                    <p class="text-[9px] text-emerald-500/60 font-bold uppercase italic tracking-tighter">Archivo almacenado correctamente</p>
+                                    <span class="block text-[10px] font-black text-emerald-400 uppercase tracking-widest">{{ count($fotosActuales) }} Imagen(es) Verificada(s)</span>
+                                    <p class="text-[9px] text-emerald-500/60 font-bold uppercase italic tracking-tighter">Archivo(s) almacenado(s) correctamente</p>
                                 </div>
                             </div>
                         @endif
@@ -210,21 +222,29 @@
 
     function previewImage(event) {
         const input = event.target;
-        const preview = document.getElementById('img-preview');
         const icon = document.getElementById('upload-icon');
         const fileName = document.getElementById('file-name-display');
         const dropzone = document.getElementById('dropzone');
+        const previews = document.getElementById('img-previews');
 
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                icon.classList.add('hidden');
-                fileName.innerText = "ARCHIVO SELECCIONADO: " + input.files[0].name.toUpperCase();
-                dropzone.classList.add('bg-indigo-500/10', 'border-indigo-500');
-            }
-            reader.readAsDataURL(input.files[0]);
+        previews.innerHTML = '';
+        if (input.files && input.files.length > 0) {
+            const maxFiles = 5;
+            const files = Array.from(input.files).slice(0, maxFiles);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'w-24 h-24 object-cover rounded-2xl border-2 border-indigo-500 shadow-2xl';
+                    previews.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+            previews.classList.remove('hidden');
+            icon.classList.add('hidden');
+            fileName.innerText = `${files.length} / 5 IMÁGENES SELECCIONADAS`;
+            dropzone.classList.add('bg-indigo-500/10', 'border-indigo-500');
         }
     }
 

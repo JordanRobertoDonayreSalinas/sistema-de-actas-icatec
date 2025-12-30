@@ -15,7 +15,13 @@
         .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%; }
         .uppercase { text-transform: uppercase; }
         .text-center { text-align: center; }
-        .foto { width: 100%; max-height: 300px; object-fit: contain; border: 1px solid #e2e8f0; }
+        /* Evidencia fotográfica: imagen única centrada en recuadro */
+        .foto-container { margin: 15px 0; padding: 15px; border: 2px solid #4f46e5; background-color: #f9fafc; text-align: center; }
+        .foto { display: block; margin: 0 auto; width: 100%; height: 280px; object-fit: contain; background-color: #ffffff; border: 1px solid #e2e8f0; }
+        /* Evidencia fotográfica: múltiples imágenes en grid con recuadro uniforme */
+        .foto-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin: 10px 0; padding: 10px; border: 2px solid #4f46e5; background-color: #f9fafc; }
+        .foto-grid-item { width: calc(50% - 6px); }
+        .foto-grid-item img { width: 100%; height: 150px; object-fit: contain; background-color: #ffffff; border: 1px solid #e2e8f0; display: block; }
         .materiales-list { padding: 8px; }
         .materiales-item { display: inline-block; padding: 3px 8px; background-color: #e0e7ff; border-radius: 4px; margin: 2px; font-size: 9px; }
     </style>
@@ -147,21 +153,21 @@
         {{ $detalle->contenido['comentarios'] ?? 'SIN COMENTARIOS.' }}
     </div>
 
-    @php
-        $fotoPath = $detalle->contenido['foto_evidencia'] ?? null;
-        $fotoData = null;
-        if ($fotoPath && file_exists(storage_path('app/public/' . $fotoPath))) {
-            $p = storage_path('app/public/' . $fotoPath);
-            $ext = pathinfo($p, PATHINFO_EXTENSION);
-            $fotoData = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($p));
-        }
-    @endphp
-
-    @if($fotoData)
+    @if(!empty($imagenesData) && is_array($imagenesData) && count($imagenesData) > 0)
         <div class="section-title">8. Evidencia Fotográfica</div>
-        <div style="text-align:center; margin-top:8px;">
-            <img src="{{ $fotoData }}" class="foto" alt="Evidencia">
-        </div>
+        @if(count($imagenesData) === 1)
+            <div class="foto-container">
+                <img src="{{ $imagenesData[0] }}" class="foto" alt="Evidencia">
+            </div>
+        @else
+            <div class="foto-grid">
+                @foreach($imagenesData as $img)
+                    <div class="foto-grid-item">
+                        <img src="{{ $img }}" alt="Evidencia">
+                    </div>
+                @endforeach
+            </div>
+        @endif
     @endif
 
     <div style="position: fixed; bottom: -10px; width: 100%; text-align: right; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px;">

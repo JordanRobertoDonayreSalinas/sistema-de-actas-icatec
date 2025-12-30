@@ -46,7 +46,8 @@ class ConsultaMedicinaController extends Controller
     public function store(Request $request, $id)
     {
         $request->validate([
-            'foto_evidencia' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
+            'foto_evidencia' => 'array|max:5',
+            'foto_evidencia.*' => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
         ]);
 
         try {
@@ -100,14 +101,26 @@ class ConsultaMedicinaController extends Controller
                                 ->where('modulo_nombre', $modulo)
                                 ->first();
 
+            // Normalize previous photos to array
+            $prevFotos = [];
+            if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+                $prev = $registroPrevio->contenido['foto_evidencia'];
+                if (is_array($prev)) $prevFotos = $prev;
+                elseif (!empty($prev)) $prevFotos = [$prev];
+            }
+
+            $nuevas = [];
             if ($request->hasFile('foto_evidencia')) {
-                if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
-                    Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
+                foreach ($request->file('foto_evidencia') as $file) {
+                    if (count($prevFotos) + count($nuevas) >= 5) break; // limit total to 5
+                    $nuevas[] = $file->store('evidencias_monitoreo', 'public');
                 }
-                $path = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
-                $datos['foto_evidencia'] = $path;
-            } elseif ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
-                $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'];
+            }
+
+            // Merge keeping previous first, then nuevas, cap at 5
+            $merged = array_values(array_slice(array_merge($prevFotos, $nuevas), 0, 5));
+            if (!empty($merged)) {
+                $datos['foto_evidencia'] = $merged;
             }
 
             // 4. GUARDADO DEL JSON

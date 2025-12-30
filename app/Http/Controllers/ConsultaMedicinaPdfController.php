@@ -6,6 +6,7 @@ use App\Models\CabeceraMonitoreo;
 use App\Models\MonitoreoModulos;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class ConsultaMedicinaPdfController extends Controller
 {
@@ -17,7 +18,22 @@ class ConsultaMedicinaPdfController extends Controller
                     ->where('modulo_nombre', 'consulta_medicina')
                     ->firstOrFail();
 
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.consulta_medicina', compact('acta', 'detalle'));
+        // Build array of data-URIs for up to 5 evidence images
+        $imagenesData = [];
+        $fotos = $detalle->contenido['foto_evidencia'] ?? null;
+        if ($fotos) {
+            $paths = is_array($fotos) ? $fotos : [$fotos];
+            foreach ($paths as $p) {
+                if ($p && Storage::disk('public')->exists($p)) {
+                    $ext = pathinfo($p, PATHINFO_EXTENSION);
+                    $data = Storage::disk('public')->get($p);
+                    $imagenesData[] = 'data:image/' . $ext . ';base64,' . base64_encode($data);
+                    if (count($imagenesData) >= 5) break;
+                }
+            }
+        }
+
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.consulta_medicina', compact('acta', 'detalle', 'imagenesData'));
 
         return $pdf->setPaper('a4', 'portrait')->stream("Modulo04_Consulta_Medicina_Acta_{$id}.pdf");
     }
