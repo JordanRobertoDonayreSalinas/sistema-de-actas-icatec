@@ -1,5 +1,5 @@
 @extends('layouts.usuario')
-@section('title', 'Monitoreo - Atención Pre Natal')
+@section('title', 'Monitoreo - Parto')
 
 @push('styles')
   <style>
@@ -317,10 +317,10 @@
 
 
     {{-- FORMULARIO --}}
-    <form action="{{ route('usuario.monitoreo.atencion-prenatal.create', $acta->id) }}" method="POST"
-      enctype="multipart/form-data" id="mainForm">
+    <form action="{{ route('usuario.monitoreo.parto.create', $acta->id) }}" method="POST" enctype="multipart/form-data"
+      id="mainForm">
       @csrf
-      <input type="hidden" name="modulo_nombre" value="atencion_prenatal">
+      <input type="hidden" name="modulo_nombre" value="parto">
 
       <div class="form-card">
 
@@ -328,7 +328,7 @@
         <div id="step-1" class="step-content active">
           <div class="mb-3 border-b border-slate-100 pb-2">
             <h2 class="text-xl font-bold text-slate-800">Datos Generales del Responsable</h2>
-            <p class="text-slate-500 text-xs">Información de Atención Prenatal</p>
+            <p class="text-slate-500 text-xs">Información del Modulo Parto</p>
           </div>
 
           <div class="mb-4">
@@ -572,16 +572,16 @@
                 <span class="text-xs font-bold text-slate-600 uppercase">¿Utiliza Reportes?</span>
                 <div class="toggle-group">
                   <label><input type="radio" name="contenido[gestion_reportes]" value="SI" class="toggle-radio"
-                      onchange="toggleReportesPrenatal(true)"
+                      onchange="toggleReportesParto(true)"
                       {{ ($registro->gestion_reportes ?? '') == 'SI' ? 'checked' : '' }}><span
                       class="toggle-btn">SÍ</span></label>
                   <label><input type="radio" name="contenido[gestion_reportes]" value="NO" class="toggle-radio"
-                      onchange="toggleReportesPrenatal(false)"
+                      onchange="toggleReportesParto(false)"
                       {{ ($registro->gestion_reportes ?? '') == 'NO' ? 'checked' : '' }}><span
                       class="toggle-btn">NO</span></label>
                 </div>
               </div>
-              <div id="div-reportes-prenatal-detalle"
+              <div id="div-reportes-parto-detalle"
                 class="{{ ($registro->gestion_reportes ?? '') == 'SI' ? '' : 'hidden' }}">
                 <label class="input-label mb-1">Si es "SI" ¿con quién lo socializa?</label>
                 <input type="text" name="contenido[gestion_reportes_socializa]" class="input-blue"
@@ -780,7 +780,7 @@
       loader.classList.remove('hidden');
       try {
         const res = await fetch(
-          `{{ route('usuario.monitoreo.atencion-prenatal.buscar.profesional') }}?type=doc&q=${doc}`);
+          `{{ route('usuario.monitoreo.parto.buscar.profesional') }}?type=doc&q=${doc}`);
         const data = await res.json();
         if (data.length > 0) rellenarDatos(data[0]);
       } finally {
@@ -812,7 +812,7 @@
       if (query.length < 3) return lista.classList.add('hidden');
       timeoutNombre = setTimeout(async () => {
         const res = await fetch(
-          `{{ route('usuario.monitoreo.atencion-prenatal.buscar.profesional') }}?type=name&q=${query}`);
+          `{{ route('usuario.monitoreo.parto.buscar.profesional') }}?type=name&q=${query}`);
         const data = await res.json();
         lista.innerHTML = '';
         if (data.length > 0) {
@@ -841,7 +841,7 @@
 
     window.toggleCapacitacion = (s) => document.getElementById('div-capacitacion-detalles').classList.toggle('hidden', !
       s);
-    window.toggleReportesPrenatal = (s) => document.getElementById('div-reportes-prenatal-detalle').classList.toggle(
+    window.toggleReportesParto = (s) => document.getElementById('div-reportes-parto-detalle').classList.toggle(
       'hidden', !s);
     window.toggleOtrosCapacitacion = (c) => document.getElementById('div-capacitacion-otros').classList.toggle('hidden', !
       c.checked);

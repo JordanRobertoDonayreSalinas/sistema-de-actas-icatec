@@ -14,6 +14,7 @@ use App\Http\Controllers\GestionAdministrativaController;
 use App\Http\Controllers\GestionAdministrativaPdfController;
 use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de firmas
 use App\Http\Controllers\EstablecimientoController;
+use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\UsuarioController;
 
@@ -107,6 +108,16 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [PrenatalController::class, 'index'])->name('index');
                 Route::post('/{id}', [PrenatalController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [PrenatalController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 12: Atencion Prenatal
+            Route::prefix('modulo/parto')->name('parto.')->group(function () {
+                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
+                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
+
+                Route::get('/{id}', [PartoController::class, 'index'])->name('index');
+                Route::post('/{id}', [PartoController::class, 'create'])->name('create');
+                Route::get('/{id}/pdf', [PartoController::class, 'generar'])->name('pdf');
             });
 
             // Motor de PDF consolidado y visor final
