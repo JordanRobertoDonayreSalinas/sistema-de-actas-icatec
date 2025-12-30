@@ -14,6 +14,7 @@ use App\Http\Controllers\GestionAdministrativaController;
 use App\Http\Controllers\GestionAdministrativaPdfController;
 use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de firmas
 use App\Http\Controllers\EstablecimientoController;
+use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\UsuarioController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
@@ -88,7 +89,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
             });
 
-            // Módulo 02: Gestión Administrativa
+            // Módulo 02: Citas
             Route::prefix('modulo/citas')->name('citas.')->group(function () {
                 // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
                 Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
@@ -96,6 +97,16 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [CitaController::class, 'index'])->name('index');
                 Route::post('/{id}', [CitaController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 10: Atencion Prenatal
+            Route::prefix('modulo/atencion_prenatal')->name('atencion-prenatal.')->group(function () {
+                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
+                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
+
+                Route::get('/{id}', [PrenatalController::class, 'index'])->name('index');
+                Route::post('/{id}', [PrenatalController::class, 'create'])->name('create');
+                Route::get('/{id}/pdf', [PrenatalController::class, 'generar'])->name('pdf');
             });
 
             // Motor de PDF consolidado y visor final
