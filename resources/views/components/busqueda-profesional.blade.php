@@ -19,7 +19,7 @@
         </div>
         
         <div class="flex items-center bg-white p-1.5 rounded-2xl border border-slate-100 shadow-inner gap-2">
-            {{-- BOTÓN VALIDAR - SOMBREADO NEGRO ELEGANTE --}}
+            {{-- BOTÓN VALIDAR --}}
             <button type="button" onclick="buscarMaster('{{$prefix}}')" 
                     class="group flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-black hover:shadow-lg hover:shadow-slate-900/30 active:scale-95 transition-all outline-none">
                 <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors"></i> 
@@ -38,7 +38,7 @@
     <div class="p-10 pl-16">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-6">
             
-            {{-- DNI / DOC (Eliminado required para evitar bloqueo de submit si no se usa) --}}
+            {{-- N° IDENTIDAD --}}
             <div class="md:col-span-3">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">N° Identidad</label>
                 <div class="relative group/input">
@@ -64,7 +64,7 @@
                 </div>
             </div>
 
-            {{-- NOMBRES (Eliminado required físico para validación en controlador) --}}
+            {{-- NOMBRES --}}
             <div class="md:col-span-6">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Nombres Completos</label>
                 <input type="text" name="contenido[{{$prefix}}][nombres]" id="nombres_{{$prefix}}" 
@@ -117,6 +117,9 @@
 
 @once
 <script>
+    /**
+     * Actualiza la interfaz visual según el estado del profesional
+     */
     function updateIdentityUI(prefix, mode) {
         const card = document.getElementById('card_' + prefix);
         const iconBg = document.getElementById('status_icon_bg_' + prefix);
@@ -124,6 +127,7 @@
         const line = document.getElementById('status_line_' + prefix);
         const subText = document.getElementById('sub_text_' + prefix);
 
+        // Limpiar estados previos
         card.classList.remove('border-emerald-500', 'border-amber-500', 'shadow-emerald-200/40', 'shadow-amber-200/40', 'shadow-2xl');
         line.classList.remove('bg-emerald-500', 'bg-amber-500');
         badge.classList.remove('text-emerald-600', 'text-amber-600');
@@ -132,20 +136,23 @@
             card.classList.add('border-emerald-500', 'shadow-2xl', 'shadow-emerald-100/50');
             line.classList.add('bg-emerald-500');
             badge.classList.add('text-emerald-600');
-            badge.innerText = 'Profesional Verificado';
-            subText.innerText = 'Identidad confirmada en el maestro global';
+            badge.innerText = 'Profesional Cargado';
+            subText.innerHTML = '<span class="text-emerald-500 font-bold">●</span> Puede editar los campos para actualizar el maestro global';
             iconBg.innerHTML = '<i data-lucide="user-check" class="w-8 h-8 text-emerald-500 animate-bounce-short"></i>';
         } else if(mode === 'new') {
             card.classList.add('border-amber-500', 'shadow-2xl', 'shadow-amber-100/50');
             line.classList.add('bg-amber-500');
             badge.classList.add('text-amber-600');
             badge.innerText = 'Modo: Nuevo Registro';
-            subText.innerText = 'Complete el formulario para alimentar la base de datos';
+            subText.innerText = 'Este DOC no existe. Se creará un nuevo registro al guardar.';
             iconBg.innerHTML = '<i data-lucide="user-plus" class="w-8 h-8 text-amber-500"></i>';
         }
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
+    /**
+     * Busca profesional en la DB y rellena campos
+     */
     function buscarMaster(prefix) {
         const docInput = document.getElementById('doc_' + prefix);
         const doc = docInput.value.trim();
@@ -155,8 +162,7 @@
                 title: 'DNI Inválido',
                 text: 'Ingrese un número de documento válido.',
                 icon: 'error',
-                confirmButtonColor: '#0f172a',
-                customClass: { popup: 'rounded-[2rem]' }
+                confirmButtonColor: '#0f172a'
             });
             return;
         }
@@ -165,6 +171,7 @@
             .then(res => res.json())
             .then(data => {
                 if(data.exists) {
+                    // MODO ACTUALIZACIÓN: Cargamos datos y avisamos que puede editar
                     updateIdentityUI(prefix, 'success');
                     document.getElementById('nombres_' + prefix).value = data.nombres;
                     document.getElementById('paterno_' + prefix).value = data.apellido_paterno;
@@ -172,23 +179,53 @@
                     document.getElementById('email_' + prefix).value = data.email || '';
                     document.getElementById('tel_' + prefix).value = data.telefono || '';
                     document.getElementById('tipo_' + prefix).value = data.tipo_doc;
+
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Profesional encontrado. Si cambia algún dato, se actualizará en el sistema.'
+                    });
+
                 } else {
+                    // MODO NUEVO
+                    updateIdentityUI(prefix, 'new');
                     Swal.fire({
                         title: 'Sin Resultados',
                         text: 'El profesional no figura en el maestro. ¿Desea registrarlo como nuevo?',
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonText: 'Sí, Registrar',
+                        cancelButtonText: 'Cancelar',
                         confirmButtonColor: '#0f172a',
                         customClass: { popup: 'rounded-[2rem]' }
-                    }).then(r => { if(r.isConfirmed) nuevoProfesional(prefix); });
+                    }).then(r => { 
+                        if(!r.isConfirmed) {
+                            // Si cancela, limpiamos para no dejar datos inconsistentes
+                            nuevoProfesional(prefix);
+                        } else {
+                            document.getElementById('nombres_' + prefix).focus();
+                        }
+                    });
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
             });
     }
 
+    /**
+     * Limpia los campos para un nuevo registro
+     */
     function nuevoProfesional(prefix) {
         updateIdentityUI(prefix, 'new');
-        const fields = ['doc_', 'nombres_', 'paterno_', 'materno_', 'email_', 'tel_'];
+        const fields = ['nombres_', 'paterno_', 'materno_', 'email_', 'tel_'];
         fields.forEach(f => {
             const input = document.getElementById(f + prefix);
             if(input) input.value = '';
