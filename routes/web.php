@@ -7,13 +7,14 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActaController;
+use App\Http\Controllers\CitaController;
 use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EditMonitoreoController;
-use App\Http\Controllers\GestionAdministrativaController; 
+use App\Http\Controllers\GestionAdministrativaController;
 use App\Http\Controllers\GestionAdministrativaPdfController;
 use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de firmas
 use App\Http\Controllers\EstablecimientoController;
-use App\Http\Controllers\UsuarioController; 
+use App\Http\Controllers\UsuarioController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -32,16 +33,16 @@ Route::controller(LoginController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/', function () {
-        return Auth::user()->role === 'admin' 
-            ? redirect()->route('admin.dashboard') 
-            : redirect()->route('usuario.dashboard'); 
+        return Auth::user()->role === 'admin'
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('usuario.dashboard');
     });
 
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
 
     // --- GRUPO USUARIO (Monitor / Técnico) ---
     Route::prefix('usuario')->name('usuario.')->group(function () {
-        
+
         Route::get('/dashboard', [UsuarioController::class, 'index'])->name('dashboard');
         Route::get('/mi-perfil', [UsuarioController::class, 'perfil'])->name('perfil');
         Route::put('/mi-perfil', [UsuarioController::class, 'perfilUpdate'])->name('perfil.update');
@@ -60,7 +61,7 @@ Route::middleware(['auth'])->group(function () {
 
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
-            
+
             Route::get('/profesional/buscar/{doc}', [GestionAdministrativaController::class, 'buscarProfesional'])->name('profesional.buscar');
             Route::get('/equipo/buscar/{doc}', [MonitoreoController::class, 'buscarMiembroEquipo'])->name('equipo.buscar');
             Route::get('/equipo/buscar-filtro', [MonitoreoController::class, 'buscarFiltro'])->name('equipo.filtro');
@@ -85,6 +86,16 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
                 Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 02: Gestión Administrativa
+            Route::prefix('modulo/citas')->name('citas.')->group(function () {
+                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
+                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
+
+                Route::get('/{id}', [CitaController::class, 'index'])->name('index');
+                Route::post('/{id}', [CitaController::class, 'create'])->name('create');
+                Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
             });
 
             // Motor de PDF consolidado y visor final
