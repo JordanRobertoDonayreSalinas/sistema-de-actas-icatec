@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
+use App\Models\EquipoComputo;
 use App\Models\ModuloCita;
 use App\Models\MonitoreoModulos;
 use App\Models\Profesional;
@@ -99,6 +100,34 @@ class CitaController extends Controller
                 'contenido' => 'FINALIZADO' // Texto fijo que solicitaste
             ]
         );
+
+        //INSERTA EN TABLA NORMALIZADA
+        $datosEquipos = $request->input('contenido.equipos', []);
+
+        // 2. IMPORTANTE: Primero limpiamos los registros anteriores de este monitoreo
+        // Esto sirve para que si borraste una fila en el HTML, también se borre en la BD al guardar.
+        EquipoComputo::where('cabecera_monitoreo_id', $request->id) // O el ID que uses como FK
+            ->where('modulo', 'citas') // Opcional: Para asegurar que borras solo de este módulo
+            ->delete();
+
+        // 3. Recorremos y creamos los nuevos registros
+        foreach ($datosEquipos as $item) {
+            EquipoComputo::create([
+                'cabecera_monitoreo_id' => $request->id, // Tu ID foráneo
+                'modulo'      => 'citas', // O el nombre del módulo en el que estés (ej. 'gestion_administrativa')
+                'descripcion' => $item['nombre'] ?? 'Desconocido',
+                'cantidad'    => 1, // Como ahora es registro individual, la cantidad siempre es 1
+                'estado'      => $item['estado'] ?? 'Regular',
+                'nro_serie'   => $item['serie'] ?? null,
+
+                // Convertimos el select (ESTABLECIMIENTO/PROPIO) a booleano (0 o 1)
+                'propio'      => ($item['propiedad'] ?? '') === 'PROPIO' ? 1 : 0,
+
+                'observacion' => $item['observaciones'] ?? null,
+            ]);
+        }
+
+
 
         return redirect()->route('usuario.monitoreo.modulos', $idActa) // O redirigir al index
             ->with('success', 'Módulo de Citas finalizado y guardado correctamente.');

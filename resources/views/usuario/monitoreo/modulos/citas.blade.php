@@ -499,6 +499,7 @@
 
         {{-- PASO 2: LOGÍSTICA --}}
         <div id="step-2" class="step-content">
+
           <div class="mb-6 border-b border-slate-100 pb-4">
             <h2 class="text-2xl font-bold text-slate-800">Equipamiento e Insumos</h2>
           </div>
@@ -510,122 +511,143 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
               @foreach (['TICKET', 'FUA', 'HOJA DE FILIACIÓN', 'PAPEL BOND', 'TONER / TINTA', 'LAPICEROS'] as $insumo)
                 <label
-                  class="flex items-center gap-3 cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:border-indigo-400 group">
+                  class="flex items-center gap-3 cursor-pointer bg-white p-3 rounded-lg border border-slate-200 hover:border-indigo-400 group transition-colors">
                   <input type="checkbox" name="contenido[insumos][]" value="{{ $insumo }}"
                     class="rounded text-indigo-600 focus:ring-0 border-slate-300"
                     {{ in_array($insumo, $registro->insumos_disponibles ?? []) ? 'checked' : '' }}>
                   <span
-                    class="text-[11px] font-bold text-slate-600 group-hover:text-indigo-700">{{ $insumo }}</span>
+                    class="text-[11px] font-bold text-slate-600 group-hover:text-indigo-700 uppercase">{{ $insumo }}</span>
                 </label>
               @endforeach
             </div>
           </div>
 
-          <div>
-            <div class="flex justify-between items-end mb-3">
-              <h3 class="input-label text-slate-600">Listado de Equipos</h3>
-              <button type="button" onclick="agregarFila('tabla-equipos', 'contenido[equipos]')"
-                class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex items-center gap-2">
-                <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR EQUIPO
+          <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+
+            <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex justify-between items-center">
+              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalle de Equipos</h3>
+              <button type="button" onclick="agregarFilaEquipo()"
+                class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
               </button>
             </div>
-            <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm">
-              <table class="blue-table mb-0" id="tabla-equipos">
-                <thead>
-                  <tr>
-                    <th style="width: 35%">Descripción</th>
-                    <th style="width: 20%">Propiedad</th>
-                    <th style="width: 10%" class="text-center">Cant.</th>
-                    <th style="width: 25%">Estado</th>
-                    <th style="width: 10%" class="text-center">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @php
-                    $equipos = $registro->equipos_listado ?? [];
-                    // Si no hay datos, mostramos items por defecto. Si hay, mostramos lo guardado.
-                    $items =
-                        count($equipos) > 0
-                            ? $equipos
-                            : [
-                                [
-                                    'nombre' => 'Monitor',
-                                    'propiedad' => 'ESTABLECIMIENTO',
-                                    'cantidad' => 1,
-                                    'estado' => 'Bueno',
-                                ],
-                                [
-                                    'nombre' => 'CPU',
-                                    'propiedad' => 'ESTABLECIMIENTO',
-                                    'cantidad' => 1,
-                                    'estado' => 'Bueno',
-                                ],
-                                [
-                                    'nombre' => 'Teclado',
-                                    'propiedad' => 'ESTABLECIMIENTO',
-                                    'cantidad' => 1,
-                                    'estado' => 'Bueno',
-                                ],
-                                [
-                                    'nombre' => 'Mouse',
-                                    'propiedad' => 'ESTABLECIMIENTO',
-                                    'cantidad' => 1,
-                                    'estado' => 'Bueno',
-                                ],
-                                [
-                                    'nombre' => 'Impresora',
-                                    'propiedad' => 'ESTABLECIMIENTO',
-                                    'cantidad' => 1,
-                                    'estado' => 'Bueno',
-                                ],
-                                [
-                                    'nombre' => 'Ticketera',
-                                    'propiedad' => 'ESTABLECIMIENTO',
-                                    'cantidad' => 1,
-                                    'estado' => 'Bueno',
-                                ],
-                            ];
-                  @endphp
 
-                  @foreach ($items as $idx => $item)
-                    <tr>
-                      <td><input type="text" name="contenido[equipos][{{ $idx }}][nombre]"
-                          value="{{ $item['nombre'] ?? '' }}" class="table-input font-bold text-slate-700"></td>
-                      <td>
-                        <select name="contenido[equipos][{{ $idx }}][propiedad]" class="table-input text-xs">
-                          <option value="ESTABLECIMIENTO"
-                            {{ ($item['propiedad'] ?? '') == 'ESTABLECIMIENTO' ? 'selected' : '' }}>Establecimiento
-                          </option>
-                          <option value="PROPIO" {{ ($item['propiedad'] ?? '') == 'PROPIO' ? 'selected' : '' }}>Propio
-                          </option>
-                        </select>
-                      </td>
-                      <td><input type="number" min="0"
-                          name="contenido[equipos][{{ $idx }}][cantidad]"
-                          value="{{ $item['cantidad'] ?? 1 }}" class="table-input text-center"></td>
-                      <td>
-                        <select name="contenido[equipos][{{ $idx }}][estado]" class="table-input text-xs">
-                          @foreach (['Bueno', 'Regular', 'Malo', 'Inoperativo'] as $est)
-                            <option value="{{ $est }}"
-                              {{ ($item['estado'] ?? '') == $est ? 'selected' : '' }}>{{ $est }}</option>
-                          @endforeach
-                        </select>
-                      </td>
-                      <td class="text-center"><button type="button" onclick="this.closest('tr').remove()"
-                          class="p-1 rounded text-slate-300 hover:text-red-500"><i data-lucide="trash-2"
-                            class="w-4 h-4"></i></button></td>
-                    </tr>
-                  @endforeach
-                </tbody>
-              </table>
+            <table class="w-full text-left border-collapse" id="tabla-equipos">
+              <thead>
+                <tr
+                  class="bg-slate-50/50 border-b border-slate-200 text-[11px] uppercase text-slate-500 font-bold tracking-wider">
+                  <th class="px-3 py-2 w-[15%]">Descripción</th>
+                  <th class="px-3 py-2 w-[20%]">N° Serie / Cod.</th>
+                  <th class="px-3 py-2 w-[15%]">Propiedad</th>
+                  <th class="px-3 py-2 w-[15%]">Estado</th>
+                  <th class="px-3 py-2 w-[30%]">Observaciones</th>
+                  <th class="px-3 py-2 w-[5%] text-center"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100" id="tbody-equipos">
+                @php
+                  $equipos = $registro->equipos_listado ?? [];
+                  // Si no hay equipos guardados, mostramos los por defecto
+                  $defaultItems = [
+                      ['nombre' => 'Monitor', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
+                      ['nombre' => 'CPU', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
+                      ['nombre' => 'Teclado', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
+                      ['nombre' => 'Mouse', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
+                      ['nombre' => 'Impresora', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
+                      ['nombre' => 'Ticketera', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
+                  ];
+                  $items = count($equipos) > 0 ? $equipos : $defaultItems;
+                @endphp
+
+                @foreach ($items as $idx => $item)
+                  <tr class="group hover:bg-slate-50 transition-colors">
+                    <td class="p-2 align-middle">
+                      <input type="text" name="contenido[equipos][{{ $idx }}][nombre]"
+                        value="{{ $item['nombre'] ?? '' }}"
+                        class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
+                        placeholder="Nombre">
+                    </td>
+
+                    <td class="p-2 align-middle">
+                      <div class="relative flex items-center">
+                        <input type="text" id="serie-input-{{ $idx }}"
+                          name="contenido[equipos][{{ $idx }}][serie]" value="{{ $item['serie'] ?? '' }}"
+                          class="w-full bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-mono uppercase rounded pl-2 pr-8 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400"
+                          placeholder="----">
+
+                        <button type="button" onclick="iniciarEscaneo('serie-input-{{ $idx }}')"
+                          class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10"
+                          title="Escanear">
+                          <i data-lucide="scan-barcode" class="w-3 h-3"></i>
+                        </button>
+                      </div>
+                    </td>
+
+                    <td class="p-2 align-middle">
+                      <select name="contenido[equipos][{{ $idx }}][propiedad]"
+                        class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
+                        <option value="ESTABLECIMIENTO"
+                          {{ ($item['propiedad'] ?? '') == 'ESTABLECIMIENTO' ? 'selected' : '' }}>Establecimiento
+                        </option>
+                        <option value="PROPIO" {{ ($item['propiedad'] ?? '') == 'PROPIO' ? 'selected' : '' }}>Propio
+                        </option>
+                      </select>
+                    </td>
+
+                    <td class="p-2 align-middle">
+                      <select name="contenido[equipos][{{ $idx }}][estado]"
+                        class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer
+                                {{ ($item['estado'] ?? '') == 'Malo' || ($item['estado'] ?? '') == 'Inoperativo' ? 'text-red-600 font-bold bg-red-50' : 'text-slate-600' }}">
+                        @foreach (['Bueno', 'Regular', 'Malo', 'Inoperativo'] as $est)
+                          <option value="{{ $est }}" {{ ($item['estado'] ?? '') == $est ? 'selected' : '' }}>
+                            {{ $est }}</option>
+                        @endforeach
+                      </select>
+                    </td>
+
+                    <td class="p-2 align-middle">
+                      <input type="text" name="contenido[equipos][{{ $idx }}][observaciones]"
+                        value="{{ $item['observaciones'] ?? '' }}"
+                        class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1"
+                        placeholder="Observaciones...">
+                    </td>
+
+                    <td class="p-2 text-center align-middle">
+                      <button type="button" onclick="this.closest('tr').remove()"
+                        class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                      </button>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase mb-2">
+              <i data-lucide="message-square" class="w-4 h-4"></i> Observaciones Adicionales
+            </label>
+            <textarea name="contenido[equipos_observaciones]" rows="3"
+              placeholder="Describa aquí algun comentario y/o dificultad adicional..."
+              class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm resize-none focus:ring-indigo-500 focus:border-indigo-500">{{ $registro->equipos_observaciones ?? '' }}</textarea>
+          </div>
+
+        </div>
+
+        <div id="scanner-modal"
+          class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 transition-all">
+          <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl">
+            <div class="p-4 bg-white border-b flex justify-between items-center z-10 relative">
+              <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="scan" class="text-indigo-600"></i> Escáner
+              </h3>
+              <button type="button" onclick="detenerEscaneo()"
+                class="text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 p-1 rounded-full transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
             </div>
-            <div class="mt-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase mb-2"><i
-                  data-lucide="message-square" class="w-4 h-4"></i> Observaciones Adicionales</label>
-              <textarea name="contenido[equipos_observaciones]" rows="3"
-                placeholder="Describa aquí algun comentario y/o dificultad adicional..."
-                class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm resize-none">{{ $registro->equipos_observaciones ?? '' }}</textarea>
-            </div>
+            <div id="reader" class="w-full bg-black min-h-[250px] relative"></div>
           </div>
         </div>
 
@@ -901,6 +923,7 @@
 @endsection
 
 @push('scripts')
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script>
     let canvas, ctx;
     let isDrawing = false;
@@ -1201,15 +1224,73 @@
     function generateId() {
       return Date.now() + Math.floor(Math.random() * 1000);
     }
-    window.agregarFila = function(tableId, baseName) {
-      const tbody = document.querySelector(`#${tableId} tbody`);
-      if (!tbody) return;
-      const id = generateId();
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        `<td><input type="text" name="${baseName}[${id}][nombre]" class="table-input font-medium" placeholder="Descripción..."></td><td><select name="${baseName}[${id}][propiedad]" class="table-input text-xs"><option value="ESTABLECIMIENTO">Establecimiento</option><option value="PROPIO">Propio</option></select></td><td><input type="number" min="0" name="${baseName}[${id}][cantidad]" value="1" class="table-input text-center"></td><td><select name="${baseName}[${id}][estado]" class="table-input text-xs"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option><option value="Inoperativo">Inoperativo</option></select></td><td class="text-center"><button type="button" onclick="this.closest('tr').remove()" class="p-1 rounded text-slate-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>`;
-      tbody.appendChild(tr);
-      lucide.createIcons();
+    let equipoIndex = {{ count($items) }};
+
+    window.agregarFilaEquipo = function(tableId, baseName) {
+      equipoIndex++;
+      const tbody = document.getElementById('tbody-equipos');
+
+      const row = document.createElement('tr');
+      row.className = "group hover:bg-slate-50 transition-colors";
+
+      row.innerHTML = `
+        <td class="p-2 align-middle">
+            <input type="text" name="contenido[equipos][${equipoIndex}][nombre]"
+                class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
+                placeholder="Nuevo Equipo">
+        </td>
+
+        <td class="p-2 align-middle">
+            <div class="relative flex items-center">
+                <input type="text" id="serie-input-${equipoIndex}"
+                    name="contenido[equipos][${equipoIndex}][serie]"
+                    class="w-full bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-mono uppercase rounded pl-2 pr-8 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400"
+                    placeholder="----">
+
+                <button type="button" onclick="iniciarEscaneo('serie-input-${equipoIndex}')"
+                    class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10"
+                    title="Escanear">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="5" height="5" x="7" y="7" rx="1"/><path d="M7 17h10"/><path d="M17 7v10"/></svg>
+                </button>
+            </div>
+        </td>
+
+        <td class="p-2 align-middle">
+            <select name="contenido[equipos][${equipoIndex}][propiedad]"
+                class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
+                <option value="ESTABLECIMIENTO" selected>Establecimiento</option>
+                <option value="PROPIO">Propio</option>
+            </select>
+        </td>
+
+        <td class="p-2 align-middle">
+            <select name="contenido[equipos][${equipoIndex}][estado]"
+                class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
+                <option value="Bueno" selected>Bueno</option>
+                <option value="Regular">Regular</option>
+                <option value="Malo">Malo</option>
+                <option value="Inoperativo">Inoperativo</option>
+            </select>
+        </td>
+
+        <td class="p-2 align-middle">
+            <input type="text" name="contenido[equipos][${equipoIndex}][observaciones]"
+                class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1"
+                placeholder="Observaciones...">
+        </td>
+
+        <td class="p-2 text-center align-middle">
+            <button type="button" onclick="this.closest('tr').remove()"
+                class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            </button>
+        </td>
+    `;
+
+      tbody.appendChild(row);
+
+      // Si usas librerías que necesitan reiniciar iconos (como Lucide), descomenta esto:
+      if (window.lucide) lucide.createIcons();
     }
     window.agregarFilaProduccion = function(tableId) {
       const tbody = document.querySelector(`#${tableId} tbody`);
@@ -1374,6 +1455,63 @@
       const input = document.getElementById('firma_input');
       if (!input) return;
       if (canvas) input.value = canvas.toDataURL('image/png');
+    }
+
+    let html5QrcodeScanner = null;
+    let currentInputId = null;
+
+    function iniciarEscaneo(inputId) {
+      currentInputId = inputId;
+      const modal = document.getElementById('scanner-modal');
+      modal.classList.remove('hidden'); // Mostrar modal
+
+      // Iniciar libreria
+      html5QrcodeScanner = new Html5Qrcode("reader");
+
+      const config = {
+        fps: 10,
+        qrbox: {
+          width: 250,
+          height: 250
+        }
+      };
+
+      // Preferir cámara trasera (environment)
+      html5QrcodeScanner.start({
+          facingMode: "environment"
+        }, config, onScanSuccess, onScanFailure)
+        .catch(err => {
+          console.error("Error iniciando cámara", err);
+          alert("No se pudo acceder a la cámara. Asegúrate de dar permisos.");
+          modal.classList.add('hidden');
+        });
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      // Cuando detecta un código:
+      if (currentInputId) {
+        document.getElementById(currentInputId).value = decodedText;
+      }
+      detenerEscaneo();
+    }
+
+    function onScanFailure(error) {
+      // Pasa constantemente si no detecta nada, puedes dejarlo vacío para no saturar la consola
+      // console.warn(`Code scan error = ${error}`);
+    }
+
+    function detenerEscaneo() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+          html5QrcodeScanner.clear();
+          document.getElementById('scanner-modal').classList.add('hidden');
+          currentInputId = null;
+        }).catch(err => {
+          console.error("Error deteniendo el scanner", err);
+        });
+      } else {
+        document.getElementById('scanner-modal').classList.add('hidden');
+      }
     }
   </script>
 @endpush
