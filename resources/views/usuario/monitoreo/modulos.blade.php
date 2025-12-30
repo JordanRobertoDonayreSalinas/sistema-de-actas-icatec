@@ -36,7 +36,6 @@
             this.showModal = true;
         },
         init() {
-            // Este observador detecta cambios en 'activos' y regenera los iconos
             this.$watch('activos', () => {
                 this.$nextTick(() => {
                     if (typeof lucide !== 'undefined') {
@@ -77,10 +76,9 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between px-6 gap-4">
                 <div class="space-y-1">
                     <h3 class="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em]">Módulos de Evaluación Técnica</h3>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Active o desactive módulos según la cartera de servicios de la IPRESS</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Active los módulos que desea evaluar para esta IPRESS</p>
                 </div>
                 
-                {{-- CONTADOR DINÁMICO --}}
                 <div class="flex flex-col items-end">
                     <span class="text-[11px] font-black text-indigo-600 bg-indigo-50 px-5 py-2 rounded-full uppercase tracking-widest border border-indigo-100 shadow-sm">
                         <span x-text="activos.filter(a => modulosGuardados.includes(a)).length"></span> / <span x-text="activos.length"></span> Completados
@@ -108,84 +106,82 @@
                 @endphp
                 
                 <div class="relative bg-white border rounded-[2.5rem] flex items-center shadow-sm transition-all duration-500 group"
-                     :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'border-emerald-200' : 'border-slate-200' }}' : 'border-slate-100 bg-slate-50/50 grayscale'">
+                     :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-200 bg-white' }}' : 'border-slate-100 bg-slate-100/50 opacity-60 grayscale cursor-not-allowed'">
                     
                     {{-- TOGGLE --}}
                     <div class="absolute -top-3 -right-2 z-20">
                         <button @click="toggle('{{ $slug }}')" 
                                 :class="activos.includes('{{ $slug }}') ? 'bg-indigo-600' : 'bg-slate-300'"
-                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shadow-sm">
+                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shadow-md">
                             <span :class="activos.includes('{{ $slug }}') ? 'translate-x-6' : 'translate-x-1'"
                                   class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
                         </button>
                     </div>
 
                     <div class="flex flex-1 items-center overflow-hidden">
+                        {{-- MÓDULO HABILITADO --}}
                         <template x-if="activos.includes('{{ $slug }}')">
-                            @if($hasRoute)
-                                <a href="{{ route($routeName, $acta->id) }}" class="flex items-center gap-6 p-4 flex-1 rounded-[2rem] hover:bg-slate-50 transition-colors">
-                                    <div class="h-16 w-16 rounded-2xl {{ $isCompleted ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-500' }} flex items-center justify-center group-hover:scale-105 transition-all">
-                                        <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[13px] font-black text-slate-800 uppercase tracking-tight">{{ $data['nombre'] }}</p>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <p class="text-[9px] font-bold {{ $isCompleted ? 'text-emerald-500' : 'text-slate-400' }} uppercase">
-                                                {{ $isCompleted ? 'Completado' : 'Pendiente' }}
-                                            </p>
-                                            @if($isSigned)
-                                                <span class="px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-md uppercase tracking-tighter flex items-center gap-1 animate-pulse">
-                                                    <i data-lucide="check" class="w-2 h-2"></i> Firmado
-                                                </span>
-                                            @endif
+                            <div class="flex items-center w-full">
+                                @if($hasRoute)
+                                    <a href="{{ route($routeName, $acta->id) }}" class="flex items-center gap-6 p-4 flex-1 rounded-[2rem] hover:bg-white hover:shadow-inner transition-all">
+                                        <div class="h-16 w-16 rounded-2xl {{ $isCompleted ? 'bg-emerald-500 text-white' : 'bg-indigo-50 text-indigo-500' }} flex items-center justify-center group-hover:scale-105 transition-all">
+                                            <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[13px] font-black text-slate-800 uppercase tracking-tight">{{ $data['nombre'] }}</p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <p class="text-[9px] font-bold {{ $isCompleted ? 'text-emerald-500' : 'text-slate-400' }} uppercase">
+                                                    {{ $isCompleted ? 'Completado' : 'Habilitado - Click para evaluar' }}
+                                                </p>
+                                                @if($isSigned)
+                                                    <span class="px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-md uppercase flex items-center gap-1">
+                                                        <i data-lucide="check" class="w-2 h-2"></i> Firmado
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </a>
+                                @else
+                                    <div class="flex items-center gap-6 p-4 flex-1 opacity-50">
+                                        <div class="h-16 w-16 rounded-2xl bg-slate-200 text-slate-400 flex items-center justify-center">
+                                            <i data-lucide="settings-2" class="w-8 h-8"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[13px] font-black text-slate-500 uppercase tracking-tight">{{ $data['nombre'] }}</p>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase italic mt-1">En desarrollo técnico</p>
                                         </div>
                                     </div>
-                                </a>
-                            @else
-                                <div class="flex items-center gap-6 p-4 flex-1 rounded-[2rem]">
-                                    <div class="h-16 w-16 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
-                                        <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[13px] font-black text-slate-400 uppercase tracking-tight">{{ $data['nombre'] }}</p>
-                                        <p class="text-[9px] font-bold text-slate-300 uppercase mt-1.5 flex items-center gap-2 italic">
-                                            Módulo en configuración
-                                        </p>
-                                    </div>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </template>
 
+                        {{-- MÓDULO INHABILITADO --}}
                         <template x-if="!activos.includes('{{ $slug }}')">
-                            <div class="flex items-center gap-6 p-4 flex-1 opacity-40 select-none">
-                                <div class="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center">
-                                    <i data-lucide="slash" class="w-8 h-8 text-slate-300"></i>
+                            <div class="flex items-center gap-6 p-4 flex-1 select-none">
+                                <div class="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                                    <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8 text-slate-300"></i>
                                 </div>
                                 <div>
                                     <p class="text-[13px] font-black text-slate-300 uppercase tracking-tight">{{ $data['nombre'] }}</p>
-                                    <p class="text-[9px] font-bold text-slate-200 uppercase mt-1.5 italic tracking-widest text-wrap">No aplica a esta categoría</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-1.5 flex items-center gap-2">
+                                        <i data-lucide="lock" class="w-3 h-3"></i> Módulo Inactivo
+                                    </p>
                                 </div>
                             </div>
                         </template>
                     </div>
 
-                    {{-- ACCIONES DE PDF --}}
+                    {{-- ACCIONES DE PDF (Solo visibles si está habilitado y completado) --}}
                     <div class="flex items-center gap-2 px-4" x-show="activos.includes('{{ $slug }}') && {{ $isCompleted ? 'true' : 'false' }}">
                         @if($hasPdfRoute)
-                        <a href="{{ route($pdfRouteName, $acta->id) }}" target="_blank" class="h-10 w-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm" title="Ver Reporte">
-                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        <a href="{{ route($pdfRouteName, $acta->id) }}" target="_blank" class="h-9 w-9 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-indigo-600 transition-all shadow-sm">
+                            <i data-lucide="file-text" class="w-4 h-4"></i>
                         </a>
                         @endif
                         
-                        <button @click="openUpload('{{ $slug }}', '{{ $data['nombre'] }}')" class="h-10 w-10 rounded-xl {{ $isSigned ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600' }} flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm" title="Subir Firma">
-                            <i data-lucide="{{ $isSigned ? 'refresh-cw' : 'upload' }}" class="w-5 h-5"></i>
+                        <button @click="openUpload('{{ $slug }}', '{{ $data['nombre'] }}')" class="h-9 w-9 rounded-xl {{ $isSigned ? 'bg-emerald-500 text-white' : 'bg-orange-500 text-white' }} flex items-center justify-center hover:scale-105 transition-all shadow-sm">
+                            <i data-lucide="{{ $isSigned ? 'refresh-cw' : 'upload' }}" class="w-4 h-4"></i>
                         </button>
-
-                        @if($isSigned)
-                        <a href="{{ $viewSignedRoute }}" target="_blank" class="h-10 w-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-700 transition-all shadow-sm" title="Ver Firma">
-                            <i data-lucide="eye" class="w-5 h-5"></i>
-                        </a>
-                        @endif
                     </div>
                 </div>
                 @endforeach
@@ -201,7 +197,7 @@
                         </div>
                         <div class="text-left">
                             <p class="text-lg uppercase tracking-[0.3em] leading-none">Generar Acta Consolidada</p>
-                            <p class="text-[11px] text-slate-400 font-bold uppercase mt-3 italic">Documento final unificado con todos los módulos</p>
+                            <p class="text-[11px] text-slate-400 font-bold uppercase mt-3 italic">Unificar todos los módulos habilitados</p>
                         </div>
                     </div>
                     <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
@@ -260,6 +256,5 @@
 
 <style>
     [x-cloak] { display: none !important; }
-    .grayscale { filter: grayscale(1); opacity: 0.6; }
 </style>
 @endsection

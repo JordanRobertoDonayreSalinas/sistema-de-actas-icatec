@@ -2,24 +2,38 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class EquipoComputo extends Model
 {
+    use HasFactory;
+
+    /**
+     * Tabla asociada al modelo.
+     */
     protected $table = 'mon_equipos_computo';
 
+    /**
+     * Atributos asignables masivamente.
+     * Se agregaron 'nro_serie' y 'observacion' para permitir su guardado.
+     */
     protected $fillable = [
         'cabecera_monitoreo_id',
         'modulo',
         'descripcion',
         'cantidad',
         'estado',
-        'propio'
+        'nro_serie',    // Campo verificado según tu migración
+        'propio',
+        'observacion'   // Campo verificado según tu migración
     ];
 
-    // Relación inversa: Un equipo pertenece a un monitoreo
-    public function monitoreo()
+    /**
+     * Relación inversa: Un equipo pertenece a una cabecera de monitoreo.
+     */
+    public function cabecera()
     {
-        return $this->belongsTo(Monitoreo::class, 'cabecera_monitoreo_id');
+        return $this->belongsTo(CabeceraMonitoreo::class, 'cabecera_monitoreo_id');
     }
 }

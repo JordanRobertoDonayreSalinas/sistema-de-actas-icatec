@@ -196,21 +196,29 @@ class MonitoreoController extends Controller
             'urgencias'              => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
         ];
 
+        // Módulos que ya tienen datos guardados
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->where('modulo_nombre', '!=', 'config_modulos')
                             ->pluck('modulo_nombre')
                             ->toArray();
 
+        // Módulos que ya tienen un PDF firmado cargado
         $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->whereNotNull('pdf_firmado_path')
                             ->pluck('modulo_nombre')
                             ->toArray();
 
+        // BUSCAR CONFIGURACIÓN DE INTERRUPTORES
         $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', 'config_modulos')
                     ->first();
         
-        $modulosActivos = $config ? $config->contenido : array_keys($modulosMaster);
+        /**
+         * CAMBIO CRÍTICO:
+         * Si no existe configuración ($config es null), devolvemos un array VACÍO [].
+         * Esto hará que en la vista todos los módulos aparezcan apagados inicialmente.
+         */
+        $modulosActivos = $config ? $config->contenido : [];
 
         return view('usuario.monitoreo.modulos', compact('acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'));
     }
