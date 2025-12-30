@@ -22,18 +22,17 @@ class CabeceraMonitoreo extends Model
     protected $fillable = [
         'user_id',
         'establecimiento_id',
-        'categoria_congelada',
-        'responsable_congelado',
         'fecha',
         'responsable',
         'implementador',
         'firmado',
-        'firmado_pdf'
+        'firmado_pdf',
+        'categoria_congelada',
+        'responsable_congelado'
     ];
 
     /**
-     * Relación con el establecimiento.
-     * Un monitoreo pertenece a un establecimiento de salud.
+     * Relación con el establecimiento de salud.
      */
     public function establecimiento(): BelongsTo
     {
@@ -41,8 +40,7 @@ class CabeceraMonitoreo extends Model
     }
 
     /**
-     * Relación con el equipo de monitoreo.
-     * Un acta puede tener varios miembros del equipo evaluador.
+     * Relación con el equipo de monitoreo / personal.
      */
     public function equipo(): HasMany
     {
@@ -50,8 +48,8 @@ class CabeceraMonitoreo extends Model
     }
 
     /**
-     * RELACIÓN VITAL: Detalles de los módulos.
-     * Aquí se guarda la configuración de módulos activos y las rutas de los PDF firmados.
+     * RELACIÓN CORREGIDA: Detalles de los módulos.
+     * Cambiado de MonitoreoDetalle a MonitoreoModulos para coincidir con tu sistema.
      */
     public function detalles(): HasMany
     {
@@ -59,10 +57,20 @@ class CabeceraMonitoreo extends Model
     }
 
     /**
-     * Relación con el usuario que creó el registro.
+     * Relación con el usuario del sistema que creó el registro.
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Accesor para obtener el progreso del monitoreo.
+     */
+    public function getProgresoAttribute()
+    {
+        $totalModulos = 8; // Ajustar según la cantidad real de módulos activos
+        $completados = $this->detalles()->count();
+        return ($totalModulos > 0) ? ($completados / $totalModulos) * 100 : 0;
     }
 }

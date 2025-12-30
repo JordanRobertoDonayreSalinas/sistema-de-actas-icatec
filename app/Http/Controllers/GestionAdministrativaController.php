@@ -35,7 +35,7 @@ class GestionAdministrativaController extends Controller
     }
 
     /**
-     * Carga la interfaz del Módulo 01 con Lógica de Guía Histórica.
+     * Carga la interfaz del Módulo 01.
      */
     public function index($id)
     {
@@ -46,6 +46,7 @@ class GestionAdministrativaController extends Controller
                                 ->where('modulo', $modulo)
                                 ->get();
 
+        // Lógica de Guía Histórica si no hay equipos en el acta actual
         if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
                 ->where('id', '<', $id) 
@@ -67,7 +68,7 @@ class GestionAdministrativaController extends Controller
     }
 
     /**
-     * Guarda los datos y sincroniza las tablas maestras con transformación de tipos.
+     * Guarda los datos y sincroniza las tablas.
      */
     public function store(Request $request, $id)
     {
@@ -99,7 +100,7 @@ class GestionAdministrativaController extends Controller
                 }
             }
 
-            // 2. GESTIÓN DE EQUIPOS (Corrección del error 1366: string to integer)
+            // 2. GESTIÓN DE EQUIPOS (INCLUYE NRO_SERIE Y OBSERVACION)
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
             
             if ($request->has('equipos') && is_array($request->equipos)) {
@@ -111,17 +112,16 @@ class GestionAdministrativaController extends Controller
                             'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
                             'cantidad'    => (int)($eq['cantidad'] ?? 1),
                             'estado'      => $eq['estado'] ?? 'BUENO',
-                            // TRANSFORMACIÓN CRÍTICA: 'SI' -> 1, otros -> 0
+                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null, // NUEVO
                             'propio'      => (isset($eq['propio']) && $eq['propio'] === 'SI') ? 1 : 0,
+                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null, // NUEVO
                         ]);
                     }
                 }
             }
 
             // 3. ACTUALIZAR RESPUESTA DEL ENTREVISTADO
-            // Mapeo para evitar errores de tipo en inst_que_lo_capacito e inst_a_quien_comunica
             $mapInst = ['MINSA' => 1, 'DIRESA' => 2, 'OTROS' => 3, 'JEFE DE ESTABLECIMIENTO' => 4, 'OTRO' => 5];
-
             DB::table('mon_respuesta_entrevistado')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo' => $modulo],
                 [
@@ -149,7 +149,7 @@ class GestionAdministrativaController extends Controller
                 $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'];
             }
 
-            // 5. GUARDADO DEL JSON (Mantiene el formato original para la vista)
+            // 5. GUARDADO DEL JSON
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
                 ['contenido' => $datos]

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3307
--- Tiempo de generación: 29-12-2025 a las 22:17:45
+-- Tiempo de generación: 30-12-2025 a las 15:34:07
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -911,7 +911,7 @@ INSERT INTO `establecimientos` (`id`, `codigo`, `nombre`, `provincia`, `distrito
 (131, '3418', 'GROCIO PRADO', 'CHINCHA', 'GROCIO PRADO', 'I-3', 'CHINCHA - PISCO', 'CHINCHA', 'VILMA ARIAS MUNAYCO', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (132, '3370', 'PUEBLO NUEVO', 'ICA', 'PUEBLO NUEVO', 'I-3', 'ICA-PALPA-NAZCA', 'PUEBLO NUEVO', 'CRISTHIAN RAUL PALACIOS NEYRA ', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (133, '3422', 'CONDORILLO ALTO', 'CHINCHA', 'CHINCHA ALTA', 'I-2', 'CHINCHA - PISCO', 'CHINCHA', 'DAVID ANGEL DIAZ SALVATIERRA', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
-(134, '3425', 'CHAVIN', 'CHINCHA', 'CHAVIN', 'I-2', 'CHINCHA - PISCO', 'PUEBLO NUEVO', 'MARIA DEL PILAR CARHUAPUMA ELEFONIO ', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
+(134, '3425', 'CHAVIN', 'CHINCHA', 'CHAVIN', 'I-2', 'CHINCHA - PISCO', 'PUEBLO NUEVO', 'MARIA DEL PILAR CARHUAPUMA ELEFONIO', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (135, '3462', 'SACRAMENTO', 'PALPA', 'PALPA', 'I-2', 'ICA-PALPA-NAZCA', 'PALPA', 'LISSETTE EDELVIS MUÑOZ GAMONAL', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (136, '3455', 'LAS TRANCAS', 'NAZCA', 'VISTA ALEGRE', 'I-2', 'ICA-PALPA-NAZCA', 'NASCA', 'SONIA BEATRIZ PEREZ MURIANO', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
 (137, '3368', 'ACOMAYO', 'ICA', 'PARCONA', 'I-3', 'ICA-PALPA-NAZCA', 'LA TINGUIÑA/PARCONA', 'CARMEN ROSA VELASQUEZ DE LA ROCA', '0000-00-00 00:00:00', '0000-00-00 00:00:00'),
@@ -1029,7 +1029,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (37, '2025_12_28_121210_add_historico_fields_to_cabecera_monitoreo', 29),
 (38, '2025_12_29_093830_add_id_to_mon_profesionales_table', 30),
 (39, '2025_12_29_102339_fix_primary_key_in_mon_equipo_monitoreo', 31),
-(40, '2025_12_29_170118_add_pdf_firmado_path_to_mon_monitoreo_modulos_table', 32);
+(40, '2025_12_29_170118_add_pdf_firmado_path_to_mon_monitoreo_modulos_table', 32),
+(41, '2025_12_30_100505_add_fields_to_mon_equipos_computo_table', 33);
 
 -- --------------------------------------------------------
 
@@ -1087,7 +1088,11 @@ INSERT INTO `mon_cabecera_monitoreo` (`id`, `user_id`, `establecimiento_id`, `ca
 (52, 6, 123, 'I-3', NULL, '2025-12-29', 'CARMEN ROSA CHUMPITAZ VEGA', 'Donayre Salinas Jordan Roberto', 0, NULL, '2025-12-29 16:17:36', '2025-12-29 16:17:36'),
 (53, 6, 131, 'I-3', NULL, '2025-12-29', 'VILMA ARIAS MUNAYCO', 'Donayre Salinas Jordan Roberto', 0, NULL, '2025-12-29 17:35:19', '2025-12-29 17:35:19'),
 (54, 6, 116, 'I-3', NULL, '2025-12-29', 'MARIA DEL CARMEN TAIPE HUAYRA', 'Donayre Salinas Jordan Roberto', 0, NULL, '2025-12-29 19:16:31', '2025-12-29 19:16:31'),
-(55, 6, 130, 'I-3', NULL, '2025-12-29', 'VILLAMARES RAMOS EDWIN JESUS', 'Donayre Salinas Jordan Roberto', 0, NULL, '2025-12-29 22:13:01', '2025-12-29 22:13:01');
+(55, 6, 130, 'I-3', NULL, '2025-12-29', 'VILLAMARES RAMOS EDWIN JESUS', 'Donayre Salinas Jordan Roberto', 0, NULL, '2025-12-29 22:13:01', '2025-12-29 22:13:01'),
+(56, 6, 116, 'I-3', NULL, '2025-12-29', 'MARIA DEL CARMEN TAIPE HUAYRA', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-29 22:37:39', '2025-12-29 22:37:39'),
+(57, 6, 22, 'I-3', NULL, '2025-12-29', 'JULIO WILLIAM CRUCES LECAROS', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-29 22:42:53', '2025-12-29 22:42:53'),
+(58, 6, 77, 'I-2', NULL, '2025-12-29', 'AMELIA LOPEZ ALVA', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-29 23:09:52', '2025-12-29 23:09:52'),
+(59, 6, 134, 'I-2', NULL, '2025-12-29', 'MARIA DEL PILAR CARHUAPUMA ELEFONIO', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-29 23:17:20', '2025-12-29 23:17:20');
 
 -- --------------------------------------------------------
 
@@ -1102,7 +1107,9 @@ CREATE TABLE `mon_equipos_computo` (
   `descripcion` varchar(191) NOT NULL,
   `cantidad` int(11) NOT NULL DEFAULT 1,
   `estado` varchar(191) NOT NULL DEFAULT 'Operativo',
+  `nro_serie` varchar(191) DEFAULT NULL,
   `propio` tinyint(1) NOT NULL DEFAULT 1,
+  `observacion` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1111,9 +1118,14 @@ CREATE TABLE `mon_equipos_computo` (
 -- Volcado de datos para la tabla `mon_equipos_computo`
 --
 
-INSERT INTO `mon_equipos_computo` (`id`, `cabecera_monitoreo_id`, `modulo`, `descripcion`, `cantidad`, `estado`, `propio`, `created_at`, `updated_at`) VALUES
-(2, 54, 'gestion_administrativa', 'MONITOR LED 24 P', 1, 'BUENO', 1, '2025-12-29 21:49:36', '2025-12-29 21:49:36'),
-(3, 55, 'gestion_administrativa', 'CPU CORE I5 12GEN', 1, 'REGULAR', 1, '2025-12-29 22:14:47', '2025-12-29 22:14:47');
+INSERT INTO `mon_equipos_computo` (`id`, `cabecera_monitoreo_id`, `modulo`, `descripcion`, `cantidad`, `estado`, `nro_serie`, `propio`, `observacion`, `created_at`, `updated_at`) VALUES
+(2, 54, 'gestion_administrativa', 'MONITOR LED 24 P', 1, 'BUENO', NULL, 1, NULL, '2025-12-29 21:49:36', '2025-12-29 21:49:36'),
+(3, 55, 'gestion_administrativa', 'CPU CORE I5 12GEN', 1, 'REGULAR', NULL, 1, NULL, '2025-12-29 22:14:47', '2025-12-29 22:14:47'),
+(4, 56, 'gestion_administrativa', 'MONITOR LED 24 P', 1, 'BUENO', NULL, 1, NULL, '2025-12-29 22:38:19', '2025-12-29 22:38:19'),
+(5, 57, 'gestion_administrativa', 'MONITOR LED 24 P', 1, 'BUENO', NULL, 1, NULL, '2025-12-29 22:43:13', '2025-12-29 22:43:13'),
+(6, 58, 'gestion_administrativa', 'MONITOR LED 24 P', 1, 'BUENO', NULL, 1, NULL, '2025-12-29 23:10:19', '2025-12-29 23:10:19'),
+(14, 59, 'gestion_administrativa', 'LAPTOP CORPORATIVA', 1, 'BUENO', 'AAA', 1, 'CCC', '2025-12-30 15:31:44', '2025-12-30 15:31:44'),
+(15, 59, 'gestion_administrativa', 'TECLADO MULTIMEDIA', 3, 'MALO', 'BBB', 1, 'DDD', '2025-12-30 15:31:44', '2025-12-30 15:31:44');
 
 -- --------------------------------------------------------
 
@@ -1152,10 +1164,14 @@ INSERT INTO `mon_equipo_monitoreo` (`id`, `cabecera_monitoreo_id`, `tipo_doc`, `
 (15, 51, 'DNI', '71883058', 'DONAYRE', 'SALINAS', 'JORDAN ROBERTO', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 16:10:28', '2025-12-29 16:10:28'),
 (18, 52, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 17:09:30', '2025-12-29 17:09:30'),
 (21, 53, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 18:55:14', '2025-12-29 18:55:14'),
-(29, 54, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:12:27', '2025-12-29 22:12:27'),
-(30, 55, 'DNI', '70314306', 'MELGAR', 'MESIAS', 'JAIRO', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:13:01', '2025-12-29 22:13:01'),
-(31, 55, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:13:01', '2025-12-29 22:13:01'),
-(32, 55, 'DNI', '70398441', 'MUÑANTE', 'MEDINA', 'ERNESTO JAVIER', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:13:01', '2025-12-29 22:13:01');
+(36, 55, 'DNI', '70314306', 'MELGAR', 'MESIAS', 'JAIRO', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:34:46', '2025-12-29 22:34:46'),
+(37, 55, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:34:46', '2025-12-29 22:34:46'),
+(38, 55, 'DNI', '70398441', 'MUÑANTE', 'MEDINA', 'ERNESTO JAVIER', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:34:46', '2025-12-29 22:34:46'),
+(39, 56, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:37:39', '2025-12-29 22:37:39'),
+(40, 54, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 22:42:01', '2025-12-29 22:42:01'),
+(42, 57, 'DNI', '70398441', 'MUÑANTE', 'MEDINA', 'ERNESTO JAVIER', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 23:09:30', '2025-12-29 23:09:30'),
+(44, 58, 'DNI', '70398441', 'MUÑANTE', 'MEDINA', 'ERNESTO JAVIER', 'IMPLEMENTADOR', 'DIRESA', '2025-12-29 23:09:59', '2025-12-29 23:09:59'),
+(49, 59, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-30 15:14:22', '2025-12-30 15:14:22');
 
 -- --------------------------------------------------------
 
@@ -1182,8 +1198,14 @@ INSERT INTO `mon_monitoreo_modulos` (`id`, `cabecera_monitoreo_id`, `modulo_nomb
 (2, 45, 'config_modulos', '[\"citas\",\"triaje\",\"consulta_medicina\",\"consulta_odontologia\",\"consulta_nutricion\",\"cred\",\"inmunizaciones\",\"atencion_prenatal\",\"planificacion_familiar\",\"parto\",\"puerperio\",\"fua_electronico\",\"farmacia\",\"referencias\",\"laboratorio\",\"urgencias\",\"gestion_administrativa\",\"consulta_psicologia\"]', NULL, '2025-12-28 23:16:09', '2025-12-28 23:16:49'),
 (3, 53, 'config_modulos', '[\"triaje\",\"consulta_medicina\",\"consulta_odontologia\",\"consulta_nutricion\",\"consulta_psicologia\",\"cred\",\"inmunizaciones\",\"atencion_prenatal\",\"planificacion_familiar\",\"fua_electronico\",\"farmacia\",\"referencias\",\"laboratorio\",\"urgencias\",\"citas\",\"gestion_administrativa\"]', NULL, '2025-12-29 17:35:25', '2025-12-29 17:36:37'),
 (4, 54, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"71883058\",\"tipo_doc\":\"DNI\",\"nombres\":\"JORDAN ROBERTO\",\"apellido_paterno\":\"DONAYRE\",\"apellido_materno\":\"SALINAS\",\"email\":\"jordands140995@gmail.com\",\"telefono\":\"965346430\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"MINSA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Marzo\",\"programacion_anio\":\"2026\",\"comentarios\":\"asdasd\",\"foto_evidencia\":\"evidencias_monitoreo\\/iaWHLly4nmA88HReKrPyruhc34FNlXB7dsjd2AyP.jpg\"}', 'firmas/acta_54/gestion_administrativa_1767045874.pdf', '2025-12-29 21:38:29', '2025-12-29 22:04:34'),
-(5, 54, 'config_modulos', '[\"gestion_administrativa\",\"consulta_medicina\",\"consulta_odontologia\",\"consulta_nutricion\",\"consulta_psicologia\",\"cred\",\"inmunizaciones\",\"atencion_prenatal\",\"planificacion_familiar\",\"parto\",\"puerperio\",\"fua_electronico\",\"farmacia\",\"referencias\",\"laboratorio\",\"urgencias\",\"triaje\",\"citas\"]', NULL, '2025-12-29 21:52:32', '2025-12-29 22:10:49'),
-(6, 55, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"71883058\",\"tipo_doc\":\"DNI\",\"nombres\":\"JORDAN ROBERTO\",\"apellido_paterno\":\"DONAYRE\",\"apellido_materno\":\"SALINAS\",\"email\":\"jordands140995@gmail.com\",\"telefono\":\"965346430\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"MINSA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Enero\",\"programacion_anio\":\"2026\",\"comentarios\":\"ASDASD\",\"foto_evidencia\":\"evidencias_monitoreo\\/SikNNobHQ0dmje12ZMZzADC4E9NJdiqdxp9ixKJV.jpg\"}', 'firmas/acta_55/gestion_administrativa_1767046515.pdf', '2025-12-29 22:14:47', '2025-12-29 22:15:15');
+(5, 54, 'config_modulos', '[\"gestion_administrativa\"]', NULL, '2025-12-29 21:52:32', '2025-12-29 22:44:55'),
+(6, 55, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"71883058\",\"tipo_doc\":\"DNI\",\"nombres\":\"JORDAN ROBERTO\",\"apellido_paterno\":\"DONAYRE\",\"apellido_materno\":\"SALINAS\",\"email\":\"jordands140995@gmail.com\",\"telefono\":\"965346430\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"MINSA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Enero\",\"programacion_anio\":\"2026\",\"comentarios\":\"ASDASD\",\"foto_evidencia\":\"evidencias_monitoreo\\/SikNNobHQ0dmje12ZMZzADC4E9NJdiqdxp9ixKJV.jpg\"}', 'firmas/acta_55/gestion_administrativa_1767046515.pdf', '2025-12-29 22:14:47', '2025-12-29 22:15:15'),
+(7, 56, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"00504230\",\"tipo_doc\":\"DNI\",\"nombres\":\"ROCIO YANETH\",\"apellido_paterno\":\"CHUCALTA\",\"apellido_materno\":\"MAYTA\",\"email\":\"ross_forever2012@hotmail.com\",\"telefono\":\"976772320\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"MINSA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Junio\",\"programacion_anio\":\"2026\",\"comentarios\":\"asdsd\",\"foto_evidencia\":\"evidencias_monitoreo\\/mzup0UiJQHx5Yx7dE4Kv5y14DWQStehLqkDLKknV.jpg\"}', 'firmas/acta_56/gestion_administrativa_1767047913.pdf', '2025-12-29 22:38:19', '2025-12-29 22:38:33'),
+(8, 57, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"71883058\",\"tipo_doc\":\"DNI\",\"nombres\":\"JORDAN ROBERTO\",\"apellido_paterno\":\"DONAYRE\",\"apellido_materno\":\"SALINAS\",\"email\":\"jordands140995@gmail.com\",\"telefono\":\"965346430\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"MINSA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Enero\",\"programacion_anio\":\"2025\",\"comentarios\":\"asdadsd\",\"foto_evidencia\":\"evidencias_monitoreo\\/0DJstRqfoY5Hpwwdti0dTtj8mJZi1f3bF0E8Rs9a.jpg\"}', 'firmas/acta_57/gestion_administrativa_1767048202.pdf', '2025-12-29 22:43:13', '2025-12-29 22:43:22'),
+(9, 57, 'config_modulos', '[\"gestion_administrativa\",\"consulta_odontologia\",\"consulta_nutricion\",\"consulta_psicologia\",\"cred\",\"inmunizaciones\",\"atencion_prenatal\",\"planificacion_familiar\",\"parto\",\"puerperio\",\"fua_electronico\",\"farmacia\",\"referencias\",\"laboratorio\",\"urgencias\",\"triaje\",\"consulta_medicina\"]', NULL, '2025-12-29 22:54:00', '2025-12-29 23:09:35'),
+(10, 58, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"71883058\",\"tipo_doc\":\"DNI\",\"nombres\":\"JORDAN ROBERTO\",\"apellido_paterno\":\"DONAYRE\",\"apellido_materno\":\"SALINAS\",\"email\":\"jordands140995@gmail.com\",\"telefono\":\"965346430\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"MINSA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Enero\",\"programacion_anio\":\"2026\",\"comentarios\":\"aWEdqdas\",\"foto_evidencia\":\"evidencias_monitoreo\\/S5NCAGp3ThTxHZFul0QAdCmSX5A1tmVJD3oDH5NB.jpg\"}', 'firmas/acta_58/gestion_administrativa_1767049839.pdf', '2025-12-29 23:10:19', '2025-12-29 23:10:39'),
+(11, 59, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"71883058\",\"tipo_doc\":\"DNI\",\"nombres\":\"JORDAN ROBERTO\",\"apellido_paterno\":\"DONAYRE\",\"apellido_materno\":\"SALINAS\",\"email\":\"jordands140995@gmail.com\",\"telefono\":\"965346430\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"MINSA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Enero\",\"programacion_anio\":\"2026\",\"comentarios\":\"asdas\",\"foto_evidencia\":\"evidencias_monitoreo\\/KgQTBhK8RVFjzYcXBUTLSbBxFohZ9HqGoaQrwJvr.jpg\"}', 'firmas/acta_59/gestion_administrativa_1767050297.pdf', '2025-12-29 23:18:01', '2025-12-30 15:17:39'),
+(12, 59, 'config_modulos', '[\"gestion_administrativa\"]', NULL, '2025-12-29 23:18:41', '2025-12-30 14:58:30');
 
 -- --------------------------------------------------------
 
@@ -5094,7 +5116,11 @@ CREATE TABLE `mon_respuesta_entrevistado` (
 
 INSERT INTO `mon_respuesta_entrevistado` (`id`, `cabecera_monitoreo_id`, `doc_profesional`, `modulo`, `recibio_capacitacion`, `inst_que_lo_capacito`, `inst_a_quien_comunica`, `medio_que_utiliza`, `created_at`, `updated_at`) VALUES
 (1, 54, '71883058', 'gestion_administrativa', 1, '1', '1', 'WHATSAPP', NULL, '2025-12-29 21:49:36'),
-(2, 55, '71883058', 'gestion_administrativa', 1, '1', '1', 'WHATSAPP', NULL, '2025-12-29 22:14:47');
+(2, 55, '71883058', 'gestion_administrativa', 1, '1', '1', 'WHATSAPP', NULL, '2025-12-29 22:14:47'),
+(3, 56, '00504230', 'gestion_administrativa', 1, '1', '1', 'WHATSAPP', NULL, '2025-12-29 22:38:19'),
+(4, 57, '71883058', 'gestion_administrativa', 1, '1', '1', 'WHATSAPP', NULL, '2025-12-29 22:43:13'),
+(5, 58, '71883058', 'gestion_administrativa', 1, '1', '1', 'WHATSAPP', NULL, '2025-12-29 23:10:19'),
+(6, 59, '71883058', 'gestion_administrativa', 1, '1', '1', 'WHATSAPP', NULL, '2025-12-30 15:31:44');
 
 -- --------------------------------------------------------
 
@@ -5887,31 +5913,31 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT de la tabla `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_cabecera_monitoreo`
 --
 ALTER TABLE `mon_cabecera_monitoreo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_equipos_computo`
 --
 ALTER TABLE `mon_equipos_computo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_equipo_monitoreo`
 --
 ALTER TABLE `mon_equipo_monitoreo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_monitoreo_modulos`
 --
 ALTER TABLE `mon_monitoreo_modulos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_profesionales`
@@ -5923,7 +5949,7 @@ ALTER TABLE `mon_profesionales`
 -- AUTO_INCREMENT de la tabla `mon_respuesta_entrevistado`
 --
 ALTER TABLE `mon_respuesta_entrevistado`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `observaciones`
