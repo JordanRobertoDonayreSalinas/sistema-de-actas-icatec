@@ -15,6 +15,12 @@ use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de fi
 use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\UsuarioController; 
 
+
+use App\Http\Controllers\TriajeController;
+use App\Http\Controllers\OdontologiaController;
+
+
+
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
     'create' => 'crear-acta',
@@ -85,6 +91,20 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
                 Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 03: Triaje
+            Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
+                Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
+                Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 05: Odontologia
+            Route::prefix('modulo/consulta-odontologia')->name('consulta-odontologia.')->group(function () {
+                Route::get('/{id}', [OdontologiaController::class, 'index'])->name('index');
+                Route::post('/{id}', [OdontologiaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [OdontologiaPdfController::class, 'generar'])->name('pdf');
             });
 
             // Motor de PDF consolidado y visor final
