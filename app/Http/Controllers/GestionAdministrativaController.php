@@ -82,25 +82,26 @@ class GestionAdministrativaController extends Controller
             $modulo = 'gestion_administrativa';
             $datos = $request->input('contenido', []);
 
-            // 1. SINCRONIZACIÓN DE PROFESIONALES
-            $profesionalesKeys = ['rrhh', 'programador'];
-            foreach ($profesionalesKeys as $key) {
-                if (isset($datos[$key]) && !empty($datos[$key]['doc'])) {
+            // 1. SINCRONIZACIÓN DINÁMICA DEL MAESTRO DE PROFESIONALES
+            // Recorremos todos los bloques de identidad enviados en el contenido (rrhh, programador, jefe, etc)
+            foreach ($datos as $prefix => $info) {
+                // Verificamos si este bloque contiene un documento de identidad
+                if (is_array($info) && isset($info['doc']) && !empty($info['doc'])) {
                     Profesional::updateOrCreate(
-                        ['doc' => trim($datos[$key]['doc'])],
+                        ['doc' => trim($info['doc'])], // Buscamos por DNI
                         [
-                            'tipo_doc'         => $datos[$key]['tipo_doc'] ?? 'DNI',
-                            'apellido_paterno' => mb_strtoupper(trim($datos[$key]['apellido_paterno']), 'UTF-8'),
-                            'apellido_materno' => mb_strtoupper(trim($datos[$key]['apellido_materno']), 'UTF-8'),
-                            'nombres'          => mb_strtoupper(trim($datos[$key]['nombres']), 'UTF-8'),
-                            'email'            => isset($datos[$key]['email']) ? strtolower(trim($datos[$key]['email'])) : null,
-                            'telefono'         => $datos[$key]['telefono'] ?? null,
+                            'tipo_doc'         => $info['tipo_doc'] ?? 'DNI',
+                            'apellido_paterno' => mb_strtoupper(trim($info['apellido_paterno']), 'UTF-8'),
+                            'apellido_materno' => mb_strtoupper(trim($info['apellido_materno']), 'UTF-8'),
+                            'nombres'          => mb_strtoupper(trim($info['nombres']), 'UTF-8'),
+                            'email'            => isset($info['email']) ? strtolower(trim($info['email'])) : null,
+                            'telefono'         => $info['telefono'] ?? null,
                         ]
                     );
                 }
             }
 
-            // 2. GESTIÓN DE EQUIPOS (INCLUYE NRO_SERIE Y OBSERVACION)
+            // 2. GESTIÓN DE EQUIPOS
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
             
             if ($request->has('equipos') && is_array($request->equipos)) {
@@ -112,15 +113,15 @@ class GestionAdministrativaController extends Controller
                             'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
                             'cantidad'    => (int)($eq['cantidad'] ?? 1),
                             'estado'      => $eq['estado'] ?? 'BUENO',
-                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null, // NUEVO
+                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
                             'propio'      => (isset($eq['propio']) && $eq['propio'] === 'SI') ? 1 : 0,
-                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null, // NUEVO
+                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
                         ]);
                     }
                 }
             }
 
-            // 3. ACTUALIZAR RESPUESTA DEL ENTREVISTADO
+            // 3. ACTUALIZAR RESPUESTA DEL ENTREVISTADO (Uso de DNI de RRHH como referencia principal)
             $mapInst = ['MINSA' => 1, 'DIRESA' => 2, 'OTROS' => 3, 'JEFE DE ESTABLECIMIENTO' => 4, 'OTRO' => 5];
             DB::table('mon_respuesta_entrevistado')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo' => $modulo],
@@ -134,7 +135,7 @@ class GestionAdministrativaController extends Controller
                 ]
             );
 
-            // 4. GESTIÓN DE ARCHIVOS
+            // 4. GESTIÓN DE ARCHIVOS (Evidencia Fotográfica)
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo_nombre', $modulo)
                                 ->first();
@@ -149,7 +150,7 @@ class GestionAdministrativaController extends Controller
                 $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'];
             }
 
-            // 5. GUARDADO DEL JSON
+            // 5. GUARDADO DEL JSON EN DETALLE DE MONITOREO
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
                 ['contenido' => $datos]
@@ -157,7 +158,7 @@ class GestionAdministrativaController extends Controller
 
             DB::commit();
             return redirect()->route('usuario.monitoreo.modulos', $id)
-                             ->with('success', 'Módulo 01 sincronizado correctamente.');
+                             ->with('success', 'Módulo 01 sincronizado y Maestro de Profesionales actualizado.');
 
         } catch (\Exception $e) {
             DB::rollBack();
