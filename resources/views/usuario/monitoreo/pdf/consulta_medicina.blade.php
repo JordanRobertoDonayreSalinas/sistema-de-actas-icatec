@@ -153,19 +153,37 @@
         {{ $detalle->contenido['comentarios'] ?? 'SIN COMENTARIOS.' }}
     </div>
 
+    {{-- Lógica de Imágenes (Ya optimizada para recibir el array del controlador) --}}
     @if(!empty($imagenesData) && is_array($imagenesData) && count($imagenesData) > 0)
         <div class="section-title">8. Evidencia Fotográfica</div>
+        
         @if(count($imagenesData) === 1)
+            {{-- Caso 1 Foto --}}
             <div class="foto-container">
                 <img src="{{ $imagenesData[0] }}" class="foto" alt="Evidencia">
             </div>
         @else
-            <div class="foto-grid">
-                @foreach($imagenesData as $img)
-                    <div class="foto-grid-item">
-                        <img src="{{ $img }}" alt="Evidencia">
-                    </div>
-                @endforeach
+            {{-- Caso Múltiples Fotos --}}
+            <div style="text-align: center; padding: 10px; border: 1px solid #ffffff; background-color: #f9fafc;">
+                <table style="width: 100%; border: none;">
+                    <tr>
+                        @foreach($imagenesData as $index => $img)
+                            {{-- Salto de fila cada 2 imágenes para que no se rompa el layout --}}
+                            @if($index > 0 && $index % 2 == 0) 
+                                </tr><tr> 
+                            @endif
+                            <td style="border: none; padding: 5px; text-align: center; width: 50%;">
+                                <div style="border: 1px solid #cbd5e1; padding: 4px; background: #fff;">
+                                    <img src="{{ $img }}" style="max-width: 100%; height: 160px; object-fit: contain;">
+                                </div>
+                            </td>
+                        @endforeach
+                        {{-- Relleno si es impar para mantener estructura --}}
+                        @if(count($imagenesData) % 2 != 0)
+                            <td style="border: none;"></td>
+                        @endif
+                    </tr>
+                </table>
             </div>
         @endif
     @endif
