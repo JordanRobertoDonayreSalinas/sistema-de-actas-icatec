@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Acta;
+use App\Models\Profesional;
 
 class TriajeController extends Controller
 {
@@ -91,6 +92,21 @@ class TriajeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error en el servidor: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function buscarProfesional($doc)
+{
+        // Buscamos en la tabla 'mon_profesionales' usando el modelo Profesional
+        $profesional = Profesional::where('doc', $doc)->first();
+
+        if ($profesional) {
+            return response()->json([
+                'found' => true,
+                'data' => $profesional
+            ]);
+        } else {
+            return response()->json(['found' => false], 404);
         }
     }
 }

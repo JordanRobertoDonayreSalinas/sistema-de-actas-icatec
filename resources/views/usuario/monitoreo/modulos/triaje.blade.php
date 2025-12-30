@@ -25,120 +25,21 @@
             </a>
         </div>
 
-        {{-- FORMULARIO ÚNICO --}}
+        {{-- 1. DATOS DEL PROFESIONAL --}}
         <form @submit.prevent="guardarTodo" class="space-y-8">
 
-            {{-- 1. DATOS DEL PROFESIONAL (Color: Índigo) --}}
-            <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
-                {{-- Decoración --}}
-                <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-60 pointer-events-none"></div>
-                
-                <div class="relative z-10">
-                    <div class="flex items-center gap-4 mb-8">
-                        {{-- Icono Unificado --}}
-                        <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                            <i data-lucide="user-cog" class="text-white w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Datos del Profesional</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Responsable</p>
-                        </div>
-                    </div>
+            {{-- 1. DATOS DEL PROFESIONAL --}}
+            {{-- Aquí pasas el string "form.profesional" que coincide con tu objeto en Alpine --}}
+            <x-seleccion-profesional 
+                model="form.profesional" 
+            />
 
-                    <div class="space-y-6">
-                        {{-- Buscador DNI --}}
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                            <div class="md:col-span-4">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo Doc.</label>
-                                <select x-model="form.profesional.tipo_doc" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl font-bold uppercase p-3">
-                                    <option value="DNI">DNI</option>
-                                    <option value="CE">C.E.</option>
-                                </select>
-                            </div>
-                            <div class="md:col-span-8 relative">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Número Documento</label>
-                                <div class="flex gap-2">
-                                    <input type="text" x-model="form.profesional.doc" @keydown.enter.prevent="buscarProfesional()" placeholder="Ingrese DNI..." 
-                                           class="flex-1 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-3 font-bold tracking-wider">
-                                    <button type="button" @click="buscarProfesional()" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2 transition-colors">
-                                        <i data-lucide="search" class="w-5 h-5"></i>
-                                    </button>
-                                </div>
-                                <span x-show="msgProfesional" x-text="msgProfesional" class="absolute -bottom-5 left-0 text-[10px] font-bold text-emerald-500"></span>
-                            </div>
-                        </div>
+            
 
-                        {{-- Datos Personales --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Apellido Paterno</label>
-                                <input type="text" x-model="form.profesional.apellido_paterno" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Apellido Materno</label>
-                                <input type="text" x-model="form.profesional.apellido_materno" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombres</label>
-                                <input type="text" x-model="form.profesional.nombres" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase">
-                            </div>
-                        </div>
-                         {{-- Contacto --}}
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Email</label>
-                                <input type="email" x-model="form.profesional.email" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-medium lowercase">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Teléfono</label>
-                                <input type="text" x-model="form.profesional.telefono" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 2. CAPACITACIÓN (Color unificado: Índigo) --}}
-            <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-4 mb-6">
-                        {{-- Icono Unificado --}}
-                        <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                            <i data-lucide="graduation-cap" class="text-white w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Capacitación</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Formación</p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <label class="block text-sm font-bold text-slate-700">¿El personal ha recibido capacitación?</label>
-                        <div class="flex gap-4">
-                            <label class="cursor-pointer flex-1">
-                                <input type="radio" value="SI" x-model="form.capacitacion.recibieron_cap" class="peer sr-only">
-                                {{-- Estilos Checked en Índigo --}}
-                                <div class="text-center py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-white">SI</div>
-                            </label>
-                            <label class="cursor-pointer flex-1">
-                                <input type="radio" value="NO" x-model="form.capacitacion.recibieron_cap" class="peer sr-only">
-                                <div class="text-center py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-300 hover:bg-white">NO</div>
-                            </label>
-                        </div>
-
-                        <div x-show="form.capacitacion.recibieron_cap === 'SI'" x-transition class="mt-4">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Entidad que capacitó</label>
-                            <select x-model="form.capacitacion.institucion_cap" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold uppercase text-sm focus:ring-indigo-500">
-                                <option value="" disabled>Seleccione...</option>
-                                <option value="MINSA">MINSA</option>
-                                <option value="DIRESA">DIRESA</option>
-                                <option value="UUEE">UUEE</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{-- 2. CAPACITACIÓN --}}
+            <x-capacitacion 
+                model="form.capacitacion" 
+            />
 
 
             {{-- 3. INVENTARIO DE EQUIPAMIENTO --}}
@@ -343,6 +244,51 @@
 <script>
     function triajeForm() {
         return {
+
+            async buscarProfesional() {
+            const doc = this.form.profesional.doc;
+            
+            // Validar que haya algo escrito (mínimo 8 dígitos para DNI)
+            if (!doc || doc.length < 8) {
+                this.msgProfesional = 'Ingrese un documento válido.';
+                return;
+            }
+
+            this.msgProfesional = 'Buscando...'; // Feedback visual
+
+            try {
+                // Usamos la ruta definida en web.php
+                // Ajusta la URL si tu prefijo de ruta es diferente
+                const response = await fetch(`/usuario/monitoreo/profesional/buscar/${doc}`);
+                
+                if (!response.ok) throw new Error('No encontrado');
+
+                const result = await response.json();
+
+                if (result.found) {
+                    const p = result.data;
+                    // Mapeamos los datos recibidos al formulario de Alpine
+                    this.form.profesional.tipo_doc = p.tipo_doc || 'DNI';
+                    this.form.profesional.nombres = p.nombres;
+                    this.form.profesional.apellido_paterno = p.apellido_paterno;
+                    this.form.profesional.apellido_materno = p.apellido_materno;
+                    this.form.profesional.email = p.email;
+                    this.form.profesional.telefono = p.telefono;
+                    
+                    this.msgProfesional = '✅ Profesional encontrado';
+                    setTimeout(() => this.msgProfesional = '', 3000);
+                }
+
+            } catch (error) {
+                console.error(error);
+                this.msgProfesional = '❌ No se encontró registro. Puede llenarlo manualmente.';
+                
+                // Opcional: Limpiar campos si no se encuentra
+                // this.form.profesional.nombres = ''; 
+                // ...
+            }
+        },
+
             saving: false,
             msgProfesional: '',
             
