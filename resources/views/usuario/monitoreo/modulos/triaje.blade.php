@@ -25,22 +25,22 @@
             </a>
         </div>
 
-        {{-- 1. DATOS DEL PROFESIONAL --}}
+        {{-- FORMULARIO ÚNICO --}}
         <form @submit.prevent="guardarTodo" class="space-y-8">
 
-            {{-- 1. DATOS DEL PROFESIONAL --}}
-            {{-- Aquí pasas el string "form.profesional" que coincide con tu objeto en Alpine --}}
+            {{-- 1. DATOS DEL PROFESIONAL (COMPONENTE) --}}
+            {{-- Pasamos el modelo 'form.profesional' para que Alpine sepa dónde guardar los datos --}}
             <x-seleccion-profesional 
-                model="form.profesional" 
+                model="form.profesional"
+                titulo="Datos del Profesional"
+                subtitulo="Responsable de Triaje"
             />
 
-            
-
-            {{-- 2. CAPACITACIÓN --}}
+            {{-- 2. CAPACITACIÓN (COMPONENTE) --}}
+            {{-- Si ya creaste el componente de capacitación, úsalo aquí. Si no, deja el HTML original --}}
             <x-capacitacion 
                 model="form.capacitacion" 
             />
-
 
             {{-- 3. INVENTARIO DE EQUIPAMIENTO --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
@@ -56,14 +56,13 @@
                     </div>
                 </div>
 
-                {{-- BARRA DE AGREGAR (SIN RESTRICCIONES) --}}
+                {{-- BARRA DE AGREGAR --}}
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 items-end md:items-center">
                     <div class="flex-1 w-full">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Seleccionar Equipo</label>
                         <select x-model="itemSeleccionado" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase text-xs focus:ring-indigo-500 cursor-pointer">
                             <option value="">-- SELECCIONE UN ÍTEM --</option>
                             <template x-for="opcion in listaOpciones" :key="opcion">
-                                {{-- Quitamos el :disabled para permitir múltiples selecciones --}}
                                 <option :value="opcion" x-text="opcion"></option>
                             </template>
                         </select>
@@ -77,7 +76,7 @@
                     </button>
                 </div>
 
-                {{-- TABLA --}}
+                {{-- TABLA INVENTARIO --}}
                 <div class="overflow-x-auto min-h-[150px]">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -91,8 +90,6 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            
-                            {{-- Mensaje Vacío (Chequeamos el length del array) --}}
                             <tr x-show="form.inventario.length === 0">
                                 <td colspan="6" class="py-8 text-center text-slate-300">
                                     <div class="flex flex-col items-center justify-center gap-2">
@@ -101,27 +98,18 @@
                                     </div>
                                 </td>
                             </tr>
-
-                            {{-- Filas (Iteramos Array) --}}
                             <template x-for="(item, index) in form.inventario" :key="item.id">
                                 <tr class="group hover:bg-slate-50/50 transition-colors">
-                                    
-                                    {{-- Descripción (Leemos item.descripcion) --}}
                                     <td class="py-3 pl-2 align-middle">
                                         <span class="font-black text-slate-700 text-xs uppercase bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg" x-text="item.descripcion"></span>
-                                        {{-- Mostrar índice opcional para diferenciar: #1, #2... --}}
                                         <span class="text-[9px] text-slate-300 font-bold ml-1" x-text="'#' + (index + 1)"></span>
                                     </td>
-
-                                    {{-- Propiedad --}}
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.propiedad" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
                                             <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
                                             <option value="PERSONAL">PERSONAL</option>
                                         </select>
                                     </td>
-
-                                    {{-- Estado --}}
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.estado" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
                                             <option value="BUENO">BUENO</option>
@@ -129,8 +117,6 @@
                                             <option value="MALO">MALO</option>
                                         </select>
                                     </td>
-
-                                    {{-- Código --}}
                                     <td class="py-3 px-2 align-middle">
                                         <div class="relative">
                                             <input type="text" x-model="item.codigo" placeholder="---" 
@@ -138,14 +124,10 @@
                                             <i data-lucide="scan-barcode" class="absolute left-2 top-2.5 w-3.5 h-3.5 text-slate-400"></i>
                                         </div>
                                     </td>
-
-                                    {{-- Observación --}}
                                     <td class="py-3 px-2 align-middle">
                                         <input type="text" x-model="item.observacion" placeholder="Sin obs."
                                                class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-medium uppercase focus:ring-indigo-500">
                                     </td>
-
-                                    {{-- Eliminar (Pasamos el index) --}}
                                     <td class="py-3 pr-2 align-middle text-right">
                                         <button type="button" @click="eliminarItem(index)" class="text-slate-300 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg" title="Quitar ítem">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -156,25 +138,20 @@
                         </tbody>
                     </table>
                 </div>
-
-                {{-- Comentarios Generales --}}
                 <div class="mt-4 border-t border-slate-100 pt-4">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Comentarios Generales</label>
                     <textarea x-model="form.inventario_comentarios" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-indigo-500"></textarea>
                 </div>
             </div>
             
-
-            {{-- 4. DIFICULTADES CON EL SISTEMA (Color unificado: Índigo) --}}
+            {{-- 4. DIFICULTADES (Mantengo HTML original por ahora si no hay componente) --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
                 <div class="flex items-center gap-4 mb-6">
-                    {{-- Icono Unificado --}}
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i data-lucide="alert-circle" class="text-white w-6 h-6"></i>
                     </div>
                     <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Dificultades con el Sistema</h3>
                 </div>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Institución con la que coordina</label>
@@ -184,7 +161,6 @@
                             <option value="DIRESA">DIRESA</option>
                             <option value="UUEE">UUEE</option>
                         </select>
-                        
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Medio de comunicación</label>
@@ -198,10 +174,9 @@
                 </div>
             </div>
 
-            {{-- 5. EVIDENCIA FOTOGRÁFICA (Color unificado: Índigo) --}}
+            {{-- 5. EVIDENCIA FOTOGRÁFICA --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
                 <div class="flex items-center gap-4 mb-6">
-                    {{-- Icono Unificado --}}
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i data-lucide="camera" class="text-white w-6 h-6"></i>
                     </div>
@@ -215,7 +190,6 @@
                     <p class="text-xs text-slate-400 mt-1">PNG, JPG o JPEG (Máx. 5MB)</p>
                 </div>
                 
-                {{-- Lista de archivos seleccionados --}}
                 <div class="mt-4 space-y-2" x-show="files.length > 0">
                     <template x-for="(file, i) in files" :key="i">
                         <div class="flex items-center justify-between bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
@@ -239,64 +213,13 @@
     </div>
 </div>
 
-
-
 <script>
     function triajeForm() {
         return {
-
-            async buscarProfesional() {
-            const doc = this.form.profesional.doc;
-            
-            // Validar que haya algo escrito (mínimo 8 dígitos para DNI)
-            if (!doc || doc.length < 8) {
-                this.msgProfesional = 'Ingrese un documento válido.';
-                return;
-            }
-
-            this.msgProfesional = 'Buscando...'; // Feedback visual
-
-            try {
-                // Usamos la ruta definida en web.php
-                // Ajusta la URL si tu prefijo de ruta es diferente
-                const response = await fetch(`/usuario/monitoreo/profesional/buscar/${doc}`);
-                
-                if (!response.ok) throw new Error('No encontrado');
-
-                const result = await response.json();
-
-                if (result.found) {
-                    const p = result.data;
-                    // Mapeamos los datos recibidos al formulario de Alpine
-                    this.form.profesional.tipo_doc = p.tipo_doc || 'DNI';
-                    this.form.profesional.nombres = p.nombres;
-                    this.form.profesional.apellido_paterno = p.apellido_paterno;
-                    this.form.profesional.apellido_materno = p.apellido_materno;
-                    this.form.profesional.email = p.email;
-                    this.form.profesional.telefono = p.telefono;
-                    
-                    this.msgProfesional = '✅ Profesional encontrado';
-                    setTimeout(() => this.msgProfesional = '', 3000);
-                }
-
-            } catch (error) {
-                console.error(error);
-                this.msgProfesional = '❌ No se encontró registro. Puede llenarlo manualmente.';
-                
-                // Opcional: Limpiar campos si no se encuentra
-                // this.form.profesional.nombres = ''; 
-                // ...
-            }
-        },
-
             saving: false,
             msgProfesional: '',
-            
-            // LISTA DE OPCIONES
             listaOpciones: ['MONITOR', 'CPU', 'TECLADO', 'MOUSE', 'IMPRESORA', 'LECTORA DE DNIe', 'TICKETERA'],
-            
             itemSeleccionado: '',
-
             files: [],
 
             form: {
@@ -306,66 +229,116 @@
                 capacitacion: {
                     recibieron_cap: '', institucion_cap: ''
                 },
-                inicio_labores: {
-                    consultorios: 0, fua: '', referencia: '', receta: '', orden_lab: ''
-                },
-                seccion_dni: {
-                    tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: ''
-                },
                 dificultades: {
                     institucion: '', medio: ''
                 },
-
-                // CAMBIO IMPORTANTE: AHORA ES UN ARRAY []
                 inventario: [], 
                 inventario_comentarios: ''
             },
 
-            // --- LÓGICA DE INVENTARIO (MULTIPLICIDAD PERMITIDA) ---
             agregarItem() {
                 if (!this.itemSeleccionado) return;
-
-                // YA NO VERIFICAMOS DUPLICADOS. PERMITIMOS AGREGAR SIEMPRE.
-                
-                // Agregamos un nuevo objeto al array con un ID único
                 this.form.inventario.push({
-                    id: Date.now() + Math.random(), // ID único para que Alpine no se confunda
-                    descripcion: this.itemSeleccionado, // Guardamos el nombre aquí (ej. MONITOR)
+                    id: Date.now() + Math.random(),
+                    descripcion: this.itemSeleccionado,
                     propiedad: 'ESTABLECIMIENTO',
                     estado: 'BUENO',
                     codigo: '',
                     observacion: ''
                 });
-
-                this.itemSeleccionado = ''; // Limpiar select
-                
-                // Refrescar iconos
+                this.itemSeleccionado = '';
                 this.$nextTick(() => { if(typeof lucide !== 'undefined') lucide.createIcons(); });
             },
 
             eliminarItem(index) {
-                // Borramos por la posición en la lista (index), no por nombre
                 this.form.inventario.splice(index, 1);
             },
 
-            // --- RESTO DE FUNCIONES IGUALES ---
             handleFiles(e) {
                 this.files = [...this.files, ...Array.from(e.target.files)];
             },
+            
             removeFile(index) {
                 this.files.splice(index, 1);
             },
+
+            // --- LÓGICA DE BÚSQUEDA CORREGIDA ---
             async buscarProfesional() {
-                // ... tu lógica de búsqueda ...
+                const doc = this.form.profesional.doc;
+                
+                if (!doc || doc.length < 8) {
+                    this.msgProfesional = 'Ingrese un documento válido.';
+                    return;
+                }
+
+                this.msgProfesional = 'Buscando...';
+
+                try {
+                    // Genera la URL base (sin el ID) usando el helper de Blade
+                    const baseUrl = "{{ route('usuario.monitoreo.profesional.buscar', '') }}";
+                    
+                    // Concatenamos el DNI
+                    const response = await fetch(`${baseUrl}/${doc}`);
+                    
+                    if (!response.ok) throw new Error('No encontrado');
+
+                    const result = await response.json();
+
+                    if (result.found) {
+                        const p = result.data;
+                        this.form.profesional.tipo_doc = p.tipo_doc || 'DNI';
+                        this.form.profesional.nombres = p.nombres;
+                        this.form.profesional.apellido_paterno = p.apellido_paterno;
+                        this.form.profesional.apellido_materno = p.apellido_materno;
+                        this.form.profesional.email = p.email;
+                        this.form.profesional.telefono = p.telefono;
+                        
+                        this.msgProfesional = '✅ Encontrado';
+                        setTimeout(() => this.msgProfesional = '', 3000);
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    this.msgProfesional = '❌ No encontrado (Llenar manual)';
+                }
             },
-            guardarTodo() {
+
+            // --- LÓGICA DE GUARDADO CORREGIDA ---
+            async guardarTodo() {
                 this.saving = true;
-                setTimeout(() => {
+                try {
+                    const formData = new FormData();
+                    formData.append('data', JSON.stringify(this.form));
+                    this.files.forEach((file, index) => {
+                        formData.append(`evidencias[${index}]`, file);
+                    });
+
+                    // Token CSRF necesario para Laravel
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    
+                    // Ruta Store
+                    const url = "{{ route('usuario.monitoreo.triaje.store', $acta->id) }}";
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': token },
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const res = await response.json();
+                        throw new Error(res.message || 'Error al guardar');
+                    }
+
+                    alert('Guardado exitosamente');
+                    window.location.reload(); 
+
+                } catch (error) {
+                    console.error(error);
+                    alert('Error: ' + error.message);
+                } finally {
                     this.saving = false;
-                    console.log("--- DATOS A ENVIAR ---");
-                    console.log(JSON.parse(JSON.stringify(this.form)));
-                    alert('MODO PRUEBA: Revisa la consola (F12) para ver el array de inventario.');
-                }, 800);
+                }
             }
         }
     }
@@ -374,7 +347,4 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 </script>
-
-
-
 @endsection

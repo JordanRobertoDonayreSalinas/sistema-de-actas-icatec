@@ -93,6 +93,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
             });
 
+            Route::get('/profesional/buscar/{doc}', [TriajeController::class, 'buscarProfesional'])->name('profesional.buscar');
+
             // Módulo 03: Triaje
             Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
                 Route::get('/{id}', [TriajeController::class, 'index'])->name('index');

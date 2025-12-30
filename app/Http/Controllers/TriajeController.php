@@ -96,8 +96,7 @@ class TriajeController extends Controller
     }
 
     public function buscarProfesional($doc)
-{
-        // Buscamos en la tabla 'mon_profesionales' usando el modelo Profesional
+    {
         $profesional = Profesional::where('doc', $doc)->first();
 
         if ($profesional) {
