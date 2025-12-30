@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3307
--- Tiempo de generación: 30-12-2025 a las 21:46:17
+-- Tiempo de generación: 30-12-2025 a las 22:44:24
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -1118,7 +1118,8 @@ INSERT INTO `mon_cabecera_monitoreo` (`id`, `user_id`, `establecimiento_id`, `ca
 (77, 6, 33, 'I-2', NULL, '2025-12-30', 'EVA LAURENTE MENDEZ', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-30 21:10:48', '2025-12-30 21:10:48'),
 (78, 6, 22, 'I-3', NULL, '2025-12-30', 'JULIO WILLIAM CRUCES LECAROS', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-30 21:22:45', '2025-12-30 21:22:45'),
 (79, 6, 30, 'I-2', NULL, '2025-12-30', 'ANALIA GIOVANA COAQUIRA DIAZ', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-30 21:26:10', '2025-12-30 21:26:10'),
-(80, 6, 62, 'I-2', NULL, '2025-12-30', 'JORGE DIEGO GALVEZ FLORES', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-30 21:40:28', '2025-12-30 21:40:28');
+(80, 6, 62, 'I-2', NULL, '2025-12-30', 'JORGE DIEGO GALVEZ FLORES', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-30 21:40:28', '2025-12-30 21:40:28'),
+(81, 6, 21, 'I-3', NULL, '2025-12-30', 'ARQUIMEDES BENDEZU GAVILAN', 'DONAYRE SALINAS JORDAN ROBERTO', 0, NULL, '2025-12-30 22:16:49', '2025-12-30 22:16:49');
 
 -- --------------------------------------------------------
 
@@ -1235,7 +1236,8 @@ INSERT INTO `mon_equipo_monitoreo` (`id`, `cabecera_monitoreo_id`, `tipo_doc`, `
 (82, 77, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-30 21:10:48', '2025-12-30 21:10:48'),
 (83, 78, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-30 21:22:45', '2025-12-30 21:22:45'),
 (84, 79, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-30 21:26:10', '2025-12-30 21:26:10'),
-(85, 80, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-30 21:40:28', '2025-12-30 21:40:28');
+(85, 80, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-30 21:40:28', '2025-12-30 21:40:28'),
+(86, 81, 'DNI', '70073797', 'GUTIERREZ', 'HILARIO', 'JUAN CARLOS', 'IMPLEMENTADOR', 'DIRESA', '2025-12-30 22:16:49', '2025-12-30 22:16:49');
 
 -- --------------------------------------------------------
 
@@ -1406,8 +1408,9 @@ INSERT INTO `mon_monitoreo_modulos` (`id`, `cabecera_monitoreo_id`, `modulo_nomb
 (42, 78, 'config_modulos', '[\"gestion_administrativa\",\"citas\",\"atencion_prenatal\",\"parto\"]', NULL, '2025-12-30 21:22:48', '2025-12-30 21:23:01'),
 (43, 79, 'config_modulos', '[\"citas\",\"gestion_administrativa\",\"parto\"]', NULL, '2025-12-30 21:26:15', '2025-12-30 21:30:12'),
 (44, 79, 'citas', '\"FINALIZADO\"', NULL, '2025-12-30 21:29:29', '2025-12-30 21:29:29'),
-(45, 80, 'config_modulos', '[\"gestion_administrativa\"]', NULL, '2025-12-30 21:40:30', '2025-12-30 21:40:30'),
-(46, 80, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"70314306\",\"tipo_doc\":\"DNI\",\"nombres\":\"JAIRO\",\"apellido_paterno\":\"MELGAR\",\"apellido_materno\":\"MESIAS\",\"email\":\"mesiasjairo@hotmail.com\",\"telefono\":\"993980540\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"DIRESA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Enero\",\"programacion_anio\":\"2027\",\"comentarios\":\"ASDASD\",\"foto_evidencia\":\"evidencias_monitoreo\\/aiFGklVdHKFvEZVj5u9sVNyRFvuHAlqQNQgUBwSw.jpg\"}', NULL, '2025-12-30 21:45:19', '2025-12-30 21:45:19');
+(45, 80, 'config_modulos', '[\"gestion_administrativa\",\"parto\"]', NULL, '2025-12-30 21:40:30', '2025-12-30 21:51:07'),
+(46, 80, 'gestion_administrativa', '{\"rrhh\":{\"doc\":\"70314306\",\"tipo_doc\":\"DNI\",\"nombres\":\"JAIRO\",\"apellido_paterno\":\"MELGAR\",\"apellido_materno\":\"MESIAS\",\"email\":\"mesiasjairo@hotmail.com\",\"telefono\":\"993980540\"},\"cuenta_sihce\":\"SI\",\"programador\":{\"doc\":null,\"tipo_doc\":\"DNI\",\"nombres\":null,\"apellido_paterno\":null,\"apellido_materno\":null,\"email\":null,\"telefono\":null},\"recibio_capacitacion\":\"SI\",\"inst_que_lo_capacito\":\"DIRESA\",\"inst_a_quien_comunica\":\"MINSA\",\"medio_que_utiliza\":\"WHATSAPP\",\"programacion_mes\":\"Enero\",\"programacion_anio\":\"2027\",\"comentarios\":\"ASDASD\",\"foto_evidencia\":\"evidencias_monitoreo\\/aiFGklVdHKFvEZVj5u9sVNyRFvuHAlqQNQgUBwSw.jpg\"}', NULL, '2025-12-30 21:45:19', '2025-12-30 21:45:19'),
+(47, 81, 'config_modulos', '[\"gestion_administrativa\"]', NULL, '2025-12-30 22:16:52', '2025-12-30 22:16:52');
 
 -- --------------------------------------------------------
 
@@ -6156,7 +6159,7 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT de la tabla `mon_cabecera_monitoreo`
 --
 ALTER TABLE `mon_cabecera_monitoreo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_equipos_computo`
@@ -6168,7 +6171,7 @@ ALTER TABLE `mon_equipos_computo`
 -- AUTO_INCREMENT de la tabla `mon_equipo_monitoreo`
 --
 ALTER TABLE `mon_equipo_monitoreo`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_modulo_citas`
@@ -6192,7 +6195,7 @@ ALTER TABLE `mon_modulo_prenatal`
 -- AUTO_INCREMENT de la tabla `mon_monitoreo_modulos`
 --
 ALTER TABLE `mon_monitoreo_modulos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT de la tabla `mon_profesionales`

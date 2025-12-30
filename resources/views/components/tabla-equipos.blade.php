@@ -1,22 +1,6 @@
 @props(['equipos' => [], 'modulo' => '', 'esHistorico' => false])
 
 <div class="bg-white border {{ $esHistorico ? 'border-amber-200 shadow-amber-50' : 'border-slate-200 shadow-sm' }} rounded-[2.5rem] overflow-hidden transition-all hover:shadow-lg group/container">
-    
-    {{-- AVISO DE DATOS HISTÓRICOS (Se activa solo si esHistorico es true y hay datos) --}}
-    @if($esHistorico && count($equipos) > 0)
-        <div class="bg-amber-50 border-b border-amber-100 px-8 py-3 flex items-center justify-between animate-pulse-slow">
-            <div class="flex items-center gap-3">
-                <div class="h-6 w-6 rounded-full bg-amber-500 flex items-center justify-center text-white">
-                    <i data-lucide="history" class="w-3.5 h-3.5"></i>
-                </div>
-                <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest">
-                    Sugerencia: Se cargaron equipos del monitoreo anterior. Verifique y guarde para confirmar.
-                </p>
-            </div>
-            <span class="text-[9px] font-bold text-amber-500 bg-white px-3 py-1 rounded-full border border-amber-200 uppercase">Referencia</span>
-        </div>
-    @endif
-
     {{-- CABECERA --}}
     <div class="bg-slate-50 border-b border-slate-100 px-8 py-5 flex justify-between items-center">
         <div class="flex items-center gap-4">
@@ -25,7 +9,7 @@
             </div>
             <div>
                 <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block leading-none">Inventario de Equipamiento</span>
-                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">Gestión de activos tecnológicos</p>
+                <p class="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-tighter">Gestión de activos tecnológicos</p>
             </div>
         </div>
         
@@ -36,24 +20,12 @@
         </button>
     </div>
 
-    {{-- DATALIST DE SUGERENCIAS --}}
-    <datalist id="list_equipos_master">
-        <option value="CPU">
-        <option value="MONITOR">
-        <option value="TECLADO">
-        <option value="MOUSE">
-        <option value="LECTOR DNIe">
-        <option value="IMPRESORA">
-        <option value="LAPTOP">
-        <option value="TICKETERA">
-    </datalist>
-
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto custom-scroll">
         <table class="w-full border-collapse">
             <thead>
                 <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 bg-slate-50/30">
                     <th class="px-8 py-4 text-left">Descripción del Hardware</th>
-                    <th class="px-4 py-4 text-left">N° de Serie</th>
+                    <th class="px-4 py-4 text-left">N° de Serie / QR</th>
                     <th class="px-4 py-4 text-center" width="80">Cant.</th>
                     <th class="px-4 py-4 text-left" width="150">Estado</th>
                     <th class="px-4 py-4 text-left" width="130">Propiedad</th>
@@ -66,46 +38,34 @@
                     <tr class="hover:bg-slate-50/50 transition-colors group/row">
                         <td class="px-8 py-4">
                             <input type="text" name="equipos[{{ $index }}][descripcion]" value="{{ $eq->descripcion }}" 
-                                   class="input-table-text {{ $esHistorico ? 'text-amber-600 font-bold border-amber-100' : '' }}" 
-                                   required list="list_equipos_master" placeholder="Seleccione o escriba...">
+                                   class="input-table-text" required list="list_equipos_master" placeholder="Seleccione...">
                         </td>
                         <td class="px-4 py-4">
-                            <input type="text" name="equipos[{{ $index }}][nro_serie]" value="{{ $eq->nro_serie }}" 
-                                   class="input-table-text {{ $esHistorico ? 'border-amber-100' : '' }}" placeholder="S/N">
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="serie_{{ $modulo }}_{{ $index }}" name="equipos[{{ $index }}][nro_serie]" value="{{ $eq->nro_serie }}" 
+                                       class="input-table-text font-mono text-indigo-600 font-bold" placeholder="S/N o QR">
+                                <button type="button" onclick="openScanner('serie_{{ $modulo }}_{{ $index }}')" 
+                                        class="h-9 w-9 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                    <i data-lucide="scan-line" class="w-5 h-5"></i>
+                                </button>
+                            </div>
                         </td>
                         <td class="px-4 py-4 text-center">
                             <input type="hidden" name="equipos[{{ $index }}][cantidad]" value="1">
-                            <span class="text-xs font-black {{ $esHistorico ? 'text-amber-500' : 'text-slate-400' }}">1</span>
+                            <span class="text-xs font-black text-slate-400">1</span>
                         </td>
-                        <td class="px-4 py-4">
-                            <select name="equipos[{{ $index }}][estado]" class="select-table-custom {{ $esHistorico ? 'border-amber-200 bg-amber-50/30' : '' }}">
-                                <option value="BUENO" {{ $eq->estado == 'BUENO' ? 'selected' : '' }}>🟢 BUENO</option>
-                                <option value="REGULAR" {{ $eq->estado == 'REGULAR' ? 'selected' : '' }}>🟡 REGULAR</option>
-                                <option value="MALO" {{ $eq->estado == 'MALO' ? 'selected' : '' }}>🔴 MALO</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-4">
-                            <select name="equipos[{{ $index }}][propio]" class="select-table-custom {{ $esHistorico ? 'border-amber-200 bg-amber-50/30' : '' }}">
-                                <option value="SI" {{ $eq->propio == 'SI' ? 'selected' : '' }}>SI</option>
-                                <option value="NO" {{ $eq->propio == 'NO' ? 'selected' : '' }}>NO</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-4">
-                            <input type="text" name="equipos[{{ $index }}][observacion]" value="{{ $eq->observacion }}" 
-                                   class="input-table-text text-[10px] {{ $esHistorico ? 'border-amber-100' : '' }}" placeholder="...">
-                        </td>
+                        <td class="px-4 py-4 text-center select-none">—</td>
+                        <td class="px-4 py-4 text-center select-none">—</td>
+                        <td class="px-4 py-4 text-center select-none">—</td>
                         <td class="px-6 py-4 text-right">
-                            <button type="button" onclick="removeRow(this, '{{ $modulo }}')" 
-                                    class="h-8 w-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover/row:opacity-100">
+                            <button type="button" onclick="removeRow(this, '{{ $modulo }}')" class="text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
                     </tr>
                 @empty
                     <tr id="no_data_{{ $modulo }}">
-                        <td colspan="7" class="py-16 text-center text-slate-400 text-xs font-bold uppercase italic tracking-widest">
-                            Sin registros de hardware
-                        </td>
+                        <td colspan="7" class="py-16 text-center text-slate-400 text-xs font-bold uppercase italic tracking-widest">Sin registros de hardware</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -113,95 +73,137 @@
     </div>
 </div>
 
+{{-- MODAL SCANNER --}}
+<div id="modal_scanner" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-4">
+    <div class="bg-white rounded-[3rem] w-full max-w-md overflow-hidden shadow-2xl">
+        <div class="p-6 flex justify-between items-center bg-slate-50 border-b">
+            <h3 class="text-xs font-black uppercase tracking-widest text-slate-700">Scanner Inteligente</h3>
+            <button type="button" onclick="stopScanner()" class="text-slate-400 hover:text-red-500 transition-colors">
+                <i data-lucide="x-circle" class="w-7 h-7"></i>
+            </button>
+        </div>
+        <div class="p-6">
+            <div id="reader" style="width: 100%;" class="rounded-[2rem] overflow-hidden bg-black aspect-square"></div>
+            <p class="mt-6 text-[10px] font-black text-slate-400 text-center uppercase tracking-[0.2em]">Enfoque el código con la cámara</p>
+        </div>
+    </div>
+</div>
+
 <script>
+    let html5QrCode = null;
+    let currentInputId = null;
+
+    // Función principal para abrir cámara
+    async function openScanner(id) {
+        currentInputId = id;
+        
+        // MOSTRAR MODAL PRIMERO
+        const modal = document.getElementById('modal_scanner');
+        modal.classList.remove('hidden');
+
+        // LIMPIEZA ABSOLUTA DE INSTANCIAS
+        if (html5QrCode) {
+            try {
+                await html5QrCode.stop();
+            } catch (e) { console.log("Cámara ya estaba cerrada"); }
+            html5QrCode = null;
+        }
+
+        // CREAR INSTANCIA NUEVA CADA VEZ (Esto evita el bug de que se cierre solo)
+        html5QrCode = new Html5Qrcode("reader");
+
+        const config = { 
+            fps: 20, 
+            qrbox: { width: 250, height: 180 }, // Caja rectangular para códigos de barras
+            aspectRatio: 1.0
+        };
+
+        try {
+            await html5QrCode.start(
+                { facingMode: "environment" }, 
+                config,
+                (decodedText) => {
+                    // ÉXITO: Poner el valor en el input
+                    document.getElementById(currentInputId).value = decodedText.trim().toUpperCase();
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    stopScanner(); // Cerrar al detectar
+                }
+            );
+        } catch (err) {
+            console.error("No se pudo abrir la cámara:", err);
+            // Si el error es por seguridad (HTTPS), avisar al usuario
+            alert("Error: Para usar la cámara debe acceder por 'localhost' o un sitio seguro 'HTTPS'.");
+            modal.classList.add('hidden');
+        }
+    }
+
+    // Función para cerrar cámara de forma segura
+    async function stopScanner() {
+        document.getElementById('modal_scanner').classList.add('hidden');
+        if (html5QrCode) {
+            try {
+                if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
+                html5QrCode.clear();
+            } catch (err) {
+                console.log("Error al limpiar:", err);
+            }
+        }
+    }
+
+    // Funciones auxiliares de tabla
     function addEquipRow(modulo) {
         const body = document.getElementById('body_equipos_' + modulo);
         const noData = document.getElementById('no_data_' + modulo);
         if (noData) noData.remove();
-
-        // Calcular index basado en la cantidad de filas reales
         const index = body.querySelectorAll('tr').length;
+        const rowId = `serie_${modulo}_${Date.now()}`;
         const row = document.createElement('tr');
         row.className = "hover:bg-slate-50/50 transition-colors group/row";
-        
         row.innerHTML = `
-            <td class="px-8 py-4">
-                <input type="text" name="equipos[${index}][descripcion]" class="input-table-text" required list="list_equipos_master" placeholder="Seleccione o escriba...">
-            </td>
+            <td class="px-8 py-4"><input type="text" name="equipos[${index}][descripcion]" class="input-table-text" required list="list_equipos_master"></td>
             <td class="px-4 py-4">
-                <input type="text" name="equipos[${index}][nro_serie]" class="input-table-text" placeholder="S/N">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="${rowId}" name="equipos[${index}][nro_serie]" class="input-table-text font-mono font-bold" placeholder="S/N o QR">
+                    <button type="button" onclick="openScanner('${rowId}')" class="h-9 w-9 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                        <i data-lucide="scan-line" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </td>
-            <td class="px-4 py-4 text-center">
-                <input type="hidden" name="equipos[${index}][cantidad]" value="1">
-                <span class="text-xs font-black text-slate-400">1</span>
-            </td>
-            <td class="px-4 py-4">
-                <select name="equipos[${index}][estado]" class="select-table-custom">
-                    <option value="BUENO">🟢 BUENO</option>
-                    <option value="REGULAR">🟡 REGULAR</option>
-                    <option value="MALO">🔴 MALO</option>
-                </select>
-            </td>
-            <td class="px-4 py-4">
-                <select name="equipos[${index}][propio]" class="select-table-custom">
-                    <option value="SI">INSTITUCIONAL</option>
-                    <option value="NO">PERSONAL</option>
-                </select>
-            </td>
-            <td class="px-4 py-4">
-                <input type="text" name="equipos[${index}][observacion]" class="input-table-text text-[10px]" placeholder="...">
-            </td>
+            <td class="px-4 py-4 text-center"><span class="text-xs font-black text-slate-400">1</span></td>
+            <td class="px-4 py-4 text-center">—</td><td class="px-4 py-4 text-center">—</td><td class="px-4 py-4 text-center">—</td>
             <td class="px-6 py-4 text-right">
-                <button type="button" onclick="removeRow(this, '${modulo}')" 
-                        class="h-8 w-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
+                <button type="button" onclick="removeRow(this, '${modulo}')" class="h-8 w-8 text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             </td>
         `;
         body.appendChild(row);
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (window.refreshLucide) window.refreshLucide();
     }
 
     function removeRow(btn, modulo) {
         btn.closest('tr').remove();
-        const body = document.getElementById('body_equipos_' + modulo);
-        if (body.querySelectorAll('tr').length === 0) {
-            body.innerHTML = `<tr id="no_data_${modulo}"><td colspan="7" class="py-16 text-center text-slate-400 text-xs font-bold uppercase italic tracking-widest">Sin registros de hardware</td></tr>`;
-        }
     }
 </script>
 
 <style>
     .input-table-text {
-        width: 100%;
-        background-color: transparent;
-        border: none;
-        border-bottom: 2px solid #f1f5f9;
-        padding: 4px 0;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #334155;
-        outline: none;
-        transition: all 0.3s;
+        width: 100%; background: transparent; border: none; border-bottom: 2px solid #f1f5f9;
+        padding: 4px 6px; font-size: 0.75rem; font-weight: 700; color: #334155;
+        outline: none; transition: all 0.3s;
     }
-    .input-table-text:focus {
-        border-bottom-color: #6366f1;
+    .input-table-text:focus { border-bottom-color: #6366f1; }
+    #reader { position: relative; }
+    #reader::after {
+        content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
+        background: rgba(239, 68, 68, 0.7); box-shadow: 0 0 8px red; z-index: 10;
+        animation: scanLine 2s linear infinite;
     }
-    .select-table-custom {
-        width: 100%;
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.75rem;
-        padding: 4px 8px;
-        font-size: 10px;
-        font-weight: 800;
-        color: #475569;
-        outline: none;
-        cursor: pointer;
+    @keyframes scanLine {
+        0% { top: 20%; opacity: 0; }
+        50% { top: 50%; opacity: 1; }
+        100% { top: 80%; opacity: 0; }
     }
-    @keyframes pulse-slow {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.8; }
-    }
-    .animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 </style>
