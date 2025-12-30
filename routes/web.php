@@ -87,6 +87,13 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
             });
 
+            // Módulo 04: Consulta Externa - Medicina
+            Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
+                Route::get('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'index'])->name('index');
+                Route::post('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [\App\Http\Controllers\ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+            });
+
             // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
