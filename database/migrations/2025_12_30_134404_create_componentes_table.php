@@ -33,9 +33,10 @@ return new class extends Migration
             $table->foreignId('profesional_id')->constrained('mon_profesionales');
 
             $table->string('descripcion'); // Opciones: MONITOR, CPU, TECLADO, MOUSE, IMPRESORA, TICKETERA, LECTORA DE DNIe
-            $table->string('cantidad');
+            $table->string('cantidad'); // Opciones: siempre sera 1
             $table->string('propiedad'); // Opciones: ESTABLECIMIENTO, PERSONAL 
             $table->string('estado'); // opciones: BUENO, REGULAR, MALO
+            $table->string('cod_barras');
             $table->string('observaciones');
             $table->text('comentarios')->nullable();
             $table->timestamps();

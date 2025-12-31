@@ -95,12 +95,24 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/profesional/buscar/{doc}', [TriajeController::class, 'buscarProfesional'])->name('profesional.buscar');
 
+            // --- API DE PROFESIONALES (Buscar) ---
+            // Route::controller(App\Http\Controllers\ProfesionalController::class)
+            //     ->prefix('modulo/profesionales') // Prefijo URL
+            //     ->name('profesionales.')         // Prefijo Nombre: usuario.monitoreo.profesionales.
+            //     ->group(function () {
+            //         Route::get('/buscar/{doc}', 'buscar')->name('buscar');
+            //     });
+
             // Módulo 03: Triaje
             Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
                 Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
                 Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
+
+                Route::get('/buscar-profesional/{doc}', [TriajeController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');  
             });
+            
 
             // Módulo 05: Odontologia
             Route::prefix('modulo/consulta-odontologia')->name('consulta-odontologia.')->group(function () {

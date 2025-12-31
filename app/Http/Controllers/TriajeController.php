@@ -7,105 +7,170 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Acta;
 use App\Models\Profesional;
+use App\Models\ComCapacitacion;
+use App\Models\ComEquipamiento;
+use App\Models\ComDificultad;
+use App\Models\ComFotos;
 
 class TriajeController extends Controller
 {
+    // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
     public function index($id){
         $acta = Acta::with('establecimiento')->findOrFail($id);
-        return view('usuario.monitoreo.modulos.triaje', compact('acta'));
+        
+        $dbCapacitacion = ComCapacitacion::with('profesional')
+                    ->where('acta_id', $id)->where('modulo_id', 'TRIAJE')->first();
+
+        $dbInventario = ComEquipamiento::where('acta_id', $id)
+                            ->where('modulo_id', 'TRIAJE')->get();
+        
+        $dbDificultad = ComDificultad::where('acta_id', $id)
+                            ->where('modulo_id', 'TRIAJE')->first();
+
+        // 4. CARGAR FOTOS (NUEVO)
+        $dbFotos = ComFotos::where('acta_id', $id)
+                        ->where('modulo_id', 'TRIAJE')->get();
+
+        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos'));
     }
 
-    public function store(Request $request, $id) {
-        try {
-            DB::beginTransaction();
-
-            // 1. Decodificar el JSON que viene del frontend
-            $data = json_decode($request->input('data'), true);
-            
-            // Validar que el JSON sea válido
-            if (!$data) {
-                throw new \Exception("Datos inválidos recibidos.");
-            }
-
-            // --- A. GUARDAR DATOS DEL PROFESIONAL ---
-            // Asumiendo que tienes una tabla 'mon_profesionales' vinculada al monitoreo_id
-            // $profesionalData = $data['profesional'];
-            // MonProfesional::create([
-            //     'monitoreo_id' => $id,
-            //     'tipo_doc' => $profesionalData['tipo_doc'],
-            //     'numero_documento' => $profesionalData['doc'],
-            //     'nombres' => $profesionalData['nombres'],
-            //     'apellido_paterno' => $profesionalData['apellido_paterno'],
-            //     'apellido_materno' => $profesionalData['apellido_materno'],
-            //     'telefono' => $profesionalData['telefono'],
-            //     'email' => $profesionalData['email'],
-            // ]);
-
-            // --- B. GUARDAR RESPUESTAS (Capacitación, Dificultades, etc.) ---
-            // Puedes guardar esto en una tabla de respuestas o campos JSON en el acta
-            // Ejemplo:
-            // $respuestas = [
-            //    'capacitacion' => $data['capacitacion'],
-            //    'dificultades' => $data['dificultades'],
-            //    'seccion_dni'  => $data['seccion_dni']
-            // ];
-            // Si tienes una tabla mon_respuestas:
-            // foreach($respuestas as $categoria => $contenido) {
-            //      MonRespuestaEntrevistado::create([
-            //          'monitoreo_id' => $id,
-            //          'modulo' => 'TRIAJE',
-            //          'pregunta' => $categoria, // O el ID de la pregunta
-            //          'respuesta' => json_encode($contenido)
-            //      ]);
-            // }
-
-            // --- C. GUARDAR INVENTARIO (Equipos) ---
-            if (!empty($data['inventario'])) {
-                foreach ($data['inventario'] as $equipo) {
-                    // Usando el modelo que vi en tus migraciones 'mon_equipos_computo'
-                    // MonEquipoComputo::create([
-                    //     'monitoreo_id' => $id,
-                    //     'area' => 'TRIAJE',
-                    //     'descripcion' => $equipo['descripcion'],
-                    //     'propiedad' => $equipo['propiedad'],
-                    //     'estado' => $equipo['estado'],
-                    //     'cod_patrimonial' => $equipo['codigo'],
-                    //     'observacion' => $equipo['observacion']
-                    // ]);
-                }
-            }
-
-            // --- D. SUBIDA DE IMÁGENES (EVIDENCIAS) ---
-            if ($request->hasFile('evidencias')) {
-                foreach ($request->file('evidencias') as $file) {
-                    $path = $file->store('evidencias/triaje/' . $id, 'public');
-                    
-                    // Guardar la ruta en la tabla correspondiente (ej. tabla evidencias o actualizar campos en acta)
-                    // Evidencia::create(['monitoreo_id' => $id, 'ruta' => $path, 'modulo' => 'TRIAJE']);
-                }
-            }
-
-            DB::commit();
-
-            return response()->json(['message' => 'Datos de Triaje guardados correctamente.']);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error en el servidor: ' . $e->getMessage()], 500);
-        }
-    }
-
+    // 2. BUSCADOR (Sin cambios)
     public function buscarProfesional($doc)
     {
         $profesional = Profesional::where('doc', $doc)->first();
 
         if ($profesional) {
-            return response()->json([
-                'found' => true,
-                'data' => $profesional
-            ]);
+            return response()->json(['success' => true, 'data' => $profesional]);
         } else {
-            return response()->json(['found' => false], 404);
+            return response()->json(['success' => false, 'message' => 'Profesional no encontrado.']);
+        }
+    }
+
+    // 3. STORE: Guarda y Redirige
+    public function store(Request $request, $id)
+    {
+        // AHORA RECIBIMOS UN FORM-DATA HÍBRIDO.
+        // El texto viene en un campo llamado 'data' (string JSON)
+        // Las fotos vienen en 'fotos[]'
+        
+        // 1. Decodificar el JSON de datos
+        $data = json_decode($request->input('data'), true);
+
+        // Validamos manualmente porque $request->validate no lee directo del JSON string
+        if (!$data || !isset($data['profesional']['doc'])) {
+             return response()->json(['success' => false, 'message' => 'Faltan datos del profesional'], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. PROFESIONAL
+            $datosProfesional = $data['profesional'];
+            $profesional = Profesional::updateOrCreate(
+                ['doc' => $datosProfesional['doc'], 'tipo_doc' => $datosProfesional['tipo_doc'] ?? 'DNI'],
+                [
+                    'apellido_paterno' => $datosProfesional['apellido_paterno'],
+                    'apellido_materno' => $datosProfesional['apellido_materno'],
+                    'nombres'          => $datosProfesional['nombres'],
+                    'email'            => $datosProfesional['email'],
+                    'telefono'         => $datosProfesional['telefono'],
+                ]
+            );
+
+            // 2. CAPACITACIÓN
+            $datosCapacitacion = $data['capacitacion'];
+            ComCapacitacion::updateOrCreate(
+                ['acta_id' => $id, 'modulo_id' => 'TRIAJE'],
+                [
+                    'profesional_id'  => $profesional->id,
+                    'recibieron_cap'  => $datosCapacitacion['recibieron_cap'],
+                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? $datosCapacitacion['institucion_cap'] : null
+                ]
+            );
+
+
+            // 3. INVENTARIO
+            ComEquipamiento::where('acta_id', $id)->where('modulo_id', 'TRIAJE')->delete();
+            $listaInventario = $data['inventario'] ?? [];
+            $comentarioGeneral = $data['inventario_comentarios'] ?? '';
+
+            if (!empty($listaInventario)) {
+                foreach ($listaInventario as $item) {
+                    
+                    // YA NO CONCATENAMOS. Guardamos directo.
+                    
+                    ComEquipamiento::create([
+                        'acta_id'        => $id,
+                        'modulo_id'      => 'TRIAJE',
+                        'profesional_id' => $profesional->id,
+                        'descripcion'    => $item['descripcion'],
+                        'cantidad'       => '1', // Siempre 1 según tu indicación
+                        'propiedad'      => $item['propiedad'],
+                        'estado'         => $item['estado'],
+                        
+                        // Mapeo directo: JS 'codigo' -> BD 'cod_barras'
+                        'cod_barras'     => $item['codigo'] ?? null, 
+                        
+                        'observaciones'  => $item['observacion'] ?? '',
+                        'comentarios'    => $comentarioGeneral
+                    ]);
+                }
+            }
+
+            // 4. DIFICULTADES
+            $datosDificultad = $data['dificultades'];
+            ComDificultad::updateOrCreate(
+                ['acta_id' => $id, 'modulo_id' => 'TRIAJE'],
+                [
+                    'profesional_id' => $profesional->id,
+                    'insti_comunica' => $datosDificultad['institucion'] ?? null,
+                    'medio_comunica' => $datosDificultad['medio'] ?? null,
+                ]
+            );
+
+            // ----------------------------------------------------
+            // 5. FOTOS (NUEVO BLOQUE)
+            // ----------------------------------------------------
+            if ($request->hasFile('fotos')) {
+                foreach ($request->file('fotos') as $foto) {
+                    // Guardar en carpeta: storage/app/public/evidencia_fotos
+                    // Asegúrate de correr: php artisan storage:link
+                    $path = $foto->store('evidencia_fotos', 'public');
+
+                    ComFotos::create([
+                        'acta_id'        => $id,
+                        'modulo_id'      => 'TRIAJE',
+                        'profesional_id' => $profesional->id,
+                        'url_foto'       => $path
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'redirect' => route('usuario.monitoreo.modulos', $id)]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function eliminarFoto($id)
+    {
+        try {
+            $foto = ComFotos::findOrFail($id);
+
+            // 1. Borrar archivo del almacenamiento (disco 'public')
+            if (Storage::disk('public')->exists($foto->url_foto)) {
+                Storage::disk('public')->delete($foto->url_foto);
+            }
+
+            // 2. Borrar registro de la BD
+            $foto->delete();
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }
