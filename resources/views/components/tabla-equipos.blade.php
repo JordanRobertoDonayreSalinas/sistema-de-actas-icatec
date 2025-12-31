@@ -62,10 +62,11 @@
                             </select>
                         </td>
                         <td class="px-4 py-4">
-                            <select name="equipos[{{ $index }}][propiedad]" class="input-table-select">
-                                <option value="DEL SERVICIO" {{ $eq->propiedad == 'SERVICIO' ? 'selected' : '' }}>SERVICIO</option>
-                                <option value="PERSONAL" {{ $eq->propiedad == 'PERSONAL' ? 'selected' : '' }}>PERSONAL</option>
-                                <option value="OTRO SERVICIO" {{ $eq->propiedad == 'ESTABLECIMIENTO' ? 'selected' : '' }}>ESTABLECIMIENTO</option>
+                            {{-- CORRECCIÓN: 'propio' en minúsculas para coincidir con el controlador --}}
+                            <select name="equipos[{{ $index }}][propio]" class="input-table-select">
+                                <option value="ESTABLECIMIENTO" {{ $eq->propio == 'ESTABLECIMIENTO' ? 'selected' : '' }}>ESTABLECIMIENTO</option>
+                                <option value="PERSONAL" {{ $eq->propio == 'PERSONAL' ? 'selected' : '' }}>PERSONAL</option>
+                                <option value="SERVICIO" {{ $eq->propio == 'SERVICIO' ? 'selected' : '' }}>SERVICIO</option>
                             </select>
                         </td>
                         <td class="px-4 py-4">
@@ -91,15 +92,15 @@
 {{-- DATALIST PARA SUGERENCIAS --}}
 <datalist id="list_equipos_master">
     <option value="CPU">
-    <option value="IMPRESORA MULTIFUNCIONAL">
+    <option value="IMPRESORA">
     <option value="LAPTOP">
-    <option value="LECTOR DE CODIGO DE BARRAS">
     <option value="LECTOR DE DNIe">
     <option value="MONITOR">
     <option value="MOUSE">
-    <option value="SCANNER">
+    <option value="SCANNER">   
     <option value="TABLET">
     <option value="TECLADO">
+    <option value="TICKETERA">
 </datalist>
 
 {{-- MODAL SCANNER --}}
@@ -189,9 +190,9 @@
             </td>
             <td class="px-4 py-4">
                 <select name="equipos[${index}][propiedad]" class="input-table-select">
-                    <option value="SERVICIO">SERVICIO</option>
+                    <option value="DEL SERVICIO">DEL SERVICIO</option>
                     <option value="PERSONAL">PERSONAL</option>
-                    <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
+                    <option value="OTRO SERVICIO">OTRO SERVICIO</option>
                 </select>
             </td>
             <td class="px-4 py-4"><input type="text" name="equipos[${index}][observaciones]" class="input-table-text uppercase"></td>

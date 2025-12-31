@@ -23,7 +23,7 @@
 
         /* SECCIÓN DE FIRMAS */
         .firmas-wrapper { margin-top: 10px; width: 100%; text-align: center; }
-        .firma-recuadro { 
+        .firma-box { 
             width: 50%; 
             border: 1px solid #94a3b8; 
             border-radius: 10px; 
@@ -110,7 +110,8 @@
                 <td>{{ $eq->nro_serie ?? 'S/N' }}</td>
                 <td class="text-center">{{ $eq->cantidad }}</td>
                 <td>{{ $eq->estado }}</td>
-                <td>{{ $eq->propio ? 'INSTITUCIONAL' : 'PERSONAL' }}</td>
+                {{-- Se ajustó para mostrar el valor de texto directo de la base de datos --}}
+                <td>{{ $eq->propio }}</td>
             </tr>
             @empty
             <tr><td colspan="5" class="text-center" style="color: #94a3b8; padding: 15px;">No se registraron equipos en este módulo.</td></tr>
@@ -139,7 +140,7 @@
 
     <div class="section-title">7. Firma de Conformidad</div>
     <div class="firmas-wrapper">
-        <div class="firma-recuadro">
+        <div class="firma-box">
             <div class="firma-espacio"></div>
             <div class="firma-linea-firmar"></div>
             <div class="firma-nombre">

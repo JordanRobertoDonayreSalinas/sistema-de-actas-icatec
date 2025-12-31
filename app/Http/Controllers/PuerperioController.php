@@ -53,11 +53,17 @@ class PuerperioController extends Controller
                 );
             }
 
-            // 2. Guardar Equipos
+            // 2. Guardar Equipos (Corregido para manejar VARCHAR en 'propio')
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
             if ($request->has('equipos')) {
                 foreach ($request->equipos as $eq) {
                     if (!empty($eq['descripcion'])) {
+                        // Validamos el valor de propiedad según las nuevas categorías
+                        $valorPropio = mb_strtoupper($eq['propio'] ?? 'PERSONAL', 'UTF-8');
+                        if (!in_array($valorPropio, ['ESTABLECIMIENTO', 'SERVICIO', 'PERSONAL'])) {
+                            $valorPropio = 'PERSONAL';
+                        }
+
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $this->modulo,
@@ -65,7 +71,7 @@ class PuerperioController extends Controller
                             'cantidad'    => 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
                             'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? 'S/N', 'UTF-8'),
-                            'propio'      => ($eq['propio'] ?? '') === 'SI' ? 1 : 0,
+                            'propio'      => $valorPropio, // Ahora guarda el texto directamente
                         ]);
                     }
                 }
@@ -82,17 +88,18 @@ class PuerperioController extends Controller
                 $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'] ?? null;
             }
 
-            // 4. Guardar JSON
+            // 4. Guardar JSON de contenido del módulo
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
                 ['contenido' => $datos]
             );
 
             DB::commit();
-            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Módulo de Puerperio guardado.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Módulo de Puerperio guardado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
+            Log::error("Error en PuerperioController@store: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Error al guardar el módulo: ' . $e->getMessage()]);
         }
     }
 }

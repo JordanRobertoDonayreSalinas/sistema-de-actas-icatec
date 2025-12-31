@@ -49,7 +49,7 @@
                 
                 <div class="max-w-md mb-8">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuenta con acceso al sistema?</label>
-                    <select name="contenido[cuenta_sihce]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 font-bold text-sm outline-none transition-all cursor-pointer shadow-sm" onchange="toggleProgramador(this.value)">
+                    <select name="contenido[cuenta_sihce]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 font-bold text-sm outline-none transition-all cursor-pointer shadow-sm uppercase" onchange="toggleProgramador(this.value)">
                         <option value="SI" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'SI') ? 'selected' : '' }}>SÍ, POSEE CREDENCIALES ACTIVAS</option>
                         <option value="NO" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'NO') ? 'selected' : '' }}>NO POSEE CREDENCIALES</option>
                     </select>
@@ -68,14 +68,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10 border-b border-slate-100 pb-10">
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">3. ¿Recibió capacitación?</label>
-                        <select name="contenido[recibio_capacitacion]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all">
+                        <select name="contenido[recibio_capacitacion]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase">
                             <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SÍ, FUE CAPACITADO</option>
                             <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO HA SIDO CAPACITADO</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">4. Entidad Capacitadora</label>
-                        <select name="contenido[inst_que_lo_capacito]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all">
+                        <select name="contenido[inst_que_lo_capacito]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase">
                             <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
                             <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
                             <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
@@ -83,7 +83,10 @@
                     </div>
                 </div>
 
-                <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
+                {{-- TABLA DE EQUIPOS: JALA ESTABLECIMIENTO, SERVICIO, PERSONAL --}}
+                <div class="mt-6">
+                    <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
+                </div>
             </div>
 
             {{-- SECCIÓN 4: COMUNICACIÓN Y PROGRAMACIÓN --}}
@@ -91,7 +94,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">5. ¿A quién comunica dificultades?</label>
-                        <select name="contenido[inst_a_quien_comunica]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none">
+                        <select name="contenido[inst_a_quien_comunica]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase">
                             @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTRO'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
@@ -99,7 +102,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">6. ¿Qué medio utiliza?</label>
-                        <select name="contenido[medio_que_utiliza]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none">
+                        <select name="contenido[medio_que_utiliza]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase">
                             @foreach(['WHATSAPP','TELEFONO','EMAIL'] as $me)
                                 <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
                             @endforeach
@@ -110,7 +113,7 @@
                 <div class="pt-6 border-t border-slate-100">
                     <label class="block text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 italic">7. Programación actual en el SIHCE hasta:</label>
                     <div class="flex flex-wrap gap-4">
-                        <select name="contenido[programacion_mes]" class="flex-1 min-w-[200px] px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 shadow-sm">
+                        <select name="contenido[programacion_mes]" class="flex-1 min-w-[200px] px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 shadow-sm uppercase">
                             @foreach(['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] as $mes)
                                 <option value="{{ $mes }}" {{ ($detalle->contenido['programacion_mes'] ?? '') == $mes ? 'selected' : '' }}>{{ $mes }}</option>
                             @endforeach
@@ -125,17 +128,16 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-indigo-400 mb-6 flex items-center gap-2">
-                            <i data-lucide="message-square" class="w-5 h-5"></i> Comentarios
+                            <i data-lucide="message-square" class="w-5 h-5"></i> 8. Comentarios
                         </h3>
                         <textarea name="contenido[comentarios]" rows="5" class="w-full bg-white/5 border-2 border-white/10 rounded-3xl p-6 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/20 shadow-inner">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
                     </div>
                     
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-red-400 mb-6 flex items-center gap-2">
-                            <i data-lucide="camera" class="w-5 h-5"></i> Evidencia Fotográfica
+                            <i data-lucide="camera" class="w-5 h-5"></i> 9. Evidencia Fotográfica
                         </h3>
                         
-                        {{-- VISTA PREVIA DE IMAGEN EXISTENTE --}}
                         @if(isset($detalle->contenido['foto_evidencia']))
                             <div class="mb-6 relative group w-full max-w-xs">
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
@@ -143,14 +145,11 @@
                                     <img src="{{ asset('storage/' . $detalle->contenido['foto_evidencia']) }}" 
                                          class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700">
                                 </div>
-                                <div class="absolute -top-2 -right-2 bg-emerald-500 text-white p-2 rounded-full shadow-lg">
-                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                                </div>
                             </div>
                         @endif
 
                         <div class="relative group">
-                            <input type="file" name="foto_evidencia" id="foto_evidencia" {{ isset($detalle->contenido['foto_evidencia']) ? '' : 'required' }} accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
+                            <input type="file" name="foto_evidencia" id="foto_evidencia" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
                             <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2.5rem] p-10 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all duration-500 shadow-inner">
                                 <i data-lucide="upload-cloud" id="upload-icon" class="w-10 h-10 text-indigo-400 mb-4"></i>
                                 <span id="file-name-display" class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center leading-relaxed">
@@ -166,7 +165,7 @@
             {{-- BOTÓN DE GUARDADO FINAL --}}
             <div class="pt-10 pb-20">
                 <button type="submit" id="btn-submit-action" 
-                        class="w-full group bg-indigo-600 text-white p-10 rounded-[3rem] font-black shadow-2xl shadow-indigo-200 flex items-center justify-between hover:bg-indigo-700 transition-all duration-500 active:scale-[0.98] cursor-pointer">
+                        class="w-full group bg-indigo-600 text-white p-10 rounded-[3rem] font-black shadow-2xl flex items-center justify-between hover:bg-indigo-700 transition-all duration-500 active:scale-[0.98]">
                     <div class="flex items-center gap-8 pointer-events-none">
                         <div class="h-16 w-16 bg-white/20 rounded-3xl flex items-center justify-center group-hover:rotate-12 transition-all shadow-lg border border-white/30">
                             <i data-lucide="save" id="icon-save-loader" class="w-8 h-8 text-white"></i>
@@ -214,13 +213,10 @@
     document.getElementById('form-monitoreo-final').onsubmit = function() {
         const btn = document.getElementById('btn-submit-action');
         const icon = document.getElementById('icon-save-loader');
-        
         btn.disabled = true;
         btn.classList.add('opacity-50', 'cursor-not-allowed');
-        
         icon.innerHTML = '<i data-lucide="loader-2" class="w-8 h-8 text-white animate-spin"></i>';
         if (typeof lucide !== 'undefined') lucide.createIcons();
-        
         return true;
     };
 </script>
