@@ -22,20 +22,12 @@ use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\ConsolidadoPdfController;
 use App\Http\Controllers\UsuarioController;
-
-
 use App\Http\Controllers\TriajeController;
 use App\Http\Controllers\TriajePdfController;
 use App\Http\Controllers\OdontologiaController;
 use App\Http\Controllers\OdontologiaPdfController;
 use App\Http\Controllers\PsicologiaController;
 use App\Http\Controllers\PsicologiaPdfController;
-
-
-
-
-
-
 use App\Http\Controllers\ConsultaMedicinaController;
 use App\Http\Controllers\ConsultaMedicinaPdfController;
 use App\Http\Controllers\ConsultaNutricionController;
@@ -125,6 +117,56 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [CitaController::class, 'index'])->name('index');
                 Route::post('/{id}', [CitaController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
+            });
+            // Módulo 03: Triaje
+            Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
+                Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
+                Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
+
+                Route::get('/buscar-profesional/{doc}', [TriajeController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');  
+            });
+            
+
+            // Módulo 05: Odontologia
+            Route::prefix('modulo/consulta-odontologia')->name('consulta-odontologia.')->group(function () {
+                Route::get('/{id}', [OdontologiaController::class, 'index'])->name('index');
+                Route::post('/{id}', [OdontologiaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [OdontologiaPdfController::class, 'generar'])->name('pdf');
+
+                Route::get('/buscar-profesional/{doc}', [OdontologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [OdontologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
+            });
+
+            // Módulo 07: Psicologia
+            Route::prefix('modulo/consulta-psicologia')->name('consulta-psicologia.')->group(function () {
+                Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
+                Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
+
+                Route::get('/buscar-profesional/{doc}', [PsicologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
+            });
+            // Módulo 04: Consulta Externa - Medicina
+            Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
+                Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
+                Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 06: Consulta Externa - Nutrición
+            Route::prefix('modulo/consulta-nutricion')->name('consulta-nutricion.')->group(function () {
+                Route::get('/{id}', [ConsultaNutricionController::class, 'index'])->name('index');
+                Route::post('/{id}', [ConsultaNutricionController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [ConsultaNutricionPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 09: Inmunizaciones
+            Route::prefix('modulo/inmunizaciones')->name('inmunizaciones.')->group(function () {
+                Route::get('/{id}', [InmunizacionesController::class, 'index'])->name('index');
+                Route::post('/{id}', [InmunizacionesController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [InmunizacionesPdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 10: Atencion Prenatal
