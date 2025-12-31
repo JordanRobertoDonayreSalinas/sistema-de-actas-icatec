@@ -17,6 +17,10 @@ use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ConsultaMedicinaController;
+use App\Http\Controllers\ConsultaMedicinaPdfController;
+use App\Http\Controllers\ConsultaNutricionController;
+use App\Http\Controllers\ConsultaNutricionPdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -102,9 +106,16 @@ Route::middleware(['auth'])->group(function () {
 
             // Módulo 04: Consulta Externa - Medicina
             Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
-                Route::get('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'index'])->name('index');
-                Route::post('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [\App\Http\Controllers\ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+                Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
+                Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 06: Consulta Externa - Nutrición
+            Route::prefix('modulo/consulta-nutricion')->name('consulta-nutricion.')->group(function () {
+                Route::get('/{id}', [ConsultaNutricionController::class, 'index'])->name('index');
+                Route::post('/{id}', [ConsultaNutricionController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [ConsultaNutricionPdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 10: Atencion Prenatal

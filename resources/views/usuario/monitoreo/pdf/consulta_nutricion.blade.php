@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Consulta Externa - Medicina - Acta {{ $acta->id }}</title>
+    <title>Consulta Externa - Nutrición - Acta {{ $acta->id }}</title>
     <style>
         @page { margin: 1.2cm 1.5cm; }
         body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
@@ -37,7 +37,7 @@
 <body>
 
     <div class="header">
-        <h1>Módulo 04: Consulta Externa - Medicina</h1>
+        <h1>Módulo 6: Consulta Externa - Nutrición</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px;">
             ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | E.E.S.S.: {{ strtoupper($acta->establecimiento->nombre) }}
         </div>
@@ -125,7 +125,7 @@
     <div class="section-title">5. Equipamiento del Área</div>
     @php
         $equipos = \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $acta->id)
-                    ->where('modulo', 'consulta_medicina')
+                    ->where('modulo', 'consulta_nutricion')
                     ->get();
     @endphp
     @if($equipos->count() > 0)
@@ -260,4 +260,3 @@
 
 </body>
 </html>
-
