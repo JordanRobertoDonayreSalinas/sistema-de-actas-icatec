@@ -497,14 +497,28 @@
             </div>
           </div>
 
+          <!--  DETALLE DE EQUIPOS  -->
           <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
 
-            <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex justify-between items-center">
+            <div
+              class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex flex-wrap gap-3 justify-between items-center">
               <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalle de Equipos</h3>
-              <button type="button" onclick="agregarFilaEquipo()"
-                class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
-                <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
-              </button>
+
+              <div class="flex items-center gap-2">
+                {{-- SELECTOR DE EQUIPOS --}}
+                <select id="select-equipo-agregar"
+                  class="text-xs border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 py-1.5 pl-2 pr-8">
+                  <option value="" disabled selected>-- Seleccione equipo --</option>
+                  @foreach (['Tablet', 'Laptop', 'CPU', 'Monitor', 'Teclado', 'Mouse', 'Impresora', 'Escaner', 'Ticketera', 'Lector de DNIe', 'Lector de Codigo de Barras', 'OTRO'] as $eq)
+                    <option value="{{ $eq }}">{{ $eq }}</option>
+                  @endforeach
+                </select>
+
+                <button type="button" onclick="agregarEquipoDesdeSelect()"
+                  class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                  <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
+                </button>
+              </div>
             </div>
 
             <table class="w-full text-left border-collapse" id="tabla-equipos">
@@ -521,21 +535,12 @@
               </thead>
               <tbody class="divide-y divide-slate-100" id="tbody-equipos">
                 @php
-                  $equipos = $registro->equipos_listado ?? [];
-                  // Si no hay equipos guardados, mostramos los por defecto
-                  $defaultItems = [
-                      ['nombre' => 'Monitor', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
-                      ['nombre' => 'CPU', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
-                      ['nombre' => 'Teclado', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
-                      ['nombre' => 'Mouse', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
-                      ['nombre' => 'Impresora', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
-                      ['nombre' => 'Ticketera', 'propiedad' => 'ESTABLECIMIENTO', 'estado' => 'Bueno'],
-                  ];
-                  $items = count($equipos) > 0 ? $equipos : $defaultItems;
+                  $equiposGuardados = $registro->equipos_listado ?? [];
                 @endphp
 
-                @foreach ($items as $idx => $item)
+                @foreach ($equiposGuardados as $idx => $item)
                   <tr class="group hover:bg-slate-50 transition-colors">
+                    {{-- 1. Nombre del Equipo --}}
                     <td class="p-2 align-middle">
                       <input type="text" name="contenido[equipos][{{ $idx }}][nombre]"
                         value="{{ $item['nombre'] ?? '' }}"
@@ -543,6 +548,7 @@
                         placeholder="Nombre">
                     </td>
 
+                    {{-- 2. Serie / Código --}}
                     <td class="p-2 align-middle">
                       <div class="relative flex items-center">
                         <input type="text" id="serie-input-{{ $idx }}"
@@ -551,35 +557,40 @@
                           placeholder="----">
 
                         <button type="button" onclick="iniciarEscaneo('serie-input-{{ $idx }}')"
-                          class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10"
-                          title="Escanear">
+                          class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10">
                           <i data-lucide="scan-barcode" class="w-3 h-3"></i>
                         </button>
                       </div>
                     </td>
 
+                    {{-- 3. Propiedad --}}
                     <td class="p-2 align-middle">
                       <select name="contenido[equipos][{{ $idx }}][propiedad]"
                         class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
                         <option value="ESTABLECIMIENTO"
                           {{ ($item['propiedad'] ?? '') == 'ESTABLECIMIENTO' ? 'selected' : '' }}>Establecimiento
                         </option>
-                        <option value="PROPIO" {{ ($item['propiedad'] ?? '') == 'PROPIO' ? 'selected' : '' }}>Propio
-                        </option>
+                        <option value="SERVICIO" {{ ($item['propiedad'] ?? '') == 'SERVICIO' ? 'selected' : '' }}>
+                          Servicio</option>
+                        <option value="PERSONAL" {{ ($item['propiedad'] ?? '') == 'PERSONAL' ? 'selected' : '' }}>
+                          Personal</option>
                       </select>
                     </td>
 
+                    {{-- 4. Estado --}}
                     <td class="p-2 align-middle">
                       <select name="contenido[equipos][{{ $idx }}][estado]"
-                        class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer
-                                {{ ($item['estado'] ?? '') == 'Malo' || ($item['estado'] ?? '') == 'Inoperativo' ? 'text-red-600 font-bold bg-red-50' : 'text-slate-600' }}">
-                        @foreach (['Bueno', 'Regular', 'Malo', 'Inoperativo'] as $est)
-                          <option value="{{ $est }}" {{ ($item['estado'] ?? '') == $est ? 'selected' : '' }}>
-                            {{ $est }}</option>
-                        @endforeach
+                        class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
+                        <option value="Operativo" {{ ($item['estado'] ?? '') == 'Operativo' ? 'selected' : '' }}>
+                          Operativo</option>
+                        <option value="Regular" {{ ($item['estado'] ?? '') == 'Regular' ? 'selected' : '' }}>Regular
+                        </option>
+                        <option value="Inoperativo" {{ ($item['estado'] ?? '') == 'Inoperativo' ? 'selected' : '' }}>
+                          Inoperativo</option>
                       </select>
                     </td>
 
+                    {{-- 5. Observaciones --}}
                     <td class="p-2 align-middle">
                       <input type="text" name="contenido[equipos][{{ $idx }}][observaciones]"
                         value="{{ $item['observaciones'] ?? '' }}"
@@ -587,6 +598,7 @@
                         placeholder="Observaciones...">
                     </td>
 
+                    {{-- 6. Botón Eliminar --}}
                     <td class="p-2 text-center align-middle">
                       <button type="button" onclick="this.closest('tr').remove()"
                         class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
@@ -1199,73 +1211,94 @@
     function generateId() {
       return Date.now() + Math.floor(Math.random() * 1000);
     }
-    let equipoIndex = {{ count($items) }};
 
-    window.agregarFilaEquipo = function(tableId, baseName) {
-      equipoIndex++;
+    let equipoIndex = {{ count($registro->equipos_listado ?? []) }};
+
+    function agregarEquipoDesdeSelect() {
+      const select = document.getElementById('select-equipo-agregar');
+      const tipoEquipo = select.value;
+
+      if (!tipoEquipo) {
+        alert("Por favor seleccione un equipo de la lista.");
+        return;
+      }
+
       const tbody = document.getElementById('tbody-equipos');
+      const esOtro = tipoEquipo === 'OTRO';
+      const valorNombre = esOtro ? '' : tipoEquipo;
 
-      const row = document.createElement('tr');
-      row.className = "group hover:bg-slate-50 transition-colors";
+      // Si es "OTRO", el input es editable. Si es fijo, es readonly (o editable si prefieres)
+      const inputNombre = `<input type="text"
+                                    name="contenido[equipos][${equipoIndex}][nombre]"
+                                    value="${valorNombre}"
+                                    class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
+                                    placeholder="Escriba nombre del equipo..."
+                                    ${esOtro ? 'autofocus' : ''}>`; // Si es fijo, podrías agregar 'readonly'
 
-      row.innerHTML = `
-        <td class="p-2 align-middle">
-            <input type="text" name="contenido[equipos][${equipoIndex}][nombre]"
-                class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
-                placeholder="Nuevo Equipo">
-        </td>
+      const fila = `
+            <tr class="group hover:bg-slate-50 transition-colors">
+                <td class="p-2 align-middle">
+                    ${inputNombre}
+                </td>
 
-        <td class="p-2 align-middle">
-            <div class="relative flex items-center">
-                <input type="text" id="serie-input-${equipoIndex}"
-                    name="contenido[equipos][${equipoIndex}][serie]"
-                    class="w-full bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-mono uppercase rounded pl-2 pr-8 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400"
-                    placeholder="----">
+                <td class="p-2 align-middle">
+                    <div class="relative flex items-center">
+                        <input type="text" id="serie-input-${equipoIndex}"
+                            name="contenido[equipos][${equipoIndex}][serie]"
+                            class="w-full bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-mono uppercase rounded pl-2 pr-8 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400"
+                            placeholder="----">
+                        <button type="button" onclick="iniciarEscaneo('serie-input-${equipoIndex}')"
+                            class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10">
+                            <i data-lucide="scan-barcode" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                </td>
 
-                <button type="button" onclick="iniciarEscaneo('serie-input-${equipoIndex}')"
-                    class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10"
-                    title="Escanear">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="5" height="5" x="7" y="7" rx="1"/><path d="M7 17h10"/><path d="M17 7v10"/></svg>
-                </button>
-            </div>
-        </td>
+                <td class="p-2 align-middle">
+                    <select name="contenido[equipos][${equipoIndex}][propiedad]"
+                        class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
+                        <option value="ESTABLECIMIENTO" selected>Establecimiento</option>
+                        <option value="SERVICIO">Servicio</option>
+                        <option value="PERSONAL">Personal</option>
+                    </select>
+                </td>
 
-        <td class="p-2 align-middle">
-            <select name="contenido[equipos][${equipoIndex}][propiedad]"
-                class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
-                <option value="ESTABLECIMIENTO" selected>Establecimiento</option>
-                <option value="PROPIO">Propio</option>
-            </select>
-        </td>
+                <td class="p-2 align-middle">
+                    <select name="contenido[equipos][${equipoIndex}][estado]"
+                        class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
+                        <option value="Operativo" selected>Operativo</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Inoperativo">Inoperativo</option>
+                    </select>
+                </td>
 
-        <td class="p-2 align-middle">
-            <select name="contenido[equipos][${equipoIndex}][estado]"
-                class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
-                <option value="Bueno" selected>Bueno</option>
-                <option value="Regular">Regular</option>
-                <option value="Malo">Malo</option>
-                <option value="Inoperativo">Inoperativo</option>
-            </select>
-        </td>
+                <td class="p-2 align-middle">
+                    <input type="text" name="contenido[equipos][${equipoIndex}][observaciones]"
+                        class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1"
+                        placeholder="Observaciones...">
+                </td>
 
-        <td class="p-2 align-middle">
-            <input type="text" name="contenido[equipos][${equipoIndex}][observaciones]"
-                class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1"
-                placeholder="Observaciones...">
-        </td>
+                <td class="p-2 text-center align-middle">
+                    <button type="button" onclick="this.closest('tr').remove()"
+                        class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
 
-        <td class="p-2 text-center align-middle">
-            <button type="button" onclick="this.closest('tr').remove()"
-                class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-            </button>
-        </td>
-    `;
+      tbody.insertAdjacentHTML('beforeend', fila);
 
-      tbody.appendChild(row);
+      // Reinicializar iconos Lucide para la nueva fila
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
 
-      // Si usas librerías que necesitan reiniciar iconos (como Lucide), descomenta esto:
-      if (window.lucide) lucide.createIcons();
+      // Resetear el select
+      select.value = "";
+
+      // Incrementar índice
+      equipoIndex++;
     }
     window.agregarFilaProduccion = function(tableId) {
       const tbody = document.querySelector(`#${tableId} tbody`);

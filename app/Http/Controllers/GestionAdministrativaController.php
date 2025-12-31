@@ -43,26 +43,26 @@ class GestionAdministrativaController extends Controller
         $modulo = 'gestion_administrativa';
 
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', $modulo)
-                                ->get();
+            ->where('modulo', $modulo)
+            ->get();
 
         // Lógica de Guía Histórica si no hay equipos en el acta actual
         if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
-                ->where('id', '<', $id) 
+                ->where('id', '<', $id)
                 ->orderBy('id', 'desc')
                 ->value('id');
 
             if ($ultimaActaId) {
                 $equipos = EquipoComputo::where('cabecera_monitoreo_id', $ultimaActaId)
-                                        ->where('modulo', $modulo)
-                                        ->get();
+                    ->where('modulo', $modulo)
+                    ->get();
             }
         }
-        
+
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', $modulo)
-                    ->first();
+            ->where('modulo_nombre', $modulo)
+            ->first();
 
         return view('usuario.monitoreo.modulos.gestion_administrativa', compact('acta', 'detalle', 'equipos'));
     }
@@ -102,7 +102,7 @@ class GestionAdministrativaController extends Controller
 
             // 2. GESTIÓN DE EQUIPOS (INCLUYE NRO_SERIE Y OBSERVACION)
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
-            
+
             if ($request->has('equipos') && is_array($request->equipos)) {
                 foreach ($request->equipos as $eq) {
                     if (!empty($eq['descripcion'])) {
@@ -136,8 +136,8 @@ class GestionAdministrativaController extends Controller
 
             // 4. GESTIÓN DE ARCHIVOS
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo_nombre', $modulo)
-                                ->first();
+                ->where('modulo_nombre', $modulo)
+                ->first();
 
             if ($request->hasFile('foto_evidencia')) {
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
@@ -157,8 +157,7 @@ class GestionAdministrativaController extends Controller
 
             DB::commit();
             return redirect()->route('usuario.monitoreo.modulos', $id)
-                             ->with('success', 'Módulo 01 sincronizado correctamente.');
-
+                ->with('success', 'Módulo 01 sincronizado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error Módulo 01 (Store) - Acta {$id}: " . $e->getMessage());

@@ -105,7 +105,9 @@ class CitaController extends Controller
             ],
             [
                 // Aquí está el cambio que pediste: Guardar el JSON completo en vez de "FINALIZADO"
-                'contenido' => $datosCita
+                'contenido' => $datosCita,
+
+                'pdf_firmado_path' => null
             ]
         );
 

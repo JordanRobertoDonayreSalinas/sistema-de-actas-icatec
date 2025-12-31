@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
 use App\Models\Establecimiento;
-use App\Models\MonitoreoModulos; 
-use App\Models\MonitoreoEquipo; 
+use App\Models\MonitoreoModulos;
+use App\Models\MonitoreoEquipo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -22,12 +22,12 @@ class MonitoreoController extends Controller
     public function index(Request $request)
     {
         $query = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'detalles'])
-                    ->where('user_id', Auth::id());
+            ->where('user_id', Auth::id());
 
         if ($request->filled('implementador')) {
             $query->where('implementador', $request->input('implementador'));
         }
-        
+
         if ($request->filled('provincia')) {
             $query->whereHas('establecimiento', function ($q) use ($request) {
                 $q->where('provincia', $request->input('provincia'));
@@ -39,7 +39,7 @@ class MonitoreoController extends Controller
         }
 
         $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
-        
+
         // Conteo de actas donde el acta final consolidada ya fue firmada
         $countCompletados = (clone $query)->where('firmado', 1)->count();
         $implementadores = CabeceraMonitoreo::distinct()->pluck('implementador');
@@ -65,22 +65,22 @@ class MonitoreoController extends Controller
         if (empty($term)) return response()->json([]);
 
         $equipo = MonitoreoEquipo::select(
-                        'doc', 
-                        DB::raw('MAX(tipo_doc) as tipo_doc'),
-                        DB::raw('MAX(apellido_paterno) as apellido_paterno'),
-                        DB::raw('MAX(apellido_materno) as apellido_materno'),
-                        DB::raw('MAX(nombres) as nombres'),
-                        DB::raw('MAX(cargo) as cargo'),
-                        DB::raw('MAX(institucion) as institucion')
-                    )
-                    ->where(function($q) use ($term) {
-                        $q->where('doc', 'LIKE', "%$term%")
-                          ->orWhere('apellido_paterno', 'LIKE', "%$term%");
-                    })
-                    ->groupBy('doc')
-                    ->limit(10)
-                    ->get();
-                    
+            'doc',
+            DB::raw('MAX(tipo_doc) as tipo_doc'),
+            DB::raw('MAX(apellido_paterno) as apellido_paterno'),
+            DB::raw('MAX(apellido_materno) as apellido_materno'),
+            DB::raw('MAX(nombres) as nombres'),
+            DB::raw('MAX(cargo) as cargo'),
+            DB::raw('MAX(institucion) as institucion')
+        )
+            ->where(function ($q) use ($term) {
+                $q->where('doc', 'LIKE', "%$term%")
+                    ->orWhere('apellido_paterno', 'LIKE', "%$term%");
+            })
+            ->groupBy('doc')
+            ->limit(10)
+            ->get();
+
         return response()->json($equipo);
     }
 
@@ -91,8 +91,8 @@ class MonitoreoController extends Controller
     {
         try {
             $miembro = MonitoreoEquipo::where('doc', trim($doc))
-                        ->orderBy('created_at', 'desc')
-                        ->first();
+                ->orderBy('created_at', 'desc')
+                ->first();
 
             if ($miembro) {
                 return response()->json([
@@ -122,7 +122,7 @@ class MonitoreoController extends Controller
             'responsable' => 'required|string|max:255',
             'categoria' => 'nullable|string|max:50',
             'implementador' => 'required|string',
-            'equipo' => 'required|array|min:1', 
+            'equipo' => 'required|array|min:1',
         ]);
 
         try {
@@ -138,15 +138,15 @@ class MonitoreoController extends Controller
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
             $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
-            $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8'); 
-            $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8'); 
+            $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8');
+            $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
             $monitoreo->user_id = Auth::id();
             $monitoreo->save();
 
             foreach ($request->equipo as $persona) {
                 if (!empty($persona['doc'])) {
                     MonitoreoEquipo::create([
-                        'cabecera_monitoreo_id' => $monitoreo->id, 
+                        'cabecera_monitoreo_id' => $monitoreo->id,
                         'tipo_doc'              => $persona['tipo_doc'] ?? 'DNI',
                         'doc'                   => trim($persona['doc']),
                         'apellido_paterno'      => mb_strtoupper(trim($persona['apellido_paterno']), 'UTF-8'),
@@ -160,8 +160,7 @@ class MonitoreoController extends Controller
 
             DB::commit();
             return redirect()->route('usuario.monitoreo.modulos', $monitoreo->id)
-                             ->with('success', 'Acta iniciada correctamente.');
-
+                ->with('success', 'Acta iniciada correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors('Error: ' . $e->getMessage())->withInput();
@@ -198,21 +197,21 @@ class MonitoreoController extends Controller
 
         // Módulos que ya tienen datos guardados
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', '!=', 'config_modulos')
-                            ->pluck('modulo_nombre')
-                            ->toArray();
+            ->where('modulo_nombre', '!=', 'config_modulos')
+            ->pluck('modulo_nombre')
+            ->toArray();
 
         // Módulos que ya tienen un PDF firmado cargado
         $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->whereNotNull('pdf_firmado_path')
-                            ->pluck('modulo_nombre')
-                            ->toArray();
+            ->whereNotNull('pdf_firmado_path')
+            ->pluck('modulo_nombre')
+            ->toArray();
 
         // BUSCAR CONFIGURACIÓN DE INTERRUPTORES
         $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', 'config_modulos')
-                    ->first();
-        
+            ->where('modulo_nombre', 'config_modulos')
+            ->first();
+
         /**
          * CAMBIO CRÍTICO:
          * Si no existe configuración ($config es null), devolvemos un array VACÍO [].
@@ -231,7 +230,7 @@ class MonitoreoController extends Controller
         try {
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => 'config_modulos'],
-                ['contenido' => $request->modulos_activos] 
+                ['contenido' => $request->modulos_activos]
             );
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
@@ -245,10 +244,10 @@ class MonitoreoController extends Controller
     public function show($id)
     {
         $monitoreo = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'user'])->findOrFail($id);
-        
+
         $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', '!=', 'config_modulos')
-                    ->get();
+            ->where('modulo_nombre', '!=', 'config_modulos')
+            ->get();
 
         return view('usuario.monitoreo.show', compact('monitoreo', 'detalles'));
     }
@@ -261,18 +260,18 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            
+
             // Eliminar archivos físicos asociados
             $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->get();
-            foreach($modulos as $m) {
-                if($m->pdf_firmado_path) Storage::disk('public')->delete($m->pdf_firmado_path);
-                if(isset($m->contenido['foto_evidencia'])) Storage::disk('public')->delete($m->contenido['foto_evidencia']);
+            foreach ($modulos as $m) {
+                if ($m->pdf_firmado_path) Storage::disk('public')->delete($m->pdf_firmado_path);
+                if (isset($m->contenido['foto_evidencia'])) Storage::disk('public')->delete($m->contenido['foto_evidencia']);
             }
 
-            if($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
-            
-            $monitoreo->delete(); 
-            
+            if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
+
+            $monitoreo->delete();
+
             DB::commit();
             return redirect()->route('usuario.monitoreo.index')->with('success', 'Acta eliminada correctamente.');
         } catch (\Exception $e) {
@@ -287,15 +286,15 @@ class MonitoreoController extends Controller
     public function generarPDF($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
-        
+
         $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', '!=', 'config_modulos')
-                    ->get()
-                    ->keyBy('modulo_nombre');
+            ->where('modulo_nombre', '!=', 'config_modulos')
+            ->get()
+            ->keyBy('modulo_nombre');
 
         return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))
-                  ->setPaper('a4', 'portrait')
-                  ->stream("ACTA_CONSOLIDADA_NRO_{$acta->id}.pdf");
+            ->setPaper('a4', 'portrait')
+            ->stream("ACTA_CONSOLIDADA_NRO_{$acta->id}.pdf");
     }
 
     /**

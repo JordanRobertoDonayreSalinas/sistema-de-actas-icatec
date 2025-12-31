@@ -171,8 +171,11 @@
       <span class="label">Capacitación:</span>
       <span class="value">
         {{ $registro->capacitacion_recibida ?? 'NO' }}
+
         @if (!empty($registro->capacitacion_entes))
-          (Por: {{ implode(', ', $registro->capacitacion_entes) }})
+          {{-- CORRECCIÓN: Verificamos si es array antes de usar implode --}}
+          (Por:
+          {{ is_array($registro->capacitacion_entes) ? implode(', ', $registro->capacitacion_entes) : $registro->capacitacion_entes }})
         @endif
       </span>
     </div>
