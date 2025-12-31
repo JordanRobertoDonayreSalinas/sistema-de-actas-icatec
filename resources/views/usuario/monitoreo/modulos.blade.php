@@ -168,7 +168,7 @@
                     </div>
                     <div class="text-left">
                         <h4 class="text-2xl font-black uppercase tracking-tighter leading-none mb-2">Acta Consolidada</h4>
-                        <p class="text-[10px] text-indigo-300 group-hover:text-white/70 font-bold uppercase tracking-[0.2em]">Generar reporte final de asistencia técnica</p>
+                        <p class="text-[10px] text-indigo-300 group-hover:text-white/70 font-bold uppercase tracking-[0.2em]">Generar Resumen de Acta de Monitoreo</p>
                     </div>
                 </div>
                 <i data-lucide="arrow-right" class="mr-6 w-8 h-8 group-hover:translate-x-2 transition-transform"></i>

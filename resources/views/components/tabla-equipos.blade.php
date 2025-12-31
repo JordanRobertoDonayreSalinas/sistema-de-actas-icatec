@@ -54,9 +54,25 @@
                             <input type="hidden" name="equipos[{{ $index }}][cantidad]" value="1">
                             <span class="text-xs font-black text-slate-400">1</span>
                         </td>
-                        <td class="px-4 py-4 text-center select-none">—</td>
-                        <td class="px-4 py-4 text-center select-none">—</td>
-                        <td class="px-4 py-4 text-center select-none">—</td>
+                        <td class="px-4 py-4">
+                            <select name="equipos[{{ $index }}][estado]" class="input-table-select">
+                                <option value="OPERATIVO" {{ $eq->estado == 'OPERATIVO' ? 'selected' : '' }}>OPERATIVO</option>
+                                <option value="REGULAR" {{ $eq->estado == 'REGULAR' ? 'selected' : '' }}>REGULAR</option>
+                                <option value="INOPERATIVO" {{ $eq->estado == 'INOPERATIVO' ? 'selected' : '' }}>INOPERATIVO</option>
+                                <option value="BAJA" {{ $eq->estado == 'BAJA' ? 'selected' : '' }}>BAJA</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-4">
+                            <select name="equipos[{{ $index }}][propiedad]" class="input-table-select">
+                                <option value="DEL SERVICIO" {{ $eq->propiedad == 'DEL SERVICIO' ? 'selected' : '' }}>DEL SERVICIO</option>
+                                <option value="PERSONAL" {{ $eq->propiedad == 'PERSONAL' ? 'selected' : '' }}>PERSONAL</option>
+                                <option value="OTRO SERVICIO" {{ $eq->propiedad == 'OTRO SERVICIO' ? 'selected' : '' }}>OTRO SERVICIO</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-4">
+                            <input type="text" name="equipos[{{ $index }}][observaciones]" value="{{ $eq->observaciones }}" 
+                                   class="input-table-text uppercase">
+                        </td>
                         <td class="px-6 py-4 text-right">
                             <button type="button" onclick="removeRow(this, '{{ $modulo }}')" class="text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -72,6 +88,20 @@
         </table>
     </div>
 </div>
+
+{{-- DATALIST PARA SUGERENCIAS --}}
+<datalist id="list_equipos_master">
+    <option value="CPU">
+    <option value="IMPRESORA MULTIFUNCIONAL">
+    <option value="LAPTOP">
+    <option value="LECTOR DE CODIGO DE BARRAS">
+    <option value="LECTOR DE DNIe">
+    <option value="MONITOR">
+    <option value="MOUSE">
+    <option value="SCANNER">
+    <option value="TABLET">
+    <option value="TECLADO">
+</datalist>
 
 {{-- MODAL SCANNER --}}
 <div id="modal_scanner" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-4">
@@ -93,66 +123,45 @@
     let html5QrCode = null;
     let currentInputId = null;
 
-    // Función principal para abrir cámara
     async function openScanner(id) {
         currentInputId = id;
-        
-        // MOSTRAR MODAL PRIMERO
         const modal = document.getElementById('modal_scanner');
         modal.classList.remove('hidden');
 
-        // LIMPIEZA ABSOLUTA DE INSTANCIAS
         if (html5QrCode) {
-            try {
-                await html5QrCode.stop();
-            } catch (e) { console.log("Cámara ya estaba cerrada"); }
+            try { await html5QrCode.stop(); } catch (e) {}
             html5QrCode = null;
         }
 
-        // CREAR INSTANCIA NUEVA CADA VEZ (Esto evita el bug de que se cierre solo)
         html5QrCode = new Html5Qrcode("reader");
-
-        const config = { 
-            fps: 20, 
-            qrbox: { width: 250, height: 180 }, // Caja rectangular para códigos de barras
-            aspectRatio: 1.0
-        };
+        const config = { fps: 20, qrbox: { width: 250, height: 180 }, aspectRatio: 1.0 };
 
         try {
             await html5QrCode.start(
                 { facingMode: "environment" }, 
                 config,
                 (decodedText) => {
-                    // ÉXITO: Poner el valor en el input
                     document.getElementById(currentInputId).value = decodedText.trim().toUpperCase();
                     if (navigator.vibrate) navigator.vibrate(100);
-                    stopScanner(); // Cerrar al detectar
+                    stopScanner();
                 }
             );
         } catch (err) {
-            console.error("No se pudo abrir la cámara:", err);
-            // Si el error es por seguridad (HTTPS), avisar al usuario
-            alert("Error: Para usar la cámara debe acceder por 'localhost' o un sitio seguro 'HTTPS'.");
+            alert("Error: Active los permisos de cámara o use HTTPS.");
             modal.classList.add('hidden');
         }
     }
 
-    // Función para cerrar cámara de forma segura
     async function stopScanner() {
         document.getElementById('modal_scanner').classList.add('hidden');
         if (html5QrCode) {
             try {
-                if (html5QrCode.isScanning) {
-                    await html5QrCode.stop();
-                }
+                if (html5QrCode.isScanning) await html5QrCode.stop();
                 html5QrCode.clear();
-            } catch (err) {
-                console.log("Error al limpiar:", err);
-            }
+            } catch (err) {}
         }
     }
 
-    // Funciones auxiliares de tabla
     function addEquipRow(modulo) {
         const body = document.getElementById('body_equipos_' + modulo);
         const noData = document.getElementById('no_data_' + modulo);
@@ -162,7 +171,7 @@
         const row = document.createElement('tr');
         row.className = "hover:bg-slate-50/50 transition-colors group/row";
         row.innerHTML = `
-            <td class="px-8 py-4"><input type="text" name="equipos[${index}][descripcion]" class="input-table-text" required list="list_equipos_master"></td>
+            <td class="px-8 py-4"><input type="text" name="equipos[${index}][descripcion]" class="input-table-text" required list="list_equipos_master" placeholder="Seleccione..."></td>
             <td class="px-4 py-4">
                 <div class="flex items-center gap-2">
                     <input type="text" id="${rowId}" name="equipos[${index}][nro_serie]" class="input-table-text font-mono font-bold" placeholder="S/N o QR">
@@ -172,7 +181,22 @@
                 </div>
             </td>
             <td class="px-4 py-4 text-center"><span class="text-xs font-black text-slate-400">1</span></td>
-            <td class="px-4 py-4 text-center">—</td><td class="px-4 py-4 text-center">—</td><td class="px-4 py-4 text-center">—</td>
+            <td class="px-4 py-4">
+                <select name="equipos[${index}][estado]" class="input-table-select">
+                    <option value="OPERATIVO">OPERATIVO</option>
+                    <option value="REGULAR">REGULAR</option>
+                    <option value="INOPERATIVO">INOPERATIVO</option>
+                    <option value="BAJA">BAJA</option>
+                </select>
+            </td>
+            <td class="px-4 py-4">
+                <select name="equipos[${index}][propiedad]" class="input-table-select">
+                    <option value="DEL SERVICIO">DEL SERVICIO</option>
+                    <option value="PERSONAL">PERSONAL</option>
+                    <option value="OTRO SERVICIO">OTRO SERVICIO</option>
+                </select>
+            </td>
+            <td class="px-4 py-4"><input type="text" name="equipos[${index}][observaciones]" class="input-table-text uppercase"></td>
             <td class="px-6 py-4 text-right">
                 <button type="button" onclick="removeRow(this, '${modulo}')" class="h-8 w-8 text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -180,7 +204,7 @@
             </td>
         `;
         body.appendChild(row);
-        if (window.refreshLucide) window.refreshLucide();
+        if (window.lucide) window.lucide.createIcons();
     }
 
     function removeRow(btn, modulo) {
@@ -195,6 +219,14 @@
         outline: none; transition: all 0.3s;
     }
     .input-table-text:focus { border-bottom-color: #6366f1; }
+    
+    .input-table-select {
+        width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem;
+        padding: 4px 8px; font-size: 0.7rem; font-weight: 800; color: #475569;
+        outline: none; cursor: pointer; transition: all 0.3s;
+    }
+    .input-table-select:focus { border-color: #6366f1; background: white; }
+
     #reader { position: relative; }
     #reader::after {
         content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
