@@ -14,6 +14,9 @@
     
     {{-- Alpine.js --}}
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    {{-- Librería para Escáner de Código de Barras (Html5-QRCode) --}}
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -71,15 +74,12 @@
                 </a>
 
                 {{-- MONITOREO --}}
-<a href="{{ route('usuario.monitoreo.index') }}" 
-   class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.monitoreo.*') ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-    <i data-lucide="activity" class="w-5 h-5"></i>
-    <span class="font-medium">Actas de Monitoreo</span>
-</a>
+                <a href="{{ route('usuario.monitoreo.index') }}" 
+                   class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.monitoreo.*') ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="activity" class="w-5 h-5"></i>
+                    <span class="font-medium">Actas de Monitoreo</span>
+                </a>
             </nav>
-
-            {{-- Logout Sidebar --}}
-
         </aside>
 
         {{-- ================= CONTENIDO PRINCIPAL ================= --}}
@@ -114,15 +114,15 @@
                              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 translate-y-2"
                              class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50"
                              x-cloak>
                             
-                            
-
                             <div class="border-t border-slate-50 mt-1 pt-1">
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold">
+                                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold text-left">
                                         <i data-lucide="log-out" class="w-4 h-4"></i>
                                         <span>Cerrar Sesión</span>
                                     </button>
@@ -145,6 +145,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
         });
+
+        // Helper global para refrescar iconos en componentes dinámicos
+        window.refreshLucide = () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
     </script>
 
     @stack('scripts')

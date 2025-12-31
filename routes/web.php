@@ -7,13 +7,21 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActaController;
+use App\Http\Controllers\CitaController;
 use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EditMonitoreoController;
-use App\Http\Controllers\GestionAdministrativaController; 
+use App\Http\Controllers\GestionAdministrativaController;
 use App\Http\Controllers\GestionAdministrativaPdfController;
-use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de firmas
+use App\Http\Controllers\LaboratorioController;
+use App\Http\Controllers\LaboratorioPdfController;
+use App\Http\Controllers\PuerperioController;
+use App\Http\Controllers\PuerperioPdfController;
+use App\Http\Controllers\FirmasMonitoreoController; 
 use App\Http\Controllers\EstablecimientoController;
-use App\Http\Controllers\UsuarioController; 
+use App\Http\Controllers\PartoController;
+use App\Http\Controllers\PrenatalController;
+use App\Http\Controllers\ConsolidadoPdfController;
+use App\Http\Controllers\UsuarioController;
 
 
 use App\Http\Controllers\TriajeController;
@@ -46,16 +54,16 @@ Route::controller(LoginController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/', function () {
-        return Auth::user()->role === 'admin' 
-            ? redirect()->route('admin.dashboard') 
-            : redirect()->route('usuario.dashboard'); 
+        return Auth::user()->role === 'admin'
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('usuario.dashboard');
     });
 
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
 
     // --- GRUPO USUARIO (Monitor / Técnico) ---
     Route::prefix('usuario')->name('usuario.')->group(function () {
-        
+
         Route::get('/dashboard', [UsuarioController::class, 'index'])->name('dashboard');
         Route::get('/mi-perfil', [UsuarioController::class, 'perfil'])->name('perfil');
         Route::put('/mi-perfil', [UsuarioController::class, 'perfilUpdate'])->name('perfil.update');
@@ -74,7 +82,7 @@ Route::middleware(['auth'])->group(function () {
 
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
-            
+
             Route::get('/profesional/buscar/{doc}', [GestionAdministrativaController::class, 'buscarProfesional'])->name('profesional.buscar');
             Route::get('/equipo/buscar/{doc}', [MonitoreoController::class, 'buscarMiembroEquipo'])->name('equipo.buscar');
             Route::get('/equipo/buscar-filtro', [MonitoreoController::class, 'buscarFiltro'])->name('equipo.filtro');
@@ -94,13 +102,26 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/editar-acta', [EditMonitoreoController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update');
 
-            // Módulo 01: Gestión Administrativa
-            Route::prefix('modulo/gestion-administrativa')->name('gestion-administrativa.')->group(function () {
-                Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
-                Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+           // Módulo 01: Gestión Administrativa
+// Quitamos 'usuario.monitoreo' del name si ya estás dentro de un grupo con ese nombre
+        Route::prefix('modulo/gestion-administrativa')
+            ->name('gestion-administrativa.') 
+            ->group(function () {
+        Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+        Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+        Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+    });
+            // Módulo 02: Citas
+            Route::prefix('modulo/citas')->name('citas.')->group(function () {
+                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
+                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
+
+                Route::get('/{id}', [CitaController::class, 'index'])->name('index');
+                Route::post('/{id}', [CitaController::class, 'create'])->name('create');
+                Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
             });
 
+<<<<<<< HEAD
             Route::get('/profesional/buscar/{doc}', [TriajeController::class, 'buscarProfesional'])->name('profesional.buscar');
 
             // --- API DE PROFESIONALES (Buscar) ---
@@ -142,12 +163,53 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
             });
 
+=======
+            // Módulo 10: Atencion Prenatal
+            Route::prefix('modulo/atencion_prenatal')->name('atencion-prenatal.')->group(function () {
+                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
+                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
+
+                Route::get('/{id}', [PrenatalController::class, 'index'])->name('index');
+                Route::post('/{id}', [PrenatalController::class, 'create'])->name('create');
+                Route::get('/{id}/pdf', [PrenatalController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 12: Atencion Prenatal
+            Route::prefix('modulo/parto')->name('parto.')->group(function () {
+                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
+                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
+
+                Route::get('/{id}', [PartoController::class, 'index'])->name('index');
+                Route::post('/{id}', [PartoController::class, 'create'])->name('create');
+                Route::get('/{id}/pdf', [PartoController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 17: Laboratorio
+Route::prefix('modulo/laboratorio')
+    ->name('laboratorio.') 
+    ->group(function () {
+        Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
+        Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
+        Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
+    });
+// Módulo 13: Puerperio
+    Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
+        Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
+        Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
+        Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
+    });
+
+>>>>>>> main
             // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
             Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
         });
     });
+
+    // Esta es la ruta que dispara el botón "Acta Consolidada"
+Route::get('monitoreo/{id}/consolidado/pdf', [ConsolidadoPdfController::class, 'generar'])
+    ->name('usuario.monitoreo.pdf');
 
     // --- GRUPO ADMINISTRADOR ---
     Route::prefix('admin')->name('admin.')->group(function () {

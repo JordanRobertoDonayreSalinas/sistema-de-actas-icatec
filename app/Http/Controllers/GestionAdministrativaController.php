@@ -10,16 +10,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GestionAdministrativaController extends Controller
 {
-    /**
-     * Busca un profesional en la tabla maestra 'mon_profesionales'.
-     */
     public function buscarProfesional($doc)
     {
         $profesional = Profesional::where('doc', trim($doc))->first();
-
         if ($profesional) {
             return response()->json([
                 'exists'           => true,
@@ -34,42 +32,26 @@ class GestionAdministrativaController extends Controller
         return response()->json(['exists' => false]);
     }
 
-    /**
-     * Carga la interfaz del Módulo 01.
-     */
     public function index($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
         $modulo = 'gestion_administrativa';
+        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->get();
+        $esHistorico = false;
 
-        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', $modulo)
-                                ->get();
-
-        // Lógica de Guía Histórica si no hay equipos en el acta actual
         if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
-                ->where('id', '<', $id) 
-                ->orderBy('id', 'desc')
-                ->value('id');
-
+                ->where('id', '<', $id)->orderBy('id', 'desc')->value('id');
             if ($ultimaActaId) {
-                $equipos = EquipoComputo::where('cabecera_monitoreo_id', $ultimaActaId)
-                                        ->where('modulo', $modulo)
-                                        ->get();
+                $equipos = EquipoComputo::where('cabecera_monitoreo_id', $ultimaActaId)->where('modulo', $modulo)->get();
+                $esHistorico = true;
             }
         }
         
-        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', $modulo)
-                    ->first();
-
-        return view('usuario.monitoreo.modulos.gestion_administrativa', compact('acta', 'detalle', 'equipos'));
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', $modulo)->first();
+        return view('usuario.monitoreo.modulos.gestion_administrativa', compact('acta', 'detalle', 'equipos', 'esHistorico'));
     }
 
-    /**
-     * Guarda los datos y sincroniza las tablas.
-     */
     public function store(Request $request, $id)
     {
         $request->validate([
@@ -78,17 +60,14 @@ class GestionAdministrativaController extends Controller
 
         try {
             DB::beginTransaction();
-
             $modulo = 'gestion_administrativa';
             $datos = $request->input('contenido', []);
 
-            // 1. SINCRONIZACIÓN DINÁMICA DEL MAESTRO DE PROFESIONALES
-            // Recorremos todos los bloques de identidad enviados en el contenido (rrhh, programador, jefe, etc)
-            foreach ($datos as $prefix => $info) {
-                // Verificamos si este bloque contiene un documento de identidad
+            // 1. Sincronizar Profesionales
+            foreach ($datos as $info) {
                 if (is_array($info) && isset($info['doc']) && !empty($info['doc'])) {
                     Profesional::updateOrCreate(
-                        ['doc' => trim($info['doc'])], // Buscamos por DNI
+                        ['doc' => trim($info['doc'])],
                         [
                             'tipo_doc'         => $info['tipo_doc'] ?? 'DNI',
                             'apellido_paterno' => mb_strtoupper(trim($info['apellido_paterno']), 'UTF-8'),
@@ -101,69 +80,78 @@ class GestionAdministrativaController extends Controller
                 }
             }
 
-            // 2. GESTIÓN DE EQUIPOS
+            // 2. Equipos
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
-            
-            if ($request->has('equipos') && is_array($request->equipos)) {
+            if ($request->has('equipos')) {
                 foreach ($request->equipos as $eq) {
                     if (!empty($eq['descripcion'])) {
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $modulo,
                             'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
-                            'cantidad'    => (int)($eq['cantidad'] ?? 1),
+                            'cantidad'    => 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
-                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
-                            'propio'      => (isset($eq['propio']) && $eq['propio'] === 'SI') ? 1 : 0,
-                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
+                            'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? '', 'UTF-8'),
+                            'propio'      => ($eq['propio'] ?? '') === 'SI' ? 1 : 0,
                         ]);
                     }
                 }
             }
 
-            // 3. ACTUALIZAR RESPUESTA DEL ENTREVISTADO (Uso de DNI de RRHH como referencia principal)
-            $mapInst = ['MINSA' => 1, 'DIRESA' => 2, 'OTROS' => 3, 'JEFE DE ESTABLECIMIENTO' => 4, 'OTRO' => 5];
+            // 3. RESPUESTAS (Ahora guarda texto gracias a la migración)
             DB::table('mon_respuesta_entrevistado')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo' => $modulo],
                 [
                     'doc_profesional'       => $datos['rrhh']['doc'] ?? null,
-                    'recibio_capacitacion'  => (isset($datos['recibio_capacitacion']) && $datos['recibio_capacitacion'] === 'SI') ? 1 : 0,
-                    'inst_que_lo_capacito'  => $mapInst[$datos['inst_que_lo_capacito'] ?? ''] ?? null,
-                    'inst_a_quien_comunica' => $mapInst[$datos['inst_a_quien_comunica'] ?? ''] ?? null,
+                    'recibio_capacitacion'  => $datos['recibio_capacitacion'] ?? 'NO',
+                    'inst_que_lo_capacito'  => $datos['inst_que_lo_capacito'] ?? null,
+                    'inst_a_quien_comunica' => $datos['inst_a_quien_comunica'] ?? null,
                     'medio_que_utiliza'     => $datos['medio_que_utiliza'] ?? null,
                     'updated_at'            => now()
                 ]
             );
 
-            // 4. GESTIÓN DE ARCHIVOS (Evidencia Fotográfica)
-            $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo_nombre', $modulo)
-                                ->first();
-
+            // 4. Foto
+            $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', $modulo)->first();
             if ($request->hasFile('foto_evidencia')) {
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                     Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
                 }
-                $path = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
-                $datos['foto_evidencia'] = $path;
-            } elseif ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
-                $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'];
+                $datos['foto_evidencia'] = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
+            } elseif ($registroPrevio) {
+                $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'] ?? null;
             }
 
-            // 5. GUARDADO DEL JSON EN DETALLE DE MONITOREO
+            // 5. JSON Detalle
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
                 ['contenido' => $datos]
             );
 
             DB::commit();
-            return redirect()->route('usuario.monitoreo.modulos', $id)
-                             ->with('success', 'Módulo 01 sincronizado y Maestro de Profesionales actualizado.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Módulo guardado con éxito.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error Módulo 01 (Store) - Acta {$id}: " . $e->getMessage());
-            return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
+            Log::error("Error Store: " . $e->getMessage());
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    public function pdf($id)
+    {
+        $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', 'gestion_administrativa')->firstOrFail();
+        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', 'gestion_administrativa')->get();
+        
+        $user = Auth::user();
+        $monitor = [
+            'nombre'    => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
+            'tipo_doc'  => $user->tipo_documento ?? 'DNI',
+            'documento' => $user->documento ?? $user->username ?? '________'
+        ];
+
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.gestion_administrativa', compact('acta', 'detalle', 'equipos', 'monitor'));
+        return $pdf->stream("Acta_{$id}.pdf");
     }
 }
