@@ -14,6 +14,7 @@ use App\Http\Controllers\GestionAdministrativaController;
 use App\Http\Controllers\GestionAdministrativaPdfController;
 use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de firmas
 use App\Http\Controllers\EstablecimientoController;
+use App\Http\Controllers\FirmaMovilController;
 use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\UsuarioController;
@@ -140,4 +141,19 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggleStatus');
         });
     });
+});
+
+
+// Motor de Firma Digital
+Route::controller(FirmaMovilController::class)->group(function () {
+
+    // NUEVA RUTA: Genera el QR solo cuando se pide
+    Route::get('/firmar/generate-qr/{token}', 'generateQrCode')->name('firma.generate_qr');
+
+    // RUTA 
+    Route::get('/firmar/movil/{token}', 'viewMobilePad')->name('firma.movil');
+
+    // Las otras rutas necesarias para que funcione la lógica:
+    Route::post('/firmar/save/{token}', 'saveMobileSignature')->name('firma.save');
+    Route::get('/firmar/check/{token}', 'checkSignatureStatus')->name('firma.check');
 });

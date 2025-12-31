@@ -869,27 +869,256 @@
         </div>
 
         {{-- PASO 5: FIRMA --}}
+        @php
+          // Generamos un TOKEN único para esta sesión.
+          // Este token identifica la sesión, pero el link firmado temporal se generará después vía AJAX.
+          $tokenFirma = \Illuminate\Support\Str::uuid();
+        @endphp
+
         <div id="step-5" class="step-content">
           <div class="mb-6 border-b border-slate-100 pb-4">
             <h2 class="text-2xl font-bold text-slate-800">Conformidad</h2>
           </div>
-          <div class="max-w-xl mx-auto py-4">
-            <div class="flex justify-between items-end mb-2 px-1">
-              <label class="text-xs font-bold text-slate-500 uppercase">Dibuje su firma aquí:</label>
-              <button type="button" onclick="clearSignature()"
-                class="text-[10px] font-bold text-red-500 hover:text-red-700 flex items-center gap-1 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100"><i
-                  data-lucide="eraser" class="w-3 h-3"></i> LIMPIAR</button>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <div class="lg:col-span-2">
+              <div class="flex justify-between items-end mb-2 px-1">
+                <label class="text-xs font-bold text-slate-500 uppercase">Dibuje su firma aquí:</label>
+                <button type="button" onclick="clearSignature()"
+                  class="text-[10px] font-bold text-red-500 hover:text-red-700 flex items-center gap-1 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100">
+                  <i data-lucide="eraser" class="w-3 h-3"></i> LIMPIAR
+                </button>
+              </div>
+
+              <div class="bg-white border-2 border-dashed border-slate-300 rounded-xl shadow-sm p-1 relative">
+                <canvas id="signature-pad"
+                  class="w-full h-64 bg-slate-50 rounded-lg cursor-crosshair touch-none block"></canvas>
+              </div>
+
+              <p class="text-[10px] text-center text-slate-400 mt-3 italic">
+                <i data-lucide="info" class="w-3 h-3 inline-block mr-1"></i>
+                Al guardar, se generará el acta con esta firma gráfica.
+              </p>
+
+              <input type="hidden" name="firma_grafica_data" id="firma_input"
+                value="{{ $registro->firma_grafica ?? '' }}">
             </div>
-            <div class="bg-white border-2 border-dashed border-slate-300 rounded-xl shadow-sm p-1 relative">
-              <canvas id="signature-pad"
-                class="w-full h-64 bg-slate-50 rounded-lg cursor-crosshair touch-none block"></canvas>
+
+            <div
+              class="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-xl text-center h-full">
+              <div class="mb-3">
+                <span
+                  class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
+                  Opción Móvil
+                </span>
+              </div>
+              <h3 class="text-sm font-bold text-slate-700 mb-2">¿Es difícil firmar con el mouse?</h3>
+              <p class="text-xs text-slate-500 mb-4 px-2">Genere un código seguro para firmar desde su celular.</p>
+
+              <div
+                class="bg-white p-3 rounded-lg shadow-sm border border-slate-100 w-full max-w-[180px] min-h-[160px] flex flex-col justify-center items-center relative">
+
+                <div id="qr-container" class="hidden"></div>
+
+                <div id="qr-placeholder" class="w-full">
+                  <div class="mb-2 text-slate-400">
+                    <svg class="w-8 h-8 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                  <button type="button" onclick="cargarQR()"
+                    class="text-xs bg-slate-800 text-white px-3 py-2 rounded shadow hover:bg-slate-700 transition w-full font-bold">
+                    Generar Código QR
+                  </button>
+                </div>
+
+                <div id="qr-loading"
+                  class="hidden absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
+                  <svg class="animate-spin h-6 w-6 text-slate-800" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                      stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="mt-4 min-h-[20px]">
+                <div id="qr-status"
+                  class="hidden text-xs font-medium text-slate-400 flex items-center justify-center gap-2">
+                  <span class="relative flex h-2 w-2">
+                    <span
+                      class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                  </span>
+                  Esperando firma...
+                </div>
+
+                <p id="qr-timer" class="text-[10px] text-red-400 hidden">
+                  Vence en <span id="timer-count" class="font-bold">60</span>s
+                </p>
+              </div>
             </div>
-            <p class="text-[10px] text-center text-slate-400 mt-3 italic"><i data-lucide="info"
-                class="w-3 h-3 inline-block mr-1"></i> Al guardar, se generará el acta con esta firma gráfica.</p>
-            <input type="hidden" name="firma_grafica_data" id="firma_input"
-              value="{{ $registro->firma_grafica ?? '' }}">
           </div>
         </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+        <script>
+          // --- 1. CONFIGURACIÓN DEL CANVAS (Igual que antes) ---
+          var wrapper = document.getElementById("signature-pad");
+          var signaturePad = new SignaturePad(wrapper, {
+            backgroundColor: 'rgb(248, 250, 252)'
+          });
+
+          function resizeCanvas() {
+            var ratio = Math.max(window.devicePixelRatio || 1, 1);
+            wrapper.width = wrapper.offsetWidth * ratio;
+            wrapper.height = wrapper.offsetHeight * ratio;
+            wrapper.getContext("2d").scale(ratio, ratio);
+          }
+          window.onresize = resizeCanvas;
+          resizeCanvas();
+
+          function clearSignature() {
+            signaturePad.clear();
+            document.getElementById('firma_input').value = '';
+          }
+
+          signaturePad.addEventListener("endStroke", () => {
+            document.getElementById('firma_input').value = signaturePad.toDataURL();
+          });
+
+          // --- 2. LÓGICA DE QR BAJO DEMANDA Y POLLING ---
+
+          // Variables globales para controlar los intervalos
+          let pollingInterval;
+          let countdownInterval;
+          const token = "{{ $tokenFirma }}";
+
+          // Función principal: Se llama al pulsar el botón "Generar QR"
+          function cargarQR() {
+            const container = document.getElementById('qr-container');
+            const placeholder = document.getElementById('qr-placeholder');
+            const loading = document.getElementById('qr-loading');
+
+            // UI: Mostrar carga
+            loading.classList.remove('hidden');
+
+            // A. Petición al servidor para crear el QR temporal
+            fetch(`/firmar/generate-qr/${token}`)
+              .then(res => res.json())
+              .then(data => {
+                // UI: Ocultar botón y carga, mostrar QR
+                loading.classList.add('hidden');
+                placeholder.classList.add('hidden');
+                container.innerHTML = data.qr_html;
+                container.classList.remove('hidden');
+
+                // B. Iniciar temporizador visual (60s)
+                iniciarTemporizador();
+
+                // C. Iniciar Polling (escuchar si firman)
+                iniciarPolling();
+              })
+              .catch(err => {
+                console.error(err);
+                loading.classList.add('hidden');
+                alert('Error al generar QR. Intente nuevamente.');
+              });
+          }
+
+          function iniciarTemporizador() {
+            const timerLabel = document.getElementById('qr-timer');
+            const countSpan = document.getElementById('timer-count');
+            const statusDiv = document.getElementById('qr-status');
+
+            let timeLeft = 60;
+
+            // Resetear UI
+            timerLabel.classList.remove('hidden');
+            statusDiv.classList.remove('hidden'); // Mostrar "Esperando firma..."
+            statusDiv.innerHTML = `
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+            </span>
+            Esperando firma...`;
+
+            // Limpiar intervalo anterior si existe
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+              timeLeft--;
+              countSpan.innerText = timeLeft;
+
+              if (timeLeft <= 0) {
+                // TIEMPO AGOTADO
+                detenerTodo();
+                mostrarQrVencido();
+              }
+            }, 1000);
+          }
+
+          function iniciarPolling() {
+            // Limpiar polling anterior si existe
+            if (pollingInterval) clearInterval(pollingInterval);
+
+            // Consultar cada 3.5 segundos (Amigable con cPanel)
+            pollingInterval = setInterval(() => {
+              fetch(`/firmar/check/${token}`)
+                .then(res => res.json())
+                .then(data => {
+                  if (data.status === 'signed') {
+                    // ¡EXITO!
+                    detenerTodo(); // Parar timer y polling
+
+                    // Actualizar UI derecha
+                    const statusDiv = document.getElementById('qr-status');
+                    document.getElementById('qr-timer').classList.add('hidden');
+
+                    statusDiv.innerHTML = `
+                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span class="text-green-600 font-bold">¡Firma Recibida!</span>
+                        `;
+
+                    // Pintar firma en izquierda
+                    signaturePad.clear(); // Limpiar por si había algo sucio
+                    signaturePad.fromDataURL(data.signature);
+                    document.getElementById('firma_input').value = data.signature;
+                  }
+                })
+                .catch(err => console.log('Esperando conexión...'));
+            }, 3500);
+          }
+
+          function detenerTodo() {
+            clearInterval(pollingInterval);
+            clearInterval(countdownInterval);
+          }
+
+          function mostrarQrVencido() {
+            // Ocultar QR y Timer
+            document.getElementById('qr-container').innerHTML = '';
+            document.getElementById('qr-container').classList.add('hidden');
+            document.getElementById('qr-timer').classList.add('hidden');
+            document.getElementById('qr-status').classList.add('hidden');
+
+            // Mostrar Botón de nuevo con mensaje de error
+            const placeholder = document.getElementById('qr-placeholder');
+            placeholder.classList.remove('hidden');
+            placeholder.innerHTML = `
+            <p class="text-[10px] text-red-500 mb-1 font-bold">Código vencido</p>
+            <button type="button" onclick="cargarQR()"
+                class="text-xs bg-slate-800 text-white px-3 py-2 rounded shadow hover:bg-slate-700 transition w-full font-bold">
+                Generar Nuevo QR
+            </button>
+        `;
+          }
+        </script>
 
       </div>
 
