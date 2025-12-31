@@ -43,17 +43,32 @@
     @foreach($modulos as $mod)
         <div class="no-break">
             <div class="section-header">Módulo: {{ strtoupper(str_replace('_', ' ', $mod->modulo_nombre)) }}</div>
-            <table>
-                @php $cont = $mod->contenido; @endphp
-                @foreach($cont as $key => $value)
-                    @if(!is_array($value) && !in_array($key, ['foto_evidencia', 'comentarios', 'password']))
-                        <tr>
-                            <td class="bg-label">{{ strtoupper(str_replace(['_', 'inst'], [' ', 'entidad'], $key)) }}:</td>
-                            <td class="uppercase">{{ $value }}</td>
-                        </tr>
-                    @endif
-                @endforeach
-            </table>
+            
+            @php
+                // Solución al error: Detectar si el contenido es string y decodificarlo
+                $cont = is_string($mod->contenido) ? json_decode($mod->contenido, true) : $mod->contenido;
+            @endphp
+
+            @if(is_array($cont))
+                <table>
+                    @foreach($cont as $key => $value)
+                        @if(!is_array($value) && !in_array($key, ['foto_evidencia', 'comentarios', 'password']))
+                            <tr>
+                                <td class="bg-label">{{ strtoupper(str_replace(['_', 'inst'], [' ', 'entidad'], $key)) }}:</td>
+                                <td class="uppercase">{{ $value }}</td>
+                            </tr>
+                        @endif
+                    @endforeach
+                </table>
+                
+                @if(isset($cont['comentarios']))
+                <div style="font-size: 8px; font-style: italic; margin-bottom: 10px; color: #475569;">
+                    <strong>Observaciones:</strong> {{ strtoupper($cont['comentarios']) }}
+                </div>
+                @endif
+            @else
+                <p style="color: red; padding: 10px;">Error: Los datos de este módulo no tienen el formato correcto.</p>
+            @endif
         </div>
     @endforeach
 
@@ -63,10 +78,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Descripción</th>
-                        <th>Módulo</th>
-                        <th>N° Serie</th>
-                        <th>Estado</th>
+                        <th width="35%">Descripción</th>
+                        <th width="20%">Módulo</th>
+                        <th width="25%">N° Serie</th>
+                        <th width="20%">Propiedad</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,7 +90,7 @@
                             <td>{{ $eq->descripcion }}</td>
                             <td>{{ str_replace('_', ' ', $eq->modulo) }}</td>
                             <td>{{ $eq->nro_serie ?? 'S/N' }}</td>
-                            <td>{{ $eq->estado }}</td>
+                            <td>{{ $eq->propio }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -102,7 +117,6 @@
         @foreach($equipoMonitoreo as $miembro)
             <div class="firma-box no-break">
                 <div class="linea"></div>
-                {{-- Solución al error: busca nombres_apellidos o nombre --}}
                 <span class="cargo">{{ strtoupper($miembro->nombres_apellidos ?? $miembro->nombre ?? 'MIEMBRO TÉCNICO') }}</span>
                 <span class="cargo">{{ strtoupper($miembro->cargo ?? 'Equipo de Monitoreo') }}</span>
                 <div style="font-size: 7px;">DNI: {{ $miembro->dni ?? '____________' }}</div>
