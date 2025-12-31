@@ -23,7 +23,7 @@
 
         /* SECCIÓN DE FIRMAS */
         .firmas-wrapper { margin-top: 10px; width: 100%; text-align: center; }
-        .firma-recuadro { 
+        .firma-box { 
             width: 50%; 
             border: 1px solid #94a3b8; 
             border-radius: 10px; 
@@ -68,7 +68,7 @@
     <table>
         <tr>
             <td class="bg-label">¿Cuenta con Usuario?</td>
-            <td>{{ strtoupper($detalle->contenido['acceso_sistema'] ?? 'NO') }}</td>
+            <td class="uppercase">{{ $detalle->contenido['acceso_sistema'] ?? 'NO' }}</td>
         </tr>
     </table>
 
@@ -76,7 +76,7 @@
     <table>
         <tr>
             <td class="bg-label">¿Recibió capacitación técnica?</td>
-            <td>{{ strtoupper($detalle->contenido['recibio_capacitacion'] ?? 'NO') }}</td>
+            <td class="uppercase">{{ $detalle->contenido['recibio_capacitacion'] ?? 'NO' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Entidad que lo capacitó:</td>
@@ -110,7 +110,8 @@
                 <td>{{ $eq->nro_serie ?? 'S/N' }}</td>
                 <td class="text-center">{{ $eq->cantidad }}</td>
                 <td>{{ $eq->estado }}</td>
-                <td>{{ $eq->propio ? 'INSTITUCIONAL' : 'PERSONAL' }}</td>
+                {{-- Cambio: Muestra el valor de texto directo guardado en la base de datos --}}
+                <td>{{ $eq->propio }}</td>
             </tr>
             @empty
             <tr><td colspan="5" class="text-center" style="color: #94a3b8; padding: 15px;">No se registraron equipos en este módulo.</td></tr>
@@ -125,7 +126,7 @@
             @if(file_exists($path))
                 <img src="{{ $path }}" class="evidencia-img">
             @else
-                <div class="no-evidencia">Archivo de imagen no encontrado.</div>
+                <div class="no-evidencia">Archivo de imagen no encontrado en el servidor.</div>
             @endif
         @else
             <div class="no-evidencia">No se adjuntó evidencia fotográfica.</div>
@@ -139,7 +140,7 @@
 
     <div class="section-title">7. Firma de Conformidad</div>
     <div class="firmas-wrapper">
-        <div class="firma-recuadro">
+        <div class="firma-box">
             <div class="firma-espacio"></div>
             <div class="firma-linea-firmar"></div>
             <div class="firma-nombre">

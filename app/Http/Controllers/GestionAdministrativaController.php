@@ -63,24 +63,23 @@ class GestionAdministrativaController extends Controller
             $modulo = 'gestion_administrativa';
             $datos = $request->input('contenido', []);
 
-            // 1. Sincronizar Profesionales
-            foreach ($datos as $info) {
-                if (is_array($info) && isset($info['doc']) && !empty($info['doc'])) {
-                    Profesional::updateOrCreate(
-                        ['doc' => trim($info['doc'])],
-                        [
-                            'tipo_doc'         => $info['tipo_doc'] ?? 'DNI',
-                            'apellido_paterno' => mb_strtoupper(trim($info['apellido_paterno']), 'UTF-8'),
-                            'apellido_materno' => mb_strtoupper(trim($info['apellido_materno']), 'UTF-8'),
-                            'nombres'          => mb_strtoupper(trim($info['nombres']), 'UTF-8'),
-                            'email'            => isset($info['email']) ? strtolower(trim($info['email'])) : null,
-                            'telefono'         => $info['telefono'] ?? null,
-                        ]
-                    );
-                }
+            // 1. Sincronizar Profesionales (Entrevistados)
+            if (isset($datos['rrhh']) && !empty($datos['rrhh']['doc'])) {
+                $info = $datos['rrhh'];
+                Profesional::updateOrCreate(
+                    ['doc' => trim($info['doc'])],
+                    [
+                        'tipo_doc'         => $info['tipo_doc'] ?? 'DNI',
+                        'apellido_paterno' => mb_strtoupper(trim($info['apellido_paterno'] ?? ''), 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper(trim($info['apellido_materno'] ?? ''), 'UTF-8'),
+                        'nombres'          => mb_strtoupper(trim($info['nombres'] ?? ''), 'UTF-8'),
+                        'email'            => isset($info['email']) ? strtolower(trim($info['email'])) : null,
+                        'telefono'         => $info['telefono'] ?? null,
+                    ]
+                );
             }
 
-            // 2. Equipos
+            // 2. Equipos de Cómputo (Actualizado para guardar texto en 'propio')
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
             if ($request->has('equipos')) {
                 foreach ($request->equipos as $eq) {
@@ -92,13 +91,14 @@ class GestionAdministrativaController extends Controller
                             'cantidad'    => 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
                             'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? '', 'UTF-8'),
-                            'propio'      => ($eq['propio'] ?? '') === 'SI' ? 1 : 0,
+                            // CAMBIO: Ahora guarda el valor directo (INSTITUCIONAL / PERSONAL) en lugar de 1/0
+                            'propio'      => mb_strtoupper($eq['propio'] ?? 'PERSONAL', 'UTF-8'),
                         ]);
                     }
                 }
             }
 
-            // 3. RESPUESTAS (Ahora guarda texto gracias a la migración)
+            // 3. Respuestas de Monitoreo
             DB::table('mon_respuesta_entrevistado')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo' => $modulo],
                 [
@@ -111,7 +111,7 @@ class GestionAdministrativaController extends Controller
                 ]
             );
 
-            // 4. Foto
+            // 4. Gestión de Foto de Evidencia
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', $modulo)->first();
             if ($request->hasFile('foto_evidencia')) {
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
@@ -122,7 +122,7 @@ class GestionAdministrativaController extends Controller
                 $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'] ?? null;
             }
 
-            // 5. JSON Detalle
+            // 5. Guardar JSON de detalle
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
                 ['contenido' => $datos]
@@ -133,8 +133,8 @@ class GestionAdministrativaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error Store: " . $e->getMessage());
-            return back()->withErrors(['error' => $e->getMessage()]);
+            Log::error("Error en GestionAdministrativaController@store: " . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()]);
         }
     }
 
@@ -152,6 +152,6 @@ class GestionAdministrativaController extends Controller
         ];
 
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.gestion_administrativa', compact('acta', 'detalle', 'equipos', 'monitor'));
-        return $pdf->stream("Acta_{$id}.pdf");
+        return $pdf->stream("Acta_Gestion_Adm_{$id}.pdf");
     }
 }

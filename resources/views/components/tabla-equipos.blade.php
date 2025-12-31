@@ -59,14 +59,14 @@
                                 <option value="OPERATIVO" {{ $eq->estado == 'OPERATIVO' ? 'selected' : '' }}>OPERATIVO</option>
                                 <option value="REGULAR" {{ $eq->estado == 'REGULAR' ? 'selected' : '' }}>REGULAR</option>
                                 <option value="INOPERATIVO" {{ $eq->estado == 'INOPERATIVO' ? 'selected' : '' }}>INOPERATIVO</option>
-                                <option value="BAJA" {{ $eq->estado == 'BAJA' ? 'selected' : '' }}>BAJA</option>
                             </select>
                         </td>
                         <td class="px-4 py-4">
-                            <select name="equipos[{{ $index }}][propiedad]" class="input-table-select">
-                                <option value="DEL SERVICIO" {{ $eq->propiedad == 'DEL SERVICIO' ? 'selected' : '' }}>DEL SERVICIO</option>
-                                <option value="PERSONAL" {{ $eq->propiedad == 'PERSONAL' ? 'selected' : '' }}>PERSONAL</option>
-                                <option value="OTRO SERVICIO" {{ $eq->propiedad == 'OTRO SERVICIO' ? 'selected' : '' }}>OTRO SERVICIO</option>
+                            {{-- CORRECCIÓN: 'propio' en minúsculas para coincidir con el controlador --}}
+                            <select name="equipos[{{ $index }}][propio]" class="input-table-select">
+                                <option value="ESTABLECIMIENTO" {{ $eq->propio == 'ESTABLECIMIENTO' ? 'selected' : '' }}>ESTABLECIMIENTO</option>
+                                <option value="PERSONAL" {{ $eq->propio == 'PERSONAL' ? 'selected' : '' }}>PERSONAL</option>
+                                <option value="SERVICIO" {{ $eq->propio == 'SERVICIO' ? 'selected' : '' }}>SERVICIO</option>
                             </select>
                         </td>
                         <td class="px-4 py-4">
@@ -92,15 +92,15 @@
 {{-- DATALIST PARA SUGERENCIAS --}}
 <datalist id="list_equipos_master">
     <option value="CPU">
-    <option value="IMPRESORA MULTIFUNCIONAL">
+    <option value="IMPRESORA">
     <option value="LAPTOP">
-    <option value="LECTOR DE CODIGO DE BARRAS">
     <option value="LECTOR DE DNIe">
     <option value="MONITOR">
     <option value="MOUSE">
-    <option value="SCANNER">
+    <option value="SCANNER">   
     <option value="TABLET">
     <option value="TECLADO">
+    <option value="TICKETERA">
 </datalist>
 
 {{-- MODAL SCANNER --}}
@@ -186,14 +186,14 @@
                     <option value="OPERATIVO">OPERATIVO</option>
                     <option value="REGULAR">REGULAR</option>
                     <option value="INOPERATIVO">INOPERATIVO</option>
-                    <option value="BAJA">BAJA</option>
                 </select>
             </td>
             <td class="px-4 py-4">
-                <select name="equipos[${index}][propiedad]" class="input-table-select">
-                    <option value="DEL SERVICIO">DEL SERVICIO</option>
+                {{-- CORRECCIÓN: 'propio' en minúsculas en el JS también --}}
+                <select name="equipos[${index}][propio]" class="input-table-select">
+                    <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
                     <option value="PERSONAL">PERSONAL</option>
-                    <option value="OTRO SERVICIO">OTRO SERVICIO</option>
+                    <option value="SERVICIO">SERVICIO</option>
                 </select>
             </td>
             <td class="px-4 py-4"><input type="text" name="equipos[${index}][observaciones]" class="input-table-text uppercase"></td>

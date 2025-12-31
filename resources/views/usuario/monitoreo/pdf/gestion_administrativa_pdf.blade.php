@@ -23,7 +23,7 @@
 
         /* SECCIÓN DE FIRMAS */
         .firmas-wrapper { margin-top: 10px; width: 100%; text-align: center; }
-        .firma-recuadro { 
+        .firma-box { 
             width: 50%; 
             border: 1px solid #94a3b8; 
             border-radius: 10px; 
@@ -50,6 +50,7 @@
 
     <div class="section-title">1. Responsable de Recursos Humanos</div>
     <table>
+        <tr> {{-- Corrección: Se agregó el TR de apertura --}}
             <td class="bg-label">Apellidos y Nombres:</td>
             <td class="uppercase">
                 {{ ($detalle->contenido['rrhh']['apellido_paterno'] ?? '') }} 
@@ -65,7 +66,7 @@
 
     @if(!empty($detalle->contenido['programador']['doc']))
     <table style="margin-top: 8px;">
-        <tr><th colspan="2" style="background-color: #eef2ff;">Personal Programador / Apoyo Administrativo</th></tr>
+        <tr><th colspan="2" style="background-color: #eef2ff; color: #4f46e5;">Personal Programador / Apoyo Administrativo</th></tr>
         <tr>
             <td class="bg-label">Apellidos y Nombres:</td>
             <td class="uppercase">
@@ -85,7 +86,7 @@
     <table>
         <tr>
             <td class="bg-label">¿Cuenta con Usuario?</td>
-            <td>{{ strtoupper($detalle->contenido['cuenta_sihce'] ?? 'NO') }}</td>
+            <td class="uppercase">{{ $detalle->contenido['cuenta_sihce'] ?? 'NO' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Programación hasta:</td>
@@ -97,18 +98,18 @@
     <table>
         <tr>
             <td class="bg-label">¿Recibió capacitación?</td>
-            <td>{{ strtoupper($detalle->contenido['recibio_capacitacion'] ?? 'NO') }}</td>
+            <td class="uppercase">{{ $detalle->contenido['recibio_capacitacion'] ?? 'NO' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Entidad que lo capacitó:</td>
             <td class="uppercase">{{ $detalle->contenido['inst_que_lo_capacito'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">¿A quién comunica en caso de tener alguna dificultad?</td>
+            <td class="bg-label">¿A quién comunica dificultades?</td>
             <td class="uppercase">{{ $detalle->contenido['inst_a_quien_comunica'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">¿Medio que utiliza para comunicarse?</td>
+            <td class="bg-label">¿Medio que utiliza?</td>
             <td class="uppercase">{{ $detalle->contenido['medio_que_utiliza'] ?? '---' }}</td>
         </tr>
     </table>
@@ -131,7 +132,8 @@
                 <td>{{ $eq->nro_serie ?? 'S/N' }}</td>
                 <td class="text-center">{{ $eq->cantidad }}</td>
                 <td>{{ $eq->estado }}</td>
-                <td>{{ $eq->propio ? 'INSTITUCIONAL' : 'PERSONAL' }}</td>
+                {{-- Imprime el texto directo: ESTABLECIMIENTO, SERVICIO o PERSONAL --}}
+                <td>{{ $eq->propio }}</td>
             </tr>
             @empty
             <tr><td colspan="5" class="text-center" style="color: #94a3b8; padding: 15px;">No se registraron equipos tecnológicos.</td></tr>
@@ -146,7 +148,7 @@
             @if(file_exists($path))
                 <img src="{{ $path }}" class="evidencia-img">
             @else
-                <div class="no-evidencia">Archivo de imagen no encontrado.</div>
+                <div class="no-evidencia">Archivo de imagen no encontrado en el servidor.</div>
             @endif
         @else
             <div class="no-evidencia">No se adjuntó evidencia fotográfica.</div>
@@ -158,10 +160,9 @@
         {{ $detalle->contenido['comentarios'] ?? 'SIN OBSERVACIONES ADICIONALES.' }}
     </div>
 
-    {{-- SECCIÓN 7: FIRMAS --}}
     <div class="section-title">7. Firma de Conformidad</div>
     <div class="firmas-wrapper">
-        <div class="firma-recuadro">
+        <div class="firma-box">
             <div class="firma-espacio"></div>
             <div class="firma-linea-firmar"></div>
             <div class="firma-nombre">

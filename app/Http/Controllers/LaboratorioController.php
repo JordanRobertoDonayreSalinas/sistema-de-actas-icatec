@@ -39,7 +39,7 @@ class LaboratorioController extends Controller
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->get();
         $esHistorico = false;
 
-        // Lógica de carga histórica de equipos
+        // Lógica de carga histórica de equipos si la acta actual no tiene registros
         if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
                 ->where('id', '<', $id)->orderBy('id', 'desc')->value('id');
@@ -64,7 +64,6 @@ class LaboratorioController extends Controller
             $datos = $request->input('contenido', []);
 
             // 1. Sincronizar Profesional (Responsable de Laboratorio)
-            // Asegúrate que en tu vista el componente use prefix="responsable"
             if (isset($datos['responsable']) && !empty($datos['responsable']['doc'])) {
                 Profesional::updateOrCreate(
                     ['doc' => trim($datos['responsable']['doc'])],
@@ -79,11 +78,18 @@ class LaboratorioController extends Controller
                 );
             }
 
-            // 2. Equipos (Tecnológicos y Biomédicos)
+            // 2. Equipos (Corregido para manejar categorías de texto en 'propio')
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
             if ($request->has('equipos')) {
                 foreach ($request->equipos as $eq) {
                     if (!empty($eq['descripcion'])) {
+                        
+                        // Normalización de la propiedad del equipo
+                        $valorPropio = mb_strtoupper($eq['propio'] ?? 'PERSONAL', 'UTF-8');
+                        if (!in_array($valorPropio, ['ESTABLECIMIENTO', 'SERVICIO', 'PERSONAL'])) {
+                            $valorPropio = 'PERSONAL';
+                        }
+
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $this->modulo,
@@ -91,24 +97,26 @@ class LaboratorioController extends Controller
                             'cantidad'    => 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
                             'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? 'S/N', 'UTF-8'),
-                            'propio'      => ($eq['propio'] ?? '') === 'SI' ? 1 : 0,
+                            'propio'      => $valorPropio, // Ahora guarda el texto descriptivo
                         ]);
                     }
                 }
             }
 
-            // 3. Foto de Evidencia
+            // 3. Gestión de Foto de Evidencia
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', $this->modulo)->first();
             if ($request->hasFile('foto_evidencia')) {
+                // Borrar foto anterior si existe
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                     Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
                 }
                 $datos['foto_evidencia'] = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
             } elseif ($registroPrevio) {
+                // Mantener la foto actual si no se subió una nueva
                 $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'] ?? null;
             }
 
-            // 4. Guardar JSON Detalle
+            // 4. Guardar JSON Detalle del Módulo
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
                 ['contenido' => $datos]
@@ -119,8 +127,8 @@ class LaboratorioController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error Laboratorio Store: " . $e->getMessage());
-            return back()->withErrors(['error' => 'Hubo un error al guardar: ' . $e->getMessage()]);
+            Log::error("Error en LaboratorioController@store: " . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => 'Hubo un error al guardar: ' . $e->getMessage()]);
         }
     }
 }
