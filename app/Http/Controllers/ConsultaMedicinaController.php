@@ -87,7 +87,7 @@ class ConsultaMedicinaController extends Controller
                             'modulo'      => $modulo,
                             'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
                             'cantidad'    => (int)($eq['cantidad'] ?? 1),
-                            'estado'      => $eq['estado'] ?? 'BUENO',
+                            'estado'      => $eq['estado'] ?? 'OPERATIVO',
                             'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
                             'propio'      => (isset($eq['propio']) && $eq['propio'] === 'SI') ? 1 : 0,
                             'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,

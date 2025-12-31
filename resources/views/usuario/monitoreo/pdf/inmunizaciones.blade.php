@@ -144,10 +144,11 @@
         <table>
             <thead>
                 <tr>
-                    <th width="35%">Descripción</th>
+                    <th width="25%">Descripción</th>
                     <th width="15%">Cantidad</th>
                     <th width="15%">Estado</th>
-                    <th width="20%">N° Serie</th>
+                    <th width="15%">Propiedad</th>
+                    <th width="15%">N° Serie</th>
                     <th width="15%">Observación</th>
                 </tr>
             </thead>
@@ -157,6 +158,7 @@
                     <td class="uppercase">{{ $eq->descripcion }}</td>
                     <td class="text-center">{{ $eq->cantidad }}</td>
                     <td>{{ $eq->estado }}</td>
+                    <td>{{ $eq->propio }}</td>
                     <td>{{ $eq->nro_serie ?? '---' }}</td>
                     <td class="uppercase">{{ $eq->observacion ?? '---' }}</td>
                 </tr>
