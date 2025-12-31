@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Triaje</title>
+    <style>
+        body { font-family: sans-serif; font-size: 11px; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
+        .header h1 { color: #4f46e5; margin: 0; text-transform: uppercase; font-size: 18px; }
+        .header p { margin: 2px 0; color: #666; }
+        
+        .section-title { 
+            background-color: #f3f4f6; 
+            color: #1f2937; 
+            padding: 8px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin-top: 20px; 
+            border-left: 4px solid #4f46e5;
+            font-size: 12px;
+        }
+
+        .info-grid { width: 100%; margin-top: 10px; border-collapse: collapse; }
+        .info-grid td { padding: 5px; vertical-align: top; }
+        .label { font-weight: bold; color: #6b7280; display: block; font-size: 9px; text-transform: uppercase; }
+        .value { font-weight: bold; color: #111; }
+
+        /* Tablas de datos */
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+        .table th { background-color: #4f46e5; color: white; padding: 6px; text-align: left; text-transform: uppercase; }
+        .table td { border-bottom: 1px solid #e5e7eb; padding: 6px; }
+        .table tr:nth-child(even) { background-color: #f9fafb; }
+
+        /* Fotos */
+        .gallery { margin-top: 10px; }
+        .photo-container { display: inline-block; width: 23%; margin: 1%; vertical-align: top; }
+        .photo { width: 100%; height: 120px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    {{-- ENCABEZADO --}}
+    <div class="header">
+        <h1>Acta de Monitoreo - Triaje</h1>
+        <p>Acta N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | Fecha: {{ $acta->created_at->format('d/m/Y') }}</p>
+        <p>{{ $acta->establecimiento->nombre_establecimiento ?? 'Establecimiento Desconocido' }}</p>
+    </div>
+
+    {{-- 1. DATOS DEL PROFESIONAL --}}
+    <div class="section-title">1. Datos del Profesional Responsable</div>
+    @if($dbCapacitacion && $dbCapacitacion->profesional)
+        <table class="info-grid">
+            <tr>
+                <td><span class="label">Nombre Completo</span> <span class="value">{{ $dbCapacitacion->profesional->apellido_paterno }} {{ $dbCapacitacion->profesional->apellido_materno }}, {{ $dbCapacitacion->profesional->nombres }}</span></td>
+                <td><span class="label">Documento</span> <span class="value">{{ $dbCapacitacion->profesional->tipo_doc }}: {{ $dbCapacitacion->profesional->doc }}</span></td>
+                <td><span class="label">Contacto</span> <span class="value">{{ $dbCapacitacion->profesional->telefono }}</span></td>
+            </tr>
+            <tr>
+                <td colspan="3"><span class="label">Email</span> <span class="value">{{ $dbCapacitacion->profesional->email }}</span></td>
+            </tr>
+        </table>
+    @else
+        <p style="padding:10px; color:#999;">No se registró información del profesional.</p>
+    @endif
+
+    {{-- 2. CAPACITACIÓN --}}
+    <div class="section-title">2. Capacitación</div>
+    <table class="info-grid">
+        <tr>
+            <td width="50%">
+                <span class="label">¿Recibió Capacitación?</span> 
+                <span class="value">{{ $dbCapacitacion->recibieron_cap ?? '-' }}</span>
+            </td>
+            <td>
+                <span class="label">Entidad</span> 
+                <span class="value">{{ $dbCapacitacion->institucion_cap ?? 'N/A' }}</span>
+            </td>
+        </tr>
+    </table>
+
+    {{-- 3. INVENTARIO --}}
+    <div class="section-title">3. Inventario de Equipamiento</div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th>Propiedad</th>
+                <th>Estado</th>
+                <th>Cod. Barras</th>
+                <th>Observación</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($dbInventario as $item)
+                <tr>
+                    <td>{{ $item->descripcion }}</td>
+                    <td>{{ $item->propiedad }}</td>
+                    <td>{{ $item->estado }}</td>
+                    <td>{{ $item->cod_barras ?? '-' }}</td>
+                    <td>{{ $item->observaciones }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="5" style="text-align:center; padding:10px;">Sin equipamiento registrado</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+    @if(count($dbInventario) > 0 && !empty($dbInventario[0]->comentarios))
+        <div style="margin-top:5px; font-style:italic; font-size:10px; color:#666;">
+            <strong>Comentarios Generales:</strong> {{ $dbInventario[0]->comentarios }}
+        </div>
+    @endif
+
+    {{-- 4. DIFICULTADES --}}
+    <div class="section-title">4. Dificultades con el Sistema</div>
+    <table class="info-grid">
+        <tr>
+            <td><span class="label">Institución Coordina</span> <span class="value">{{ $dbDificultad->insti_comunica ?? '-' }}</span></td>
+            <td><span class="label">Medio Comunicación</span> <span class="value">{{ $dbDificultad->medio_comunica ?? '-' }}</span></td>
+        </tr>
+    </table>
+
+    {{-- 5. FOTOS --}}
+    <div class="section-title">5. Evidencia Fotográfica</div>
+    <div class="gallery">
+        @forelse($dbFotos as $foto)
+            <div class="photo-container">
+                {{-- Usamos public_path para que DomPDF encuentre la imagen localmente --}}
+                <img src="{{ public_path('storage/' . $foto->url_foto) }}" class="photo">
+            </div>
+        @empty
+            <p style="padding:10px; color:#999;">No hay evidencia fotográfica adjunta.</p>
+        @endforelse
+    </div>
+
+</body>
+</html>
