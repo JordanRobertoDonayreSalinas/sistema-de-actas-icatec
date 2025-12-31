@@ -40,19 +40,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Cantidad de Consultorios</label>
-                        <input type="number" name="contenido[numero_consultorio]" value="{{ $detalle->contenido['numero_consultorio'] ?? 0 }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" />
+                        <input type="number" name="contenido[numero_consultorio]" 
+                        min="0"
+                        onkeydown="return event.keyCode !== 69 && event.keyCode !== 189"
+                        oninput="this.value = Math.abs(this.value)"
+                        value="{{ $detalle->contenido['numero_consultorio'] ?? 0 }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" />
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Denominación del Consultorio</label>
-                        <input type="text" name="contenido[denominacion_consultorio]" value="{{ $detalle->contenido['denominacion_consultorio'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" />
+                        <input type="text" name="contenido[denominacion_consultorio]" value="{{ $detalle->contenido['denominacion_consultorio'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase" />
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Horario de Atención</label>
-                        <input type="text" name="contenido[horario_atencion]" value="{{ $detalle->contenido['horario_atencion'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" placeholder="Ej: Lunes a Viernes 8:00-16:00" />
+                        <input type="text" name="contenido[horario_atencion]" value="{{ $detalle->contenido['horario_atencion'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase" placeholder="Ej: Lunes a Viernes 8:00-20:00" />
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Cantidad de Personal</label>
-                        <input type="number" name="contenido[cantidad_personal]" value="{{ $detalle->contenido['cantidad_personal'] ?? 0 }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" />
+                        <input type="number" name="contenido[cantidad_personal]" 
+                        min="0"
+                        onkeydown="return event.keyCode !== 69 && event.keyCode !== 189"
+                        oninput="this.value = Math.abs(this.value)"
+                        value="{{ $detalle->contenido['cantidad_personal'] ?? 0 }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" />
                     </div>
                     
                 </div>
@@ -145,7 +153,7 @@
                     </div>
                     <div id="section_socializa_reportes" class="{{ ($detalle->contenido['utiliza_reportes'] ?? '') === 'NO' ? 'hidden' : '' }}">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Si es "SÍ" con quién lo socializa</label>
-                        <input type="text" name="contenido[socializa_reportes]" value="{{ $detalle->contenido['socializa_reportes'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" placeholder="Ej: Jefe de establecimiento, equipo de salud, etc." />
+                        <input type="text" name="contenido[socializa_reportes]" value="{{ $detalle->contenido['socializa_reportes'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase" placeholder="Ej: Jefe de establecimiento, equipo de salud, etc." />
                     </div>
                 </div>
             </div>
@@ -206,7 +214,9 @@
                             <i data-lucide="camera" class="w-5 h-5"></i> Evidencia Fotográfica
                         </h3>
                         <div class="relative group">
-                            <input type="file" name="foto_evidencia[]" id="foto_evidencia" {{ (count($fotosActuales) > 0) ? '' : 'required' }} accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
+                            <input type="file" 
+                            name="foto_evidencia[]" 
+                            id="foto_evidencia" {{ (count($fotosActuales) > 0) ? '' : 'required' }} accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
                             <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2.5rem] p-10 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all duration-500 shadow-inner">
                                 <i data-lucide="upload-cloud" id="upload-icon" class="w-10 h-10 text-indigo-400 mb-4"></i>
                                 <span id="file-name-display" class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center leading-relaxed">
