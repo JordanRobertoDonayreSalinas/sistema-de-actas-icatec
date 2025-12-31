@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
+use App\Models\EquipoComputo;
 use App\Models\ModuloCita;
 use App\Models\MonitoreoModulos;
 use App\Models\Profesional;
+use App\Models\RespuestaEntrevistado;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -28,79 +30,124 @@ class CitaController extends Controller
      */
     public function create(Request $request, $idActa)
     {
+        // ... (Tu lógica anterior de las fotos sigue igual) ...
         // 1. Procesar Fotos
         $rutasFotos = [];
-
-        // A. Fotos antiguas (vienen del input hidden del JS, si es edición)
         if ($request->has('rutas_servidor') && !empty($request->rutas_servidor)) {
-            // Decodificar JSON de rutas que envía el JS
             $rutasFotos = json_decode($request->rutas_servidor, true) ?? [];
         }
-
-        // B. Fotos nuevas subidas
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
                 $path = $foto->store('evidencias', 'public');
                 $rutasFotos[] = asset('storage/' . $path);
             }
         }
-
-        // Limitar a 2 fotos
         $rutasFotos = array_slice($rutasFotos, 0, 2);
 
-        // 2. Extraer Inputs del Request (tu formulario envía todo en el array 'contenido')
+        // 2. Extraer Inputs
         $input = $request->input('contenido');
 
-        // 3. Guardar en Base de Datos (Mapeo Manual)
+
+        // =========================================================================
+        // PASO 1: Guardamos todos los datos en una variable ($datosCita)
+        // =========================================================================
+
+        $datosCita = [
+            // Personal
+            'personal_nombre' => $input['personal_nombre'] ?? null,
+            'personal_dni'    => $input['personal_dni'] ?? null,
+            'personal_turno'  => $input['personal_turno'] ?? null,
+            'personal_roles'  => $input['personal_rol'] ?? [],
+
+            'capacitacion_recibida'      => $input['capacitacion'] ?? null,
+            'capacitacion_entes'         => $input['capacitacion_ente'] ?? null,
+            'capacitacion_otros_detalle' => $input['capacitacion_otros_detalle'] ?? null,
+
+            // Logística
+            'insumos_disponibles'   => $input['insumos'] ?? [],
+            'equipos_listado'       => array_values($input['equipos'] ?? []),
+            'equipos_observaciones' => $input['equipos_observaciones'] ?? null,
+
+            // Gestión
+            'nro_ventanillas'    => $input['nro_ventanillas'] ?? 0,
+            'produccion_listado' => array_values($input['produccion'] ?? []),
+
+            'calidad_tiempo_espera'       => $input['calidad']['espera'] ?? null,
+            'calidad_paciente_satisfecho' => $input['calidad']['satisfaccion'] ?? null,
+            'calidad_usa_reportes'        => $input['calidad']['reportes'] ?? null,
+            'calidad_socializa_con'       => $input['calidad']['reportes_socializa'] ?? null,
+
+            'dificultad_comunica_a' => $input['dificultades']['comunica'] ?? null,
+            'dificultad_medio_uso'  => $input['dificultades']['medio'] ?? null,
+
+            // Evidencias
+            'fotos_evidencia' => $rutasFotos,
+            'firma_grafica'   => $request->input('firma_grafica_data'),
+        ];
+
+
+        // =========================================================================
+        // PASO 2: Usamos esa variable para guardar en tu tabla principal
+        // =========================================================================
         ModuloCita::updateOrCreate(
-            ['monitoreo_id' => $idActa], // Clave de búsqueda
-            [
-                // Personal
-                'personal_nombre' => $input['personal_nombre'] ?? null,
-                'personal_dni'    => $input['personal_dni'] ?? null,
-                'personal_turno'  => $input['personal_turno'] ?? null,
-                'personal_roles'  => $input['personal_rol'] ?? [], // Array
-
-                'capacitacion_recibida'      => $input['capacitacion'] ?? null,
-                'capacitacion_entes'         => $input['capacitacion_ente'] ?? [], // Array
-                'capacitacion_otros_detalle' => $input['capacitacion_otros_detalle'] ?? null,
-
-                // Logística
-                'insumos_disponibles'   => $input['insumos'] ?? [], // Array
-                // Para las tablas dinámicas, usamos array_values para reindexar (0,1,2...)
-                'equipos_listado'       => array_values($input['equipos'] ?? []),
-                'equipos_observaciones' => $input['equipos_observaciones'] ?? null,
-
-                // Gestión
-                'nro_ventanillas'    => $input['nro_ventanillas'] ?? 0,
-                'produccion_listado' => array_values($input['produccion'] ?? []),
-
-                'calidad_tiempo_espera'       => $input['calidad']['espera'] ?? null,
-                'calidad_paciente_satisfecho' => $input['calidad']['satisfaccion'] ?? null,
-                'calidad_usa_reportes'        => $input['calidad']['reportes'] ?? null,
-                'calidad_socializa_con'       => $input['calidad']['reportes_socializa'] ?? null,
-
-                'dificultad_comunica_a' => $input['dificultades']['comunica'] ?? null,
-                'dificultad_medio_uso'  => $input['dificultades']['medio'] ?? null,
-
-                // Evidencias
-                'fotos_evidencia' => $rutasFotos,
-                'firma_grafica'   => $request->input('firma_grafica_data'),
-
-            ]
+            ['monitoreo_id' => $idActa],
+            $datosCita // <--- Aquí pasamos la variable creada arriba
         );
 
+
+        // =========================================================================
+        // PASO 3: Usamos la misma variable, la convertimos a JSON y la guardamos
+        // =========================================================================
         MonitoreoModulos::updateOrCreate(
             [
-                'cabecera_monitoreo_id' => $idActa, // Relación con el ID del acta
-                'modulo_nombre'         => 'citas'   // Identificador de este formulario
+                'cabecera_monitoreo_id' => $idActa,
+                'modulo_nombre'         => 'citas'
             ],
             [
-                'contenido' => 'FINALIZADO' // Texto fijo que solicitaste
+                // Aquí está el cambio que pediste: Guardar el JSON completo en vez de "FINALIZADO"
+                'contenido' => $datosCita,
+
+                'pdf_firmado_path' => null
             ]
         );
 
-        return redirect()->route('usuario.monitoreo.modulos', $idActa) // O redirigir al index
+        // ... (El resto de tu código de equipos e insert normalizado sigue igual) ...
+        $datosEquipos = $request->input('contenido.equipos', []);
+        EquipoComputo::where('cabecera_monitoreo_id', $request->id)->where('modulo', 'citas')->delete();
+
+        foreach ($datosEquipos as $item) {
+            EquipoComputo::create([
+                'cabecera_monitoreo_id' => $request->id,
+                'modulo'      => 'citas',
+                'descripcion' => $item['nombre'] ?? 'Desconocido',
+                'cantidad'    => 1,
+                'estado'      => $item['estado'] ?? 'Regular',
+                'nro_serie'   => $item['serie'] ?? null,
+                'propio'      => ($item['propiedad'] ?? '') === 'PROPIO' ? 1 : 0,
+                'observacion' => $item['observaciones'] ?? null,
+            ]);
+        }
+
+        // =========================================================================
+        // PASO 4: NUEVO - Guardar en mon_respuesta_entrevistado
+        // =========================================================================
+        RespuestaEntrevistado::updateOrCreate(
+            [
+                // Buscamos por monitoreo y modulo para no duplicar filas si editan
+                'cabecera_monitoreo_id' => $idActa,
+                'modulo'                => 'citas'
+            ],
+            [
+                // Mapeo exacto que solicitaste:
+                'doc_profesional'       => $datosCita['personal_dni'],
+                'recibio_capacitacion'  => $datosCita['capacitacion_recibida'],
+                'inst_que_lo_capacito'  => $datosCita['capacitacion_entes'],
+                'inst_a_quien_comunica' => $datosCita['dificultad_comunica_a'],
+                'medio_que_utiliza'     => $datosCita['dificultad_medio_uso'],
+            ]
+        );
+
+        return redirect()->route('usuario.monitoreo.modulos', $idActa)
             ->with('success', 'Módulo de Citas finalizado y guardado correctamente.');
     }
 
