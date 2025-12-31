@@ -22,6 +22,12 @@ use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\ConsolidadoPdfController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ConsultaMedicinaController;
+use App\Http\Controllers\ConsultaMedicinaPdfController;
+use App\Http\Controllers\ConsultaNutricionController;
+use App\Http\Controllers\ConsultaNutricionPdfController;
+use App\Http\Controllers\InmunizacionesController;
+use App\Http\Controllers\InmunizacionesPdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -105,6 +111,27 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [CitaController::class, 'index'])->name('index');
                 Route::post('/{id}', [CitaController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 04: Consulta Externa - Medicina
+            Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
+                Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
+                Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 06: Consulta Externa - Nutrición
+            Route::prefix('modulo/consulta-nutricion')->name('consulta-nutricion.')->group(function () {
+                Route::get('/{id}', [ConsultaNutricionController::class, 'index'])->name('index');
+                Route::post('/{id}', [ConsultaNutricionController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [ConsultaNutricionPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 09: Inmunizaciones
+            Route::prefix('modulo/inmunizaciones')->name('inmunizaciones.')->group(function () {
+                Route::get('/{id}', [InmunizacionesController::class, 'index'])->name('index');
+                Route::post('/{id}', [InmunizacionesController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [InmunizacionesPdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 10: Atencion Prenatal

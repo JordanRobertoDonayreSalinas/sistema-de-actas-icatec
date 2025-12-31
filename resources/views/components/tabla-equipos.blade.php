@@ -189,11 +189,10 @@
                 </select>
             </td>
             <td class="px-4 py-4">
-                {{-- CORRECCIÓN: 'propio' en minúsculas en el JS también --}}
-                <select name="equipos[${index}][propio]" class="input-table-select">
-                    <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
-                    <option value="PERSONAL">PERSONAL</option>
+                <select name="equipos[${index}][propiedad]" class="input-table-select">
                     <option value="SERVICIO">SERVICIO</option>
+                    <option value="PERSONAL">PERSONAL</option>
+                    <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
                 </select>
             </td>
             <td class="px-4 py-4"><input type="text" name="equipos[${index}][observaciones]" class="input-table-text uppercase"></td>
