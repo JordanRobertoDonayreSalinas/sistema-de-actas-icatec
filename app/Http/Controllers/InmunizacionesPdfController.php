@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Intervention\Image\Facades\Image;
 
-class ConsultaNutricionPdfController extends Controller
+class InmunizacionesPdfController extends Controller
 {
     public function generar($id)
     {
@@ -18,7 +18,7 @@ class ConsultaNutricionPdfController extends Controller
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', 'consulta_nutricion')
+                    ->where('modulo_nombre', 'inmunizaciones')
                     ->firstOrFail();
 
         // 2. Procesar imágenes (Comprimir y convertir a Base64)
@@ -62,8 +62,8 @@ class ConsultaNutricionPdfController extends Controller
         // 3. Generar PDF
         // Pasamos $imagenesData que contiene las cadenas Base64 optimizadas
         $usuarioLogeado = Auth::user();
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.consulta_nutricion', compact('acta', 'detalle', 'imagenesData', 'usuarioLogeado'));
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.inmunizaciones', compact('acta', 'detalle', 'imagenesData', 'usuarioLogeado'));
 
-        return $pdf->setPaper('a4', 'portrait')->stream("Modulo06_Consulta_Nutricion_Acta_{$id}.pdf");
+        return $pdf->setPaper('a4', 'portrait')->stream("Modulo09_Inmunizaciones_Acta_{$id}.pdf");
     }
 }

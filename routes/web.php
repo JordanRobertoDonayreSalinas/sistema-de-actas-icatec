@@ -21,6 +21,8 @@ use App\Http\Controllers\ConsultaMedicinaController;
 use App\Http\Controllers\ConsultaMedicinaPdfController;
 use App\Http\Controllers\ConsultaNutricionController;
 use App\Http\Controllers\ConsultaNutricionPdfController;
+use App\Http\Controllers\InmunizacionesController;
+use App\Http\Controllers\InmunizacionesPdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -116,6 +118,13 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [ConsultaNutricionController::class, 'index'])->name('index');
                 Route::post('/{id}', [ConsultaNutricionController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [ConsultaNutricionPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 09: Inmunizaciones
+            Route::prefix('modulo/inmunizaciones')->name('inmunizaciones.')->group(function () {
+                Route::get('/{id}', [InmunizacionesController::class, 'index'])->name('index');
+                Route::post('/{id}', [InmunizacionesController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [InmunizacionesPdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 10: Atencion Prenatal
