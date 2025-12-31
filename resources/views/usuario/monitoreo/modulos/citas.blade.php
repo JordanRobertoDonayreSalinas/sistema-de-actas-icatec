@@ -341,7 +341,6 @@
 
           {{-- FILA 1: Identificación --}}
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
-
             {{-- 1. Tipo de Documento --}}
             <div class="md:col-span-3">
               <label class="input-label">Tipo Documento</label>
@@ -353,7 +352,7 @@
               </select>
             </div>
 
-            {{-- 2. Número de Documento (Con búsqueda) --}}
+            {{-- 2. Número de Documento --}}
             <div class="md:col-span-3">
               <label class="input-label">Nro. Documento</label>
               <div class="relative">
@@ -361,7 +360,6 @@
                   class="input-blue font-bold" placeholder="Ingrese y presione Enter"
                   value="{{ $registro->personal_dni ?? '' }}" onblur="buscarPorDoc()"
                   onkeydown="if(event.key === 'Enter'){event.preventDefault(); buscarPorDoc();}">
-                {{-- Icono de carga (oculto por defecto) --}}
                 <div id="loading-doc" class="hidden absolute right-3 top-2.5">
                   <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-indigo-600"></i>
                 </div>
@@ -407,25 +405,22 @@
             </div>
           </div>
 
-          {{-- FILA 2: Nombre Completo (Con autocompletado) --}}
+          {{-- FILA 2: Nombre Completo --}}
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div class="md:col-span-12 relative">
               <label class="input-label">Apellidos y Nombres</label>
               <input type="text" name="contenido[personal_nombre]" id="personal_nombre" class="input-blue"
                 placeholder="Escriba para buscar coincidencias..." autocomplete="off"
                 value="{{ $registro->personal_nombre ?? '' }}" oninput="buscarPorNombre()">
-
-              {{-- Lista de sugerencias flotante --}}
               <div id="lista-sugerencias"
                 class="hidden absolute z-50 w-full bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-                {{-- Aquí se inyectan los resultados con JS --}}
               </div>
             </div>
           </div>
 
-          {{-- ... Resto del código (Capacitación, etc) ... --}}
+          {{-- SECCIÓN CAPACITACIÓN --}}
           <div class="md:col-span-12 bg-slate-50 p-4 rounded-lg border border-slate-100 mt-4">
-            {{-- ... TUS CAMPOS DE CAPACITACION (Déjalos igual) ... --}}
+
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <p class="text-sm font-bold text-slate-700">¿El personal recibió capacitación?</p>
@@ -444,57 +439,37 @@
                   <span class="toggle-btn"><i data-lucide="x" class="w-4 h-4"></i> NO</span>
                 </label>
               </div>
-
             </div>
 
-
-
-            {{-- Lógica para mostrar si ya estaba marcado SI --}}
+            {{-- Lógica PHP para evitar errores de Array vs String --}}
+            @php
+              $rawEnte = $registro->capacitacion_entes ?? '';
+              // Si por error viene un array, tomamos el primer valor. Si es texto, lo usamos directo.
+              $valorGuardado = is_array($rawEnte) ? $rawEnte[0] ?? '' : $rawEnte;
+            @endphp
 
             <div id="div-capacitacion-detalles"
               class="{{ ($registro->capacitacion_recibida ?? '') == 'SI' ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-200">
 
-              <p class="input-label mb-2">Entidad que capacitó:</p>
+              <p class="input-label mb-2">Entidad que capacitó (Seleccione una):</p>
 
               <div class="flex flex-wrap gap-4">
 
-                @foreach (['MINSA', 'DIRIS/DIRESA'] as $ente)
+                {{-- NUEVA LISTA FIJA --}}
+                @foreach (['MINSA', 'DIRESA', 'UNIDAD EJECUTORA'] as $ente)
                   <label class="flex items-center gap-2 cursor-pointer">
-
-                    <input type="checkbox" name="contenido[capacitacion_ente][]" value="{{ $ente }}"
-                      class="rounded text-indigo-600 focus:ring-0"
-                      {{ in_array($ente, $registro->capacitacion_entes ?? []) ? 'checked' : '' }}>
+                    {{-- Radio Button Simple: name="...[capacitacion_ente]" sin corchetes --}}
+                    <input type="radio" name="contenido[capacitacion_ente]" value="{{ $ente }}"
+                      class="text-indigo-600 focus:ring-0" {{ $valorGuardado == $ente ? 'checked' : '' }}>
 
                     <span class="text-xs font-bold text-slate-600">{{ $ente }}</span>
-
                   </label>
                 @endforeach
 
-                <label class="flex items-center gap-2 cursor-pointer">
-
-                  <input type="checkbox" name="contenido[capacitacion_ente][]" value="OTROS"
-                    class="rounded text-indigo-600 focus:ring-0" onchange="toggleOtrosCapacitacion(this)"
-                    {{ in_array('OTROS', $registro->capacitacion_entes ?? []) ? 'checked' : '' }}>
-
-                  <span class="text-xs font-bold text-slate-600">OTROS</span>
-
-                </label>
-
               </div>
-
-              <div id="div-capacitacion-otros"
-                class="{{ in_array('OTROS', $registro->capacitacion_entes ?? []) ? '' : 'hidden' }} mt-3">
-
-                <input type="text" name="contenido[capacitacion_otros_detalle]" class="input-blue"
-                  placeholder="Especifique..." value="{{ $registro->capacitacion_otros_detalle ?? '' }}">
-
-              </div>
-
+              {{-- Ya no hay campo de texto ni opción "OTROS" --}}
             </div>
-
           </div>
-
-
         </div>
 
         {{-- PASO 2: LOGÍSTICA --}}

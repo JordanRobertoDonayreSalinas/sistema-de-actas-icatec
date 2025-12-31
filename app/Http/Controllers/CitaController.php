@@ -7,6 +7,7 @@ use App\Models\EquipoComputo;
 use App\Models\ModuloCita;
 use App\Models\MonitoreoModulos;
 use App\Models\Profesional;
+use App\Models\RespuestaEntrevistado;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -50,6 +51,7 @@ class CitaController extends Controller
         // =========================================================================
         // PASO 1: Guardamos todos los datos en una variable ($datosCita)
         // =========================================================================
+
         $datosCita = [
             // Personal
             'personal_nombre' => $input['personal_nombre'] ?? null,
@@ -58,7 +60,7 @@ class CitaController extends Controller
             'personal_roles'  => $input['personal_rol'] ?? [],
 
             'capacitacion_recibida'      => $input['capacitacion'] ?? null,
-            'capacitacion_entes'         => $input['capacitacion_ente'] ?? [],
+            'capacitacion_entes'         => $input['capacitacion_ente'] ?? null,
             'capacitacion_otros_detalle' => $input['capacitacion_otros_detalle'] ?? null,
 
             // Logística
@@ -123,6 +125,25 @@ class CitaController extends Controller
                 'observacion' => $item['observaciones'] ?? null,
             ]);
         }
+
+        // =========================================================================
+        // PASO 4: NUEVO - Guardar en mon_respuesta_entrevistado
+        // =========================================================================
+        RespuestaEntrevistado::updateOrCreate(
+            [
+                // Buscamos por monitoreo y modulo para no duplicar filas si editan
+                'cabecera_monitoreo_id' => $idActa,
+                'modulo'                => 'citas'
+            ],
+            [
+                // Mapeo exacto que solicitaste:
+                'doc_profesional'       => $datosCita['personal_dni'],
+                'recibio_capacitacion'  => $datosCita['capacitacion_recibida'],
+                'inst_que_lo_capacito'  => $datosCita['capacitacion_entes'],
+                'inst_a_quien_comunica' => $datosCita['dificultad_comunica_a'],
+                'medio_que_utiliza'     => $datosCita['dificultad_medio_uso'],
+            ]
+        );
 
         return redirect()->route('usuario.monitoreo.modulos', $idActa)
             ->with('success', 'Módulo de Citas finalizado y guardado correctamente.');
