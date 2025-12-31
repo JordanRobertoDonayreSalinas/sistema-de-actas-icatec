@@ -1,8 +1,8 @@
 @extends('layouts.usuario')
-@section('title', 'Módulo 05: Odontologia')
+@section('title', 'Módulo 07: Psicologia')
 
 @section('content')
-<div class="py-12 bg-[#f8fafc] min-h-screen" x-data="odontologiaForm()">
+<div class="py-12 bg-[#f8fafc] min-h-screen" x-data="psicologiaForm()">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
         {{-- ENCABEZADO --}}
@@ -19,12 +19,12 @@
                         <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
                         <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Odontologia</h2>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Psicologia</h2>
                 </div>
             </div>
             
             {{-- Enlace de PDF Temporal --}}
-            <a href="{{ route('usuario.monitoreo.consulta-odontologia.pdf', $acta->id) }}" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-md transition-colors flex items-center gap-2">
+            <a href="{{ route('usuario.monitoreo.consulta-psicologia.pdf', $acta->id) }}" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-md transition-colors flex items-center gap-2">
                     <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
             </a>
 
@@ -558,7 +558,7 @@
 
 
 <script>
-    function odontologiaForm() {
+    function psicologiaForm() {
         // DATOS BD
         const dbCapacitacion  = @json($dbCapacitacion ?? null);
         const dbInventario    = @json($dbInventario ?? []);
@@ -693,7 +693,7 @@
                 this.buscando = true;
                 this.msgProfesional = "Buscando...";
                 try {
-                    let response = await fetch(`/usuario/monitoreo/modulo/consulta-odontologia/buscar-profesional/${doc}`);
+                    let response = await fetch(`/usuario/monitoreo/modulo/consulta-psicologia/buscar-profesional/${doc}`);
                     let data = await response.json();
                     if (data.success) {
                         this.form.profesional = { ...this.form.profesional, ...data.data };
@@ -706,7 +706,7 @@
                 finally { this.buscando = false; }
             },
             eliminarFotoGuardada(id, index) {
-                fetch(`/usuario/monitoreo/modulo/consulta-odontologia/foto/${id}`, {
+                fetch(`/usuario/monitoreo/modulo/consulta-psicologia/foto/${id}`, {
                     method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' }
                 })
@@ -722,7 +722,7 @@
                 formData.append('data', JSON.stringify(this.form));
                 this.files.forEach(file => formData.append('fotos[]', file));
 
-                fetch("{{ route('usuario.monitoreo.consulta-odontologia.store', $acta->id) }}", {
+                fetch("{{ route('usuario.monitoreo.consulta-psicologia.store', $acta->id) }}", {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData

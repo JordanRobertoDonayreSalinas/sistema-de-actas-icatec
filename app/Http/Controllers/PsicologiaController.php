@@ -14,10 +14,10 @@ use App\Models\ComFotos;
 use App\Models\ComDocuAsisten;
 use App\Models\ComDni;
 
-class OdontologiaController extends Controller
+class PsicologiaController extends Controller
 {
     // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
-    const MODULO_ID = 'ODONTOLOGIA';
+    const MODULO_ID = 'PSICOLOGIA';
 
     public function index($id){
         $acta = Acta::with('establecimiento')->findOrFail($id);
@@ -40,7 +40,7 @@ class OdontologiaController extends Controller
                     ->where('modulo_id', self::MODULO_ID)->first();
 
         // Enviamos la nueva variable a la vista
-        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni'));
+        return view('usuario.monitoreo.modulos.psicologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni'));
     }
 
     // 2. BUSCADOR (Sin cambios)
@@ -89,7 +89,7 @@ class OdontologiaController extends Controller
             // 2. CAPACITACIÓN
             $datosCapacitacion = $data['capacitacion'];
             ComCapacitacion::updateOrCreate(
-                ['acta_id' => $id, 'modulo_id' => 'ODONTOLOGIA'],
+                ['acta_id' => $id, 'modulo_id' => 'PSICOLOGIA'],
                 [
                     'profesional_id'  => $profesional->id,
                     'recibieron_cap'  => $datosCapacitacion['recibieron_cap'],
@@ -99,7 +99,7 @@ class OdontologiaController extends Controller
 
 
             // 3. INVENTARIO
-            ComEquipamiento::where('acta_id', $id)->where('modulo_id', 'ODONTOLOGIA')->delete();
+            ComEquipamiento::where('acta_id', $id)->where('modulo_id', 'PSICOLOGIA')->delete();
             $listaInventario = $data['inventario'] ?? [];
             $comentarioGeneral = $data['inventario_comentarios'] ?? '';
 
@@ -110,7 +110,7 @@ class OdontologiaController extends Controller
                     
                     ComEquipamiento::create([
                         'acta_id'        => $id,
-                        'modulo_id'      => 'ODONTOLOGIA',
+                        'modulo_id'      => 'PSICOLOGIA',
                         'profesional_id' => $profesional->id,
                         'descripcion'    => $item['descripcion'],
                         'cantidad'       => '1', // Siempre 1 según tu indicación
@@ -129,7 +129,7 @@ class OdontologiaController extends Controller
             // 4. DIFICULTADES
             $datosDificultad = $data['dificultades'];
             ComDificultad::updateOrCreate(
-                ['acta_id' => $id, 'modulo_id' => 'ODONTOLOGIA'],
+                ['acta_id' => $id, 'modulo_id' => 'PSICOLOGIA'],
                 [
                     'profesional_id' => $profesional->id,
                     'insti_comunica' => $datosDificultad['institucion'] ?? null,
@@ -182,7 +182,7 @@ class OdontologiaController extends Controller
 
                     ComFotos::create([
                         'acta_id'        => $id,
-                        'modulo_id'      => 'ODONTOLOGIA',
+                        'modulo_id'      => 'PSICOLOGIA',
                         'profesional_id' => $profesional->id,
                         'url_foto'       => $path
                     ]);

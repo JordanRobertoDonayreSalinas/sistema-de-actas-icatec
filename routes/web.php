@@ -19,6 +19,12 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\TriajeController;
 use App\Http\Controllers\TriajePdfController;
 use App\Http\Controllers\OdontologiaController;
+use App\Http\Controllers\OdontologiaPdfController;
+use App\Http\Controllers\PsicologiaController;
+use App\Http\Controllers\PsicologiaPdfController;
+
+
+
 
 
 
@@ -121,6 +127,19 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [OdontologiaController::class, 'index'])->name('index');
                 Route::post('/{id}', [OdontologiaController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [OdontologiaPdfController::class, 'generar'])->name('pdf');
+
+                Route::get('/buscar-profesional/{doc}', [OdontologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [OdontologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
+            });
+
+            // Módulo 07: Psicologia
+            Route::prefix('modulo/consulta-psicologia')->name('consulta-psicologia.')->group(function () {
+                Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
+                Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
+
+                Route::get('/buscar-profesional/{doc}', [PsicologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
             });
 
             // Motor de PDF consolidado y visor final
