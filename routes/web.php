@@ -121,8 +121,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
             });
 
-<<<<<<< HEAD
-            Route::get('/profesional/buscar/{doc}', [TriajeController::class, 'buscarProfesional'])->name('profesional.buscar');
+            // Route::get('/profesional/buscar/{doc}', [TriajeController::class, 'buscarProfesional'])->name('profesional.buscar');
 
             // --- API DE PROFESIONALES (Buscar) ---
             // Route::controller(App\Http\Controllers\ProfesionalController::class)
@@ -163,7 +162,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
             });
 
-=======
             // Módulo 10: Atencion Prenatal
             Route::prefix('modulo/atencion_prenatal')->name('atencion-prenatal.')->group(function () {
                 // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
@@ -199,7 +197,6 @@ Route::prefix('modulo/laboratorio')
         Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
     });
 
->>>>>>> main
             // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');

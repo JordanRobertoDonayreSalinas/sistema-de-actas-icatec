@@ -14,6 +14,8 @@ use App\Models\ComFotos;
 use App\Models\ComDocuAsisten;
 use App\Models\ComDni;
 
+use App\Models\MonitoreoModulos;
+
 class OdontologiaController extends Controller
 {
     // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
@@ -188,6 +190,21 @@ class OdontologiaController extends Controller
                     ]);
                 }
             }
+
+            // Parar actualizar el estado en la tabla
+            MonitoreoModulos::updateOrCreate(
+                [
+                    'cabecera_monitoreo_id' => $id, // Relación con el ID del acta
+                    'modulo_nombre'         => 'consulta_odontologia'   // Identificador de este formulario
+                    
+                ],
+                [
+                    'contenido' => 'FINALIZADO', // Texto fijo que solicitaste
+                    'pdf_firmado_path' => null
+                ]
+
+                
+            );
 
             DB::commit();
             return response()->json(['success' => true, 'redirect' => route('usuario.monitoreo.modulos', $id)]);

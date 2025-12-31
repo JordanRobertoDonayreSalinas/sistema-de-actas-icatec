@@ -12,6 +12,8 @@ use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
 
+use App\Models\MonitoreoModulos;
+
 class TriajeController extends Controller
 {
     // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
@@ -145,6 +147,19 @@ class TriajeController extends Controller
                     ]);
                 }
             }
+
+
+
+            // Parar actualizar el estado en la tabla
+            MonitoreoModulos::updateOrCreate(
+                [
+                    'cabecera_monitoreo_id' => $id, // Relación con el ID del acta
+                    'modulo_nombre'         => 'triaje'   // Identificador de este formulario
+                ],
+                [
+                    'contenido' => 'FINALIZADO' // Texto fijo que solicitaste
+                ]
+            );
 
             DB::commit();
             return response()->json(['success' => true, 'redirect' => route('usuario.monitoreo.modulos', $id)]);
