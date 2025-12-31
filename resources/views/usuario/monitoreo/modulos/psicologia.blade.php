@@ -141,7 +141,7 @@
                                 <option value="" disabled>Seleccione...</option>
                                 <option value="MINSA">MINSA</option>
                                 <option value="DIRESA">DIRESA</option>
-                                <option value="UUEE">UUEE</option>
+                                <option value="UNIDAD EJECUTORA">UNIDAD EJECUTORA</option>
                             </select>
                         </div>
                     </div>
@@ -225,15 +225,16 @@
                                         <select x-model="item.propiedad" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
                                             <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
                                             <option value="PERSONAL">PERSONAL</option>
+                                            <option value="SERVICIO">SERVICIO</option>
                                         </select>
                                     </td>
 
                                     {{-- Estado --}}
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.estado" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
-                                            <option value="BUENO">BUENO</option>
+                                            <option value="OPERATIVO">OPERATIVO</option>
                                             <option value="REGULAR">REGULAR</option>
-                                            <option value="MALO">MALO</option>
+                                            <option value="INOPERATIVO">INOPERATIVO</option>
                                         </select>
                                     </td>
 
@@ -292,7 +293,7 @@
                             <option value="">Seleccione una entidad...</option>
                             <option value="MINSA">MINSA</option>
                             <option value="DIRESA">DIRESA</option>
-                            <option value="UUEE">UUEE</option>
+                            <option value="UNIDAD EJECUTORA">UNIDAD EJECUTORA</option>
                         </select>
                         
                     </div>
@@ -643,7 +644,7 @@
             files: [],
             oldFiles: dbFotos,
 
-            listaOpciones: ['MONITOR', 'CPU', 'TECLADO', 'MOUSE', 'IMPRESORA', 'LECTORA DE DNIe', 'TICKETERA'], 
+            listaOpciones: ['CPU', 'IMPRESORA', 'LAPTOP', 'LECTOR DE DNIe', 'MONITOR', 'MOUSE', 'SCANNER', 'TABLET', 'TECLADO', 'TICKETERA'], 
             itemSeleccionado: '',
 
             form: {
