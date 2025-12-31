@@ -11,6 +11,9 @@
                 <div class="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
                     <span class="text-2xl font-black text-indigo-600">03</span>
                 </div>
+
+                
+
                 <div>
                     <div class="flex items-center gap-3 mb-1">
                         <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
@@ -20,6 +23,11 @@
                 </div>
             </div>
             
+            {{-- Enlace de PDF Temporal --}}
+            <a href="{{ route('usuario.monitoreo.triaje.pdf', $acta->id) }}" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-md transition-colors flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
+            </a>
+
             <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-colors">
                 Volver
             </a>

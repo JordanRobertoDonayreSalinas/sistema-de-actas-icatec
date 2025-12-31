@@ -17,7 +17,9 @@ use App\Http\Controllers\UsuarioController;
 
 
 use App\Http\Controllers\TriajeController;
+use App\Http\Controllers\TriajePdfController;
 use App\Http\Controllers\OdontologiaController;
+
 
 
 
