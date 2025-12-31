@@ -7,6 +7,7 @@ use App\Models\MonitoreoModulos;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Intervention\Image\Facades\Image; // <--- 1. IMPORTANTE: Agregar esta librería
 
 class ConsultaMedicinaPdfController extends Controller
@@ -60,7 +61,8 @@ class ConsultaMedicinaPdfController extends Controller
 
         // 3. Generar PDF
         // Pasamos $imagenesData que contiene las cadenas Base64 optimizadas
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.consulta_medicina', compact('acta', 'detalle', 'imagenesData'));
+        $usuarioLogeado = Auth::user();
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.consulta_medicina', compact('acta', 'detalle', 'imagenesData', 'usuarioLogeado'));
 
         return $pdf->setPaper('a4', 'portrait')->stream("Modulo04_Consulta_Medicina_Acta_{$id}.pdf");
     }

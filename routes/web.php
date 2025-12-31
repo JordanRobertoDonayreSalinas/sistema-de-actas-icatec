@@ -90,13 +90,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
             });
 
-            // Módulo 04: Consulta Externa - Medicina
-            Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
-                Route::get('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'index'])->name('index');
-                Route::post('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [\App\Http\Controllers\ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
-            });
-
             // Módulo 02: Citas
             Route::prefix('modulo/citas')->name('citas.')->group(function () {
                 // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
@@ -105,6 +98,13 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [CitaController::class, 'index'])->name('index');
                 Route::post('/{id}', [CitaController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 04: Consulta Externa - Medicina
+            Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
+                Route::get('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'index'])->name('index');
+                Route::post('/{id}', [\App\Http\Controllers\ConsultaMedicinaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [\App\Http\Controllers\ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 10: Atencion Prenatal

@@ -24,6 +24,14 @@
         .foto-grid-item img { width: 100%; height: 150px; object-fit: contain; background-color: #ffffff; border: 1px solid #e2e8f0; display: block; }
         .materiales-list { padding: 8px; }
         .materiales-item { display: inline-block; padding: 3px 8px; background-color: #e0e7ff; border-radius: 4px; margin: 2px; font-size: 9px; }
+        /* Estilos para recuadros de firma */
+        .firma-section { margin-top: 15px; }
+        .firma-container { width: 100%; display: table; table-layout: fixed; }
+        .firma-box { display: table-cell; width: 50%; text-align: center; padding: 0 28px; vertical-align: top; }
+        .firma-linea { border-bottom: 1px solid #000; height: 180px; margin-bottom: 8px; }
+        .firma-label { font-size: 10px; margin: 5px 0; }
+        .firma-nombre { font-weight: bold; text-transform: uppercase; font-size: 12px; }
+        .firma-fecha { font-size: 8px; margin-top: 3px; }
     </style>
 </head>
 <body>
@@ -35,7 +43,7 @@
         </div>
     </div>
 
-    <div class="section-title">1. Detalles</div>
+    <div class="section-title">1. Detalles de consultorio</div>
     <table>
         <tr>
             <td class="bg-label">Cantidad</td>
@@ -51,7 +59,18 @@
     <table>
         <tr>
             <td class="bg-label">Nombres y Apellidos</td>
-            <td class="uppercase">{{ $detalle->contenido['profesional']['apellidos_nombres'] ?? ($detalle->contenido['profesional']['nombres'] ?? '---') }}</td>
+            <td class="uppercase">
+                @php
+                    $profNombre = $detalle->contenido['profesional']['nombres'] ?? '';
+                    $profApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
+                    $profApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
+                    $profCompleto = trim($profApellidoPaterno . ' ' . $profApellidoMaterno . ' ' . $profNombre);
+                    if(empty($profCompleto)) {
+                        $profCompleto = $detalle->contenido['profesional']['apellidos_nombres'] ?? '---';
+                    }
+                @endphp
+                {{ strtoupper($profCompleto) }}
+            </td>
         </tr>
         <tr>
             <td class="bg-label">Documento</td>
@@ -186,6 +205,53 @@
                 </table>
             </div>
         @endif
+
+        {{-- Sección de Firmas --}}
+        <div class="firma-section">
+            <div class="section-title">9. Firmas de Responsables</div>
+            <div class="firma-container">
+                <div class="firma-box">
+                    <div class="firma-linea"></div>
+                    
+                    <div class="firma-nombre">
+                        @if($usuarioLogeado)
+                            @php
+                                $apellidoPaterno = $usuarioLogeado->apellido_paterno ?? '';
+                                $apellidoMaterno = $usuarioLogeado->apellido_materno ?? '';
+                                $nombres = $usuarioLogeado->name ?? '';
+                                $nombreCompleto = trim($apellidoPaterno . ' ' . $apellidoMaterno . ' ' . $nombres);
+                                if(empty($nombreCompleto)) {
+                                    $nombreCompleto = '___________________';
+                                }
+                            @endphp
+                            {{ strtoupper($nombreCompleto) }}
+                        @else
+                            ___________________
+                        @endif
+                    </div>
+                    <div class="firma-label">Firma del Implementador</div>
+                </div>
+                <div class="firma-box">
+                    <div class="firma-linea"></div>
+                    
+                    <div class="firma-nombre">
+                        @php
+                            $profesionalNombre = $detalle->contenido['profesional']['nombres'] ?? '';
+                            $profesionalApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
+                            $profesionalApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
+                            $profesional = trim($profesionalApellidoPaterno . ' ' . $profesionalApellidoMaterno . ' ' . $profesionalNombre);
+                            if(empty($profesional)) {
+                                $profesional = $detalle->contenido['profesional']['apellidos_nombres'] ?? '___________________';
+                            }
+                        @endphp
+                        {{ strtoupper($profesional) }}
+                    </div>
+                    
+                    <div class="firma-label">Firma del Personal Entrevistado</div>
+                    
+                </div>
+            </div>
+        </div>
     @endif
 
     <div style="position: fixed; bottom: -10px; width: 100%; text-align: right; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px;">
