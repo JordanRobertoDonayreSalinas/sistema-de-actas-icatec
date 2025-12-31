@@ -12,10 +12,15 @@ use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EditMonitoreoController;
 use App\Http\Controllers\GestionAdministrativaController;
 use App\Http\Controllers\GestionAdministrativaPdfController;
-use App\Http\Controllers\FirmasMonitoreoController; // Controlador central de firmas
+use App\Http\Controllers\LaboratorioController;
+use App\Http\Controllers\LaboratorioPdfController;
+use App\Http\Controllers\PuerperioController;
+use App\Http\Controllers\PuerperioPdfController;
+use App\Http\Controllers\FirmasMonitoreoController; 
 use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
+use App\Http\Controllers\ConsolidadoPdfController;
 use App\Http\Controllers\UsuarioController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
@@ -83,13 +88,15 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/editar-acta', [EditMonitoreoController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update');
 
-            // Módulo 01: Gestión Administrativa
-            Route::prefix('modulo/gestion-administrativa')->name('gestion-administrativa.')->group(function () {
-                Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
-                Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
-            });
-
+           // Módulo 01: Gestión Administrativa
+// Quitamos 'usuario.monitoreo' del name si ya estás dentro de un grupo con ese nombre
+        Route::prefix('modulo/gestion-administrativa')
+            ->name('gestion-administrativa.') 
+            ->group(function () {
+        Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+        Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+        Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+    });
             // Módulo 02: Citas
             Route::prefix('modulo/citas')->name('citas.')->group(function () {
                 // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
@@ -120,12 +127,31 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [PartoController::class, 'generar'])->name('pdf');
             });
 
+            // Módulo 17: Laboratorio
+Route::prefix('modulo/laboratorio')
+    ->name('laboratorio.') 
+    ->group(function () {
+        Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
+        Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
+        Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
+    });
+// Módulo 13: Puerperio
+    Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
+        Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
+        Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
+        Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
+    });
+
             // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
             Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
         });
     });
+
+    // Esta es la ruta que dispara el botón "Acta Consolidada"
+Route::get('monitoreo/{id}/consolidado/pdf', [ConsolidadoPdfController::class, 'generar'])
+    ->name('usuario.monitoreo.pdf');
 
     // --- GRUPO ADMINISTRADOR ---
     Route::prefix('admin')->name('admin.')->group(function () {
