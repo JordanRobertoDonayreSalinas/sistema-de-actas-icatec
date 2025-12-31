@@ -133,9 +133,9 @@
             <thead>
                 <tr>
                     <th width="25%">Descripción</th>
-                    <th width="15%">Cantidad</th>
+                    <th width="12%">Cantidad</th>
                     <th width="15%">Estado</th>
-                    <th width="15%">Propiedad</th>
+                    <th width="18%">Propiedad</th>
                     <th width="15%">N° Serie</th>
                     <th width="15%">Observación</th>
                 </tr>

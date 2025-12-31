@@ -89,7 +89,7 @@ class InmunizacionesController extends Controller
                             'cantidad'    => (int)($eq['cantidad'] ?? 1),
                             'estado'      => $eq['estado'] ?? 'OPERATIVO',
                             'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
-                            'propio'      => (isset($eq['propio']) && $eq['propio'] === 'SI') ? 1 : 0,
+                            'propio'      => $eq['propio'] ?? 'SERVICIO',
                             'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
                         ]);
                     }

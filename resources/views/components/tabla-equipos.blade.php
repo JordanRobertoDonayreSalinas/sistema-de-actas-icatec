@@ -190,9 +190,9 @@
             </td>
             <td class="px-4 py-4">
                 <select name="equipos[${index}][propiedad]" class="input-table-select">
-                    <option value="DEL SERVICIO">DEL SERVICIO</option>
+                    <option value="SERVICIO">SERVICIO</option>
                     <option value="PERSONAL">PERSONAL</option>
-                    <option value="OTRO SERVICIO">OTRO SERVICIO</option>
+                    <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
                 </select>
             </td>
             <td class="px-4 py-4"><input type="text" name="equipos[${index}][observaciones]" class="input-table-text uppercase"></td>
