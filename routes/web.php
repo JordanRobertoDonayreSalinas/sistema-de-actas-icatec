@@ -34,6 +34,14 @@ use App\Http\Controllers\ConsultaNutricionController;
 use App\Http\Controllers\ConsultaNutricionPdfController;
 use App\Http\Controllers\InmunizacionesController;
 use App\Http\Controllers\InmunizacionesPdfController;
+use App\Http\Controllers\CredController;
+use App\Http\Controllers\CredPdfController;
+use App\Http\Controllers\FarmaciaController;
+use App\Http\Controllers\FarmaciaPdfController;
+use App\Http\Controllers\PlanificacionController;
+use App\Http\Controllers\PlanificacionPdfController;
+use App\Http\Controllers\ReferenciasController;
+use App\Http\Controllers\ReferenciasPdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -187,6 +195,34 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [PartoController::class, 'index'])->name('index');
                 Route::post('/{id}', [PartoController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [PartoController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 08: CRED
+            Route::prefix('modulo/cred')->name('cred.')->group(function () {
+                Route::get('/{id}', [CredController::class, 'index'])->name('index');
+                Route::post('/{id}', [CredController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [CredPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 11: Planificación Familiar
+            // Se usa guion medio en el 'name' porque el panel de módulos hace el str_replace('_', '-', $slug)
+            Route::prefix('modulo/planificacion-familiar')->name('planificacion-familiar.')->group(function () {
+                Route::get('/{id}', [PlanificacionController::class, 'index'])->name('index');
+                Route::post('/{id}', [PlanificacionController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [PlanificacionPdfController::class, 'generar'])->name('pdf');
+            });
+            // Módulo 15: Farmacia
+            Route::prefix('modulo/farmacia')->name('farmacia.')->group(function () {
+                Route::get('/{id}', [FarmaciaController::class, 'index'])->name('index');
+                Route::post('/{id}', [FarmaciaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [FarmaciaPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 16: Referencias
+            Route::prefix('modulo/referencias')->name('referencias.')->group(function () {
+                Route::get('/{id}', [ReferenciasController::class, 'index'])->name('index');
+                Route::post('/{id}', [ReferenciasController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [ReferenciasPdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 17: Laboratorio
