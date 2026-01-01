@@ -1,0 +1,137 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\CabeceraMonitoreo;
+use App\Models\MonitoreoModulos;
+use App\Models\EquipoComputo;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+class CredController extends Controller
+{
+    private $modulo = 'cred';
+
+    public function index($id)
+    {
+        $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
+        
+        // 1. Cargar Equipos (Lógica de arrastre histórico)
+        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo', $this->modulo)
+                                ->get();
+
+        if ($equipos->isEmpty()) {
+            $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
+                ->where('id', '<', $id) 
+                ->orderBy('id', 'desc')
+                ->value('id');
+
+            if ($ultimaActaId) {
+                $equipos = EquipoComputo::where('cabecera_monitoreo_id', $ultimaActaId)
+                                        ->where('modulo', $this->modulo)
+                                        ->get();
+            }
+        }
+
+        // 2. BUSCAR DETALLE (Prioridad tabla nueva)
+        $detalle = DB::table('mon_detalle_modulos')
+                    ->where('cabecera_monitoreo_id', $id)
+                    ->where('modulo_nombre', $this->modulo)
+                    ->first();
+
+        if (!$detalle) {
+            $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                        ->where('modulo_nombre', $this->modulo)
+                        ->first();
+        }
+
+        if ($detalle) {
+            $detalle->contenido = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : $detalle->contenido;
+        }
+
+        return view('usuario.monitoreo.modulos.cred', compact('acta', 'detalle', 'equipos'));
+    }
+
+    public function store(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $acta = CabeceraMonitoreo::findOrFail($id);
+            $datosForm = $request->input('contenido', []);
+            $personal = $datosForm['personal'] ?? null;
+            $equiposForm = $request->input('equipos', []);
+
+            // --- 1. GESTIÓN DE FOTOS ---
+            $foto1 = $request->input('foto_1_actual'); 
+            $foto2 = $request->input('foto_2_actual');
+
+            if ($request->hasFile('foto_evidencia_1')) {
+                if ($foto1) Storage::disk('public')->delete($foto1);
+                $foto1 = $request->file('foto_evidencia_1')->store('evidencias/cred', 'public');
+            }
+            if ($request->hasFile('foto_evidencia_2')) {
+                if ($foto2) Storage::disk('public')->delete($foto2);
+                $foto2 = $request->file('foto_evidencia_2')->store('evidencias/cred', 'public');
+            }
+
+            // --- 2. ACTUALIZAR EQUIPOS DENTRO DEL JSON (Clave para guardar en mon_detalle_modulos) ---
+            // Guardamos la estructura completa de los equipos dentro del array de contenido
+            $datosForm['equipos_data'] = $equiposForm;
+
+            // --- 3. GUARDAR EN TABLA NUEVA (mon_detalle_modulos) ---
+            $nombreCompleto = mb_strtoupper(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? ''), 'UTF-8');
+            
+            DB::table('mon_detalle_modulos')->updateOrInsert(
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
+                [
+                    'personal_nombre' => !empty(trim($nombreCompleto)) ? $nombreCompleto : 'SIN NOMBRE',
+                    'personal_dni'    => $personal['dni'] ?? null,
+                    'personal_turno'  => mb_strtoupper($personal['turno'] ?? 'N/A', 'UTF-8'),
+                    'personal_roles'  => mb_strtoupper($personal['rol'] ?? 'RESPONSABLE', 'UTF-8'),
+                    'contenido'       => json_encode($datosForm),
+                    'foto_1'          => $foto1,
+                    'foto_2'          => $foto2,
+                    'updated_at'      => now()
+                ]
+            );
+
+            // --- 4. GUARDAR EN TABLA ANTIGUA (mon_monitoreo_modulos) ---
+            MonitoreoModulos::updateOrCreate(
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
+                ['contenido' => $datosForm]
+            );
+
+            // --- 5. GUARDAR EQUIPOS EN TABLA INDEPENDIENTE (mon_monitoreo_equipos) ---
+            EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
+
+            if (!empty($equiposForm)) {
+                foreach ($equiposForm as $eq) {
+                    if (!empty($eq['descripcion'])) {
+                        EquipoComputo::create([
+                            'cabecera_monitoreo_id' => $id,
+                            'modulo'      => $this->modulo,
+                            'descripcion' => mb_strtoupper($eq['descripcion'], 'UTF-8'),
+                            'cantidad'    => $eq['cantidad'] ?? 1,
+                            'estado'      => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
+                            'propio'      => (isset($eq['propio']) && (strtoupper($eq['propio']) === 'SI' || $eq['propio'] == 1)) ? 1 : 0,
+                            'nro_serie'   => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
+                            'observaciones' => !empty($eq['observaciones']) ? mb_strtoupper($eq['observaciones'], 'UTF-8') : null,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Datos guardados correctamente en ambas tablas.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error en CRED Store: " . $e->getMessage());
+            return back()->with('error', 'Error al guardar: ' . $e->getMessage())->withInput();
+        }
+    }
+}
