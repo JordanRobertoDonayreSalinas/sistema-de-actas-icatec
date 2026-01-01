@@ -321,7 +321,13 @@
 
                 {{-- ZONA DE CARGA (DRAG & DROP) --}}
                 <div class="border-2 border-dashed border-slate-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors relative cursor-pointer">
-                    <input type="file" multiple @change="handleFiles" class="absolute inset-0 opacity-0 cursor-pointer">
+                    {{-- CAMBIO AQUÍ: Agregado atributo accept --}}
+                    <input type="file" 
+                           multiple 
+                           @change="handleFiles" 
+                           accept="image/png, image/jpeg, image/jpg" 
+                           class="absolute inset-0 opacity-0 cursor-pointer">
+                           
                     <i data-lucide="cloud-upload" class="w-10 h-10 text-indigo-400 mb-3"></i>
                     <p class="text-indigo-600 font-bold uppercase text-sm">Clic para subir o arrastrar archivos</p>
                     <p class="text-xs text-slate-400 mt-1">PNG, JPG o JPEG (Máx. 5MB)</p>
@@ -387,8 +393,219 @@
 </div>
 
 
-
 <script>
+    function triajeForm() {
+        // DATOS BD
+        const dbCapacitacion = @json($dbCapacitacion ?? null);
+        const dbInventario   = @json($dbInventario ?? []);
+        const dbDificultad   = @json($dbDificultad ?? null);
+        const dbFotos        = @json($dbFotos ?? []);
+
+        // --- Inicializaciones ---
+        let initProfesional = {
+            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: ''
+        };
+        let initCapacitacion = { recibieron_cap: '', institucion_cap: '' };
+
+        if (dbCapacitacion) {
+            initCapacitacion.recibieron_cap = dbCapacitacion.recibieron_cap || '';
+            initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
+            if (dbCapacitacion.profesional) {
+                initProfesional = {
+                    tipo_doc: dbCapacitacion.profesional.tipo_doc,
+                    doc: dbCapacitacion.profesional.doc,
+                    nombres: dbCapacitacion.profesional.nombres,
+                    apellido_paterno: dbCapacitacion.profesional.apellido_paterno,
+                    apellido_materno: dbCapacitacion.profesional.apellido_materno,
+                    email: dbCapacitacion.profesional.email,
+                    telefono: dbCapacitacion.profesional.telefono
+                };
+            }
+        }
+
+        let initInventario = [];
+        let initComentariosInv = '';
+        if (dbInventario && dbInventario.length > 0) {
+            initComentariosInv = dbInventario[0].comentarios || '';
+            
+            initInventario = dbInventario.map(item => ({
+                id: Date.now() + Math.random(),
+                descripcion: item.descripcion,
+                propiedad: item.propiedad,
+                estado: item.estado,
+                // Mapeamos la columna 'cod_barras' al campo 'codigo' del form
+                codigo: item.cod_barras || '', 
+                observacion: item.observaciones
+            }));
+        }
+
+        let initDificultades = { institucion: '', medio: '' };
+        if (dbDificultad) {
+            initDificultades.institucion = dbDificultad.insti_comunica || '';
+            initDificultades.medio = dbDificultad.medio_comunica || '';
+        }
+
+        return {
+            saving: false,
+            buscando: false,
+            msgProfesional: '',
+            
+            files: [],      
+            oldFiles: dbFotos, 
+
+            // Lista específica para Triaje
+            listaOpciones: ['MONITOR', 'CPU', 'TECLADO', 'MOUSE', 'IMPRESORA', 'LECTORA DE DNIe', 'TICKETERA'],
+            itemSeleccionado: '',
+
+            form: {
+                profesional: initProfesional,
+                capacitacion: initCapacitacion,
+                inventario: initInventario,
+                inventario_comentarios: initComentariosInv,
+                dificultades: initDificultades,
+            },
+
+            // --- MANEJO DE ARCHIVOS (ACTUALIZADO) ---
+            handleFiles(event) {
+                // Filtro estricto para imágenes
+                const newFiles = Array.from(event.target.files).filter(file => {
+                    return file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
+                });
+
+                if (newFiles.length < event.target.files.length) {
+                    alert("Algunos archivos fueron ignorados porque no son imágenes válidas (solo JPG/PNG).");
+                }
+
+                this.files = [...this.files, ...newFiles];
+                
+                // Limpiar input para permitir re-selección
+                event.target.value = '';
+            },
+
+            removeFile(index) {
+                this.files.splice(index, 1);
+            },
+
+            // --- Inventario ---
+            agregarItem() {
+                if (!this.itemSeleccionado) return;
+                this.form.inventario.push({
+                    id: Date.now(),
+                    descripcion: this.itemSeleccionado,
+                    propiedad: 'ESTABLECIMIENTO',
+                    estado: 'BUENO',
+                    codigo: '',
+                    observacion: ''
+                });
+                this.itemSeleccionado = '';
+            },
+
+            eliminarItem(index) {
+                this.form.inventario.splice(index, 1);
+            },
+
+            // --- Buscador ---
+            async buscarProfesional() {
+                let doc = this.form.profesional.doc;
+                if (!doc || doc.length < 8) return;
+                this.buscando = true;
+                this.msgProfesional = "Buscando...";
+
+                try {
+                    // Ruta apuntando a TRIAJE
+                    let response = await fetch(`/usuario/monitoreo/modulo/triaje/buscar-profesional/${doc}`);
+                    let data = await response.json();
+
+                    if (data.success) {
+                        this.form.profesional = { ...this.form.profesional, ...data.data };
+                        this.msgProfesional = "Encontrado.";
+                    } else {
+                        this.limpiarDatosPersonales();
+                        this.msgProfesional = "No encontrado.";
+                    }
+                } catch (error) { 
+                    this.msgProfesional = "Error."; 
+                } finally { 
+                    this.buscando = false; 
+                }
+            },
+
+            limpiarDatosPersonales() {
+                this.form.profesional.nombres = '';
+                this.form.profesional.apellido_paterno = '';
+                this.form.profesional.apellido_materno = '';
+                this.form.profesional.email = '';
+                this.form.profesional.telefono = '';
+            },
+
+            // --- Eliminar Foto Antigua ---
+            eliminarFotoGuardada(id, index) {
+                // Ruta apuntando a TRIAJE
+                fetch(`/usuario/monitoreo/modulo/triaje/foto/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.oldFiles.splice(index, 1);
+                    } else {
+                        alert('Error al eliminar: ' + (data.message || 'Desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Error de conexión.');
+                });
+            },
+
+            // --- Guardar Todo ---
+            guardarTodo() {
+                this.saving = true;
+                
+                let formData = new FormData();
+                formData.append('data', JSON.stringify(this.form));
+
+                this.files.forEach(file => {
+                    formData.append('fotos[]', file);
+                });
+
+                // Ruta apuntando a TRIAJE
+                fetch("{{ route('usuario.monitoreo.triaje.store', $acta->id) }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        } else {
+                            window.location.reload();
+                        }
+                    } else {
+                        this.saving = false;
+                        alert('Error: ' + JSON.stringify(data.message));
+                    }
+                })
+                .catch(error => {
+                    this.saving = false;
+                    alert('Error técnico.');
+                    console.error(error);
+                });
+            }
+        }
+    }
+</script>
+
+
+{{-- <script>
     function triajeForm() {
         // DATOS BD
         const dbCapacitacion = @json($dbCapacitacion ?? null);
@@ -591,7 +808,7 @@
             
         }
     }
-</script>
+</script> --}}
 
 
 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Acta;
+use App\Models\CabeceraMonitoreo;
 use App\Models\ComCapacitacion;
 use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
@@ -15,7 +15,7 @@ class TriajePdfController extends Controller
     public function generar($id)
     {
         // 1. Cargar datos generales del Acta
-        $acta = Acta::with(['establecimiento', 'user'])->findOrFail($id);
+        $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
 
         // 2. Cargar datos específicos del módulo TRIAJE
         

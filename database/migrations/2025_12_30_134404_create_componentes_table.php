@@ -94,7 +94,7 @@ return new class extends Migration
 
             $table->string('tip_dni'); // Opciones: DNI ELECTRONICO, DNI AZUL
             $table->string('version_dni')->nullable(); // Opciones: v1, v2, v3
-            $table->string('firma_sihce'); // Opciones: SI, NO.
+            $table->string('firma_sihce')->nullable();; // Opciones: SI, NO.
             $table->text('comentarios')->nullable();
             $table->timestamps();
         });
