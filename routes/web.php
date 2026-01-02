@@ -42,6 +42,8 @@ use App\Http\Controllers\PlanificacionController;
 use App\Http\Controllers\PlanificacionPdfController;
 use App\Http\Controllers\ReferenciasController;
 use App\Http\Controllers\ReferenciasPdfController;
+use App\Http\Controllers\FuaElectronicoController;
+use App\Http\Controllers\FuaElectronicoPdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -226,19 +228,26 @@ Route::middleware(['auth'])->group(function () {
             });
 
             // Módulo 17: Laboratorio
-Route::prefix('modulo/laboratorio')
-    ->name('laboratorio.') 
-    ->group(function () {
-        Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
-        Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
-        Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
-    });
-// Módulo 13: Puerperio
-    Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
-        Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
-        Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
-        Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
-    });
+            Route::prefix('modulo/laboratorio')
+                ->name('laboratorio.') 
+                ->group(function () {
+                    Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
+                    Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
+                });
+            // Módulo 13: Puerperio
+                Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
+                    Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
+                    Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
+                });
+
+            // Módulo 14: FUA Electrónico
+            Route::prefix('modulo/fua-electronico')->name('fua-electronico.')->group(function () {
+                Route::get('/{id}', [FuaElectronicoController::class, 'index'])->name('index');
+                Route::post('/{id}', [FuaElectronicoController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [FuaElectronicoPdfController::class, 'generar'])->name('pdf');
+            });
 
             // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
