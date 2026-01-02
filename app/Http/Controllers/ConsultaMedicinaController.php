@@ -102,26 +102,34 @@ class ConsultaMedicinaController extends Controller
                                 ->first();
 
             // Normalize previous photos to array
-            $prevFotos = [];
+            $fotosFinales = [];
             if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                 $prev = $registroPrevio->contenido['foto_evidencia'];
-                if (is_array($prev)) $prevFotos = $prev;
-                elseif (!empty($prev)) $prevFotos = [$prev];
+                $fotosFinales = is_array($prev) ? $prev : [$prev];
             }
 
-            $nuevas = [];
             if ($request->hasFile('foto_evidencia')) {
+                // --- NUEVO: BORRADO FÍSICO DE ARCHIVOS ANTERIORES ---
+                if (count($fotosFinales) > 0) {
+                    foreach ($fotosFinales as $pathViejo) {
+                        // Verificamos si existe en el disco 'public' y lo borramos
+                        if (Storage::disk('public')->exists($pathViejo)) {
+                            Storage::disk('public')->delete($pathViejo);
+                        }
+                    }
+                }
+                // -----------------------------------------------------
+
+                $fotosFinales = [];
                 foreach ($request->file('foto_evidencia') as $file) {
-                    if (count($prevFotos) + count($nuevas) >= 5) break; // limit total to 5
-                    $nuevas[] = $file->store('evidencias_monitoreo', 'public');
+                    // Guardamos en la carpeta pública
+                    $path = $file->store('evidencias_monitoreo', 'public');
+                    $fotosFinales[] = $path;
                 }
             }
 
-            // Merge keeping previous first, then nuevas, cap at 5
-            $merged = array_values(array_slice(array_merge($prevFotos, $nuevas), 0, 5));
-            if (!empty($merged)) {
-                $datos['foto_evidencia'] = $merged;
-            }
+            // Asignamos el array final al JSON
+            $datos['foto_evidencia'] = $fotosFinales;
 
             // 4. GUARDADO DEL JSON
             MonitoreoModulos::updateOrCreate(

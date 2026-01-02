@@ -161,36 +161,50 @@
                     
                     <div>
                         @php
-                            // Normalize foto_evidencia to array format
                             $fotosActuales = [];
                             if (isset($detalle->contenido['foto_evidencia'])) {
-                                $fotoVal = $detalle->contenido['foto_evidencia'];
-                                if (is_array($fotoVal)) {
-                                    $fotosActuales = $fotoVal;
-                                } elseif (!empty($fotoVal)) {
-                                    $fotosActuales = [$fotoVal];
-                                }
+                                $val = $detalle->contenido['foto_evidencia'];
+                                $fotosActuales = is_array($val) ? $val : [$val];
                             }
                         @endphp
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-red-400 mb-6 flex items-center gap-2">
                             <i data-lucide="camera" class="w-5 h-5"></i> Evidencia Fotográfica
                         </h3>
                         <div class="relative group">
-                            <input type="file" name="foto_evidencia[]" id="foto_evidencia" {{ (count($fotosActuales) > 0) ? '' : 'required' }} accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
+                            <input type="file" 
+                            name="foto_evidencia[]" 
+                            id="foto_evidencia" 
+                            accept="image/*" multiple 
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                            onchange="simplePreview(event)">
+
                             <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2.5rem] p-10 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all duration-500 shadow-inner">
-                                <i data-lucide="upload-cloud" id="upload-icon" class="w-10 h-10 text-indigo-400 mb-4"></i>
-                                <span id="file-name-display" class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center leading-relaxed">
-                                    {{ count($fotosActuales) > 0 ? 'CLICK PARA AGREGAR/REEMPLAZAR IMÁGENES' : 'SELECCIONAR HASTA 5 IMÁGENES' }}
-                                </span>
-                                <div id="img-previews" class="hidden mt-4 grid grid-cols-3 gap-3"></div>
+                                {{-- Icono y Texto --}}
+                                <div id="placeholder-content" class="flex flex-col items-center">
+                                    <i data-lucide="upload-cloud" class="w-10 h-10 text-indigo-400 mb-4"></i>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center">
+                                        Click para seleccionar (Reemplaza las anteriores)
+                                    </span>
+                                </div>
+
+                                {{-- Contenedor PREVIEW (Nuevas) --}}
+                                <div id="new-previews" class="hidden mt-6 grid grid-cols-3 gap-3 w-full"></div>
                             </div>
                         </div>
+                        
+                        {{-- BLOQUE DE FOTOS GUARDADAS (Se ocultará si subes nuevas) --}}
                         @if(count($fotosActuales) > 0)
-                            <div class="mt-4 flex items-center gap-3 bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20">
-                                <i data-lucide="image-check" class="text-emerald-400 w-6 h-6"></i>
-                                <div>
-                                    <span class="block text-[10px] font-black text-emerald-400 uppercase tracking-widest">{{ count($fotosActuales) }} Imagen(es) Verificada(s)</span>
-                                    <p class="text-[9px] text-emerald-500/60 font-bold uppercase italic tracking-tighter">Archivo(s) almacenado(s) correctamente</p>
+                            <div id="saved-images-block" class="mt-6">
+                                <div class="flex items-center gap-2 mb-3 opacity-70">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Imágenes actuales en sistema:</span>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2">
+                                    @foreach($fotosActuales as $foto)
+                                        <a href="{{ asset('storage/'.$foto) }}" target="_blank" class="block aspect-square rounded-lg overflow-hidden border border-white/10 hover:opacity-80 transition">
+                                            <img src="{{ asset('storage/'.$foto) }}" class="w-full h-full object-cover">
+                                        </a>
+                                    @endforeach
                                 </div>
                             </div>
                         @endif
@@ -225,35 +239,68 @@
         const section = document.getElementById('section_inst_capacitacion');
         value === 'NO' ? section.classList.add('hidden') : section.classList.remove('hidden');
     }
-
-    function previewImage(event) {
+    
+    function simplePreview(event) {
         const input = event.target;
-        const icon = document.getElementById('upload-icon');
-        const fileName = document.getElementById('file-name-display');
-        const dropzone = document.getElementById('dropzone');
-        const previews = document.getElementById('img-previews');
-
-        previews.innerHTML = '';
+        const previewContainer = document.getElementById('new-previews');
+        const placeholder = document.getElementById('placeholder-content');
+        const savedBlock = document.getElementById('saved-images-block');
+        
+        // Limpiamos previsualizaciones anteriores para evitar duplicados visuales
+        previewContainer.innerHTML = '';
+        
+        // VALIDACIÓN: Verificamos los archivos ANTES de procesarlos
         if (input.files && input.files.length > 0) {
-            const maxFiles = 5;
-            const files = Array.from(input.files).slice(0, maxFiles);
-            files.forEach(file => {
+            
+            // Recorremos los archivos para buscar intrusos (PDFs, Excel, etc.)
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                
+                // Si el archivo NO es una imagen...
+                if (!file.type.startsWith('image/')) {
+                    // 1. Mostrar Alerta
+                    alert(`⚠️ ERROR DE FORMATO:\n\nEl archivo "${file.name}" NO es una imagen.\nSolo se permiten archivos JPG, PNG o JPEG.`);
+                    
+                    // 2. Limpiar el input (Resetea la selección para que no se suba nada incorrecto)
+                    input.value = ""; 
+                    
+                    // 3. Restaurar la vista al estado inicial
+                    previewContainer.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                    if(savedBlock) savedBlock.style.display = 'block'; // Volver a mostrar las fotos guardadas
+                    
+                    return; // ¡IMPORTANTE! Detiene la función aquí.
+                }
+            }
+
+            // --- Si llegamos aquí, todos los archivos son imágenes válidas ---
+
+            // 1. Ocultar placeholder y mostrar contenedor de nuevas
+            previewContainer.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            
+            // 2. Ocultar fotos antiguas visualmente (Lógica de reemplazo)
+            if(savedBlock) savedBlock.style.display = 'none';
+
+            // 3. Generar miniaturas (Máximo 5)
+            Array.from(input.files).slice(0, 5).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.className = 'w-24 h-24 object-cover rounded-2xl border-2 border-indigo-500 shadow-2xl';
-                    previews.appendChild(img);
+                    img.className = 'w-full h-24 object-cover rounded-xl border border-indigo-500 shadow-sm animate-fade-in';
+                    previewContainer.appendChild(img);
                 }
                 reader.readAsDataURL(file);
             });
-            previews.classList.remove('hidden');
-            icon.classList.add('hidden');
-            fileName.innerText = `${files.length} / 5 IMÁGENES SELECCIONADAS`;
-            dropzone.classList.add('bg-indigo-500/10', 'border-indigo-500');
+
+        } else {
+            // Si el usuario cancela la selección (input vacío)
+            previewContainer.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            if(savedBlock) savedBlock.style.display = 'block';
         }
     }
-
     document.getElementById('form-consulta-medicina').onsubmit = function() {
         const btn = document.getElementById('btn-submit-action');
         const icon = document.getElementById('icon-save-loader');

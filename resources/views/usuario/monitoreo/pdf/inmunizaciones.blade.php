@@ -15,9 +15,31 @@
         .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%; }
         .uppercase { text-transform: uppercase; }
         .text-center { text-align: center; }
-        /* Evidencia fotográfica: imagen única centrada en recuadro */
-        .foto-container { margin: 15px 0; padding: 15px; border: 2px solid #4f46e5; background-color: #f9fafc; text-align: center; }
-        .foto { display: block; margin: 0 auto; width: 100%; height: 280px; object-fit: contain; background-color: #ffffff; border: 1px solid #e2e8f0; }
+        
+        /* Evidencia fotográfica: Contenedor AJUSTABLE */
+        .foto-container { 
+            margin: 15px auto;  /* 'auto' a los lados CENTRA el cuadro en la página */
+            padding: 10px; 
+            border: 1px solid #e2e8f0; 
+            background-color: #ffffff; 
+            text-align: center; 
+            display: table; /* Hace que el div se comporte como una tabla (se encoge al contenido) */
+            width: auto;    /* Le dice que no use el 100%, sino solo lo necesario */
+        }
+        /* Estilo para la IMAGEN ÚNICA (Ajustado) */
+        .foto { 
+            display: block; 
+            margin: 0 auto; 
+            max-width: 100%;      /* No desbordar el ancho */
+            max-height: 300px;    /* <--- HE REDUCIDO ESTO (Antes 500px, ahora 350px) */
+            width: auto;          /* Mantiene la proporción correcta */
+            height: auto;         /* Mantiene la proporción correcta */
+            object-fit: contain;  /* Asegura que se vea completa dentro del recuadro */
+            background-color: #ffffff; 
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
         /* Evidencia fotográfica: múltiples imágenes en grid con recuadro uniforme */
         .foto-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin: 10px 0; padding: 10px; border: 2px solid #4f46e5; background-color: #f9fafc; }
         .foto-grid-item { width: calc(50% - 6px); }
@@ -28,10 +50,22 @@
         .firma-section { margin-top: 15px; }
         .firma-container { width: 50%; display: table; table-layout: fixed; margin: 0 25%; }
         .firma-box { display: table-cell; width: 50%; text-align: center; padding: 0 28px; vertical-align: top; border: 1px solid #e2e8f0;  border-radius: 14px;}
-        .firma-linea { border-bottom: 1px solid #000; height: 180px; margin-bottom: 8px; }
+        .firma-linea { border-bottom: 1px solid #000; height: 150px; margin-bottom: 8px; }
         .firma-label { font-size: 10px; margin: 5px 0; }
         .firma-nombre { font-weight: bold; text-transform: uppercase; font-size: 12px; }
         .firma-fecha { font-size: 8px; margin-top: 3px; }
+
+        /* Recuadro para indicar ausencia de evidencia fotográfica */
+        .no-evidence-box {
+            border: 2px dashed #cbd5e1; /* Borde gris discontinuo */
+            border-radius: 20px;        /* Bordes redondeados */
+            padding: 30px;              /* Espacio interno */
+            text-align: center;
+            color: #64748b;             /* Color de texto gris suave */
+            font-style: italic;
+            background-color: #f8fafc;  /* Fondo muy claro */
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
@@ -86,8 +120,12 @@
             <td>{{ $detalle->contenido['profesional']['doc'] ?? '---' }}</td>
         </tr>
         <tr>
+            <td class="bg-label">Correo</td>
+            <td>{{ $detalle->contenido['profesional']['email'] ?? '---' }}</td>
+        </tr>
+        <tr>
             <td class="bg-label">Cargo</td>
-            <td class="uppercase">{{ $detalle->contenido['profesional']['cargo'] ?? '---' }}</td>
+            <td class="uppercase">LIC. ENFERMERIA</td>
         </tr>
     </table>
 
@@ -127,7 +165,7 @@
         @endphp
         @if(count($vacunasSeleccionadas) > 0)
             @foreach($vacunasSeleccionadas as $vacuna)
-                <span class="vacunas-item">- {{ $vacuna }}</span>
+                <span class="vacunas-item">{{ $vacuna }}</span>
             @endforeach
         @else
             <span style="color: #94a3b8; font-style: italic;">SIN VACUNAS REGISTRADAS</span>
@@ -198,8 +236,10 @@
         {{ $detalle->contenido['comentarios'] ?? 'SIN COMENTARIOS.' }}
     </div>
 
+    {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
+    <div class="section-title">9. Evidencia Fotográfica</div>
+
     @if(!empty($imagenesData) && is_array($imagenesData) && count($imagenesData) > 0)
-        <div class="section-title">9. Firmas de Responsables</div>
         
         @if(count($imagenesData) === 1)
             {{-- Caso 1 Foto --}}
@@ -212,7 +252,6 @@
                 <table style="width: 100%; border: none;">
                     <tr>
                         @foreach($imagenesData as $index => $img)
-                            {{-- Salto de fila cada 2 imágenes para que no se rompa el layout --}}
                             @if($index > 0 && $index % 2 == 0) 
                                 </tr><tr> 
                             @endif
@@ -222,7 +261,6 @@
                                 </div>
                             </td>
                         @endforeach
-                        {{-- Relleno si es impar para mantener estructura --}}
                         @if(count($imagenesData) % 2 != 0)
                             <td style="border: none;"></td>
                         @endif
@@ -231,31 +269,37 @@
             </div>
         @endif
 
-        {{-- Sección de Firmas --}}
-        <div class="firma-section">
-            <div class="section-title">9. Firmas de Responsables</div>
-            <div class="firma-container">
-                <div class="firma-box">
-                    <div class="firma-linea"></div>
-                    <div class="firma-nombre">
-                        @php
-                            $profesionalNombre = $detalle->contenido['profesional']['nombres'] ?? '';
-                            $profesionalApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
-                            $profesionalApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
-                            $profesional = trim($profesionalApellidoPaterno . ' ' . $profesionalApellidoMaterno . ', ' . $profesionalNombre);
-                            if(empty($profesional)) {
-                                $profesional = $detalle->contenido['profesional']['apellidos_nombres'] ?? '___________________';
-                            }
-                        @endphp
-                        {{ strtoupper($profesional) }}
-                    </div>
-                    
-                    <div class="firma-label">LIC. ENFERMERIA</div>
-                    <div class="firma-label">DNI: {{ $detalle->contenido['profesional']['doc'] ?? '___________________' }}</div>
-                </div>
-            </div>
+    @else
+        {{-- ESTA ES LA PARTE QUE AGREGA EL RECUADRO "SIN EVIDENCIA" --}}
+        <div class="no-evidence-box">
+            No se adjuntó evidencia fotográfica.
         </div>
     @endif
+
+    {{-- 10. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
+    <div class="firma-section">
+        <div class="section-title">10. Firma del entrevistado</div>
+        <div class="firma-container">
+            <div class="firma-box">
+                <div class="firma-linea"></div>
+                <div class="firma-nombre">
+                    @php
+                        $profesionalNombre = $detalle->contenido['profesional']['nombres'] ?? '';
+                        $profesionalApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
+                        $profesionalApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
+                        $profesional = trim($profesionalApellidoPaterno . ' ' . $profesionalApellidoMaterno . ', ' . $profesionalNombre);
+                        if(empty($profesional)) {
+                            $profesional = $detalle->contenido['profesional']['apellidos_nombres'] ?? '___________________';
+                        }
+                    @endphp
+                    {{ strtoupper($profesional) }}
+                </div>
+                
+                <div class="firma-label">LIC. ENFERMERIA</div>
+                <div class="firma-label">DNI: {{ $detalle->contenido['profesional']['doc'] ?? '___________________' }}</div>
+            </div>
+        </div>
+    </div>
 
     <div style="position: fixed; bottom: -10px; width: 100%; text-align: right; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px;">
         Generado por Sistema de Monitoreo | Fecha: {{ date('d/m/Y H:i:s') }}
