@@ -32,13 +32,15 @@ class ModuloParto extends Model
         'gestion_hisminsa',
         'gestion_reportes',
         'gestion_reportes_socializa',
+        'dificultad_comunica_a',
+        'dificultad_medio_uso',
         'fotos_evidencia',
         'firma_grafica'
     ];
 
     // 3. Conversión de JSON a Array y viceversa
     protected $casts = [
-        'capacitacion_entes'  => 'array',
+        'capacitacion_entes' => 'array',
         'insumos_disponibles' => 'array',
         'equipos_listado'     => 'array',
         'fotos_evidencia'     => 'array',

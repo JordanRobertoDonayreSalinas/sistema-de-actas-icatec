@@ -305,7 +305,8 @@
       </div>
 
       <div class="flex justify-between items-start">
-        @foreach ([1 => ['user', 'Responsable'], 2 => ['package', 'Equipamiento'], 3 => ['bar-chart-2', 'Gestión'], 4 => ['camera', 'Evidencias'], 5 => ['pen-tool', 'Firma']] as $i => $data)
+        {{-- SE ELIMINÓ EL PASO 5 DEL ARRAY --}}
+        @foreach ([1 => ['user', 'Responsable'], 2 => ['package', 'Equipamiento'], 3 => ['bar-chart-2', 'Gestión'], 4 => ['camera', 'Evidencias']] as $i => $data)
           <div class="flex flex-col items-center flex-1 cursor-pointer" onclick="goToStep({{ $i }})">
             <div class="step-circle {{ $i == 1 ? 'active' : '' }}" id="circle-{{ $i }}">
               <i data-lucide="{{ $data[0] }}" class="w-5 h-5"></i>
@@ -347,7 +348,6 @@
               <select name="contenido[personal_tipo_doc]" id="personal_tipo_doc" class="input-blue">
                 <option value="DNI" {{ ($registro->personal_tipo_doc ?? '') == 'DNI' ? 'selected' : '' }}>DNI</option>
                 <option value="CE" {{ ($registro->personal_tipo_doc ?? '') == 'CE' ? 'selected' : '' }}>C.E.</option>
-                <option value="OTRO" {{ ($registro->personal_tipo_doc ?? '') == 'OTRO' ? 'selected' : '' }}>OTRO
                 </option>
               </select>
             </div>
@@ -497,7 +497,6 @@
             </div>
           </div>
 
-          <!--  DETALLE DE EQUIPOS  -->
           <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
 
             <div
@@ -765,7 +764,7 @@
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">1. ¿A quién comunica?
                     </p>
                     <div class="grid grid-cols-3 gap-3">
-                      @foreach (['MINSA', 'DIRIS/DIRESA', 'EESS'] as $opcion)
+                      @foreach (['MINSA', 'DIRESA', 'Establecimiento'] as $opcion)
                         <label class="cursor-pointer group relative">
                           <input type="radio" name="contenido[dificultades][comunica]" value="{{ $opcion }}"
                             class="peer sr-only"
@@ -856,7 +855,7 @@
             </div>
           </div>
           <div>
-            <h3 class="input-label mb-3 flex justify-between"><span>Archivos Seleccionados</span><span
+            <h3 class="input-label mb-3 flex justify-between"><span>Archivos Seleccionados </span><span
                 class="text-indigo-600" id="count-display">0 / 2</span></h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="gallery-container">
               <div id="empty-state"
@@ -868,28 +867,7 @@
           <input type="hidden" name="rutas_servidor" id="final-input-server">
         </div>
 
-        {{-- PASO 5: FIRMA --}}
-        <div id="step-5" class="step-content">
-          <div class="mb-6 border-b border-slate-100 pb-4">
-            <h2 class="text-2xl font-bold text-slate-800">Conformidad</h2>
-          </div>
-          <div class="max-w-xl mx-auto py-4">
-            <div class="flex justify-between items-end mb-2 px-1">
-              <label class="text-xs font-bold text-slate-500 uppercase">Dibuje su firma aquí:</label>
-              <button type="button" onclick="clearSignature()"
-                class="text-[10px] font-bold text-red-500 hover:text-red-700 flex items-center gap-1 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100"><i
-                  data-lucide="eraser" class="w-3 h-3"></i> LIMPIAR</button>
-            </div>
-            <div class="bg-white border-2 border-dashed border-slate-300 rounded-xl shadow-sm p-1 relative">
-              <canvas id="signature-pad"
-                class="w-full h-64 bg-slate-50 rounded-lg cursor-crosshair touch-none block"></canvas>
-            </div>
-            <p class="text-[10px] text-center text-slate-400 mt-3 italic"><i data-lucide="info"
-                class="w-3 h-3 inline-block mr-1"></i> Al guardar, se generará el acta con esta firma gráfica.</p>
-            <input type="hidden" name="firma_grafica_data" id="firma_input"
-              value="{{ $registro->firma_grafica ?? '' }}">
-          </div>
-        </div>
+        {{-- PASO 5 ELIMINADO COMPLETAMENTE --}}
 
       </div>
 
@@ -900,8 +878,9 @@
         <div>
           <button type="button" class="btn-nav btn-next" id="btn-next" onclick="changeStep(1)">Siguiente <i
               data-lucide="arrow-right" class="w-4 h-4"></i></button>
-          <button type="submit" class="btn-nav btn-finish" id="btn-submit" style="display: none;"
-            onclick="saveSignature()"><i data-lucide="check-circle" class="w-4 h-4"></i> Finalizar y Guardar</button>
+          {{-- ELIMINADO onclick="saveSignature()", ahora hace submit directo --}}
+          <button type="submit" class="btn-nav btn-finish" id="btn-submit" style="display: none;"><i
+              data-lucide="check-circle" class="w-4 h-4"></i> Finalizar y Guardar</button>
         </div>
       </div>
     </form>
@@ -912,8 +891,6 @@
 @push('scripts')
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script>
-    let canvas, ctx;
-    let isDrawing = false;
     let evidenceList = [];
     const MAX_PHOTOS = 2;
     let timeoutNombre = null;
@@ -942,9 +919,14 @@
           msg.className = "text-[10px] text-green-600 mt-1";
           msg.classList.remove('hidden');
         } else {
-          msg.textContent = "No se encontró el documento en la base de datos de profesionales.";
-          msg.className = "text-[10px] text-red-500 mt-1";
+          // CAMBIO AQUÍ: Mensaje amigable indicando que se creará nuevo
+          msg.textContent = "Personal nuevo. Complete los nombres y se guardará automáticamente.";
+          msg.className = "text-[10px] text-blue-600 mt-1 font-bold"; // Color azul para indicar info, no error fatal
           msg.classList.remove('hidden');
+
+          // Opcional: Limpiar el campo nombre para que escriban el nuevo
+          document.getElementById('personal_nombre').value = '';
+          document.getElementById('personal_nombre').focus();
         }
       } catch (error) {
         console.error('Error:', error);
@@ -1033,7 +1015,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
-      initSignaturePad();
 
       if (typeof updateRolText === 'function') updateRolText();
 
@@ -1052,16 +1033,6 @@
         });
         renderGallery();
         syncInputs();
-      }
-
-      // --- CORRECCIÓN AQUÍ: Cargar firma ---
-      const firmaInput = document.getElementById('firma_input');
-      if (firmaInput && firmaInput.value && canvas) {
-        const img = new Image();
-        img.src = firmaInput.value;
-        img.onload = function() {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        };
       }
     });
 
@@ -1134,7 +1105,9 @@
 
     // 2. WIZARD
     let currentStep = 1;
-    const totalSteps = 5;
+    // CAMBIO AQUI: Reducido a 4 pasos
+    const totalSteps = 4;
+
     window.showStep = function(step) {
       document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
       const target = document.getElementById(`step-${step}`);
@@ -1168,7 +1141,7 @@
       if (step === totalSteps) {
         btnNext.style.display = 'none';
         btnSubmit.style.display = 'flex';
-        setTimeout(resizeCanvas, 100);
+        // Se quitó resizeCanvas
       } else {
         btnNext.style.display = 'flex';
         btnSubmit.style.display = 'none';
@@ -1189,8 +1162,7 @@
           return '<i data-lucide="bar-chart-2" class="w-5 h-5"></i>';
         case 4:
           return '<i data-lucide="camera" class="w-5 h-5"></i>';
-        case 5:
-          return '<i data-lucide="pen-tool" class="w-5 h-5"></i>';
+          // Case 5 eliminado
         default:
           return step;
       }
@@ -1227,13 +1199,12 @@
       const esOtro = tipoEquipo === 'OTRO';
       const valorNombre = esOtro ? '' : tipoEquipo;
 
-      // Si es "OTRO", el input es editable. Si es fijo, es readonly (o editable si prefieres)
       const inputNombre = `<input type="text"
-                                    name="contenido[equipos][${equipoIndex}][nombre]"
-                                    value="${valorNombre}"
-                                    class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
-                                    placeholder="Escriba nombre del equipo..."
-                                    ${esOtro ? 'autofocus' : ''}>`; // Si es fijo, podrías agregar 'readonly'
+                                                              name="contenido[equipos][${equipoIndex}][nombre]"
+                                                              value="${valorNombre}"
+                                                              class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
+                                                              placeholder="Escriba nombre del equipo..."
+                                                              ${esOtro ? 'autofocus' : ''}>`;
 
       const fila = `
             <tr class="group hover:bg-slate-50 transition-colors">
@@ -1289,15 +1260,12 @@
 
       tbody.insertAdjacentHTML('beforeend', fila);
 
-      // Reinicializar iconos Lucide para la nueva fila
       if (typeof lucide !== 'undefined') {
         lucide.createIcons();
       }
 
-      // Resetear el select
       select.value = "";
 
-      // Incrementar índice
       equipoIndex++;
     }
     window.agregarFilaProduccion = function(tableId) {
@@ -1369,100 +1337,6 @@
       // Sincronizar rutas antiguas (server) para que no se pierdan
       const serverFiles = evidenceList.filter(i => i.type === 'server').map(i => i.url);
       document.getElementById('final-input-server').value = JSON.stringify(serverFiles);
-    }
-
-    // 5. SIGNATURE
-    function initSignaturePad() {
-      canvas = document.getElementById('signature-pad');
-      if (!canvas) return;
-      ctx = canvas.getContext('2d');
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#0f172a';
-      canvas.addEventListener('mousedown', startDrawing);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('mouseup', stopDrawing);
-      canvas.addEventListener('mouseleave', stopDrawing);
-      canvas.addEventListener('touchstart', startDrawing, {
-        passive: false
-      });
-      canvas.addEventListener('touchmove', draw, {
-        passive: false
-      });
-      canvas.addEventListener('touchend', stopDrawing);
-      setTimeout(resizeCanvas, 500);
-      window.addEventListener("resize", resizeCanvas);
-    }
-
-    function startDrawing(e) {
-      isDrawing = true;
-      const pos = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      if (e.type === 'touchstart') e.preventDefault();
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      const pos = getPos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      if (e.type === 'touchmove') e.preventDefault();
-    }
-
-    function stopDrawing() {
-      if (isDrawing) {
-        isDrawing = false;
-        ctx.beginPath();
-      }
-    }
-
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    }
-    window.resizeCanvas = function() {
-      if (!canvas || !ctx) return;
-      const stepContainer = document.getElementById('step-5');
-      if (canvas.offsetWidth === 0) return;
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      const width = canvas.offsetWidth;
-      const height = canvas.offsetHeight;
-
-      // Intentar preservar imagen al redimensionar
-      const tempImg = new Image();
-      tempImg.src = canvas.toDataURL();
-
-      canvas.width = width * ratio;
-      canvas.height = height * ratio;
-      ctx.scale(ratio, ratio);
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#0f172a';
-
-      tempImg.onload = function() {
-        ctx.drawImage(tempImg, 0, 0, width, height);
-      }
-    }
-    window.clearSignature = function() {
-      if (canvas && ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        isDrawing = false;
-        ctx.beginPath();
-        document.getElementById('firma_input').value = '';
-      }
-    }
-    window.saveSignature = function() {
-      const input = document.getElementById('firma_input');
-      if (!input) return;
-      if (canvas) input.value = canvas.toDataURL('image/png');
     }
 
     let html5QrcodeScanner = null;
