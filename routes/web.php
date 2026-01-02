@@ -242,6 +242,13 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
             });
 
+            // Módulo 14: FUA Electrónico
+            Route::prefix('modulo/fua-electronico')->name('fua-electronico.')->group(function () {
+                Route::get('/{id}', [FuaElectronicoController::class, 'index'])->name('index');
+                Route::post('/{id}', [FuaElectronicoController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [FuaElectronicoPdfController::class, 'generar'])->name('pdf');
+            });
+
             // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
