@@ -205,8 +205,7 @@ a
                     </div>
                     <div style="font-size: 10px; color: #334155; margin-top: 5px;">
                         <strong>DNI:</strong> {{ $detalle->personal_dni ?? '________' }} <br>
-                        <strong>Email:</strong> {{ $detalle->contenido['personal']['email'] ?? 'No registrado' }} <br>
-                        <strong>Teléfono:</strong> {{ $detalle->contenido['personal']['contacto'] ?? 'No registrado' }} <br>
+                       
                         <span style="font-style: italic; color: #64748b;">
                             {{ $detalle->personal_roles ?? 'Responsable de Referencias' }}
                         </span>
