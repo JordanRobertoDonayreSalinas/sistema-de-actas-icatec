@@ -10,32 +10,24 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * Atributos habilitados para asignación masiva.
-     * Se han incluido los campos de apellidos y el estado (status).
-     */
     protected $fillable = [
-        'name',             // Representa los "Nombres"
-        'apellido_paterno', // Nuevo
-        'apellido_materno', // Nuevo
+        'name',
+        'apellido_paterno',
+        'apellido_materno',
         'email',
         'username',         // DNI
+        'tipo_documento',   // AGREGAR ESTO (según tu SQL)
+        'documento',        // AGREGAR ESTO (según tu SQL)
         'password',
         'role',
-        'status',           // Nuevo (para activo/inactivo)
+        'status',
     ];
 
-    /**
-     * Atributos ocultos para la serialización (por ejemplo, al convertir a JSON).
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Casteo de atributos.
-     */
     protected function casts(): array
     {
         return [
@@ -44,12 +36,9 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Opcional: Accessor para obtener el nombre completo fácilmente.
-     * Uso: $user->full_name
-     */
+    // Accessor corregido para mostrar APELLIDOS primero como pediste
     public function getFullNameAttribute()
     {
-        return "{$this->name} {$this->apellido_paterno} {$this->apellido_materno}";
+        return "{$this->apellido_paterno} {$this->apellido_materno}, {$this->name}";
     }
 }

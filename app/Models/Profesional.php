@@ -16,7 +16,7 @@ class Profesional extends Model
 
     /**
      * Los atributos que se pueden asignar masivamente.
-     * Se incluye 'id' si fuera necesario, aunque Laravel lo maneja automáticamente.
+     * Al usar updateOrCreate en el controlador, todos estos deben estar aquí.
      */
     protected $fillable = [
         'tipo_doc',
@@ -29,18 +29,18 @@ class Profesional extends Model
     ];
 
     /**
-     * Al haber agregado el campo 'id' como autoincrementable y primaria,
-     * ya no necesitas configurar $incrementing ni $primaryKey, 
-     * ya que Laravel asume estos valores por defecto.
-     */
-
-    /**
      * Indica si el modelo debe tener marcas de tiempo (created_at, updated_at).
+     * Ahora que ejecutaste la migración, esto DEBE ser true.
      */
     public $timestamps = true;
 
+    // =========================================================================
+    // MUTADORES (Setters)
+    // Estos aseguran que los datos se limpien automáticamente antes de entrar a la DB
+    // =========================================================================
+
     /**
-     * Mutador: Asegura que el DNI/Documento siempre se guarde sin espacios.
+     * Asegura que el DNI/Documento siempre se guarde sin espacios en los extremos.
      */
     public function setDocAttribute($value)
     {
@@ -48,28 +48,34 @@ class Profesional extends Model
     }
 
     /**
-     * Mutadores: Convierten nombres y apellidos a mayúsculas antes de guardar.
+     * Convierte el Apellido Paterno a mayúsculas y limpia espacios.
      */
     public function setApellidoPaternoAttribute($value)
     {
         $this->attributes['apellido_paterno'] = mb_strtoupper(trim($value), 'UTF-8');
     }
 
+    /**
+     * Convierte el Apellido Materno a mayúsculas y limpia espacios.
+     */
     public function setApellidoMaternoAttribute($value)
     {
         $this->attributes['apellido_materno'] = mb_strtoupper(trim($value), 'UTF-8');
     }
 
+    /**
+     * Convierte los Nombres a mayúsculas y limpia espacios.
+     */
     public function setNombresAttribute($value)
     {
         $this->attributes['nombres'] = mb_strtoupper(trim($value), 'UTF-8');
     }
 
     /**
-     * Mutador: Asegura que el email se guarde siempre en minúsculas.
+     * Asegura que el email se guarde siempre en minúsculas para evitar duplicados por formato.
      */
     public function setEmailAttribute($value)
     {
-        $this->attributes['email'] = strtolower(trim($value));
+        $this->attributes['email'] = !empty($value) ? strtolower(trim($value)) : null;
     }
 }
