@@ -26,8 +26,8 @@
         .materiales-item { display: inline-block; padding: 3px 8px; background-color: #e0e7ff; border-radius: 4px; margin: 2px; font-size: 9px; }
         /* Estilos para recuadros de firma */
         .firma-section { margin-top: 15px; }
-        .firma-container { width: 100%; display: table; table-layout: fixed; }
-        .firma-box { display: table-cell; width: 50%; text-align: center; padding: 0 28px; vertical-align: top; border: 1px solid #e2e8f0; }
+        .firma-container { width: 50%; display: table; table-layout: fixed; margin: 0 25%;}
+        .firma-box { display: table-cell; width: 50%; text-align: center; padding: 0 28px; vertical-align: top; border: 1px solid #e2e8f0; border-radius: 14px; }
         .firma-linea { border-bottom: 1px solid #000; height: 180px; margin-bottom: 8px; }
         .firma-label { font-size: 10px; margin: 5px 0; }
         .firma-nombre { font-weight: bold; text-transform: uppercase; font-size: 12px; }
@@ -214,34 +214,12 @@
             <div class="firma-container">
                 <div class="firma-box">
                     <div class="firma-linea"></div>
-                    
-                    <div class="firma-nombre">
-                        @if($usuarioLogeado)
-                            @php
-                                $apellidoPaterno = $usuarioLogeado->apellido_paterno ?? '';
-                                $apellidoMaterno = $usuarioLogeado->apellido_materno ?? '';
-                                $nombres = $usuarioLogeado->name ?? '';
-                                $nombreCompleto = trim($apellidoPaterno . ' ' . $apellidoMaterno . ' ' . $nombres);
-                                if(empty($nombreCompleto)) {
-                                    $nombreCompleto = '___________________';
-                                }
-                            @endphp
-                            {{ strtoupper($nombreCompleto) }}
-                        @else
-                            ___________________
-                        @endif
-                    </div>
-                    <div class="firma-label">Firma del Implementador</div>
-                </div>
-                <div class="firma-box">
-                    <div class="firma-linea"></div>
-                    
                     <div class="firma-nombre">
                         @php
                             $profesionalNombre = $detalle->contenido['profesional']['nombres'] ?? '';
                             $profesionalApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
                             $profesionalApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
-                            $profesional = trim($profesionalApellidoPaterno . ' ' . $profesionalApellidoMaterno . ' ' . $profesionalNombre);
+                            $profesional = trim($profesionalApellidoPaterno . ' ' . $profesionalApellidoMaterno . ', ' . $profesionalNombre);
                             if(empty($profesional)) {
                                 $profesional = $detalle->contenido['profesional']['apellidos_nombres'] ?? '___________________';
                             }
@@ -249,8 +227,8 @@
                         {{ strtoupper($profesional) }}
                     </div>
                     
-                    <div class="firma-label">Firma del Personal Entrevistado</div>
-                    
+                    <div class="firma-label">MEDICO</div>
+                    <div class="firma-label">DNI: {{ $detalle->contenido['profesional']['doc'] ?? '___________________' }}</div>
                 </div>
             </div>
         </div>
