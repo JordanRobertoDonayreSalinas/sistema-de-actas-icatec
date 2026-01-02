@@ -16,9 +16,8 @@ use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\LaboratorioPdfController;
 use App\Http\Controllers\PuerperioController;
 use App\Http\Controllers\PuerperioPdfController;
-use App\Http\Controllers\FirmasMonitoreoController; 
+use App\Http\Controllers\FirmasMonitoreoController;
 use App\Http\Controllers\EstablecimientoController;
-use App\Http\Controllers\FirmaMovilController;
 use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\ConsolidadoPdfController;
@@ -110,14 +109,14 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update');
 
             // Módulo 01: Gestión Administrativa
-// Quitamos 'usuario.monitoreo' del name si ya estás dentro de un grupo con ese nombre
-        Route::prefix('modulo/gestion-administrativa')
-            ->name('gestion-administrativa.') 
-            ->group(function () {
-        Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
-        Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
-        Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
-    });
+            // Quitamos 'usuario.monitoreo' del name si ya estás dentro de un grupo con ese nombre
+            Route::prefix('modulo/gestion-administrativa')
+                ->name('gestion-administrativa.')
+                ->group(function () {
+                    Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+                });
             // Módulo 02: Citas
             Route::prefix('modulo/citas')->name('citas.')->group(function () {
                 // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
@@ -134,9 +133,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
 
                 Route::get('/buscar-profesional/{doc}', [TriajeController::class, 'buscarProfesional'])->name('buscarProfesional');
-                Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');  
+                Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');
             });
-            
+
 
             // Módulo 05: Odontologia
             Route::prefix('modulo/consulta-odontologia')->name('consulta-odontologia.')->group(function () {
@@ -145,7 +144,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [OdontologiaPdfController::class, 'generar'])->name('pdf');
 
                 Route::get('/buscar-profesional/{doc}', [OdontologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
-                Route::delete('/foto/{id}', [OdontologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
+                Route::delete('/foto/{id}', [OdontologiaController::class, 'eliminarFoto'])->name('eliminarFoto');
             });
 
             // Módulo 07: Psicologia
@@ -155,7 +154,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
 
                 Route::get('/buscar-profesional/{doc}', [PsicologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
-                Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');  
+                Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');
             });
             // Módulo 04: Consulta Externa - Medicina
             Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
@@ -227,19 +226,19 @@ Route::middleware(['auth'])->group(function () {
             });
 
             // Módulo 17: Laboratorio
-Route::prefix('modulo/laboratorio')
-    ->name('laboratorio.') 
-    ->group(function () {
-        Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
-        Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
-        Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
-    });
-// Módulo 13: Puerperio
-    Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
-        Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
-        Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
-        Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
-    });
+            Route::prefix('modulo/laboratorio')
+                ->name('laboratorio.')
+                ->group(function () {
+                    Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
+                    Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
+                });
+            // Módulo 13: Puerperio
+            Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
+                Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
+                Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
+            });
 
             // Motor de PDF consolidado y visor final
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
@@ -249,8 +248,8 @@ Route::prefix('modulo/laboratorio')
     });
 
     // Esta es la ruta que dispara el botón "Acta Consolidada"
-Route::get('monitoreo/{id}/consolidado/pdf', [ConsolidadoPdfController::class, 'generar'])
-    ->name('usuario.monitoreo.pdf');
+    Route::get('monitoreo/{id}/consolidado/pdf', [ConsolidadoPdfController::class, 'generar'])
+        ->name('usuario.monitoreo.pdf');
 
     // --- GRUPO ADMINISTRADOR ---
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -265,19 +264,4 @@ Route::get('monitoreo/{id}/consolidado/pdf', [ConsolidadoPdfController::class, '
             Route::patch('/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggleStatus');
         });
     });
-});
-
-
-// Motor de Firma Digital
-Route::controller(FirmaMovilController::class)->group(function () {
-
-    // NUEVA RUTA: Genera el QR solo cuando se pide
-    Route::get('/firmar/generate-qr/{token}', 'generateQrCode')->name('firma.generate_qr');
-
-    // RUTA 
-    Route::get('/firmar/movil/{token}', 'viewMobilePad')->name('firma.movil');
-
-    // Las otras rutas necesarias para que funcione la lógica:
-    Route::post('/firmar/save/{token}', 'saveMobileSignature')->name('firma.save');
-    Route::get('/firmar/check/{token}', 'checkSignatureStatus')->name('firma.check');
 });

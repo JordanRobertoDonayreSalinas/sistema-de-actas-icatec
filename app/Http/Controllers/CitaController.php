@@ -47,6 +47,49 @@ class CitaController extends Controller
         // 2. Extraer Inputs
         $input = $request->input('contenido');
 
+        // =========================================================================
+        // PASO 0: LOGICA DE GUARDADO AUTOMÁTICO DE PROFESIONAL (NUEVO)
+        // =========================================================================
+        $dni = $input['personal_dni'] ?? null;
+        $nombreCompleto = $input['personal_nombre'] ?? null;
+        $tipoDoc = $input['personal_tipo_doc'] ?? 'DNI';
+
+        if ($dni && $nombreCompleto) {
+            // Buscamos si ya existe un profesional con ese documento
+            $profesional = Profesional::where('doc', $dni)->first();
+
+            if (!$profesional) {
+                // Si NO existe, intentamos desglosar el nombre completo
+                // Asumimos formato simple: "ApellidoPaterno ApellidoMaterno Nombres"
+                // Esta es una aproximación básica, el usuario podría editarlo después si es necesario.
+                $partes = explode(' ', $nombreCompleto);
+                $paterno = array_shift($partes) ?? ''; // Primer elemento
+                $materno = array_shift($partes) ?? ''; // Segundo elemento
+                $nombres = implode(' ', $partes);      // El resto
+
+                // Si solo pusieron un nombre y un apellido, ajustamos para que no quede vacío
+                if (empty($nombres)) {
+                    $nombres = $materno;
+                    $materno = '';
+                }
+                if (empty($nombres)) { // Caso extremo solo 1 palabra
+                    $nombres = $paterno;
+                    $paterno = '';
+                }
+
+                Profesional::create([
+                    'tipo_doc'         => $tipoDoc,
+                    'doc'              => $dni,
+                    'nombres'          => strtoupper($nombres),
+                    'apellido_paterno' => strtoupper($paterno),
+                    'apellido_materno' => strtoupper($materno),
+                    // Puedes agregar campos por defecto si tu tabla los requiere
+                    'especialidad'     => null,
+                    'condicion'        => null,
+                ]);
+            }
+        }
+
 
         // =========================================================================
         // PASO 1: Guardamos todos los datos en una variable ($datosCita)
@@ -123,7 +166,7 @@ class CitaController extends Controller
                 'cantidad'    => 1,
                 'estado'      => $item['estado'] ?? 'Regular',
                 'nro_serie'   => $item['serie'] ?? null,
-                'propio'      => ($item['propiedad'] ?? '') === 'PROPIO' ? 1 : 0,
+                'propio'      => $item['propiedad'] ?? '',
                 'observacion' => $item['observaciones'] ?? null,
             ]);
         }

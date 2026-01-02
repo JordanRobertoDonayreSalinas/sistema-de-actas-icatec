@@ -348,7 +348,6 @@
               <select name="contenido[personal_tipo_doc]" id="personal_tipo_doc" class="input-blue">
                 <option value="DNI" {{ ($registro->personal_tipo_doc ?? '') == 'DNI' ? 'selected' : '' }}>DNI</option>
                 <option value="CE" {{ ($registro->personal_tipo_doc ?? '') == 'CE' ? 'selected' : '' }}>C.E.</option>
-                <option value="OTRO" {{ ($registro->personal_tipo_doc ?? '') == 'OTRO' ? 'selected' : '' }}>OTRO
                 </option>
               </select>
             </div>
@@ -856,7 +855,7 @@
             </div>
           </div>
           <div>
-            <h3 class="input-label mb-3 flex justify-between"><span>Archivos Seleccionados</span><span
+            <h3 class="input-label mb-3 flex justify-between"><span>Archivos Seleccionados </span><span
                 class="text-indigo-600" id="count-display">0 / 2</span></h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="gallery-container">
               <div id="empty-state"
@@ -920,9 +919,14 @@
           msg.className = "text-[10px] text-green-600 mt-1";
           msg.classList.remove('hidden');
         } else {
-          msg.textContent = "No se encontró el documento en la base de datos de profesionales.";
-          msg.className = "text-[10px] text-red-500 mt-1";
+          // CAMBIO AQUÍ: Mensaje amigable indicando que se creará nuevo
+          msg.textContent = "Personal nuevo. Complete los nombres y se guardará automáticamente.";
+          msg.className = "text-[10px] text-blue-600 mt-1 font-bold"; // Color azul para indicar info, no error fatal
           msg.classList.remove('hidden');
+
+          // Opcional: Limpiar el campo nombre para que escriban el nuevo
+          document.getElementById('personal_nombre').value = '';
+          document.getElementById('personal_nombre').focus();
         }
       } catch (error) {
         console.error('Error:', error);

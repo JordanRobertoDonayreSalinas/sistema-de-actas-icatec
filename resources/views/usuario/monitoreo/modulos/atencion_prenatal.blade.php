@@ -299,7 +299,8 @@
       </div>
 
       <div class="flex justify-between items-start">
-        @foreach ([1 => ['user', 'Responsable'], 2 => ['package', 'Equipamiento'], 3 => ['database', 'Datos'], 4 => ['camera', 'Evidencias'], 5 => ['pen-tool', 'Firma']] as $i => $data)
+        {{-- PASOS REDUCIDOS A 4 (SIN FIRMA) --}}
+        @foreach ([1 => ['user', 'Responsable'], 2 => ['package', 'Equipamiento'], 3 => ['database', 'Datos'], 4 => ['camera', 'Evidencias']] as $i => $data)
           <div class="flex flex-col items-center flex-1 cursor-pointer" onclick="goToStep({{ $i }})">
             <div class="step-circle {{ $i == 1 ? 'active' : '' }}" id="circle-{{ $i }}">
               <i data-lucide="{{ $data[0] }}" class="w-5 h-5"></i>
@@ -406,25 +407,23 @@
               </div>
             </div>
 
+            @php
+              $rawEnte = $registro->capacitacion_entes ?? '';
+              // Asegurar valor único si antes era array
+              $valorGuardado = is_array($rawEnte) ? $rawEnte[0] ?? '' : $rawEnte;
+            @endphp
+
             <div id="div-capacitacion-detalles"
               class="{{ ($registro->capacitacion_recibida ?? '') == 'SI' ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-100">
-              <p class="input-label mb-2">Entidad que capacitó:</p>
+              <p class="input-label mb-2">Entidad que capacitó (Seleccione una):</p>
               <div class="flex flex-wrap gap-4 mb-3">
-                @foreach (['MINSA', 'DIRIS/DIRESA', 'OTROS'] as $ente)
-                  <label
-                    class="flex items-center gap-2 cursor-pointer bg-slate-50 px-3 py-2 rounded border border-slate-100 hover:border-indigo-300 transition">
-                    <input type="checkbox" name="contenido[capacitacion_ente][]" value="{{ $ente }}"
-                      class="rounded text-indigo-600 focus:ring-0 border-slate-300"
-                      {{ in_array($ente, $registro->capacitacion_entes ?? []) ? 'checked' : '' }}
-                      {{ $ente == 'OTROS' ? 'onchange=toggleOtrosCapacitacion(this)' : '' }}>
+                @foreach (['MINSA', 'DIRESA', 'UNIDAD EJECUTORA'] as $ente)
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="contenido[capacitacion_ente]" value="{{ $ente }}"
+                      class="text-indigo-600 focus:ring-0" {{ $valorGuardado == $ente ? 'checked' : '' }}>
                     <span class="text-xs font-bold text-slate-600">{{ $ente }}</span>
                   </label>
                 @endforeach
-              </div>
-              <div id="div-capacitacion-otros"
-                class="{{ in_array('OTROS', $registro->capacitacion_entes ?? []) ? '' : 'hidden' }}">
-                <input type="text" name="contenido[capacitacion_otros_detalle]" class="input-blue"
-                  placeholder="Especifique..." value="{{ $registro->capacitacion_otros_detalle ?? '' }}">
               </div>
             </div>
           </div>
@@ -451,70 +450,121 @@
                 </label>
               @endforeach
             </div>
-
           </div>
 
-          {{-- Equipos --}}
-          <div class="mb-6">
-            <div class="flex justify-between items-end mb-3">
-              <h3 class="input-label text-slate-600">Listado de Equipos</h3>
-              <button type="button" onclick="agregarFila('tabla-equipos', 'contenido[equipos]')"
-                class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex items-center gap-2">
-                <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
-              </button>
-            </div>
-            <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm">
-              <table class="blue-table mb-0" id="tabla-equipos">
-                <thead>
-                  <tr>
-                    <th style="width: 35%">Descripción</th>
-                    <th style="width: 20%">Propiedad</th>
-                    <th style="width: 10%" class="text-center">Cant.</th>
-                    <th style="width: 25%">Estado</th>
-                    <th style="width: 10%" class="text-center">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @php
-                    $equipos = $registro->equipos_listado ?? [
-                        ['nombre' => 'Monitor', 'propiedad' => 'ESTABLECIMIENTO', 'cantidad' => 1, 'estado' => 'Bueno'],
-                        ['nombre' => 'CPU', 'propiedad' => 'ESTABLECIMIENTO', 'cantidad' => 1, 'estado' => 'Bueno'],
-                        ['nombre' => 'Teclado', 'propiedad' => 'ESTABLECIMIENTO', 'cantidad' => 1, 'estado' => 'Bueno'],
-                        ['nombre' => 'Mouse', 'propiedad' => 'ESTABLECIMIENTO', 'cantidad' => 1, 'estado' => 'Bueno'],
-                        [
-                            'nombre' => 'Impresora',
-                            'propiedad' => 'ESTABLECIMIENTO',
-                            'cantidad' => 1,
-                            'estado' => 'Bueno',
-                        ],
-                    ];
-                  @endphp
-                  @foreach ($equipos as $idx => $item)
-                    <tr>
-                      <td><input type="text" name="contenido[equipos][{{ $idx }}][nombre]"
-                          value="{{ $item['nombre'] }}" class="table-input font-bold"></td>
-                      <td><select name="contenido[equipos][{{ $idx }}][propiedad]"
-                          class="table-input text-xs">
-                          <option value="ESTABLECIMIENTO"
-                            {{ $item['propiedad'] == 'ESTABLECIMIENTO' ? 'selected' : '' }}>Establecimiento</option>
-                          <option value="PROPIO" {{ $item['propiedad'] == 'PROPIO' ? 'selected' : '' }}>Propio</option>
-                        </select></td>
-                      <td><input type="number" name="contenido[equipos][{{ $idx }}][cantidad]"
-                          value="{{ $item['cantidad'] }}" class="table-input text-center"></td>
-                      <td><select name="contenido[equipos][{{ $idx }}][estado]" class="table-input text-xs">
-                          @foreach (['Bueno', 'Regular', 'Malo', 'Inoperativo'] as $est)
-                            <option value="{{ $est }}" {{ $item['estado'] == $est ? 'selected' : '' }}>
-                              {{ $est }}</option>
-                          @endforeach
-                        </select></td>
-                      <td class="text-center"><button type="button" onclick="this.closest('tr').remove()"
-                          class="p-1 rounded text-slate-300 hover:text-red-500"><i data-lucide="trash-2"
-                            class="w-4 h-4"></i></button></td>
-                    </tr>
+          {{-- EQUIPOS CON LOGICA CORREGIDA --}}
+          <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+
+            <div
+              class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex flex-wrap gap-3 justify-between items-center">
+              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalle de Equipos</h3>
+
+              <div class="flex items-center gap-2">
+                {{-- SELECTOR DE EQUIPOS --}}
+                <select id="select-equipo-agregar"
+                  class="text-xs border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 py-1.5 pl-2 pr-8">
+                  <option value="" disabled selected>-- Seleccione equipo --</option>
+                  @foreach (['Tablet', 'Laptop', 'CPU', 'Monitor', 'Teclado', 'Mouse', 'Impresora', 'Escaner', 'Ticketera', 'Lector de DNIe', 'Lector de Codigo de Barras', 'OTRO'] as $eq)
+                    <option value="{{ $eq }}">{{ $eq }}</option>
                   @endforeach
-                </tbody>
-              </table>
+                </select>
+
+                <button type="button" onclick="agregarEquipoDesdeSelect()"
+                  class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+                  <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
+                </button>
+              </div>
             </div>
+
+            <table class="w-full text-left border-collapse" id="tabla-equipos">
+              <thead>
+                <tr
+                  class="bg-slate-50/50 border-b border-slate-200 text-[11px] uppercase text-slate-500 font-bold tracking-wider">
+                  <th class="px-3 py-2 w-[25%]">Descripción</th>
+                  <th class="px-3 py-2 w-[20%]">N° Serie / Cod.</th>
+                  <th class="px-3 py-2 w-[15%]">Propiedad</th>
+                  <th class="px-3 py-2 w-[15%]">Estado</th>
+                  <th class="px-3 py-2 w-[20%]">Observaciones</th>
+                  <th class="px-3 py-2 w-[5%] text-center"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100" id="tbody-equipos">
+                @php
+                  $equiposGuardados = $registro->equipos_listado ?? [];
+                @endphp
+
+                @foreach ($equiposGuardados as $idx => $item)
+                  <tr class="group hover:bg-slate-50 transition-colors">
+                    {{-- 1. Nombre del Equipo --}}
+                    <td class="p-2 align-middle">
+                      <input type="text" name="contenido[equipos][{{ $idx }}][nombre]"
+                        value="{{ $item['nombre'] ?? '' }}"
+                        class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
+                        placeholder="Nombre">
+                    </td>
+
+                    {{-- 2. Serie / Código --}}
+                    <td class="p-2 align-middle">
+                      <div class="relative flex items-center">
+                        <input type="text" id="serie-input-{{ $idx }}"
+                          name="contenido[equipos][{{ $idx }}][serie]" value="{{ $item['serie'] ?? '' }}"
+                          class="w-full bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-mono uppercase rounded pl-2 pr-8 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400"
+                          placeholder="----">
+
+                        <button type="button" onclick="iniciarEscaneo('serie-input-{{ $idx }}')"
+                          class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10">
+                          <i data-lucide="scan-barcode" class="w-3 h-3"></i>
+                        </button>
+                      </div>
+                    </td>
+
+                    {{-- 3. Propiedad --}}
+                    <td class="p-2 align-middle">
+                      <select name="contenido[equipos][{{ $idx }}][propiedad]"
+                        class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
+                        <option value="ESTABLECIMIENTO"
+                          {{ ($item['propiedad'] ?? '') == 'ESTABLECIMIENTO' ? 'selected' : '' }}>Establecimiento
+                        </option>
+                        <option value="SERVICIO" {{ ($item['propiedad'] ?? '') == 'SERVICIO' ? 'selected' : '' }}>
+                          Servicio</option>
+                        <option value="PERSONAL" {{ ($item['propiedad'] ?? '') == 'PERSONAL' ? 'selected' : '' }}>
+                          Personal</option>
+                      </select>
+                    </td>
+
+                    {{-- 4. Estado --}}
+                    <td class="p-2 align-middle">
+                      <select name="contenido[equipos][{{ $idx }}][estado]"
+                        class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
+                        <option value="Operativo" {{ ($item['estado'] ?? '') == 'Operativo' ? 'selected' : '' }}>
+                          Operativo
+                        </option>
+                        <option value="Regular" {{ ($item['estado'] ?? '') == 'Regular' ? 'selected' : '' }}>Regular
+                        </option>
+                        <option value="Inoperativo" {{ ($item['estado'] ?? '') == 'Inoperativo' ? 'selected' : '' }}>
+                          Inoperativo</option>
+                      </select>
+                    </td>
+
+                    {{-- 5. Observaciones --}}
+                    <td class="p-2 align-middle">
+                      <input type="text" name="contenido[equipos][{{ $idx }}][observaciones]"
+                        value="{{ $item['observaciones'] ?? '' }}"
+                        class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1"
+                        placeholder="Observaciones...">
+                    </td>
+
+                    {{-- 6. Botón Eliminar --}}
+                    <td class="p-2 text-center align-middle">
+                      <button type="button" onclick="this.closest('tr').remove()"
+                        class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                      </button>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
           </div>
 
           {{-- Observaciones unificadas --}}
@@ -524,6 +574,23 @@
             <textarea name="contenido[equipos_observaciones]" rows="3"
               placeholder="Comentarios sobre materiales o equipos..."
               class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm resize-none">{{ $registro->equipos_observaciones ?? '' }}</textarea>
+          </div>
+        </div>
+
+        {{-- MODAL SCANNER (NECESARIO PARA PASO 2) --}}
+        <div id="scanner-modal"
+          class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 transition-all">
+          <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl">
+            <div class="p-4 bg-white border-b flex justify-between items-center z-10 relative">
+              <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="scan" class="text-indigo-600"></i> Escáner
+              </h3>
+              <button type="button" onclick="detenerEscaneo()"
+                class="text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 p-1 rounded-full transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+            <div id="reader" class="w-full bg-black min-h-[250px] relative"></div>
           </div>
         </div>
 
@@ -540,14 +607,14 @@
 
               <div class="flex justify-between items-center mb-4">
                 <span class="text-xs font-bold text-slate-700 uppercase">Número de Consultorios:</span>
-                <input type="number" name="contenido[nro_consultorios]"
+                <input type="number" min="0" name="contenido[nro_consultorios]"
                   class="w-20 border border-indigo-200 rounded p-2 text-center font-bold text-indigo-700 bg-white"
                   value="{{ $registro->nro_consultorios ?? 0 }}">
               </div>
 
               <div class="flex justify-between items-center mb-4">
                 <span class="text-xs font-bold text-slate-700 uppercase">Gestantes Registradas (Mes):</span>
-                <input type="number" name="contenido[nro_gestantes_mes]"
+                <input type="number" min="0" name="contenido[nro_gestantes_mes]"
                   class="w-20 border border-indigo-200 rounded p-2 text-center font-bold text-indigo-700 bg-white"
                   value="{{ $registro->nro_gestantes_mes ?? 0 }}">
               </div>
@@ -588,6 +655,72 @@
                   placeholder="Especifique..." value="{{ $registro->gestion_reportes_socializa ?? '' }}">
               </div>
             </div>
+
+            {{-- SECCIÓN INFERIOR COMPLETA: Dificultades --}}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden md:col-span-2">
+              <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Reporte de Dificultades</h3>
+              </div>
+
+              <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+
+                {{-- Pregunta 1 --}}
+                <div>
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">1. ¿A quién comunica?
+                  </p>
+                  <div class="grid grid-cols-3 gap-3">
+                    @foreach (['MINSA', 'DIRESA', 'Establecimiento'] as $opcion)
+                      <label class="cursor-pointer group relative">
+                        <input type="radio" name="contenido[dificultades][comunica]" value="{{ $opcion }}"
+                          class="peer sr-only"
+                          {{ ($registro->dificultad_comunica_a ?? '') == $opcion ? 'checked' : '' }}>
+                        <div
+                          class="text-center py-3 px-1 rounded-lg border border-slate-200 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 peer-checked:shadow-sm group-hover:border-indigo-300 h-full flex items-center justify-center">
+                          <span
+                            class="block text-[10px] font-bold text-slate-500 peer-checked:text-indigo-700">{{ $opcion }}</span>
+                        </div>
+                        <div
+                          class="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-opacity shadow-sm">
+                          <i data-lucide="check" class="w-2 h-2"></i>
+                        </div>
+                      </label>
+                    @endforeach
+                  </div>
+                </div>
+
+                {{-- Línea divisoria --}}
+                <div class="hidden md:block absolute top-4 bottom-4 left-1/2 w-px bg-slate-100 -translate-x-1/2">
+                </div>
+
+                {{-- Pregunta 2 --}}
+                <div>
+                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">2. ¿Qué medio utiliza?
+                  </p>
+                  <div class="grid grid-cols-3 gap-3">
+                    @foreach (['WhatsApp', 'Teléfono', 'Email'] as $opcion)
+                      <label class="cursor-pointer group relative">
+                        <input type="radio" name="contenido[dificultades][medio]" value="{{ $opcion }}"
+                          class="peer sr-only"
+                          {{ ($registro->dificultad_medio_uso ?? '') == $opcion ? 'checked' : '' }}>
+                        <div
+                          class="text-center py-3 px-1 rounded-lg border border-slate-200 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 peer-checked:shadow-sm group-hover:border-indigo-300 h-full flex items-center justify-center">
+                          <span
+                            class="block text-[10px] font-bold text-slate-500 peer-checked:text-indigo-700">{{ $opcion }}</span>
+                        </div>
+                        <div
+                          class="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-opacity shadow-sm">
+                          <i data-lucide="check" class="w-2 h-2"></i>
+                        </div>
+                      </label>
+                    @endforeach
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+
+
           </div>
         </div>
 
@@ -635,7 +768,7 @@
             </div>
           </div>
           <div>
-            <h3 class="input-label mb-3 flex justify-between"><span>Archivos Seleccionados</span><span
+            <h3 class="input-label mb-3 flex justify-between"><span>Archivos Seleccionados </span><span
                 class="text-indigo-600" id="count-display">0 / 2</span></h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="gallery-container">
               <div id="empty-state"
@@ -646,28 +779,6 @@
           <input type="file" name="fotos[]" id="final-input-files" multiple class="hidden">
           <input type="hidden" name="rutas_servidor" id="final-input-server">
         </div>
-
-        {{-- PASO 5: FIRMA --}}
-        <div id="step-5" class="step-content">
-          <div class="mb-6 border-b border-slate-100 pb-4">
-            <h2 class="text-2xl font-bold text-slate-800">Conformidad</h2>
-          </div>
-          <div class="max-w-xl mx-auto py-8">
-            <div class="flex justify-between items-end mb-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Firma del Profesional Encargado:</label>
-              <button type="button" onclick="clearSignature()"
-                class="text-[10px] font-bold text-red-500 flex items-center gap-1 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100">LIMPIAR
-                FIRMA</button>
-            </div>
-            <div class="bg-white border-2 border-dashed border-slate-300 rounded-xl p-1 shadow-sm">
-              <canvas id="signature-pad" class="w-full h-64 bg-slate-50 rounded-lg"></canvas>
-            </div>
-            <input type="hidden" name="firma_grafica_data" id="firma_input"
-              value="{{ $registro->firma_grafica ?? '' }}">
-            <p class="text-[10px] text-center text-slate-400 mt-4 italic"><i data-lucide="info"
-                class="w-3 h-3 inline-block mr-1"></i> La firma gráfica se adjuntará al reporte final del acta.</p>
-          </div>
-        </div>
       </div>
 
       {{-- NAVEGACIÓN --}}
@@ -677,8 +788,9 @@
         <div>
           <button type="button" class="btn-nav btn-next" id="btn-next" onclick="changeStep(1)">Siguiente <i
               data-lucide="arrow-right" class="w-4 h-4"></i></button>
-          <button type="submit" class="btn-nav btn-finish" id="btn-submit" style="display: none;"
-            onclick="saveSignature()"><i data-lucide="check-circle" class="w-4 h-4"></i> Finalizar y Guardar</button>
+          {{-- BOTON GUARDAR EN STEP 4 --}}
+          <button type="submit" class="btn-nav btn-finish" id="btn-submit" style="display: none;"><i
+              data-lucide="check-circle" class="w-4 h-4"></i> Finalizar y Guardar</button>
         </div>
       </div>
     </form>
@@ -687,17 +799,16 @@
 @endsection
 
 @push('scripts')
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script>
-    let canvas, ctx, isDrawing = false,
-      evidenceList = [],
+    let evidenceList = [],
       currentStep = 1;
-    const totalSteps = 5,
+    const totalSteps = 4,
       MAX_PHOTOS = 2;
     let timeoutNombre = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
-      initSignaturePad();
 
       const fotosGuardadas = @json($registro->fotos_evidencia ?? []);
       if (fotosGuardadas.length > 0) {
@@ -711,53 +822,45 @@
         renderGallery();
         syncInputs();
       }
-
-      const firmaInput = document.getElementById('firma_input');
-      if (firmaInput && firmaInput.value) {
-        const img = new Image();
-        img.src = firmaInput.value;
-        img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      }
     });
 
+    // ... (El resto de funciones de navegación y búsqueda siguen igual) ...
     window.showStep = function(step) {
       document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
       document.getElementById(`step-${step}`).classList.add('active');
-
       for (let i = 1; i <= totalSteps; i++) {
         const circle = document.getElementById(`circle-${i}`);
         const label = document.getElementById(`label-${i}`);
         const line = document.getElementById(`line-${i}`);
-
-        circle.classList.remove('active', 'completed');
-        if (label) label.classList.remove('active');
-        if (line) line.classList.remove('active');
-
-        if (i < step) {
-          // Paso completado: Fondo azul y icono de check
-          circle.classList.add('completed');
-          circle.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i>';
-          if (line) line.classList.add('active');
-        } else if (i === step) {
-          // Paso actual: Borde azul y icono original
-          circle.classList.add('active');
-          circle.innerHTML = getIconForStep(i);
-          if (label) label.classList.add('active');
-        } else {
-          // Paso futuro: Gris y icono original
-          circle.innerHTML = getIconForStep(i);
+        if (circle) {
+          circle.classList.remove('active', 'completed');
+          if (label) label.classList.remove('active');
+          if (line) line.classList.remove('active');
+          if (i < step) {
+            circle.classList.add('completed');
+            circle.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i>';
+            if (line) line.classList.add('active');
+          } else if (i === step) {
+            circle.classList.add('active');
+            circle.innerHTML = getIconForStep(i);
+            if (label) label.classList.add('active');
+          } else {
+            circle.innerHTML = getIconForStep(i);
+          }
         }
       }
-
-
-
-      // IMPORTANTE: Actualizar botones y re-dibujar iconos
       lucide.createIcons();
-      document.getElementById('btn-prev').style.visibility = step === 1 ? 'hidden' : 'visible';
-      document.getElementById('btn-next').style.display = step === totalSteps ? 'none' : 'flex';
-      document.getElementById('btn-submit').style.display = step === totalSteps ? 'flex' : 'none';
-
-      if (step === 5) setTimeout(resizeCanvas, 100);
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+      const btnSubmit = document.getElementById('btn-submit');
+      if (btnPrev) btnPrev.style.visibility = step === 1 ? 'hidden' : 'visible';
+      if (step === totalSteps) {
+        btnNext.style.display = 'none';
+        btnSubmit.style.display = 'flex';
+      } else {
+        btnNext.style.display = 'flex';
+        btnSubmit.style.display = 'none';
+      }
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
@@ -773,16 +876,41 @@
       showStep(s);
     }
 
+    // 1. BUSCAR POR NUMERO DE DOCUMENTO (Al salir del input o dar Enter)
     async function buscarPorDoc() {
       const doc = document.getElementById('personal_dni').value.trim();
+      const tipo = document.getElementById('personal_tipo_doc').value;
       const loader = document.getElementById('loading-doc');
-      if (doc.length < 5) return;
+      const msg = document.getElementById('msg-doc');
+
+      if (doc.length < 5) return; // Validación básica
+
       loader.classList.remove('hidden');
+      msg.classList.add('hidden');
+
       try {
-        const res = await fetch(
-          `{{ route('usuario.monitoreo.atencion-prenatal.buscar.profesional') }}?type=doc&q=${doc}`);
-        const data = await res.json();
-        if (data.length > 0) rellenarDatos(data[0]);
+        // Llamada al backend
+        const response = await fetch(`{{ route('usuario.monitoreo.citas.buscar.profesional') }}?type=doc&q=${doc}`);
+        const data = await response.json();
+
+        if (data.length > 0) {
+          // Encontrado: Rellenar datos
+          rellenarDatos(data[0]);
+          msg.textContent = "Personal encontrado.";
+          msg.className = "text-[10px] text-green-600 mt-1";
+          msg.classList.remove('hidden');
+        } else {
+          // CAMBIO AQUÍ: Mensaje amigable indicando que se creará nuevo
+          msg.textContent = "Personal nuevo. Complete los nombres y se guardará automáticamente.";
+          msg.className = "text-[10px] text-blue-600 mt-1 font-bold"; // Color azul para indicar info, no error fatal
+          msg.classList.remove('hidden');
+
+          // Opcional: Limpiar el campo nombre para que escriban el nuevo
+          document.getElementById('personal_nombre').value = '';
+          document.getElementById('personal_nombre').focus();
+        }
+      } catch (error) {
+        console.error('Error:', error);
       } finally {
         loader.classList.add('hidden');
       }
@@ -798,8 +926,6 @@
           return '<i data-lucide="database" class="w-5 h-5"></i>';
         case 4:
           return '<i data-lucide="camera" class="w-5 h-5"></i>';
-        case 5:
-          return '<i data-lucide="pen-tool" class="w-5 h-5"></i>';
         default:
           return step;
       }
@@ -846,16 +972,59 @@
     window.toggleOtrosCapacitacion = (c) => document.getElementById('div-capacitacion-otros').classList.toggle('hidden', !
       c.checked);
 
-    window.agregarFila = (tableId, baseName) => {
-      const tbody = document.querySelector(`#${tableId} tbody`);
-      const id = Date.now();
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        `<td><input type="text" name="${baseName}[${id}][nombre]" class="table-input font-bold"></td><td><select name="${baseName}[${id}][propiedad]" class="table-input text-xs"><option value="ESTABLECIMIENTO">EESS</option><option value="PROPIO">Propio</option></select></td><td><input type="number" name="${baseName}[${id}][cantidad]" value="1" class="table-input text-center"></td><td><select name="${baseName}[${id}][estado]" class="table-input text-xs"><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Malo">Malo</option></select></td><td class="text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-slate-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>`;
-      tbody.appendChild(tr);
-      lucide.createIcons();
+    // LOGICA TABLA EQUIPOS
+    let equipoIndex = {{ count($registro->equipos_listado ?? []) }};
+
+    function agregarEquipoDesdeSelect() {
+      const select = document.getElementById('select-equipo-agregar');
+      const tipoEquipo = select.value;
+      if (!tipoEquipo) {
+        alert("Por favor seleccione un equipo de la lista.");
+        return;
+      }
+      const tbody = document.getElementById('tbody-equipos');
+      const esOtro = tipoEquipo === 'OTRO';
+      const valorNombre = esOtro ? '' : tipoEquipo;
+      const inputNombre =
+        `<input type="text" name="contenido[equipos][${equipoIndex}][nombre]" value="${valorNombre}" class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300" placeholder="Escriba nombre..." ${esOtro ? 'autofocus' : ''}>`;
+
+      const fila = `
+          <tr class="group hover:bg-slate-50 transition-colors">
+              <td class="p-2 align-middle">${inputNombre}</td>
+              <td class="p-2 align-middle">
+                  <div class="relative flex items-center">
+                      <input type="text" id="serie-input-${equipoIndex}" name="contenido[equipos][${equipoIndex}][serie]" class="w-full bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-mono uppercase rounded pl-2 pr-8 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400" placeholder="----">
+                      <button type="button" onclick="iniciarEscaneo('serie-input-${equipoIndex}')" class="absolute right-0.5 p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer z-10"><i data-lucide="scan-barcode" class="w-3 h-3"></i></button>
+                  </div>
+              </td>
+              <td class="p-2 align-middle">
+                  <select name="contenido[equipos][${equipoIndex}][propiedad]" class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
+                      <option value="ESTABLECIMIENTO" selected>Establecimiento</option>
+                      <option value="SERVICIO">Servicio</option>
+                      <option value="PERSONAL">Personal</option>
+                  </select>
+              </td>
+              <td class="p-2 align-middle">
+                  <select name="contenido[equipos][${equipoIndex}][estado]" class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
+                      <option value="Operativo" selected>Operativo</option>
+                      <option value="Regular">Regular</option>
+                      <option value="Inoperativo">Inoperativo</option>
+                  </select>
+              </td>
+              <td class="p-2 align-middle">
+                  <input type="text" name="contenido[equipos][${equipoIndex}][observaciones]" class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1" placeholder="Observaciones...">
+              </td>
+              <td class="p-2 text-center align-middle">
+                  <button type="button" onclick="this.closest('tr').remove()" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+              </td>
+          </tr>`;
+      tbody.insertAdjacentHTML('beforeend', fila);
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      select.value = "";
+      equipoIndex++;
     }
 
+    // --- EVIDENCIAS (AQUÍ ESTÁ LA CORRECCIÓN) ---
     window.switchTab = (t) => {
       document.getElementById('tab-local').className = t == 'local' ?
         'pb-2 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600' :
@@ -866,6 +1035,7 @@
       document.getElementById('panel-local').style.display = t == 'local' ? 'block' : 'none';
       document.getElementById('panel-server').style.display = t == 'server' ? 'block' : 'none';
     }
+    window.openServerModal = () => alert("🚧 MANTENIMIENTO 🚧\nExplorador habilitado en producción.");
 
     window.handleFiles = (files) => {
       Array.from(files).forEach(f => {
@@ -888,30 +1058,30 @@
 
     function renderGallery() {
       const cont = document.getElementById('gallery-container');
-      cont.querySelectorAll('.group').forEach(e => e.remove()); // Limpiar galería previa
+      const countDisplay = document.getElementById('count-display'); // <--- 1. SELECCIONAMOS EL CONTADOR
 
+      cont.querySelectorAll('.group').forEach(e => e.remove());
       document.getElementById('empty-state').style.display = evidenceList.length ? 'none' : 'block';
 
       evidenceList.forEach(i => {
         const d = document.createElement('div');
         d.className = "relative group aspect-square rounded-xl overflow-hidden border bg-white shadow-sm";
-
-        // Determinar el color y texto del badge según el origen
         const badgeColor = i.type === 'local' ? 'bg-indigo-500' : 'bg-emerald-500';
         const badgeText = i.type.toUpperCase();
-
         d.innerHTML = `
             <img src="${i.url}" class="w-full h-full object-cover">
-            <button type="button" onclick="removeImage(${i.id})" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg">
-                <i data-lucide="x" class="w-3 h-3"></i>
-            </button>
-            <div class="absolute top-2 left-2 ${badgeColor} text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                <span>${badgeText}</span>
-            </div>
+            <button type="button" onclick="removeImage(${i.id})" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"><i data-lucide="x" class="w-3 h-3"></i></button>
+            <div class="absolute top-2 left-2 ${badgeColor} text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm"><span>${badgeText}</span></div>
         `;
         cont.appendChild(d);
       });
-      lucide.createIcons(); // Re-inicializar iconos de Lucide
+
+      // <--- 2. ACTUALIZAMOS EL TEXTO DEL CONTADOR
+      if (countDisplay) {
+        countDisplay.innerText = `${evidenceList.length} / ${MAX_PHOTOS}`;
+      }
+
+      lucide.createIcons();
     }
 
     function syncInputs() {
@@ -922,60 +1092,47 @@
         .map(i => i.url));
     }
 
-    function initSignaturePad() {
-      canvas = document.getElementById('signature-pad');
-      ctx = canvas.getContext('2d');
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = '#0f172a';
-      const getP = (e) => {
-        const r = canvas.getBoundingClientRect();
-        return {
-          x: (e.clientX || e.touches[0].clientX) - r.left,
-          y: (e.clientY || e.touches[0].clientY) - r.top
-        };
-      };
-      const start = (e) => {
-        isDrawing = true;
-        const p = getP(e);
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-      };
-      const move = (e) => {
-        if (!isDrawing) return;
-        const p = getP(e);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
-        e.preventDefault();
-      };
-      canvas.addEventListener('mousedown', start);
-      canvas.addEventListener('mousemove', move);
-      window.addEventListener('mouseup', () => isDrawing = false);
-      canvas.addEventListener('touchstart', start);
-      canvas.addEventListener('touchmove', move);
+    // LOGICA SCANNER
+    let html5QrcodeScanner = null;
+    let currentInputId = null;
+
+    function iniciarEscaneo(inputId) {
+      currentInputId = inputId;
+      document.getElementById('scanner-modal').classList.remove('hidden');
+      html5QrcodeScanner = new Html5Qrcode("reader");
+      html5QrcodeScanner.start({
+          facingMode: "environment"
+        }, {
+          fps: 10,
+          qrbox: {
+            width: 250,
+            height: 250
+          }
+        }, onScanSuccess, onScanFailure)
+        .catch(err => {
+          console.error(err);
+          alert("Error de cámara");
+          document.getElementById('scanner-modal').classList.add('hidden');
+        });
     }
 
-    function resizeCanvas() {
-      if (!canvas) return;
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      const w = canvas.offsetWidth,
-        h = canvas.offsetHeight;
-      const data = canvas.toDataURL();
-      canvas.width = w * ratio;
-      canvas.height = h * ratio;
-      ctx.scale(ratio, ratio);
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      const img = new Image();
-      img.src = data;
-      img.onload = () => ctx.drawImage(img, 0, 0, w, h);
+    function onScanSuccess(decodedText) {
+      if (currentInputId) document.getElementById(currentInputId).value = decodedText;
+      detenerEscaneo();
     }
-    window.clearSignature = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      document.getElementById('firma_input').value = '';
-    }
-    window.saveSignature = () => {
-      document.getElementById('firma_input').value = canvas.toDataURL();
+
+    function onScanFailure(error) {}
+
+    function detenerEscaneo() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+          html5QrcodeScanner.clear();
+          document.getElementById('scanner-modal').classList.add('hidden');
+          currentInputId = null;
+        });
+      } else {
+        document.getElementById('scanner-modal').classList.add('hidden');
+      }
     }
   </script>
 @endpush

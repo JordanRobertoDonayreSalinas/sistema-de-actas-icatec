@@ -3,306 +3,354 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Reporte Atención Parto</title>
+  <title>Reporte de Monitoreo - Parto</title>
   <style>
-    /* CONFIGURACIÓN GENERAL */
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Helvetica', Arial, sans-serif;
       font-size: 11px;
       color: #333;
       line-height: 1.4;
-      margin: 0;
-      padding: 0;
+      margin: 20px 30px;
     }
 
-    /* ENCABEZADO */
-    .header-table {
-      width: 100%;
-      border-bottom: 2px solid #0f172a;
+    /* CABECERA */
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #2563eb;
       padding-bottom: 10px;
       margin-bottom: 20px;
     }
 
-    .header-title {
+    .header h1 {
+      margin: 0;
       font-size: 16px;
-      font-weight: bold;
-      color: #0f172a;
       text-transform: uppercase;
-      text-align: center;
+      color: #1e293b;
     }
 
-    .header-sub {
+    .header p {
+      margin: 3px 0;
       font-size: 10px;
-      color: #666;
-      text-align: center;
+      color: #64748b;
     }
 
-    /* TÍTULOS DE SECCIÓN */
+    /* SECCIONES */
+    .section {
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
     .section-title {
-      background-color: #0f172a;
-      /* Azul oscuro */
-      color: white;
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-      margin-top: 15px;
-      margin-bottom: 10px;
-      border-radius: 4px;
-    }
-
-    /* TABLAS DE DATOS */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 10px;
-    }
-
-    .data-table th,
-    .data-table td {
-      border: 1px solid #cbd5e1;
-      padding: 6px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .data-table th {
       background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 6px 10px;
       font-weight: bold;
-      color: #334155;
-      width: 30%;
-      /* Ancho fijo para etiquetas */
+      font-size: 12px;
+      border-left: 5px solid #2563eb;
+      text-transform: uppercase;
+      margin-bottom: 10px;
     }
 
-    /* TABLA DE LISTADOS (Equipos) */
-    .list-table {
+    /* TABLAS */
+    table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 10px;
+      margin-bottom: 5px;
     }
 
-    .list-table th {
-      background-color: #e2e8f0;
-      padding: 5px;
-      border: 1px solid #94a3b8;
-      text-align: center;
-    }
-
-    .list-table td {
+    th,
+    td {
       border: 1px solid #cbd5e1;
-      padding: 5px;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background-color: #e2e8f0;
+      font-weight: bold;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #334155;
+    }
+
+    .text-center {
       text-align: center;
     }
 
-    .text-left {
-      text-align: left !important;
+    /* DATA GRID (Datos clave valor sin bordes verticales) */
+    .data-grid {
+      width: 100%;
+      margin-bottom: 10px;
     }
 
-    /* UTILIDADES */
-    .badge {
-      background-color: #e2e8f0;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      margin-right: 5px;
+    .data-grid td {
+      border: none;
+      border-bottom: 1px solid #f1f5f9;
+      padding: 5px 0;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #475569;
+      width: 140px;
       display: inline-block;
     }
 
-    .page-break {
-      page-break-after: always;
+    .value {
+      color: #000;
+      font-weight: normal;
     }
 
-    .no-break {
+    /* ESTADOS */
+    .status-ok {
+      color: #166534;
+      font-weight: bold;
+    }
+
+    .status-warn {
+      color: #ca8a04;
+      font-weight: bold;
+    }
+
+    .status-err {
+      color: #991b1b;
+      font-weight: bold;
+    }
+
+    /* ALERTAS */
+    .alert-box {
+      background-color: #fffbeb;
+      border: 1px solid #fcd34d;
+      color: #92400e;
+      padding: 8px;
+      font-size: 10px;
+      border-radius: 4px;
+      margin-top: 5px;
+    }
+
+    /* FOTOS */
+    .photos-container {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .photo-frame {
+      display: inline-block;
+      width: 45%;
+      margin: 0 5px;
+      border: 1px solid #e2e8f0;
+      padding: 4px;
+      background: #fff;
+    }
+
+    .photo-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    /* FIRMA */
+    .firma-section {
+      margin-top: 40px;
+      text-align: center;
       page-break-inside: avoid;
+    }
+
+    .firma-img {
+      height: 70px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .linea-firma {
+      border-top: 1px solid #000;
+      width: 250px;
+      margin: 5px auto;
     }
   </style>
 </head>
 
 <body>
 
-  {{-- ENCABEZADO --}}
-  <table class="header-table">
-    <tr>
-      <td style="border: none; width: 20%;">
-        {{-- Aquí puedes poner tu logo --}}
-        {{-- <img src="{{ public_path('img/logo.png') }}" width="80"> --}}
-      </td>
-      <td style="border: none; width: 60%; text-align: center;">
-        <div class="header-title">Ficha de Monitoreo</div>
-        <div class="header-title" style="font-size: 14px; color: #2563eb;">Atención Parto</div>
-      </td>
-      <td style="border: none; width: 20%; text-align: right; font-size: 9px;">
-        Fecha: {{ date('d/m/Y') }}<br>
-        Hora: {{ date('H:i') }}
-      </td>
-    </tr>
-  </table>
-
-  {{-- 1. DATOS DEL RESPONSABLE --}}
-  <div class="section-title">1. Datos Generales y Responsable</div>
-  <table class="data-table">
-    <tr>
-      <th>Establecimiento / Consultorio:</th>
-      <td>{{ $registro->nombre_consultorio ?? 'No registrado' }}</td>
-    </tr>
-    <tr>
-      <th>Profesional Responsable:</th>
-      <td>{{ $registro->personal_nombre ?? '-' }}</td>
-    </tr>
-    <tr>
-      <th>Documento Identidad:</th>
-      <td>{{ $registro->personal_tipo_doc }} - {{ $registro->personal_dni }}</td>
-    </tr>
-    <tr>
-      <th>Especialidad:</th>
-      <td>{{ $registro->personal_especialidad ?? '-' }}</td>
-    </tr>
-    <tr>
-      <th>Capacitación Recibida:</th>
-      <td>
-        <strong>{{ $registro->capacitacion_recibida }}</strong>
-        @if (($registro->capacitacion_recibida ?? '') == 'SI')
-          <br><span style="font-size: 10px; color: #666;">
-            Entes: {{ implode(', ', $registro->capacitacion_entes ?? []) }}
-            @if ($registro->capacitacion_otros_detalle)
-              ({{ $registro->capacitacion_otros_detalle }})
-            @endif
-          </span>
-        @endif
-      </td>
-    </tr>
-  </table>
-
-  {{-- 2. RECURSOS (Materiales y Equipos) --}}
-  <div class="section-title">2. Recursos Disponibles</div>
-
-  <div class="no-break">
-    <h4 style="margin: 5px 0; font-size: 11px; text-transform: uppercase;">Materiales e Insumos</h4>
-    <div style="margin-bottom: 10px; padding: 10px; border: 1px solid #cbd5e1; background: #f8fafc;">
-      @forelse($registro->insumos_disponibles ?? [] as $insumo)
-        <span class="badge">☑ {{ $insumo }}</span>
-      @empty
-        <span style="color: #999;">No se registraron insumos.</span>
-      @endforelse
-      @if ($registro->materiales_otros)
-        <br><small>Otros: {{ $registro->materiales_otros }}</small>
-      @endif
-    </div>
+  <div class="header">
+    <h1>Acta de Monitoreo - Parto</h1>
+    <p>
+      <strong>Establecimiento:</strong> {{ $acta->establecimiento->nombre ?? 'No especificado' }} &nbsp;|&nbsp;
+      <strong>Fecha:</strong> {{ $acta->created_at->format('d/m/Y H:i A') }} &nbsp;|&nbsp;
+      <strong>ID Acta:</strong> {{ $acta->id }}
+    </p>
   </div>
 
-  <div class="no-break">
-    <h4 style="margin: 10px 0 5px; font-size: 11px; text-transform: uppercase;">Equipamiento</h4>
-    <table class="list-table">
+  <div class="section">
+    <div class="section-title">1. Datos del Responsable</div>
+    <table class="data-grid">
+      <tr>
+        <td width="60%">
+          <span class="label">Responsable:</span>
+          <span class="value">{{ $registro->personal_nombre ?? '-' }}</span>
+        </td>
+        <td width="40%">
+          <span class="label">DNI / Documento:</span>
+          <span class="value">{{ $registro->personal_dni ?? '-' }}</span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="label">Especialidad:</span>
+          <span class="value">{{ $registro->personal_especialidad ?? '-' }}</span>
+        </td>
+        <td>
+          <span class="label">Consultorio:</span>
+          <span class="value">{{ $registro->nombre_consultorio ?? '-' }}</span>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <span class="label">Capacitación:</span>
+          <span class="value">
+            {{ $registro->capacitacion_recibida ?? 'NO' }}
+            @if ($registro->capacitacion_entes)
+              (Entidad:
+              {{ is_array($registro->capacitacion_entes) ? implode(', ', $registro->capacitacion_entes) : $registro->capacitacion_entes }})
+            @endif
+          </span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. Equipamiento e Insumos</div>
+
+    <div style="margin-bottom: 8px; font-size: 10px;">
+      <strong>Insumos Disponibles:</strong>
+      <span style="color: #444;">
+        {{ !empty($registro->insumos_disponibles) ? implode(', ', $registro->insumos_disponibles) : 'Ninguno registrado' }}
+      </span>
+    </div>
+
+    <table>
       <thead>
         <tr>
-          <th class="text-left">Descripción</th>
-          <th>Propiedad</th>
-          <th>Cant.</th>
-          <th>Estado</th>
+          <th width="35%">Descripción del Equipo</th>
+          <th width="15%">Serie/Cod.</th>
+          <th width="15%">Propiedad</th>
+          <th width="15%" class="text-center">Estado</th>
+          <th width="20%">Observaciones</th>
         </tr>
       </thead>
       <tbody>
-        @forelse($registro->equipos_listado ?? [] as $equipo)
+        @forelse($registro->equipos_listado ?? [] as $eq)
           <tr>
-            <td class="text-left">{{ $equipo['nombre'] ?? '-' }}</td>
-            <td>{{ $equipo['propiedad'] ?? '-' }}</td>
-            <td>{{ $equipo['cantidad'] ?? 0 }}</td>
-            <td>{{ $equipo['estado'] ?? '-' }}</td>
+            <td>{{ $eq['nombre'] ?? '-' }}</td>
+            <td style="font-family: monospace; font-size: 10px;">{{ $eq['serie'] ?? '-' }}</td>
+            <td>{{ $eq['propiedad'] ?? '-' }}</td>
+            <td class="text-center">
+              @php
+                $est = $eq['estado'] ?? '-';
+                $clase = match (strtoupper($est)) {
+                    'OPERATIVO', 'BUENO' => 'status-ok',
+                    'REGULAR' => 'status-warn',
+                    default => 'status-err',
+                };
+              @endphp
+              <span class="{{ $clase }}">{{ $est }}</span>
+            </td>
+            <td>{{ $eq['observaciones'] ?? '' }}</td>
           </tr>
         @empty
           <tr>
-            <td colspan="4" style="color: #999; padding: 10px;">No se registraron equipos.</td>
+            <td colspan="5" class="text-center" style="padding: 10px; color: #777;">
+              No se registraron equipos.
+            </td>
           </tr>
         @endforelse
       </tbody>
     </table>
+
     @if ($registro->equipos_observaciones)
-      <div style="margin-top: 5px; font-size: 10px; font-style: italic; color: #555;">
-        <strong>Observaciones:</strong> {{ $registro->equipos_observaciones }}
+      <div class="alert-box" style="background: #f8fafc; border-color: #cbd5e1; color: #334155;">
+        <strong>Observaciones Generales:</strong> {{ $registro->equipos_observaciones }}
       </div>
     @endif
   </div>
 
-  {{-- 3. GESTIÓN --}}
-  <div class="section-title no-break">3. Indicadores de Gestión</div>
-  <table class="data-table no-break">
-    <tr>
-      <th>Nro. Consultorios:</th>
-      <td>{{ $registro->nro_consultorios }}</td>
-      <th>Gestantes (Mes):</th>
-      <td>{{ $registro->nro_gestantes_mes }}</td>
-    </tr>
-    <tr>
-      <th>Uso HISMINSA:</th>
-      <td>{{ $registro->gestion_hisminsa }}</td>
-      <th>Emite Reportes:</th>
-      <td>
-        {{ $registro->gestion_reportes }}
-        @if ($registro->gestion_reportes_socializa)
-          <br><small>(Socializa con: {{ $registro->gestion_reportes_socializa }})</small>
-        @endif
-      </td>
-    </tr>
-  </table>
+  <div class="section">
+    <div class="section-title">3. Gestión y Dificultades</div>
 
-  {{-- SALTO DE PÁGINA PARA EVIDENCIAS --}}
-  <div class="page-break"></div>
-
-  {{-- 4. EVIDENCIAS FOTOGRÁFICAS --}}
-  <div class="section-title">4. Evidencias Fotográficas</div>
-  <table style="width: 100%; margin-top: 10px;">
-    <tr>
-      @forelse($registro->fotos_evidencia ?? [] as $foto)
-        <td style="width: 50%; text-align: center; border: 1px solid #ddd; padding: 10px;">
-          {{--
-                       NOTA: Como tu controlador ya convierte a Base64,
-                       aquí usamos directamente la variable $foto
-                    --}}
-          <img src="{{ $foto }}" style="max-width: 100%; max-height: 300px; border-radius: 4px;">
-        </td>
-        {{-- Salto de fila cada 2 fotos (opcional si usas tablas anidadas) --}}
-        @if (($loop->index + 1) % 2 == 0)
-    </tr>
-    <tr>
-      @endif
-    @empty
-      <td style="text-align: center; color: #999; padding: 20px;">No se adjuntaron fotografías.</td>
-      @endforelse
-    </tr>
-  </table>
-  </div>
-
-  {{-- 5. FIRMA DE CONFORMIDAD --}}
-  <div class="no-break" style="margin-top: 50px;">
-    {{-- Aseguramos que la tabla ocupe el 100% --}}
-    <table style="width: 100%; border-collapse: collapse;">
+    <table style="width: 100%; margin-bottom: 10px;">
       <tr>
-        {{-- Columna Izquierda (Espacio vacío) --}}
-        <td style="width: 30%; border: none;"></td>
-
-        {{-- Columna Central (Firma) --}}
-        <td style="width: 40%; text-align: center; border: none; vertical-align: bottom;">
-
-          {{-- Contenedor de la imagen centrado --}}
-          <div style="text-align: center; margin-bottom: 5px;">
-            @if ($registro->firma_grafica)
-              {{-- display: block y margin: auto ayudan a DOMPDF a centrar imágenes --}}
-              <img src="{{ $registro->firma_grafica }}"
-                style="width: 150px; height: auto; display: block; margin-left: auto; margin-right: auto;">
-            @else
-              <div style="height: 50px;"></div>
+        <td width="50%" style="border:none; padding: 0 10px 0 0; vertical-align: top;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 4px;">
+            <div style="margin-bottom: 5px;">
+              <strong>Nro. Consultorios:</strong> {{ $registro->nro_consultorios }}
+            </div>
+            <div style="margin-bottom: 5px;">
+              <strong>Partos Registrados (Mes):</strong> {{ $registro->nro_gestantes_mes }}
+            </div>
+            <div>
+              <strong>Descarga HISMINSA:</strong> {{ $registro->gestion_hisminsa ?? '-' }}
+            </div>
+          </div>
+        </td>
+        <td width="50%" style="border:none; padding: 0 0 0 10px; vertical-align: top;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 4px;">
+            <div style="margin-bottom: 5px;">
+              <strong>¿Utiliza Reportes?:</strong> {{ $registro->gestion_reportes ?? '-' }}
+            </div>
+            @if ($registro->gestion_reportes_socializa)
+              <div>
+                <strong>Socializa con:</strong> {{ $registro->gestion_reportes_socializa }}
+              </div>
             @endif
           </div>
-
-          {{-- Línea y Texto --}}
-          <div style="border-top: 1px solid #000; margin-top: 5px; padding-top: 5px;">
-            <strong>{{ $registro->personal_nombre ?? 'Firma del Responsable' }}</strong><br>
-            <span style="font-size: 9px;">DNI: {{ $registro->personal_dni }}</span>
-          </div>
         </td>
-
-        {{-- Columna Derecha (CRUCIAL: Espacio vacío para equilibrar) --}}
-        <td style="width: 30%; border: none;"></td>
       </tr>
     </table>
+
+    {{-- SECCIÓN DIFICULTADES (NUEVA) --}}
+    @if ($registro->dificultad_comunica_a || $registro->dificultad_medio_uso)
+      <div class="alert-box">
+        <strong>REPORTE DE DIFICULTADES:</strong><br>
+        Se comunica con: <u>{{ $registro->dificultad_comunica_a ?? 'No especificado' }}</u>
+        a través del medio: <u>{{ $registro->dificultad_medio_uso ?? 'No especificado' }}</u>.
+      </div>
+    @endif
   </div>
+
+  <div class="section">
+    <div class="section-title">4. Evidencias Fotográficas</div>
+
+    @if (!empty($registro->fotos_evidencia))
+      <div class="photos-container">
+        @foreach ($registro->fotos_evidencia as $fotoUrl)
+          <div class="photo-frame">
+            <img src="{{ $fotoUrl }}" class="photo-img">
+          </div>
+        @endforeach
+      </div>
+    @else
+      <div style="text-align: center; padding: 20px; border: 1px dashed #ccc; color: #999;">
+        No se adjuntaron fotografías para este reporte.
+      </div>
+    @endif
+  </div>
+
+  <div class="firma-section">
+    @if ($registro->firma_grafica)
+      <img src="{{ $registro->firma_grafica }}" class="firma-img">
+    @else
+      <div style="height: 60px;"></div>
+    @endif
+
+    <div class="linea-firma"></div>
+
+    <p style="margin: 0; font-weight: bold;">{{ $registro->personal_nombre ?? 'NOMBRE DEL RESPONSABLE' }}</p>
+    <p style="margin: 2px 0; font-size: 10px; color: #666;">Firma de Conformidad</p>
+  </div>
+
+</body>
+
+</html>
