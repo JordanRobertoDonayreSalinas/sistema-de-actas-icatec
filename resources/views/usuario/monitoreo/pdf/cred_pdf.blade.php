@@ -257,18 +257,16 @@
                 <div style="width: 80%; border-top: 1.0pt solid #000000; margin: 0 auto 10px auto;"></div>
 
                 {{-- Datos del Responsable --}}
-                <div style="text-transform: uppercase; font-weight: bold; font-size: 11px; color: #000; margin-top: 5px; line-height: 1.2;">
+                <div style="text-transform: uppercase; font-size: 11px; color: #000; margin-top: 5px; line-height: 1.2;">
                     {{ $detalle->personal_nombre ?? 'SIN NOMBRE REGISTRADO' }}
                 </div>
                 
                 <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
-                    <strong>DNI:</strong> {{ $detalle->personal_dni ?? '________' }} <br>
-                    <strong>Email:</strong> {{ $detalle->contenido['personal']['email'] ?? 'No registrado' }} <br>
-                    <strong>Teléfono:</strong> {{ $detalle->contenido['personal']['contacto'] ?? 'No registrado' }} <br>
-                    <span style="font-style: italic; color: #64748b;">
-                        {{ $detalle->personal_roles ?? 'Responsable de Referencias' }}
+                    DNI: {{ $detalle->personal_dni ?? '________' }} <br>
+                    <span style="font-style: italic; color: #64748b;">CARGO:
+                        {{ $detalle->personal_roles ?? 'Responsable de CRED' }}
                     </span>
-                </div>
+                </div> 
             </td>
 
             <td style="width: 20%; border: none;"></td>
