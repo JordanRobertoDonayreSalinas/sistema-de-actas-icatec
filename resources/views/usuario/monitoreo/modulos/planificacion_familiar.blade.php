@@ -187,15 +187,27 @@
                     </div>
                     <div class="space-y-4 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Tiempo promedio atención (min)</label>
-                                <input type="number" name="contenido[tiempo_atencion]" value="{{ $detalle->contenido['tiempo_atencion'] ?? '' }}" class="input-standard">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Atenciones P.F. al mes</label>
-                                <input type="number" name="contenido[atenciones_mes]" value="{{ $detalle->contenido['atenciones_mes'] ?? '' }}" class="input-standard">
-                            </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Tiempo promedio atención (min)</label>
+                            <input 
+                                type="number" 
+                                name="contenido[tiempo_atencion]" 
+                                value="{{ $detalle->contenido['tiempo_atencion'] ?? '' }}" 
+                                min="0"
+                                oninput="if(this.value < 0) this.value = 0;"
+                                class="input-standard">
                         </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Atenciones P.F. al mes</label>
+                            <input 
+                                type="number" 
+                                name="contenido[atenciones_mes]" 
+                                value="{{ $detalle->contenido['atenciones_mes'] ?? '' }}" 
+                                min="0"
+                                oninput="if(this.value < 0) this.value = 0;"
+                                class="input-standard">
+                        </div>
+                    </div>
                         <div class="grid grid-cols-1 gap-3">
                             @foreach([
                                 'contingencia' => '¿Existe cuaderno de contingencia ante caída de internet?',
