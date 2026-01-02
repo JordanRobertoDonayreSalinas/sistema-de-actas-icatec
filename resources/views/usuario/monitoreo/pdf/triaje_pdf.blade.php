@@ -32,9 +32,29 @@
         .table tr:nth-child(even) { background-color: #f9fafb; }
 
         /* Fotos */
-        .gallery { margin-top: 10px; }
-        .photo-container { display: inline-block; width: 23%; margin: 1%; vertical-align: top; }
-        .photo { width: 100%; height: 120px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; }
+        .gallery { 
+            margin-top: 15px;
+            width: 100%;
+            text-align: center; /* Esto centra las fotos si hay una sola */
+        }
+
+        .photo-container { 
+            display: inline-block; 
+            width: 45%;           /* Casi la mitad del ancho para que entren dos */
+            margin: 1%;           /* Espacio entre fotos */
+            vertical-align: top; 
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .photo { 
+            width: 100%;          /* Ocupa todo el contenedor */
+            height: 250px;        /* Altura más grande (antes era 120px) */
+            object-fit: contain;  /* Muestra toda la foto sin recortarla */
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -43,7 +63,9 @@
     <div class="header">
         <h1>Acta de Monitoreo - Triaje</h1>
         <p>Acta N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | Fecha: {{ $acta->created_at->format('d/m/Y') }}</p>
-        <p>{{ $acta->establecimiento->nombre_establecimiento ?? 'Establecimiento Desconocido' }}</p>
+        <p>
+            {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre ?? 'Establecimiento Desconocido' }}
+        </p>
     </div>
 
     {{-- 1. DATOS DEL PROFESIONAL --}}

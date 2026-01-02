@@ -29,7 +29,6 @@ class TriajeController extends Controller
         $dbDificultad = ComDificultad::where('acta_id', $id)
                             ->where('modulo_id', 'TRIAJE')->first();
 
-        // 4. CARGAR FOTOS (NUEVO)
         $dbFotos = ComFotos::where('acta_id', $id)
                         ->where('modulo_id', 'TRIAJE')->get();
 
@@ -133,6 +132,7 @@ class TriajeController extends Controller
             // ----------------------------------------------------
             // 5. FOTOS (NUEVO BLOQUE)
             // ----------------------------------------------------
+            $rutasFotos = [];
             if ($request->hasFile('fotos')) {
                 foreach ($request->file('fotos') as $foto) {
                     // Guardar en carpeta: storage/app/public/evidencia_fotos
@@ -145,10 +145,15 @@ class TriajeController extends Controller
                         'profesional_id' => $profesional->id,
                         'url_foto'       => $path
                     ]);
+
+                    // Agregamos la ruta al array temporal
+                    $rutasFotos[] = $path;
                 }
             }
 
-
+            // Usamos el array $data original y le agregamos las fotos
+            $contenidoParaGuardar = $data;
+            $contenidoParaGuardar['fotos_evidencia'] = $rutasFotos;
 
             // Parar actualizar el estado en la tabla
             MonitoreoModulos::updateOrCreate(
@@ -157,7 +162,8 @@ class TriajeController extends Controller
                     'modulo_nombre'         => 'triaje'   // Identificador de este formulario
                 ],
                 [
-                    'contenido' => 'FINALIZADO' // Texto fijo que solicitaste
+                    'contenido' => $contenidoParaGuardar, // Texto fijo que solicitaste
+                    'pdf_firmado_path' => null
                 ]
             );
 

@@ -489,7 +489,13 @@
 
                 {{-- ZONA DE CARGA (DRAG & DROP) --}}
                 <div class="border-2 border-dashed border-slate-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors relative cursor-pointer">
-                    <input type="file" multiple @change="handleFiles" class="absolute inset-0 opacity-0 cursor-pointer">
+                    {{-- CAMBIO AQUÍ: Agregado atributo accept --}}
+                    <input type="file" 
+                           multiple 
+                           @change="handleFiles" 
+                           accept="image/png, image/jpeg, image/jpg" 
+                           class="absolute inset-0 opacity-0 cursor-pointer">
+                           
                     <i data-lucide="cloud-upload" class="w-10 h-10 text-indigo-400 mb-3"></i>
                     <p class="text-indigo-600 font-bold uppercase text-sm">Clic para subir o arrastrar archivos</p>
                     <p class="text-xs text-slate-400 mt-1">PNG, JPG o JPEG (Máx. 5MB)</p>
@@ -658,14 +664,28 @@
                 dificultades: initDificultades,
             },
 
-            // ... (Resto de funciones: handleFiles, guardarTodo, etc. se mantienen IGUAL) ...
-            
+            // --- MANEJO DE ARCHIVOS (ACTUALIZADO) ---
             handleFiles(event) {
-                this.files = [...this.files, ...Array.from(event.target.files)];
+                // Filtramos para que solo pasen imágenes válidas
+                const newFiles = Array.from(event.target.files).filter(file => {
+                    return file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
+                });
+
+                if (newFiles.length < event.target.files.length) {
+                    alert("Algunos archivos fueron ignorados porque no son imágenes válidas (solo JPG/PNG).");
+                }
+
+                this.files = [...this.files, ...newFiles];
+                
+                // Limpiamos el input para permitir subir la misma foto si el usuario se equivocó y borró
+                event.target.value = ''; 
             },
+
             removeFile(index) {
                 this.files.splice(index, 1);
             },
+
+            // --- RESTO DE FUNCIONES (Sin cambios) ---
             agregarItem() {
                 if (!this.itemSeleccionado) return;
                 this.form.inventario.push({
