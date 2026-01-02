@@ -62,42 +62,71 @@
 <body>
 
     <div class="header">
-        <h1>Ficha de Monitoreo: Planificación Familiar</h1>
-        <p>Acta N°: {{ str_pad($acta->id, 6, '0', STR_PAD_LEFT) }} | {{ $acta->establecimiento->nombre }}</p>
-        <p>Fecha: {{ date('d/m/Y', strtotime($acta->fecha)) }}</p>
+        <h1>Módulo 11: Planificación Familiar</h1>
+        <p>Acta de Monitoreo N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</p>
+        <p>Establecimiento: {{ $acta->establecimiento->nombre ?? 'N/A' }}</p>
     </div>
 
     <div class="section-header">01. Responsable del Servicio</div>
     <table class="table-data">
         <tr>
             <th width="20%">Nombre:</th>
-            <td width="40%" class="uppercase">{{ $detalle->contenido['personal']['nombre'] ?? ($detalle->personal_nombre ?? 'N/A') }}</td>
+            <td width="40%" class="uppercase">{{ $detalle->personal_nombre ?? 'N/A' }}</td>
             <th width="15%">DNI:</th>
             <td width="25%">{{ $detalle->contenido['personal']['dni'] ?? ($detalle->personal_dni ?? 'N/A') }}</td>
         </tr>
+
         <tr>
-            <th>Contacto:</th>
-            <td>{{ $detalle->contenido['personal']['contacto'] ?? 'N/A' }}</td>
-            <th>Email:</th>
-            <td>{{ $detalle->contenido['personal']['email'] ?? 'N/A' }}</td>
-        </tr>
-        <tr>
-            <th>Turno / Cargo:</th>
+            <th>Turno:</th>
             <td class="uppercase">
-                {{ $detalle->contenido['personal']['turno'] ?? ($detalle->personal_turno ?? 'N/A') }} / 
+                {{ $detalle->contenido['personal']['turno'] ?? ($detalle->personal_turno ?? 'N/A') }}
+            </td>
+            <th>Rol / Cargo:</th>
+            <td class="uppercase">
+                
                 {{ $detalle->contenido['personal']['rol'] ?? ($detalle->personal_roles ?? 'Responsable') }}
             </td>
-            <th>Capacitación:</th>
-            <td class="uppercase">
+            <!-- <th>Capacitación:</th> -->
+            <!-- <td class="uppercase">
                 {{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}
                 @if(isset($detalle->contenido['capacitacion']['ente']) && ($detalle->contenido['capacitacion']['recibio'] ?? '') == 'SI')
                     <br><small>({{ is_array($detalle->contenido['capacitacion']['ente']) ? implode(', ', $detalle->contenido['capacitacion']['ente']) : $detalle->contenido['capacitacion']['ente'] }})</small>
+                @endif
+            </td> -->
+        </tr>
+        <tr>
+            <th>Email:</th>
+            <td>{{ $detalle->contenido['personal']['email'] ?? 'N/A' }}</td>
+            <th>Contacto:</th>
+            <td>{{ $detalle->contenido['personal']['contacto'] ?? 'N/A' }}</td>
+            
+        </tr>
+        
+    </table>
+
+    <div class="section-header">02. Capacitación</div>
+    <table class="table-data">
+        <tr>
+            <th width="30%">¿Recibió Capacitación?</th>
+            {{-- Corrección: Acceder a través de ->contenido --}}
+            <td>{{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}</td>
+            
+            <th width="30%">Entidades:</th>
+            <td>
+                @if(isset($detalle->contenido['capacitacion']['ente']))
+                    @if(is_array($detalle->contenido['capacitacion']['ente']))
+                        {{ implode(', ', $detalle->contenido['capacitacion']['ente']) }}
+                    @else
+                        {{ $detalle->contenido['capacitacion']['ente'] }}
+                    @endif
+                @else
+                    N/A
                 @endif
             </td>
         </tr>
     </table>
 
-    <div class="section-header">02. Insumos y Equipamiento</div>
+    <div class="section-header">03. Insumos y Equipamiento</div>
     <table class="table-data">
         <thead>
             <tr>
@@ -125,7 +154,7 @@
         </tbody>
     </table>
 
-    <div class="section-header">03. Procesos HIS y Tiempos</div>
+    <div class="section-header">04. Procesos HIS y Tiempos</div>
     <table class="table-data">
         <tr>
             <th width="35%">Tiempo Promedio Atención (min):</th>
@@ -161,20 +190,24 @@
         </tbody>
     </table>
 
-    <div class="section-header">04. Dificultades y Soporte</div>
-    <table class="table-data">
+    <div class="section-header">05. Dificultades y Soporte</div>
+    <table class="table-data" style="width: 100%;">
+    <thead>
         <tr>
-            <th>¿A quién comunica dificultades?</th>
-            <th>¿Qué medio utiliza?</th>
+            <th style="text-align: center;">¿A quién comunica dificultades?</th>
+            <th style="text-align: center;">¿Qué medio utiliza?</th>
         </tr>
+    </thead>
+    <tbody>
         <tr class="text-center uppercase">
-            <td>{{ $detalle->contenido['soporte']['comunica'] ?? 'N/A' }}</td>
-            <td>{{ $detalle->contenido['soporte']['medio'] ?? 'N/A' }}</td>
+            <td style="text-align: center;">{{ $detalle->contenido['soporte']['comunica'] ?? 'N/A' }}</td>
+            <td style="text-align: center;">{{ $detalle->contenido['soporte']['medio'] ?? 'N/A' }}</td>
         </tr>
-    </table>
+    </tbody>
+</table>
 
     @if(!empty($detalle->foto_1) || !empty($detalle->foto_2))
-    <div class="section-header">05. Evidencias Fotográficas</div>
+    <div class="section-header">06. Evidencias Fotográficas</div>
     <table class="photo-table">
         <tr>
             @if(!empty($detalle->foto_1))
@@ -182,7 +215,7 @@
                 <div class="img-box" style="{{ empty($detalle->foto_2) ? 'width: 300px; margin: 0 auto;' : '' }}">
                     <img src="{{ public_path('storage/' . $detalle->foto_1) }}">
                 </div>
-                <div class="photo-label">Evidencia 01</div>
+                
             </td>
             @endif
 
@@ -191,12 +224,14 @@
                 <div class="img-box" style="{{ empty($detalle->foto_1) ? 'width: 300px; margin: 0 auto;' : '' }}">
                     <img src="{{ public_path('storage/' . $detalle->foto_2) }}">
                 </div>
-                <div class="photo-label">Evidencia 02</div>
+                
             </td>
             @endif
         </tr>
     </table>
     @endif
+
+    <div class="section-header">Firma del responsable</div>
 
     <div style="margin-top: 80px;">
         <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
@@ -206,7 +241,7 @@
                     <div style="height: 60px;"></div>
                     <div class="signature-line"></div>
                     <div class="uppercase" style="font-size: 11px; color: #000;">
-                        {{ $detalle->contenido['personal']['nombre'] ?? ($detalle->personal_nombre ?? 'SIN NOMBRE REGISTRADO') }}
+                        {{ $detalle->personal_nombre ?? 'SIN NOMBRE REGISTRADO' }}
                     </div>
                     <div style="font-size: 10px; color: #334155; margin-top: 5px;">
                         <strong>DNI:</strong> {{ $detalle->contenido['personal']['dni'] ?? ($detalle->personal_dni ?? '________') }} <br>
