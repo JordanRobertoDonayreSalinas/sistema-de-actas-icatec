@@ -72,28 +72,60 @@ a
         <p>Establecimiento: {{ $acta->establecimiento->nombre ?? 'N/A' }}</p>
     </div>
 
-    <div class="section-header">01. Responsable del Área</div>
+    <div class="section-header">01. Responsable del Servicio</div>
     <table class="table-data">
         <tr>
             <th width="20%">Nombre:</th>
             <td width="40%" class="uppercase">{{ $detalle->personal_nombre ?? 'N/A' }}</td>
             <th width="15%">DNI:</th>
-            <td width="25%">{{ $detalle->personal_dni ?? 'N/A' }}</td>
+            <td width="25%">{{ $detalle->contenido['personal']['dni'] ?? ($detalle->personal_dni ?? 'N/A') }}</td>
+        </tr>
+
+        <tr>
+            <th>Turno:</th>
+            <td class="uppercase">
+                {{ $detalle->contenido['personal']['turno'] ?? ($detalle->personal_turno ?? 'N/A') }}
+            </td>
+            <th>Rol / Cargo:</th>
+            <td class="uppercase">
+                
+                {{ $detalle->contenido['personal']['rol'] ?? ($detalle->personal_roles ?? 'Responsable') }}
+            </td>
+            <!-- <th>Capacitación:</th> -->
+            <!-- <td class="uppercase">
+                {{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}
+                @if(isset($detalle->contenido['capacitacion']['ente']) && ($detalle->contenido['capacitacion']['recibio'] ?? '') == 'SI')
+                    <br><small>({{ is_array($detalle->contenido['capacitacion']['ente']) ? implode(', ', $detalle->contenido['capacitacion']['ente']) : $detalle->contenido['capacitacion']['ente'] }})</small>
+                @endif
+            </td> -->
         </tr>
         <tr>
-            <th>Contacto:</th>
-            <td>{{ $detalle->contenido['personal']['contacto'] ?? 'N/A' }}</td>
             <th>Email:</th>
             <td>{{ $detalle->contenido['personal']['email'] ?? 'N/A' }}</td>
+            <th>Contacto:</th>
+            <td>{{ $detalle->contenido['personal']['contacto'] ?? 'N/A' }}</td>
+            
         </tr>
+        
+    </table>
+
+    <div class="section-header">02. Capacitación</div>
+    <table class="table-data">
         <tr>
-            <th>Turno / Rol:</th>
-            <td class="uppercase">{{ $detalle->personal_turno ?? 'N/A' }} / {{ $detalle->personal_roles ?? 'RESPONSABLE' }}</td>
-            <th>Capacitación:</th>
-            <td class="uppercase">
-                {{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}
+            <th width="30%">¿Recibió Capacitación?</th>
+            {{-- Corrección: Acceder a través de ->contenido --}}
+            <td>{{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}</td>
+            
+            <th width="30%">Entidades:</th>
+            <td>
                 @if(isset($detalle->contenido['capacitacion']['ente']))
-                    <br><small>({{ implode(', ', (array)$detalle->contenido['capacitacion']['ente']) }})</small>
+                    @if(is_array($detalle->contenido['capacitacion']['ente']))
+                        {{ implode(', ', $detalle->contenido['capacitacion']['ente']) }}
+                    @else
+                        {{ $detalle->contenido['capacitacion']['ente'] }}
+                    @endif
+                @else
+                    N/A
                 @endif
             </td>
         </tr>
@@ -107,7 +139,7 @@ a
                 <th class="text-center" width="50">Cant.</th>
                 <th class="text-center" width="80">Estado</th>
                 <th class="text-center" width="100">Propiedad</th>
-                <th>Serie / Obs.</th>
+                <th>Número de Serie</th>
             </tr>
         </thead>
         <tbody>
@@ -117,7 +149,7 @@ a
                 <td class="text-center">{{ $eq->cantidad }}</td>
                 <td class="text-center">{{ $eq->estado }}</td>
                 <td class="text-center">{{ $eq->propio ?? 'N/A' }}</td>
-                <td>{{ $eq->nro_serie ? 'S/N: '.$eq->nro_serie : '' }} {{ $eq->observaciones }}</td>
+                <td>{{ $eq->nro_serie ? ''.$eq->nro_serie : '' }} {{ $eq->observaciones }}</td>
             </tr>
             @empty
             <tr><td colspan="5" class="text-center">No se registraron equipos.</td></tr>
@@ -155,16 +187,20 @@ a
     </table>
 
     <div class="section-header">04. Dificultades y Soporte</div>
-    <table class="table-data">
-        <tr>
-            <th>¿A quién comunica dificultades?</th>
-            <th>¿Qué medio utiliza?</th>
-        </tr>
-        <tr class="text-center uppercase">
-            <td>{{ $detalle->contenido['soporte']['comunica'] ?? 'N/A' }}</td>
-            <td>{{ $detalle->contenido['soporte']['medio'] ?? 'N/A' }}</td>
-        </tr>
-    </table>
+    <table class="table-data" style="width: 100%;">
+    <tr>
+        <th style="text-align: center;">¿A quién comunica dificultades?</th>
+        <th style="text-align: center;">¿Qué medio utiliza?</th>
+    </tr>
+    <tr class="uppercase">
+        <td style="text-align: center;">
+            {{ $detalle->contenido['soporte']['comunica'] ?? 'N/A' }}
+        </td>
+        <td style="text-align: center;">
+            {{ $detalle->contenido['soporte']['medio'] ?? 'N/A' }}
+        </td>
+    </tr>
+</table>
 
     @if(!empty($detalle->foto_1) || !empty($detalle->foto_2))
     <div class="section-header">05. Evidencias Fotográficas</div>
@@ -175,7 +211,7 @@ a
                 <div class="img-box" style="{{ empty($detalle->foto_2) ? 'width: 300px; margin: 0 auto;' : '' }}">
                     <img src="{{ public_path('storage/' . $detalle->foto_1) }}">
                 </div>
-                <div class="photo-label">Evidencia Principal</div>
+                
             </td>
             @endif
 
@@ -184,14 +220,14 @@ a
                 <div class="img-box" style="{{ empty($detalle->foto_1) ? 'width: 300px; margin: 0 auto;' : '' }}">
                     <img src="{{ public_path('storage/' . $detalle->foto_2) }}">
                 </div>
-                <div class="photo-label">Evidencia Secundaria</div>
+                
             </td>
             @endif
         </tr>
     </table>
     @endif
 
-    
+    <div class="section-header">Firma del responsable</div>
 
     <div style="margin-top: 100px;">
         <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
