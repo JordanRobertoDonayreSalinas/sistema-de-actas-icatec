@@ -201,11 +201,25 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">Nro de atenciones CRED del mes:</label>
-                            <input type="number" name="contenido[nro_atenciones_mes]" value="{{ $detalle->contenido['nro_atenciones_mes'] ?? '' }}" class="input-standard">
+                            <input 
+                            type="number" 
+                            name="contenido[nro_atenciones_mes]" 
+                            value="{{ $detalle->contenido['nro_atenciones_mes'] ?? '' }}" 
+                            min="0" 
+                            class="input-standard">
                         </div>
                         <div class="space-y-3">
-                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">Cuantas descargadas en HIS?</label>
-                            <input type="number" name="contenido[descargas_his]" value="{{ $detalle->contenido['descargas_his'] ?? '' }}" class="input-standard">
+                            <label class="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">
+                                Cuantas descargadas en HIS?
+                            </label>
+                            <input 
+                                type="number" 
+                                name="contenido[descargas_his]" 
+                                value="{{ $detalle->contenido['descargas_his'] ?? '' }}" 
+                                min="0" 
+                                oninput="if(this.value < 0) this.value = 0;"
+                                class="input-standard"
+                                placeholder="0">
                         </div>
                     </div>
                 </div>
