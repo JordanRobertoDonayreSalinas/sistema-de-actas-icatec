@@ -210,7 +210,7 @@
                     </div>
                     <div style="font-size: 10px; color: #334155; margin-top: 5px;">
                         <strong>DNI:</strong> {{ $detalle->contenido['personal']['dni'] ?? ($detalle->personal_dni ?? '________') }} <br>
-                        <strong>Email:</strong> {{ $detalle->contenido['personal']['email'] ?? 'No registrado' }} <br>
+                       
                         <span style="font-style: italic;">
                             {{ $detalle->contenido['personal']['rol'] ?? ($detalle->personal_roles ?? 'Responsable de Planificación') }}
                         </span>
