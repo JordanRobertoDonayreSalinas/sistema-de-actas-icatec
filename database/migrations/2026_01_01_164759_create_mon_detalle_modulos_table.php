@@ -33,7 +33,7 @@ return new class extends Migration
 
             // Definición de llave foránea (opcional pero recomendada)
             $table->foreign('cabecera_monitoreo_id')
-                  ->references('id')->on('cabecera_monitoreos')
+                  ->references('id')->on('mon_cabecera_monitoreo')
                   ->onDelete('cascade');
         });
     }
