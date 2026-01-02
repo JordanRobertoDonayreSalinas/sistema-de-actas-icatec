@@ -53,7 +53,17 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuántas personas digitan?</label>
-                        <input type="text" name="contenido[version_sistema]" value="{{ $detalle->contenido['version_sistema'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase" />
+                        <input type="number" 
+                        name="contenido[n_digitadores]" 
+                        min="0"
+                        onkeydown="return 
+                        event.keyCode !== 69 && event.keyCode !== 189"
+                        oninput="this.value = Math.abs(this.value)"
+                        value="{{ $detalle->contenido['n_digitadores'] ?? '' }}" 
+                        class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" 
+                        placeholder="Ejemplo: 5"
+                        />
+                        
                     </div>
                 </div>
             </div>

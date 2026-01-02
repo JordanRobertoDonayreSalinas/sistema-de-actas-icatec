@@ -120,7 +120,7 @@
         </tr>
         <tr>
             <td class="bg-label">Nro. Personas que Digitan</td>
-            <td class="uppercase">{{ $detalle->contenido['version_sistema'] ?? '---' }}</td>
+            <td class="uppercase">{{ $detalle->contenido['n_digitadores'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Modalidad de Registro</td>
@@ -360,7 +360,7 @@
                     {{ strtoupper($profesional) }}
                 </div>
                 
-                <div class="firma-label">RESPONSABLE DEL SIS</div>
+                <div class="firma-label">RESPONSABLE DEL FUA</div>
                 <div class="firma-label">DNI: {{ $detalle->contenido['profesional']['doc'] ?? '___________________' }}</div>
             </div>
         </div>
