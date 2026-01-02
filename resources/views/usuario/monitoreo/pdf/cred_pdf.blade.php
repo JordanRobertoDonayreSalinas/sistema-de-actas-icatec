@@ -37,13 +37,7 @@
             margin-top: 15px;
             font-size: 12px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            table-layout: fixed; /* Obliga a la tabla a respetar los anchos definidos */
-            word-wrap: break-word; /* Rompe palabras largas para que no se salgan de la celda */
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
         th, td {
             border: 1px solid #e2e8f0;
             padding: 5px;
@@ -141,7 +135,7 @@
         <tr>
             <th>Email</th>
             <td>{{ $datos['personal']['email'] ?? 'No registrado' }}</td>
-            <th>Teléfono / Contacto</th>
+            <th>Teléfono</th>
             <td>{{ $datos['personal']['contacto'] ?? 'No registrado' }}</td>
         </tr>
     </table>
@@ -170,26 +164,21 @@
             <tr>
                 <th>Descripción Hardware</th>
                 <th class="text-center">Cant.</th>
-                <th>Estado</th>
-                <th>Propiedad</th>
-                <th>Nro Serie</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Número de Serie</th>
                 
             </tr>
         </thead>
         <tbody>
             @forelse($equipos as $eq)
-            <tr>
+            <tr class="uppercase">
                 <td>{{ $eq->descripcion }}</td>
                 <td class="text-center">{{ $eq->cantidad }}</td>
-                <td>{{ $eq->estado }}</td>
-                <td>{{ ($eq->propio == 'SI' || $eq->propio == 1) ? 'INSTITUCIONAL' : 'PERSONAL' }}</td>
-                <td>{{ $eq->nro_serie ?? '-' }}</td>
-                
+                <td class="text-center">{{ $eq->estado }}</td>
+                <td>{{ $eq->nro_serie ? ''.$eq->nro_serie : '' }} {{ $eq->observaciones }}</td>
             </tr>
             @empty
-            <tr>
-                <td colspan="4" class="text-center">No se registraron equipos en este módulo.</td>
-            </tr>
+            <tr><td colspan="5" class="text-center">No se registraron equipos.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -205,16 +194,16 @@
     </table>
 
     <div class="section-title">5. Soporte y Comunicación</div>
-    <table>
-        <tr>
-            <th width="40%">¿A quién comunica dificultades?</th>
-            <td>{{ $datos['soporte']['comunica'] ?? 'N/A' }}</td>
-        </tr>
-        <tr>
-            <th>Medio utilizado:</th>
-            <td>{{ $datos['soporte']['medio'] ?? 'N/A' }}</td>
-        </tr>
-    </table>
+    <table class="table-data" style="width: 100%;">
+    <tr>
+        <th style="text-align: center;">¿A quién comunica dificultades?</th>
+        <th style="text-align: center;">¿Qué medio utiliza?</th>
+    </tr>
+    <tr class="uppercase">
+        <td style="text-align: center;">{{ $datos['soporte']['comunica'] ?? 'N/A' }}</td>
+        <td style="text-align: center;">{{ $datos['soporte']['medio'] ?? 'N/A' }}</td>
+    </tr>
+</table>
 
     <div class="section-title">6. Evidencia Fotográfica</div>
     <div class="photo-section">
@@ -224,7 +213,7 @@
             @if(file_exists($path1))
                 <div class="photo-box">
                     <img src="{{ $path1 }}">
-                    <div class="photo-caption">Evidencia Principal</div>
+                    
                 </div>
             @endif
         @endif
@@ -235,7 +224,7 @@
             @if(file_exists($path2))
                 <div class="photo-box">
                     <img src="{{ $path2 }}">
-                    <div class="photo-caption">Evidencia Secundaria</div>
+                    
                 </div>
             @endif
         @endif
