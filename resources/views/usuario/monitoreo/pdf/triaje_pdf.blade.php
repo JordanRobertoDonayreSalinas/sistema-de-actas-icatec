@@ -154,5 +154,37 @@
         @endforelse
     </div>
 
+    {{-- 6. FIRMAS --}}
+    <div class="section-title">6. Firmas</div>
+    
+    {{-- Usamos una tabla para centrar todo perfectamente en el PDF --}}
+    <table style="width: 100%; margin-top: 80px;"> {{-- margin-top da espacio para el garabato de la firma --}}
+        <tr>
+            <td style="text-align: center;">
+                {{-- Esta caja div crea la línea de la firma --}}
+                <div style="width: 250px; margin: 0 auto; border-top: 1px solid #333; padding-top: 5px;">
+                    
+                    {{-- Nombre del Profesional --}}
+                    <div class="value" style="text-transform: uppercase; font-size: 10px;">
+                        {{ $dbCapacitacion->profesional->apellido_paterno }} 
+                        {{ $dbCapacitacion->profesional->apellido_materno }}, 
+                        {{ $dbCapacitacion->profesional->nombres }}
+                    </div>
+
+                    {{-- DNI / Documento --}}
+                    <div style="font-size: 9px; color: #666; margin-top: 2px;">
+                        {{ $dbCapacitacion->profesional->tipo_doc }}: {{ $dbCapacitacion->profesional->doc }}
+                    </div>
+
+                    {{-- Cargo --}}
+                    <div style="font-weight: bold; font-size: 10px; margin-top: 4px;">
+                        RESPONSABLE DE TRIAJE
+                    </div>
+
+                </div>
+            </td>
+        </tr>
+    </table>
+
 </body>
 </html>

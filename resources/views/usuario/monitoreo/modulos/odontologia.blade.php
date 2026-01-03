@@ -329,7 +329,7 @@
                     <div class="max-w-xs">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cantidad de Consultorios</label>
                         <div class="relative">
-                            <input type="number" x-model="form.inicio_labores.consultorios" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500">
+                            <input type="number" min="0" x-model="form.inicio_labores.consultorios" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500">
                         </div>
                     </div>
 
