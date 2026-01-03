@@ -15,9 +15,9 @@
         .bg-label { background-color: #f8fafc; font-weight: bold; width: 35%; }
         .uppercase { text-transform: uppercase; }
         .no-break { page-break-inside: avoid; }
-        .firmas-container { margin-top: 30px; width: 100%; }
-        .firma-box { width: 31%; display: inline-block; text-align: center; vertical-align: top; margin: 0 1%; margin-bottom: 40px; }
-        .linea { border-top: 1px solid #000; margin-top: 50px; margin-bottom: 5px; width: 90%; margin-left: auto; margin-right: auto; }
+        .firmas-container { margin-top: 30px; width: 100%; text-align: center; }
+        .firma-box { width: 45%; display: inline-block; text-align: center; vertical-align: top; margin-bottom: 40px; }
+        .linea { border-top: 1px solid #000; margin-top: 50px; margin-bottom: 5px; width: 80%; margin-left: auto; margin-right: auto; }
         .cargo { font-size: 7.5px; font-weight: bold; text-transform: uppercase; display: block; }
     </style>
 </head>
@@ -38,6 +38,10 @@
             <td class="bg-label">Monitor Responsable:</td>
             <td class="uppercase">{{ $monitor['nombre'] }}</td>
         </tr>
+        <tr>
+            <td class="bg-label">Jefe del Establecimiento:</td>
+            <td class="uppercase">{{ $jefe['nombre'] }}</td>
+        </tr>
     </table>
 
     @foreach($modulos as $mod)
@@ -45,14 +49,14 @@
             <div class="section-header">Módulo: {{ strtoupper(str_replace('_', ' ', $mod->modulo_nombre)) }}</div>
             
             @php
-                // Solución al error: Detectar si el contenido es string y decodificarlo
                 $cont = is_string($mod->contenido) ? json_decode($mod->contenido, true) : $mod->contenido;
             @endphp
 
             @if(is_array($cont))
                 <table>
                     @foreach($cont as $key => $value)
-                        @if(!is_array($value) && !in_array($key, ['foto_evidencia', 'comentarios', 'password']))
+                        {{-- Filtramos campos internos, fotos y arrays para la tabla general --}}
+                        @if(!is_array($value) && !in_array($key, ['foto_evidencia', 'comentarios', 'observaciones', 'password']))
                             <tr>
                                 <td class="bg-label">{{ strtoupper(str_replace(['_', 'inst'], [' ', 'entidad'], $key)) }}:</td>
                                 <td class="uppercase">{{ $value }}</td>
@@ -61,9 +65,11 @@
                     @endforeach
                 </table>
                 
-                @if(isset($cont['comentarios']))
-                <div style="font-size: 8px; font-style: italic; margin-bottom: 10px; color: #475569;">
-                    <strong>Observaciones:</strong> {{ strtoupper($cont['comentarios']) }}
+                {{-- Manejo de Observaciones u Observaciones según el módulo --}}
+                @php $obs = $cont['observaciones'] ?? ($cont['comentarios'] ?? null); @endphp
+                @if($obs)
+                <div style="font-size: 8px; font-style: italic; margin-bottom: 10px; color: #475569; padding: 0 10px;">
+                    <strong>Observaciones del Módulo:</strong> {{ strtoupper($obs) }}
                 </div>
                 @endif
             @else
@@ -74,7 +80,7 @@
 
     @if($equipos->count() > 0)
         <div class="no-break">
-            <div class="section-header">2. Inventario de Equipos</div>
+            <div class="section-header">2. Inventario de Equipos Tecnológicos</div>
             <table>
                 <thead>
                     <tr>
@@ -98,30 +104,35 @@
         </div>
     @endif
 
-    <div class="section-header">Firmas de Conformidad</div>
-    <div class="firmas-container">
-        <div class="firma-box no-break">
-            <div class="linea"></div>
-            <span class="cargo">{{ $monitor['nombre'] }}</span>
-            <span class="cargo">Monitor Responsable</span>
-            <div style="font-size: 7px;">DNI: {{ $monitor['dni'] }}</div>
-        </div>
-
-        <div class="firma-box no-break">
-            <div class="linea"></div>
-            <span class="cargo">{{ strtoupper($acta->jefe_establecimiento ?? '_______________________') }}</span>
-            <span class="cargo">Jefe del Establecimiento</span>
-            <div style="font-size: 7px;">DNI: {{ $acta->dni_jefe ?? '____________' }}</div>
-        </div>
-
-        @foreach($equipoMonitoreo as $miembro)
-            <div class="firma-box no-break">
+    <div class="no-break">
+        <div class="section-header">Firmas de Conformidad</div>
+        <div class="firmas-container">
+            {{-- Firma del Monitor --}}
+            <div class="firma-box">
                 <div class="linea"></div>
-                <span class="cargo">{{ strtoupper($miembro->nombres_apellidos ?? $miembro->nombre ?? 'MIEMBRO TÉCNICO') }}</span>
-                <span class="cargo">{{ strtoupper($miembro->cargo ?? 'Equipo de Monitoreo') }}</span>
-                <div style="font-size: 7px;">DNI: {{ $miembro->dni ?? '____________' }}</div>
+                <span class="cargo">{{ $monitor['nombre'] }}</span>
+                <span class="cargo">Monitor Responsable</span>
+                <div style="font-size: 7px;">DNI: {{ $monitor['dni'] }}</div>
             </div>
-        @endforeach
+
+            {{-- Firma del Jefe --}}
+            <div class="firma-box">
+                <div class="linea"></div>
+                <span class="cargo">{{ $jefe['nombre'] }}</span>
+                <span class="cargo">{{ $jefe['cargo'] }}</span>
+                <div style="font-size: 7px;">DNI: {{ $jefe['dni'] }}</div>
+            </div>
+
+            {{-- Firmas del Equipo de Monitoreo (Acompañantes) --}}
+            @foreach($equipoMonitoreo as $miembro)
+                <div class="firma-box">
+                    <div class="linea"></div>
+                    <span class="cargo">{{ strtoupper($miembro->nombres_apellidos ?? ($miembro->nombre ?? 'MIEMBRO TÉCNICO')) }}</span>
+                    <span class="cargo">{{ strtoupper($miembro->cargo ?? 'Equipo de Monitoreo') }}</span>
+                    <div style="font-size: 7px;">DNI: {{ $miembro->dni ?? '____________' }}</div>
+                </div>
+            @endforeach
+        </div>
     </div>
 
 </body>
