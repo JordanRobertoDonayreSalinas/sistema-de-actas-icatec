@@ -10,12 +10,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 
-class LaboratorioController extends Controller
+class UrgenciasController extends Controller
 {
-    private $modulo = 'laboratorio';
+    // Definimos el nombre del módulo para que coincida en la base de datos
+    private $modulo = 'urgencias';
 
+    /**
+     * Endpoint para búsqueda de profesionales vía AJAX
+     */
     public function buscarProfesional($doc)
     {
         $profesional = Profesional::where('doc', trim($doc))->first();
@@ -33,8 +36,12 @@ class LaboratorioController extends Controller
         return response()->json(['exists' => false]);
     }
 
+    /**
+     * Muestra la vista del módulo
+     */
     public function index($id)
     {
+        // 1. Cargar acta y equipos (Lógica de carga histórica incluida)
         $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->get();
         $esHistorico = false;
@@ -48,10 +55,16 @@ class LaboratorioController extends Controller
             }
         }
         
+        // 2. Cargar detalle guardado como JSON
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', $this->modulo)->first();
-        return view('usuario.monitoreo.modulos.laboratorio', compact('acta', 'detalle', 'equipos', 'esHistorico'));
+        
+        // Retornamos la vista en la ruta correcta
+        return view('usuario.monitoreo.modulos.urgencias', compact('acta', 'detalle', 'equipos', 'esHistorico'));
     }
 
+    /**
+     * Guarda la información del módulo
+     */
     public function store(Request $request, $id)
     {
         $request->validate([
@@ -62,6 +75,7 @@ class LaboratorioController extends Controller
             DB::beginTransaction();
             $datos = $request->input('contenido', []);
 
+            // 1. Sincronizar Profesional (Responsable del Módulo)
             if (isset($datos['responsable']) && !empty($datos['responsable']['doc'])) {
                 Profesional::updateOrCreate(
                     ['doc' => trim($datos['responsable']['doc'])],
@@ -76,6 +90,7 @@ class LaboratorioController extends Controller
                 );
             }
 
+            // 2. Gestión de Equipos de Cómputo / Tecnológicos
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
             if ($request->has('equipos')) {
                 foreach ($request->equipos as $eq) {
@@ -98,27 +113,31 @@ class LaboratorioController extends Controller
                 }
             }
 
+            // 3. Gestión de Archivo de Imagen (Evidencia)
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', $this->modulo)->first();
             if ($request->hasFile('foto_evidencia')) {
+                // Eliminar foto previa si existe para ahorrar espacio
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                     Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
                 }
                 $datos['foto_evidencia'] = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
             } elseif ($registroPrevio) {
+                // Mantener foto anterior si no se sube una nueva
                 $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'] ?? null;
             }
 
+            // 4. Guardar o Actualizar el JSON en mon_detalle_modulos
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
                 ['contenido' => $datos]
             );
 
             DB::commit();
-            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Módulo de Laboratorio guardado con éxito.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Módulo de Urgencias y Emergencias guardado con éxito.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error en LaboratorioController@store: " . $e->getMessage());
+            Log::error("Error en UrgenciasController@store: " . $e->getMessage());
             return back()->withInput()->withErrors(['error' => 'Hubo un error al guardar: ' . $e->getMessage()]);
         }
     }

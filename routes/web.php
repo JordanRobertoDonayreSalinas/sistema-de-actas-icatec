@@ -44,6 +44,8 @@ use App\Http\Controllers\ReferenciasController;
 use App\Http\Controllers\ReferenciasPdfController;
 use App\Http\Controllers\FuaElectronicoController;
 use App\Http\Controllers\FuaElectronicoPdfController;
+use App\Http\Controllers\UrgenciasController;
+use App\Http\Controllers\UrgenciasPdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -235,6 +237,15 @@ Route::middleware(['auth'])->group(function () {
                     Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
                     Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
                 });
+
+            // Módulo 18: Urgencias y Emergencias
+Route::prefix('modulo/urgencias')
+    ->name('urgencias.') // Nota el punto final: esto genera 'urgencias.index', 'urgencias.store', etc.
+    ->group(function () {
+        Route::get('/{id}', [UrgenciasController::class, 'index'])->name('index');
+        Route::post('/{id}', [UrgenciasController::class, 'store'])->name('store');
+        Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
+    });
             // Módulo 13: Puerperio
             Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
                 Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');

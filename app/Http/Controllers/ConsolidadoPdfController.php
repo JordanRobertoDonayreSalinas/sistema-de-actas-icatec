@@ -13,27 +13,32 @@ class ConsolidadoPdfController extends Controller
 {
     public function generar($id)
     {
-        // 1. Datos del Acta y Jefe (desde mon_cabecera_monitoreo)
+        // 1. Datos del Acta y Establecimiento
+        // Se cargan las relaciones para evitar múltiples consultas a la base de datos
         $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
 
-        // 2. Módulos y Equipos
+        // 2. Módulos registrados y Equipos asociados
+        // Traemos todos los detalles guardados en mon_detalle_modulos para esta acta
         $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
             ->orderBy('modulo_nombre', 'asc')
             ->get();
+
+        // Traemos todos los equipos de cómputo registrados en todos los módulos de esta acta
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->get();
 
-        // 3. Equipo de Monitoreo (de la tabla mon_equipo_monitoreo)
+        // 3. Equipo de Monitoreo (Personal que acompaña la supervisión)
         $equipoMonitoreo = DB::table('mon_equipo_monitoreo')
             ->where('cabecera_monitoreo_id', $id)
             ->get();
 
-        // 4. Datos del Monitor (Usuario en sesión)
+        // 4. Datos del Monitor Responsable (Usuario actual en sesión)
         $user = Auth::user();
         $monitor = [
             'nombre' => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
             'dni'    => $user->documento ?? $user->username ?? '________'
         ];
 
+        // 5. Preparación de la data para la vista Blade
         $data = [
             'acta'            => $acta,
             'modulos'         => $modulos,
@@ -42,6 +47,8 @@ class ConsolidadoPdfController extends Controller
             'equipoMonitoreo' => $equipoMonitoreo
         ];
 
+        // 6. Generación del PDF
+        // Asegúrate de que la vista exista en resources/views/usuario/monitoreo/pdf/consolidado_pdf.blade.php
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.consolidado_pdf', $data);
 
         return $pdf->setPaper('a4', 'portrait')
