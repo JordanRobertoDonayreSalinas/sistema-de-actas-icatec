@@ -157,7 +157,7 @@ a
         </tbody>
     </table>
 
-    <div class="section-header">03. Gestión de Referencias y Contrareferencias</div>
+    <div class="section-header">03. Gestión de Referencias</div>
     <table class="table-data">
         <thead>
             <tr>
