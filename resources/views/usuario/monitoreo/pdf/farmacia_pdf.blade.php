@@ -165,9 +165,6 @@
                 $preguntas = [
                     'sis_gestion' => '¿Cuenta con sistema de gestión para el control de inventario?',
                     'stock_actual' => '¿El stock físico coincide con el reporte del sistema?',
-                    'vencimiento_6meses' => '¿Cuenta con registro de productos próximos a vencer?',
-                    'buenas_practicas' => '¿Se cumplen con las Buenas Prácticas de Almacenamiento (BPA)?',
-                    'ambiente_clima' => '¿El ambiente cuenta con control de temperatura y humedad?',
                     'fua_sismed' => '¿Realiza la digitación oportuna en el SISMED?',
                     'inventario_anual' => '¿Ha realizado el inventario anual de medicamentos e insumos?'
                 ];
