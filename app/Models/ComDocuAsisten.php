@@ -19,6 +19,7 @@ class ComDocuAsisten extends Model
         'modulo_id',
         'profesional_id',
         'cant_consultorios',
+        'nombre_consultorio',
         'fua',
         'referencia',
         'receta',

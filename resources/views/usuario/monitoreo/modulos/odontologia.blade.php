@@ -325,12 +325,31 @@
                 </div>
 
                 <div class="space-y-8">
-                    {{-- Cantidad Consultorios --}}
-                    <div class="max-w-xs">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cantidad de Consultorios</label>
-                        <div class="relative">
-                            <input type="number" min="0" x-model="form.inicio_labores.consultorios" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500">
+                    {{-- Grid: Cantidad y Nombre de Consultorio --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {{-- Cantidad Consultorios --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cantidad de Consultorios</label>
+                            <div class="relative">
+                                <input type="number" 
+                                       min="0" 
+                                       x-model="form.inicio_labores.consultorios" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500">
+                            </div>
                         </div>
+
+                        {{-- Nombre del Consultorio (NUEVO) --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombre del Consultorio</label>
+                            <div class="relative">
+                                <input type="text" 
+                                       placeholder="Ej: Consultorio 01"
+                                       x-model="form.inicio_labores.nombre_consultorio" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase">
+                            </div>
+                        </div>
+
                     </div>
 
                     {{-- Grid de Opciones --}}
@@ -597,9 +616,10 @@
             }
         }
 
-        let initInicioLabores = { consultorios: '', fua: '', referencia: '', receta: '', orden_lab: '' };
+        let initInicioLabores = { consultorios: '', nombre_consultorio: '', fua: '', referencia: '', receta: '', orden_lab: '' };
         if (dbInicioLabores) {
             initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
+            initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
             initInicioLabores.fua = dbInicioLabores.fua || '';
             initInicioLabores.referencia = dbInicioLabores.referencia || '';
             initInicioLabores.receta = dbInicioLabores.receta || '';

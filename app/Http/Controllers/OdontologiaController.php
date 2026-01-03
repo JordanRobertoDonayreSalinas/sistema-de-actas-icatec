@@ -147,6 +147,7 @@ class OdontologiaController extends Controller
                     'profesional_id'    => $profesional->id,
                     // Mapeo JS -> BD
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
+                    'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
                     'receta'            => $datosInicio['receta'] ?? null,
