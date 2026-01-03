@@ -17,7 +17,7 @@
                 class="group flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
             <i data-lucide="plus-circle" class="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"></i> 
             Añadir Equipo
-        </button>
+        </button>    
     </div>
 
     <div class="overflow-x-auto custom-scroll">
@@ -70,11 +70,11 @@
                             </select>
                         </td>
                         <td class="px-4 py-4">
-                            <input type="text" name="equipos[{{ $index }}][observaciones]" value="{{ $eq->observaciones }}" 
+                            <input type="text" name="equipos[{{ $index }}][observacion]" value="{{ $eq->observacion }}" 
                                    class="input-table-text uppercase">
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button type="button" onclick="removeRow(this, '{{ $modulo }}')" class="text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
+                            <button type="button" onclick="removeRow(this)" class="text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
@@ -162,52 +162,64 @@
         }
     }
 
+    // Función para agregar fila con ID único (SOLUCIÓN AL PROBLEMA DE GUARDADO)
     function addEquipRow(modulo) {
-        const body = document.getElementById('body_equipos_' + modulo);
-        const noData = document.getElementById('no_data_' + modulo);
-        if (noData) noData.remove();
-        const index = body.querySelectorAll('tr').length;
-        const rowId = `serie_${modulo}_${Date.now()}`;
+        const body = document.getElementById(`body_equipos_${modulo}`);
+        
+        // 1. Generamos un ID único irrepetible (Timestamp actual)
+        // Esto evita que al borrar filas se dupliquen índices como "equipos[0]"
+        const uniqueId = Date.now(); 
+
         const row = document.createElement('tr');
-        row.className = "hover:bg-slate-50/50 transition-colors group/row";
+        row.className = 'group/row hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-none';
+        
+        // 2. Construimos la fila usando ese ID único en los 'name'
         row.innerHTML = `
-            <td class="px-8 py-4"><input type="text" name="equipos[${index}][descripcion]" class="input-table-text" required list="list_equipos_master" placeholder="Seleccione..."></td>
+           <td class="px-8 py-4"><input type="text" name="equipos[${uniqueId}][descripcion]" class="input-table-text" required list="list_equipos_master" placeholder="Seleccione..."></td>
             <td class="px-4 py-4">
                 <div class="flex items-center gap-2">
-                    <input type="text" id="${rowId}" name="equipos[${index}][nro_serie]" class="input-table-text font-mono font-bold" placeholder="S/N o QR">
-                    <button type="button" onclick="openScanner('${rowId}')" class="h-9 w-9 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                    <input type="text" name="equipos[${uniqueId}][nro_serie]" class="input-table-text font-mono font-bold" placeholder="S/N o QR">
+                    <button type="button" onclick="openScanner('${uniqueId}')" class="h-9 w-9 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                         <i data-lucide="scan-line" class="w-5 h-5"></i>
                     </button>
                 </div>
             </td>
             <td class="px-4 py-4 text-center"><span class="text-xs font-black text-slate-400">1</span></td>
             <td class="px-4 py-4">
-                <select name="equipos[${index}][estado]" class="input-table-select">
+                <select name="equipos[${uniqueId}][estado]" class="input-table-select">
                     <option value="OPERATIVO">OPERATIVO</option>
                     <option value="REGULAR">REGULAR</option>
                     <option value="INOPERATIVO">INOPERATIVO</option>
                 </select>
             </td>
             <td class="px-4 py-4">
-                <select name="equipos[${index}][propiedad]" class="input-table-select">
+                <select name="equipos[${uniqueId}][propio]" class="input-table-select">
                     <option value="SERVICIO">SERVICIO</option>
                     <option value="PERSONAL">PERSONAL</option>
                     <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
                 </select>
             </td>
-            <td class="px-4 py-4"><input type="text" name="equipos[${index}][observaciones]" class="input-table-text uppercase"></td>
+            <td class="px-4 py-4"><input type="text" name="equipos[${uniqueId}][observacion]" class="input-table-text uppercase"></td>
             <td class="px-6 py-4 text-right">
-                <button type="button" onclick="removeRow(this, '${modulo}')" class="h-8 w-8 text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
+                <button type="button" onclick="removeRow(this)" class="h-8 w-8 text-slate-300 hover:text-red-500 transition-all opacity-0 group-hover/row:opacity-100">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             </td>
         `;
+        
         body.appendChild(row);
+        
+        // Reactivar iconos Lucide para la nueva fila
         if (window.lucide) window.lucide.createIcons();
+        
+        // Ponemos el foco en el primer input para escribir rápido
+        row.querySelector('input').focus();
     }
 
-    function removeRow(btn, modulo) {
-        btn.closest('tr').remove();
+    // Función de borrado simplificada (Ya no pide 'modulo')
+    function removeRow(btn) {
+        const row = btn.closest('tr');
+        if(row) row.remove();
     }
 </script>
 
