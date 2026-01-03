@@ -67,7 +67,7 @@
 <body>
 a
     <div class="header">
-        <h1>Módulo 16: Referencias y contrarreferencias (REFCON SIHCE)</h1>
+        <h1>Módulo 16: Refcon</h1>
         <p>Acta de Monitoreo N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</p>
         <p>Establecimiento: {{ $acta->establecimiento->nombre ?? 'N/A' }}</p>
     </div>
