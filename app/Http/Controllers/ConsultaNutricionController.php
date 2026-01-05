@@ -21,7 +21,7 @@ class ConsultaNutricionController extends Controller
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo', $modulo)
                                 ->get();
-
+        /*
         // Lógica de Guía Histórica si no hay equipos
         if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
@@ -34,7 +34,7 @@ class ConsultaNutricionController extends Controller
                                         ->where('modulo', $modulo)
                                         ->get();
             }
-        }
+        }*/
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', $modulo)
@@ -59,6 +59,15 @@ class ConsultaNutricionController extends Controller
             // Si no recibió capacitación, limpiar inst_capacitacion como null
             if (isset($datos['recibio_capacitacion']) && $datos['recibio_capacitacion'] === 'NO') {
                 $datos['inst_capacitacion'] = null;
+            }
+
+            // LÓGICA DE LIMPIEZA DE DATOS (DNI AZUL vs DNI ELECTRÓNICO)
+            $tipoDni = $datos['tipo_dni_fisico'] ?? null;
+
+            if ($tipoDni === 'AZUL') {
+                // Si es DNI AZUL, no debe tener versión ni firma digital
+                $datos['dnie_version'] = null;
+                $datos['dnie_firma_sihce'] = null;
             }
 
             // 1. SINCRONIZACIÓN DE PROFESIONALES

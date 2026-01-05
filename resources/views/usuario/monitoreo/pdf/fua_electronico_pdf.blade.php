@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <title>FUA Electrónico - Acta {{ $acta->id }}</title>
     <style>
-        @page { margin: 1.2cm 1.5cm; }
+        /* AJUSTAMOS EL MARGEN INFERIOR A 2CM PARA QUE QUEPA EL PIE DE PÁGINA */
+        @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }
         body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
         
         /* Encabezado */
@@ -111,16 +112,99 @@
     <div class="section-title">1. Características del Sistema FUA</div>
     <table>
         <tr>
-            <td class="bg-label">¿Cuenta con Sistema SIHCE/FUA?</td>
+            <td class="bg-label">¿Cuenta con módulo FUA del SIHCE?</td>
             <td class="uppercase">{{ $detalle->contenido['tiene_sistema_fua'] ?? '---' }}</td>
-        </tr>
-        <tr>
-            <td class="bg-label">Software Utilizado</td>
-            <td class="uppercase">{{ $detalle->contenido['nombre_software'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Nro. Personas que Digitan</td>
             <td class="uppercase">{{ $detalle->contenido['n_digitadores'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Turno</td>
+            <td class="uppercase">{{ $detalle->contenido['turno'] ?? '---' }}</td>
+        </tr>
+    </table>
+
+    {{-- SECCIÓN 2: DATOS DEL PROFESIONAL --}}
+    <div class="section-title">2. Datos del profesional</div>
+    <table>
+        <tr>
+            <td class="bg-label">Nombres y Apellidos</td>
+            <td class="uppercase">
+                @php
+                    $profNombre = $detalle->contenido['profesional']['nombres'] ?? '';
+                    $profApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
+                    $profApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
+                    $profCompleto = trim($profApellidoPaterno . ' ' . $profApellidoMaterno . ' ' . $profNombre);
+                    if(empty($profCompleto)) {
+                        $profCompleto = $detalle->contenido['profesional']['apellidos_nombres'] ?? '---';
+                    }
+                @endphp
+                {{ strtoupper($profCompleto) }}
+            </td>
+        </tr>
+        <tr>
+            <td class="bg-label">Documento</td>
+            <td>{{ $detalle->contenido['profesional']['doc'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Correo</td>
+            <td>{{ $detalle->contenido['profesional']['email'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Cargo</td>
+            <td class="uppercase">MEDICO</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Firmó Declaración Jurada?</td>
+            <td class="uppercase">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Firmó Compromiso de Confidencialidad?</td>
+            <td class="uppercase">{{ $detalle->contenido['firmo_confidencialidad'] ?? '---' }}</td>
+        </tr>
+    </table>
+
+    {{-- SECCIÓN 3: TIPO DE DNI Y FIRMA DIGITAL --}}
+    <div class="section-title">3. Tipo de DNI y Firma Digital</div>
+    <table>
+        <tr>
+            <td class="bg-label">Tipo de DNI</td>
+            <td class="uppercase">{{ $detalle->contenido['tipo_dni_fisico'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Versión DNIe</td>
+            <td class="uppercase">{{ $detalle->contenido['dnie_version'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Firma digitalmente en SIHCE?</td>
+            <td class="uppercase">{{ $detalle->contenido['dnie_firma_sihce'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Observaciones/Motivo de Uso</td>
+            <td class="uppercase">{{ $detalle->contenido['dni_observacion'] ?? '---' }}</td>
+        </tr>
+    </table>
+
+    {{-- SECCIÓN 4: DETALLES DE CAPACITACIÓN --}}
+    <div class="section-title">4. Detalles de Capacitación</div>
+    <table>
+        <tr>
+            <td class="bg-label">¿Recibió Capacitación?</td>
+            <td>{{ $detalle->contenido['recibio_capacitacion'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿De parte de quién?</td>
+            <td>{{ $detalle->contenido['inst_capacitacion'] ?? '---' }}</td>
+        </tr>
+    </table>
+
+    {{-- SECCIÓN 5: SOFTWARE Y FLUJO DE ATENCIÓN --}}
+    <div class="section-title">5. Software y Flujo de Atención</div>
+    <table>
+        <tr>
+            <td class="bg-label">Software utilizado</td>
+            <td>{{ $detalle->contenido['nombre_software'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Modalidad de Registro</td>
@@ -128,8 +212,9 @@
                 @php
                     $mod = $detalle->contenido['modalidad_registro'] ?? '';
                     $modLabel = match($mod) {
-                        'PUNTO_ATENCION' => 'EN TIEMPO REAL (Punto de Atención)',
-                        'DIGITACION' => 'DIGITACIÓN POSTERIOR',
+                        'EN TIEMPO REAL' => 'EN TIEMPO REAL (Punto de Atención)',
+                        'DIGITACION POSTERIOR' => 'DIGITACIÓN POSTERIOR',
+                        'AMBOS' => 'AMBOS',
                         default => '---'
                     };
                 @endphp
@@ -153,14 +238,13 @@
         </tr>
     </table>
 
-    {{-- SECCIÓN 2: INTEROPERABILIDAD Y TRAMAS --}}
-    <div class="section-title">2. Interoperabilidad y Tramas</div>
+    {{-- SECCIÓN 6: INTEROPERABILIDAD Y TRAMAS --}}
+    <div class="section-title">6. Envío de Información (Tramas)</div>
     <table>
         <thead>
             <tr>
                 <th>Frecuencia de Envío</th>
                 <th>Conectividad (Servidor)</th>
-                <th>Realiza Backup Local</th>
             </tr>
         </thead>
         <tbody>
@@ -175,19 +259,17 @@
                         ---
                     @endif
                 </td>
-                <td class="text-center uppercase">{{ $detalle->contenido['realiza_backup'] ?? '---' }}</td>
             </tr>
         </tbody>
     </table>
 
-    {{-- SECCIÓN 3: RECURSOS DISPONIBLES --}}
-    <div class="section-title">3. Recursos Específicos Disponibles</div>
+    {{-- SECCIÓN 7: RECURSOS DISPONIBLES --}}
+    <div class="section-title">7. Recursos Específicos Disponibles</div>
     <div style="border: 1px solid #e2e8f0; padding: 10px; background-color: #fff;">
         @php
             $recursos = $detalle->contenido['recursos'] ?? [];
             $labels = [
                 'lector_barras' => 'Lector de Código de Barras (DNI)',
-                'impresora_tickets' => 'Impresora de Tickets',
                 'impresora_fua' => 'Impresora FUA (A4/A5)',
                 'puntos_red' => 'Puntos de Red',
                 'wifi_personal' => 'WiFi Personal',
@@ -215,43 +297,10 @@
         @endif
     </div>
 
-    {{-- SECCIÓN 4: DATOS DEL RESPONSABLE --}}
-    <div class="section-title">4. Responsable FUA / Admisión</div>
-    <table>
-        <tr>
-            <td class="bg-label">Nombre Completo</td>
-            <td class="uppercase">
-                @php
-                    $prof = $detalle->contenido['profesional'] ?? [];
-                    $nombreCompleto = trim(($prof['apellido_paterno'] ?? '') . ' ' . ($prof['apellido_materno'] ?? '') . ' ' . ($prof['nombres'] ?? ''));
-                    if(empty($nombreCompleto)) $nombreCompleto = $prof['apellidos_nombres'] ?? '---';
-                @endphp
-                {{ $nombreCompleto }}
-            </td>
-        </tr>
-        <tr>
-            <td class="bg-label">DNI</td>
-            <td>{{ $prof['doc'] ?? '---' }}</td>
-        </tr>
-        <tr>
-            <td class="bg-label">Correo / Teléfono</td>
-            <td>{{ strtolower($prof['email'] ?? '') }} {{ isset($prof['telefono']) ? ' / '.$prof['telefono'] : '' }}</td>
-        </tr>
-    </table>
-
-    {{-- SECCIÓN 5: CAPACITACIÓN --}}
-    <div class="section-title">5. Capacitación</div>
-    <table>
-        <tr>
-            <td class="bg-label">¿Recibió Capacitación?</td>
-            <td width="15%" class="text-center">{{ $detalle->contenido['recibio_capacitacion'] ?? '---' }}</td>
-            <td class="bg-label" width="20%">Entidad:</td>
-            <td class="uppercase">{{ $detalle->contenido['inst_capacitacion'] ?? '---' }}</td>
-        </tr>
-    </table>
-
-    {{-- SECCIÓN 6: EQUIPAMIENTO INFORMÁTICO --}}
-    <div class="section-title">6. Equipamiento del Área</div>
+    
+   
+    {{-- SECCIÓN 8: EQUIPAMIENTO INFORMÁTICO --}}
+    <div class="section-title">8. Equipamiento del Área</div>
     @php
         $equipos = \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $acta->id)
                     ->where('modulo', 'fua_electronico')
@@ -261,11 +310,12 @@
         <table>
             <thead>
                 <tr>
-                    <th width="30%">Descripción</th>
-                    <th width="10%">Cant.</th>
+                    <th width="25%">Descripción</th>
+                    <th width="12%">Cantidad</th>
                     <th width="15%">Estado</th>
-                    <th width="15%">Propiedad</th>
-                    <th width="30%">Observación</th>
+                    <th width="18%">Propiedad</th>
+                    <th width="15%">N° Serie</th>
+                    <th width="15%">Observación</th>
                 </tr>
             </thead>
             <tbody>
@@ -273,36 +323,39 @@
                 <tr>
                     <td class="uppercase">{{ $eq->descripcion }}</td>
                     <td class="text-center">{{ $eq->cantidad }}</td>
-                    <td class="text-center">{{ $eq->estado }}</td>
-                    <td class="text-center">{{ $eq->propio }}</td>
-                    <td class="uppercase" style="font-size: 9px;">{{ $eq->observacion ?? '-' }}</td>
+                    <td>{{ $eq->estado }}</td>
+                    <td>{{ $eq->propio }}</td>
+                    <td>{{ $eq->nro_serie ?? '---' }}</td>
+                    <td class="uppercase">{{ $eq->observacion ?? '---' }}</td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
     @else
-        <div class="no-evidence-box" style="padding: 10px; font-size: 9px;">SIN EQUIPAMIENTO REGISTRADO</div>
+        <div style="color: #94a3b8; font-style: italic; padding: 8px;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
 
-    {{-- SECCIÓN 7: SOPORTE TÉCNICO --}}
-    <div class="section-title">7. Soporte Técnico</div>
+    {{-- SECCIÓN 9: SOPORTE TÉCNICO --}}
+    <div class="section-title">9. Soporte Técnico</div>
     <table>
         <tr>
-            <td class="bg-label">Reporta fallas a:</td>
+            <td class="bg-label">¿A quién le comunica?</td>
             <td class="uppercase">{{ $detalle->contenido['comunica_a'] ?? '---' }}</td>
-            <td class="bg-label">Medio utilizado:</td>
-            <td class="uppercase">{{ $detalle->contenido['medio_soporte'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Qué medio utiliza?</td>
+            <td>{{ $detalle->contenido['medio_soporte'] ?? '---' }}</td>
         </tr>
     </table>
 
-    {{-- SECCIÓN 8: COMENTARIOS --}}
-    <div class="section-title">8. Observaciones / Comentarios</div>
+    {{-- SECCIÓN 10: COMENTARIOS --}}
+    <div class="section-title">10. Observaciones / Comentarios</div>
     <div style="border: 1px solid #e2e8f0; padding: 10px; min-height: 40px; font-size: 9px;" class="uppercase">
         {{ $detalle->contenido['comentarios'] ?? 'SIN OBSERVACIONES.' }}
     </div>
 
-    {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
-    <div class="section-title">9. Evidencia Fotográfica</div>
+    {{-- 11. EVIDENCIA FOTOGRÁFICA --}}
+    <div class="section-title">11. Evidencia Fotográfica</div>
 
     @if(!empty($imagenesData) && is_array($imagenesData) && count($imagenesData) > 0)
         
@@ -341,9 +394,9 @@
         </div>
     @endif
 
-    {{-- 10. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
+    {{-- 12. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
     <div class="firma-section">
-        <div class="section-title">10. Firma del entrevistado</div>
+        <div class="section-title">12. Firma del entrevistado</div>
         <div class="firma-container">
             <div class="firma-box">
                 <div class="firma-linea"></div>
@@ -365,11 +418,6 @@
             </div>
         </div>
     </div>
-
-    <div style="position: fixed; bottom: -10px; width: 100%; text-align: right; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px;">
-        Generado por Sistema de Monitoreo | Fecha: {{ date('d/m/Y H:i:s') }}
-    </div>
-
 </body>
 </html>
 

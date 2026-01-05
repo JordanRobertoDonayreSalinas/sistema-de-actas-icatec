@@ -142,15 +142,15 @@
         </tr>
         <tr>
             <td class="bg-label">Versión DNIe</td>
-            <td class="uppercase">{{ $detalle->contenido['dnie_version'] ?? 'N.A' }}</td>
+            <td class="uppercase">{{ $detalle->contenido['dnie_version'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">¿Firma digitalmente en SIHCE?</td>
-            <td class="uppercase">{{ $detalle->contenido['dnie_firma_sihce'] ?? 'N.A' }}</td>
+            <td class="uppercase">{{ $detalle->contenido['dnie_firma_sihce'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Observaciones/Motivo de Uso</td>
-            <td class="uppercase">{{ $detalle->contenido['dni_observacion'] ?? 'SIN OBSERVACIONES' }}</td>
+            <td class="uppercase">{{ $detalle->contenido['dni_observacion'] ?? '---' }}</td>
         </tr>
     </table>
 
@@ -286,7 +286,7 @@
         </div>
     @endif
 
-    {{-- 9. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
+    {{-- 10. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
     <div class="firma-section">
         <div class="section-title">10. Firma del entrevistado</div>
         <div class="firma-container">

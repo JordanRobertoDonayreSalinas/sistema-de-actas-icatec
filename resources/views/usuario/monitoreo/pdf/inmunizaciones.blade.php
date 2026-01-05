@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <title>Inmunizaciones - Acta {{ $acta->id }}</title>
     <style>
-        @page { margin: 1.2cm 1.5cm; }
+        /* AJUSTAMOS EL MARGEN INFERIOR A 2CM PARA QUE QUEPA EL PIE DE PÁGINA */
+        @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }
         body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
         .header h1 { margin: 0; font-size: 15px; text-transform: uppercase; color: #4f46e5; }
@@ -77,7 +78,7 @@
         </div>
     </div>
 
-    <div class="section-title">1. Detalles</div>
+    <div class="section-title">1. Detalles de consultorio</div>
     <table>
         <tr>
             <td class="bg-label">Cantidad de Consultorios</td>
@@ -92,10 +93,13 @@
             <td class="uppercase">{{ $detalle->contenido['horario_atencion'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Cantidad de Personal</td>
-            <td class="uppercase">{{ $detalle->contenido['cantidad_personal'] ?? '---' }}</td>
+            <td class="bg-label">¿Es un consultorio compartido?</td>
+            <td class="uppercase">{{ $detalle->contenido['es_compartido'] ?? '---' }}</td>
         </tr>
-        
+        <tr>
+            <td class="bg-label">¿Con qué servicio/profesional?</td>
+            <td class="uppercase">{{ $detalle->contenido['con_quien_comparte'] ?? '---' }}</td>
+        </tr>
     </table>
 
     <div class="section-title">2. Datos del Profesional Responsable</div>
@@ -127,9 +131,37 @@
             <td class="bg-label">Cargo</td>
             <td class="uppercase">LIC. ENFERMERIA</td>
         </tr>
+        <tr>
+            <td class="bg-label">¿Firmó Declaración Jurada?</td>
+            <td class="uppercase">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Firmó Compromiso de Confidencialidad?</td>
+            <td class="uppercase">{{ $detalle->contenido['firmo_confidencialidad'] ?? '---' }}</td>
+        </tr>
     </table>
 
-    <div class="section-title">3. Detalles de Capacitación</div>
+    <div class="section-title">3. Tipo de DNI y Firma Digital</div>
+    <table>
+        <tr>
+            <td class="bg-label">Tipo de DNI</td>
+            <td class="uppercase">{{ $detalle->contenido['tipo_dni_fisico'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Versión DNIe</td>
+            <td class="uppercase">{{ $detalle->contenido['dnie_version'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Firma digitalmente en SIHCE?</td>
+            <td class="uppercase">{{ $detalle->contenido['dnie_firma_sihce'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Observaciones/Motivo de Uso</td>
+            <td class="uppercase">{{ $detalle->contenido['dni_observacion'] ?? 'SIN OBSERVACIONES' }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">4. Detalles de Capacitación</div>
     <table>
         <tr>
             <td class="bg-label">¿Recibió Capacitación?</td>
@@ -140,37 +172,6 @@
             <td>{{ $detalle->contenido['inst_capacitacion'] ?? '---' }}</td>
         </tr>
     </table>
-
-    <div class="section-title">4. Vacunas Disponibles</div>
-    <div class="vacunas-list">
-        @php
-            $vacunas = $detalle->contenido['vacunas'] ?? [];
-            $vacunasMapping = [
-                'bcg' => 'BCG',
-                'polio' => 'Polio',
-                'dpt' => 'DPT',
-                'sarampion' => 'Sarampión',
-                'hepatitis_b' => 'Hepatitis B',
-                'varicela' => 'Varicela',
-                'hpv' => 'HPV',
-                'fiebre_amarilla' => 'Fiebre Amarilla',
-                'rotavirus' => 'Rotavirus'
-            ];
-            $vacunasSeleccionadas = [];
-            foreach ($vacunasMapping as $key => $label) {
-                if (isset($vacunas[$key]) && $vacunas[$key]) {
-                    $vacunasSeleccionadas[] = $label;
-                }
-            }
-        @endphp
-        @if(count($vacunasSeleccionadas) > 0)
-            @foreach($vacunasSeleccionadas as $vacuna)
-                <span class="vacunas-item">{{ $vacuna }}</span>
-            @endforeach
-        @else
-            <span style="color: #94a3b8; font-style: italic;">SIN VACUNAS REGISTRADAS</span>
-        @endif
-    </div>
 
     <div class="section-title">5. Equipamiento del Área</div>
     @php
@@ -300,10 +301,5 @@
             </div>
         </div>
     </div>
-
-    <div style="position: fixed; bottom: -10px; width: 100%; text-align: right; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 5px;">
-        Generado por Sistema de Monitoreo | Fecha: {{ date('d/m/Y H:i:s') }}
-    </div>
-
 </body>
 </html>

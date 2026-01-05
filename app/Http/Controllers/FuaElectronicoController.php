@@ -22,7 +22,7 @@ class FuaElectronicoController extends Controller
                                 ->where('modulo', $modulo)
                                 ->get();
 
-        if ($equipos->isEmpty()) {
+        /*if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
                 ->where('id', '<', $id) 
                 ->orderBy('id', 'desc')
@@ -33,7 +33,7 @@ class FuaElectronicoController extends Controller
                                         ->where('modulo', $modulo)
                                         ->get();
             }
-        }
+        }*/
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', $modulo)
@@ -57,6 +57,15 @@ class FuaElectronicoController extends Controller
 
             if (isset($datos['recibio_capacitacion']) && $datos['recibio_capacitacion'] === 'NO') {
                 $datos['inst_capacitacion'] = null;
+            }
+
+            // LÓGICA DE LIMPIEZA DE DATOS (DNI AZUL vs DNI ELECTRÓNICO)
+            $tipoDni = $datos['tipo_dni_fisico'] ?? null;
+
+            if ($tipoDni === 'AZUL') {
+                // Si es DNI AZUL, no debe tener versión ni firma digital
+                $datos['dnie_version'] = null;
+                $datos['dnie_firma_sihce'] = null;
             }
 
             if (isset($datos['profesional']) && !empty($datos['profesional']['doc'])) {

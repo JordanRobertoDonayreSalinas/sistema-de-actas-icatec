@@ -166,6 +166,15 @@
     function addEquipRow(modulo) {
         const body = document.getElementById(`body_equipos_${modulo}`);
         
+        // ------------------------------------------------------------------
+        // [NUEVO] PASO 0: SI EXISTE EL MENSAJE DE "SIN REGISTROS", LO BORRAMOS
+        // ------------------------------------------------------------------
+        const noDataRow = document.getElementById(`no_data_${modulo}`);
+        if (noDataRow) {
+            noDataRow.remove(); // Elimina la fila del mensaje para limpiar la tabla
+        }
+        // ------------------------------------------------------------------
+
         // 1. Generamos un ID único irrepetible (Timestamp actual)
         // Esto evita que al borrar filas se dupliquen índices como "equipos[0]"
         const uniqueId = Date.now(); 
