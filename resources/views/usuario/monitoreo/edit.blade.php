@@ -38,25 +38,29 @@
         
         .info-editable { background: #fff !important; border: 1px solid #6366f1 !important; }
         .input-editable { color: #6366f1 !important; font-weight: 900 !important; }
+
+        /* Estilos para carga de imágenes */
+        .preview-img { width: 100%; height: 120px; object-fit: cover; border-radius: 1rem; }
+        .drop-zone { border: 2px dashed #e2e8f0; border-radius: 1.5rem; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; }
+        .drop-zone:hover { border-color: #6366f1; background: #f8fafc; }
     </style>
 @endpush
 
 @section('content')
 <div class="py-6 bg-slate-50 min-h-screen">
     <div class="max-w-full mx-auto px-4">
-        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.update', $monitoreo->id) }}" method="POST" class="animate-fade-in">
+        {{-- Importante: enctype="multipart/form-data" para permitir subir archivos --}}
+        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.update', $monitoreo->id) }}" method="POST" enctype="multipart/form-data" class="animate-fade-in">
             @csrf
             @method('PUT')
             
             <input type="hidden" name="implementador" id="implementador_input" value="{{ $monitoreo->implementador }}">
-            {{-- Campo oculto para decidir el redireccionamiento --}}
             <input type="hidden" name="redirect_to" id="redirect_to" value="index">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {{-- COLUMNA IZQUIERDA --}}
                 <div class="lg:col-span-4 space-y-6">
-                    {{-- Bloque Responsable y Fecha --}}
                     <div class="p-6 bg-slate-900 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
                         <div class="flex items-center gap-4 mb-6">
                             <div class="h-11 w-11 rounded-xl bg-indigo-500 flex items-center justify-center">
@@ -64,7 +68,7 @@
                             </div>
                             <div>
                                 <p class="text-[8px] font-black text-indigo-300 uppercase tracking-widest">Implementador</p>
-                                <h2 class="text-sm font-bold uppercase">{{ Auth::user()->name }} {{ Auth::user()->apellido_paterno }}</h2>
+                                <h2 class="text-sm font-bold uppercase">{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}</h2>
                             </div>
                         </div>
                         <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
@@ -73,15 +77,14 @@
                         </div>
                     </div>
 
-                    {{-- Bloque Establecimiento --}}
                     <div class="p-6 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
                         <h3 class="text-slate-800 font-black text-[10px] uppercase tracking-widest mb-6 flex items-center gap-2">
                             <i data-lucide="hospital" class="w-4 h-4 text-indigo-600"></i> Datos del Establecimiento
                         </h3>
                         <div class="space-y-4">
                             <div class="relative">
-                                <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block">Buscar IPRESS</label>
-                                <input type="text" id="establecimiento_search" required autocomplete="off" placeholder="Nombre o Código"
+                                <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block">IPRESS Actual</label>
+                                <input type="text" id="establecimiento_search" required autocomplete="off" 
                                        value="{{ $monitoreo->establecimiento->nombre }}"
                                        class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:bg-white focus:border-indigo-500 outline-none font-bold text-xs">
                                 <input type="hidden" name="establecimiento_id" id="establecimiento_id" value="{{ $monitoreo->establecimiento_id }}" required>
@@ -90,9 +93,7 @@
                             <div class="info-grid-estab">
                                 <div class="info-box-estab info-editable">
                                     <span class="info-label text-indigo-600">Categoría (Editable)</span>
-                                    <input type="text" id="categoria" name="categoria" 
-                                           value="{{ $monitoreo->categoria_congelada ?? $monitoreo->establecimiento->categoria }}" 
-                                           class="info-value input-editable bg-transparent border-none p-0 w-full focus:ring-0">
+                                    <input type="text" id="categoria" name="categoria" value="{{ $monitoreo->categoria_congelada }}" class="info-value input-editable bg-transparent border-none p-0 w-full focus:ring-0">
                                 </div>
                                 <div class="info-box-estab"><span class="info-label">Red</span><input type="text" id="red" readonly class="info-value bg-transparent border-none p-0 w-full focus:ring-0" value="{{ $monitoreo->establecimiento->red }}"></div>
                                 <div class="info-box-estab"><span class="info-label">Microred</span><input type="text" id="microred" readonly class="info-value bg-transparent border-none p-0 w-full focus:ring-0" value="{{ $monitoreo->establecimiento->microred }}"></div>
@@ -107,6 +108,37 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- SECCIÓN DE IMÁGENES CORREGIDA --}}
+                    <div class="p-6 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
+                        <h3 class="text-slate-800 font-black text-[10px] uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <i data-lucide="camera" class="w-4 h-4 text-indigo-600"></i> Evidencia Fotográfica (Máx. 2)
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            @for($i=1; $i<=2; $i++)
+                            @php 
+                                $fotoField = "foto".$i; 
+                                $hasFoto = !empty($monitoreo->$fotoField); 
+                            @endphp
+                            <div class="relative group">
+                                {{-- Los archivos se envían como array imagenes[] --}}
+                                <input type="file" name="imagenes[]" id="file_{{$i}}" accept="image/*" class="hidden file-input">
+                                
+                                <label for="file_{{$i}}" class="drop-zone {{ $hasFoto ? 'hidden' : '' }}" id="label_{{$i}}">
+                                    <i data-lucide="image-plus" class="w-6 h-6 text-slate-300 mb-1"></i>
+                                    <span class="text-[8px] font-bold text-slate-400 uppercase">Sustituir Foto {{$i}}</span>
+                                </label>
+
+                                <img src="{{ $hasFoto ? asset('storage/'.$monitoreo->$fotoField) : '#' }}" 
+                                     id="preview_{{$i}}" class="preview-img {{ $hasFoto ? '' : 'hidden' }}">
+                                
+                                <button type="button" onclick="resetFile({{$i}})" id="remove_{{$i}}" class="{{ $hasFoto ? '' : 'hidden' }} absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg z-10">
+                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                            @endfor
+                        </div>
+                    </div>
                 </div>
 
                 {{-- COLUMNA DERECHA --}}
@@ -117,7 +149,7 @@
                                 <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i> Equipo de Monitoreo
                             </h3>
                             <div class="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl shadow-xl w-full md:w-auto">
-                                <input type="text" id="buscar_miembro_inteligente" placeholder="DOC o Apellido..." class="text-[11px] border-none bg-transparent focus:ring-0 font-bold w-full md:w-64 pl-4 text-white">
+                                <input type="text" id="buscar_miembro_inteligente" placeholder="DNI o Apellido..." class="text-[11px] border-none bg-transparent focus:ring-0 font-bold w-full md:w-64 pl-4 text-white">
                                 <button type="button" id="btn_manual_add" class="bg-indigo-600 text-white p-2 rounded-xl"><i data-lucide="plus" class="w-4 h-4"></i></button>
                             </div>
                         </div>
@@ -140,13 +172,12 @@
                             </table>
                         </div>
 
-                        {{-- ACCIONES DE GUARDADO --}}
                         <div class="mt-8 flex flex-wrap justify-end gap-3">
                             <a href="{{ route('usuario.monitoreo.index') }}" class="px-6 py-4 rounded-2xl font-black text-xs text-slate-400 hover:bg-slate-100 transition-all uppercase">Cancelar</a>
                             
                             <button type="button" onclick="submitForm('modulos')" class="bg-slate-800 text-white px-8 py-4 rounded-2xl font-black text-xs shadow-xl hover:bg-slate-900 transition-all flex items-center gap-3">
                                 <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
-                                <span>GUARDAR Y EDITAR MÓDULOS</span>
+                                <span>ACTUALIZAR Y EDITAR MÓDULOS</span>
                             </button>
 
                             <button type="button" onclick="submitForm('index')" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-3">
@@ -167,35 +198,34 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // 1. FUNCIÓN GLOBAL DE ENVÍO (SOLUCIÓN AL ERROR DE RECARGA)
     function submitForm(destination) {
-        const form = $('#monitoreoForm');
-        
-        // Seteamos el destino en el input oculto
         $('#redirect_to').val(destination);
+        const form = document.getElementById('monitoreoForm');
 
-        // Convertimos todo a mayúsculas antes de procesar
-        form.find('input[type="text"]').not('#implementador_input').each(function() {
-            $(this).val($(this).val().toUpperCase().trim());
-        });
-
-        // Validamos que haya al menos un miembro
         if ($('#body_equipo tr').length === 0) {
-            Swal.fire('Atención', 'Debe agregar al menos un miembro al equipo de monitoreo.', 'warning');
+            Swal.fire('Atención', 'El equipo de monitoreo no puede estar vacío.', 'warning');
             return;
         }
 
-        // Enviamos el formulario directamente (esto evita el conflicto con e.preventDefault)
-        document.getElementById('monitoreoForm').submit();
+        // Convertir textos a mayúsculas
+        $('#monitoreoForm').find('input[type="text"]').not('#implementador_input').each(function() {
+            $(this).val($(this).val().toUpperCase().trim());
+        });
+
+        // Estandarización de implementador (Apellidos + Nombre)
+        let rawName = "{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}";
+        $('#implementador_input').val(rawName.toUpperCase());
+
+        form.submit();
     }
 
     $(document).ready(function() {
         lucide.createIcons();
 
-        // Carga inicial del equipo
+        // Carga inicial del equipo desde la base de datos
         @foreach($monitoreo->equipo as $persona)
             addMiembroRow({
-                tipo_doc: "{{ $persona->tipo_doc ?? 'DNI' }}",
+                tipo_doc: "{{ $persona->tipo_doc }}",
                 doc: "{{ $persona->doc }}",
                 apellido_paterno: "{{ $persona->apellido_paterno }}",
                 apellido_materno: "{{ $persona->apellido_materno }}",
@@ -204,6 +234,36 @@
                 institucion: "{{ $persona->institucion }}"
             }, false);
         @endforeach
+
+        // Gestión de Previsualización de Imágenes
+        $(".file-input").on("change", function() {
+            const id = $(this).attr('id').split('_')[1];
+            const file = this.files[0];
+            if (file) {
+                // Validar que sea imagen
+                if(!file.type.match('image.*')) {
+                    Swal.fire('Error', 'Solo se permiten archivos de imagen.', 'error');
+                    $(this).val('');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $(`#preview_${id}`).attr('src', e.target.result).removeClass('hidden').show();
+                    $(`#label_${id}`).addClass('hidden').hide();
+                    $(`#remove_${id}`).removeClass('hidden').show();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Función para limpiar el input de archivo y restaurar la UI
+        window.resetFile = function(id) {
+            $(`#file_${id}`).val("");
+            $(`#preview_${id}`).addClass('hidden').hide();
+            $(`#label_${id}`).removeClass('hidden').show();
+            $(`#remove_${id}`).addClass('hidden').hide();
+        };
 
         // Autocomplete Establecimiento
         $("#establecimiento_search").autocomplete({
@@ -221,7 +281,7 @@
             }
         });
 
-        // Buscador Inteligente de Miembros
+        // Buscador de Personal Inteligente
         $("#buscar_miembro_inteligente").autocomplete({
             minLength: 2,
             source: function(request, response) {
@@ -246,43 +306,33 @@
             }
         });
 
-        // Agregar manual mediante SweetAlert
         $('#btn_manual_add').on('click', function() {
             Swal.fire({
                 title: 'Agregar Integrante',
-                text: 'Ingrese el número de documento:',
                 input: 'text',
+                inputPlaceholder: 'Ingrese DNI',
                 showCancelButton: true,
-                confirmButtonText: 'Buscar / Agregar',
+                confirmButtonText: 'Buscar',
                 confirmButtonColor: '#4f46e5',
             }).then((result) => {
                 if (result.isConfirmed && result.value) {
-                    const dni = result.value.trim();
-                    // Buscamos si ya existe en la base de datos maestra
-                    $.get("/usuario/monitoreo/equipo/buscar/" + dni, function(data) {
-                        addMiembroRow(data.exists ? data : { doc: dni, tipo_doc: 'DNI' }, !data.exists);
-                    }).fail(function() {
-                        // Si falla la ruta de búsqueda, lo agregamos como nuevo de todos modos
-                        addMiembroRow({ doc: dni, tipo_doc: 'DNI' }, true);
+                    $.get("/usuario/monitoreo/equipo/buscar/" + result.value, function(data) {
+                        addMiembroRow(data.exists ? data : { doc: result.value, tipo_doc: 'DNI' }, !data.exists);
                     });
                 }
             });
         });
 
-        // Función para renderizar la fila del equipo
         function addMiembroRow(data, isNew) {
-            const doc = (data.doc || data.documento || "").toString();
-            if (!doc || $(`#row_${doc}`).length > 0) return;
-            
-            const tipoDoc = data.tipo_doc || 'DNI';
+            const doc = data.doc.toString();
+            if ($(`#row_${doc}`).length > 0) return;
 
             const row = `
                 <tr id="row_${doc}" class="animate-fade-in">
                     <td>
                         <select name="equipo[${doc}][tipo_doc]" class="input-inline border-slate-200 py-1">
-                            <option value="DNI" ${tipoDoc == 'DNI' ? 'selected' : ''}>DNI</option>
-                            <option value="PASS" ${tipoDoc == 'PASS' ? 'selected' : ''}>PASS</option>
-                            <option value="DIE" ${tipoDoc == 'DIE' ? 'selected' : ''}>DIE</option>
+                            <option value="DNI" ${data.tipo_doc == 'DNI' ? 'selected' : ''}>DNI</option>
+                            <option value="PASS" ${data.tipo_doc == 'PASS' ? 'selected' : ''}>PASS</option>
                         </select>
                     </td>
                     <td>
@@ -292,15 +342,11 @@
                     <td><input type="text" name="equipo[${doc}][apellido_paterno]" value="${data.apellido_paterno || ''}" class="input-inline" required ${isNew ? '' : 'readonly'}></td>
                     <td><input type="text" name="equipo[${doc}][apellido_materno]" value="${data.apellido_materno || ''}" class="input-inline" required ${isNew ? '' : 'readonly'}></td>
                     <td><input type="text" name="equipo[${doc}][nombres]" value="${data.nombres || ''}" class="input-inline" required ${isNew ? '' : 'readonly'}></td>
-                    <td><input type="text" name="equipo[${doc}][cargo]" value="${data.cargo || ''}" class="input-inline" required></td>
+                    <td><input type="text" name="equipo[${doc}][cargo]" value="${data.cargo || ''}" class="input-inline" required placeholder="Cargo"></td>
                     <td>
                         <select name="equipo[${doc}][institucion]" class="input-inline">
                             <option value="DIRESA" ${data.institucion == 'DIRESA' ? 'selected' : ''}>DIRESA</option>
                             <option value="MINSA" ${data.institucion == 'MINSA' ? 'selected' : ''}>MINSA</option>
-                            <option value="U.E HOSPITAL DE APOYO NASCA" ${data.institucion == 'U.E HOSPITAL DE APOYO NASCA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO NASCA</option>
-                            <option value="U.E HOSPITAL DE APOYO DE PALPA" ${data.institucion == 'U.E HOSPITAL DE APOYO DE PALPA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO DE PALPA</option>
-                            <option value="U.E HOSPITAL SAN JOSE DE CHINCHA" ${data.institucion == 'U.E HOSPITAL SAN JOSE DE CHINCHA' ? 'selected' : ''}>U.E HOSPITAL SAN JOSE DE CHINCHA</option>
-                            <option value="U.E HOSPITAL SAN JUAN DE DIOS PISCO" ${data.institucion == 'U.E HOSPITAL SAN JUAN DE DIOS PISCO' ? 'selected' : ''}>U.E HOSPITAL SAN JUAN DE DIOS PISCO</option>
                             <option value="U.E RED DE SALUD ICA" ${data.institucion == 'U.E RED DE SALUD ICA' ? 'selected' : ''}>U.E RED DE SALUD ICA</option>
                             <option value="OTRO" ${data.institucion == 'OTRO' ? 'selected' : ''}>OTRO</option>
                         </select>

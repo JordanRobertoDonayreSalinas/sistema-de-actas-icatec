@@ -18,6 +18,7 @@ class CabeceraMonitoreo extends Model
 
     /**
      * Atributos asignables masivamente.
+     * Se han agregado 'foto1' y 'foto2' para permitir el guardado de evidencias.
      */
     protected $fillable = [
         'user_id',
@@ -28,7 +29,9 @@ class CabeceraMonitoreo extends Model
         'firmado',
         'firmado_pdf',
         'categoria_congelada',
-        'responsable_congelado'
+        'responsable_congelado',
+        'foto1',
+        'foto2'
     ];
 
     /**
@@ -48,8 +51,8 @@ class CabeceraMonitoreo extends Model
     }
 
     /**
-     * RELACIÓN CORREGIDA: Detalles de los módulos.
-     * Cambiado de MonitoreoDetalle a MonitoreoModulos para coincidir con tu sistema.
+     * Detalles de los módulos.
+     * Coincide con el modelo MonitoreoModulos de tu sistema.
      */
     public function detalles(): HasMany
     {
@@ -66,11 +69,13 @@ class CabeceraMonitoreo extends Model
 
     /**
      * Accesor para obtener el progreso del monitoreo.
+     * Calcula el porcentaje basado en los módulos completados.
      */
     public function getProgresoAttribute()
     {
-        $totalModulos = 8; // Ajustar según la cantidad real de módulos activos
-        $completados = $this->detalles()->count();
+        $totalModulos = 18; // Actualizado a 18 según tu lista de módulos jerárquicos
+        $completados = $this->detalles()->where('modulo_nombre', '!=', 'config_modulos')->count();
+        
         return ($totalModulos > 0) ? ($completados / $totalModulos) * 100 : 0;
     }
 }

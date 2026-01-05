@@ -8,6 +8,7 @@ use App\Models\Establecimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class EditMonitoreoController extends Controller
 {
@@ -23,18 +24,19 @@ class EditMonitoreoController extends Controller
     }
 
     /**
-     * Procesa la actualización de los datos en la base de datos.
+     * Procesa la actualización de los datos en la base de datos, incluyendo imágenes.
      */
     public function update(Request $request, $id)
     {
-        // 1. Validación estricta de datos
+        // 1. Validación estricta de datos (incluyendo validación de imágenes)
         $request->validate([
             'establecimiento_id' => 'required|exists:establecimientos,id',
             'fecha'              => 'required|date',
             'responsable'        => 'required|string|max:255',
             'categoria'          => 'nullable|string|max:50',
             'equipo'             => 'nullable|array',
-            'redirect_to'        => 'nullable|string'
+            'redirect_to'        => 'nullable|string',
+            'imagenes.*'         => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         try {
@@ -43,24 +45,44 @@ class EditMonitoreoController extends Controller
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
 
             // 2. ACTUALIZAR TABLA MAESTRA DE ESTABLECIMIENTOS
-            // Usamos mb_strtoupper para que nombres con tildes o eñes no se corrompan
             $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
             $establecimiento->update([
                 'responsable' => mb_strtoupper(trim($request->responsable), 'UTF-8'),
                 'categoria'   => mb_strtoupper(trim($request->categoria), 'UTF-8'),
             ]);
 
-            // 3. ACTUALIZAR CABECERA DEL ACTA (Snapshot Histórico)
-            $monitoreo->update([
-                'establecimiento_id' => $request->establecimiento_id,
-                'fecha'              => $request->fecha,
-                'responsable'        => mb_strtoupper(trim($request->responsable), 'UTF-8'),
-                'categoria_congelada'=> mb_strtoupper(trim($request->categoria), 'UTF-8'), 
-                'implementador'      => $request->implementador,
-            ]);
+            // 3. PROCESAR NUEVAS IMÁGENES DE EVIDENCIA
+            if ($request->hasFile('imagenes')) {
+                $files = $request->file('imagenes');
+                
+                // Procesar Foto 1
+                if (isset($files[0])) {
+                    // Borrar la foto anterior físicamente del storage si existe
+                    if ($monitoreo->foto1) {
+                        Storage::disk('public')->delete($monitoreo->foto1);
+                    }
+                    $monitoreo->foto1 = $files[0]->store('evidencias', 'public');
+                }
+                
+                // Procesar Foto 2
+                if (isset($files[1])) {
+                    // Borrar la foto anterior físicamente del storage si existe
+                    if ($monitoreo->foto2) {
+                        Storage::disk('public')->delete($monitoreo->foto2);
+                    }
+                    $monitoreo->foto2 = $files[1]->store('evidencias', 'public');
+                }
+            }
 
-            // 4. SINCRONIZAR EQUIPO DE MONITOREO
-            // Eliminamos los registros actuales para evitar duplicados o basura al editar
+            // 4. ACTUALIZAR CABECERA DEL ACTA
+            $monitoreo->establecimiento_id = $request->establecimiento_id;
+            $monitoreo->fecha = $request->fecha;
+            $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
+            $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8'); 
+            $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
+            $monitoreo->save();
+
+            // 5. SINCRONIZAR EQUIPO DE MONITOREO
             MonitoreoEquipo::where('cabecera_monitoreo_id', $id)->delete();
 
             if ($request->has('equipo') && is_array($request->equipo)) {
@@ -82,11 +104,10 @@ class EditMonitoreoController extends Controller
 
             DB::commit();
 
-            // 5. FLUJO DE REDIRECCIÓN DINÁMICO
-            // Esto permite que el botón "Guardar y Editar Módulos" funcione correctamente
+            // 6. FLUJO DE REDIRECCIÓN DINÁMICO
             if ($request->input('redirect_to') === 'modulos') {
                 return redirect()->route('usuario.monitoreo.modulos', $id)
-                                 ->with('success', "Cabecera actualizada. Ahora puede completar los módulos técnicos.");
+                                 ->with('success', "Cabecera e imágenes actualizadas. Ahora puede completar los módulos técnicos.");
             }
 
             return redirect()->route('usuario.monitoreo.index')

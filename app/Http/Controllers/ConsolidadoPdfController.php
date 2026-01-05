@@ -13,51 +13,47 @@ class ConsolidadoPdfController extends Controller
 {
     public function generar($id)
     {
-        // 1. Datos del Acta y Establecimiento
-        // Se carga la cabecera. El objeto $acta ya contiene los campos del jefe.
+        // 1. Cargamos el acta con la relación del establecimiento
         $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
 
-        // 2. Extraer datos del Jefe (desde la tabla mon_cabecera_monitoreo)
-        // Asegúrate de que estos nombres de columna coincidan con tu migración/BD
+        // 2. Datos del Jefe de Establecimiento (Usando el campo 'responsable')
         $jefe = [
-            'nombre' => mb_strtoupper($acta->jefe_nombre ?? 'NO REGISTRADO', 'UTF-8'),
-            'dni'    => $acta->jefe_dni ?? '________',
-            'cargo'  => mb_strtoupper($acta->jefe_cargo ?? 'JEFE DE ESTABLECIMIENTO', 'UTF-8'),
+            'nombre' => mb_strtoupper($acta->responsable ?? 'NO REGISTRADO', 'UTF-8'),
+            'cargo'  => 'JEFE DE ESTABLECIMIENTO'
         ];
 
-        // 3. Módulos registrados y Equipos asociados
-        $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-            ->orderBy('modulo_nombre', 'asc')
-            ->get();
+        // 3. Módulos de Monitoreo (Hallazgos)
+        $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->get();
 
+        // 4. Inventario de Equipos (Para la nueva sección de equipamiento por módulos)
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->get();
 
-        // 4. Equipo de Monitoreo
+        // 5. Equipo de Monitoreo / Acompañantes (Tabla mon_equipo_monitoreo)
         $equipoMonitoreo = DB::table('mon_equipo_monitoreo')
             ->where('cabecera_monitoreo_id', $id)
             ->get();
 
-        // 5. Datos del Monitor (Usuario en sesión)
+        // 6. Datos del Monitor (Estandarizado: SIN COMA entre apellidos y nombre)
         $user = Auth::user();
         $monitor = [
-            'nombre' => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
-            'dni'    => $user->documento ?? $user->username ?? '________'
+            'nombre' => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno} {$user->name}", 'UTF-8')
         ];
 
-        // 6. Preparación de la data para la vista Blade
+        // 7. Consolidación de datos para la vista
         $data = [
             'acta'            => $acta,
-            'jefe'            => $jefe, // <--- Enviamos los datos del jefe por separado para fácil acceso
+            'jefe'            => $jefe,
             'modulos'         => $modulos,
             'equipos'         => $equipos,
             'monitor'         => $monitor,
             'equipoMonitoreo' => $equipoMonitoreo
         ];
 
-        // 7. Generación del PDF
+        // 8. Generación del PDF
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.consolidado_pdf', $data);
 
+        // Retornamos el PDF con orientación vertical y nombre dinámico
         return $pdf->setPaper('a4', 'portrait')
-                   ->stream("ACTA_MONITOREO_N_" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
+                   ->stream("ACTA_MONITOREO_" . ltrim($id, '0') . ".pdf");
     }
 }

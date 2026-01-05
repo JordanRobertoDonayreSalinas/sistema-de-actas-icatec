@@ -36,16 +36,21 @@
         .info-label { display: block; font-size: 7px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
         .info-value { display: block; font-size: 10px; font-weight: 800; color: #334155; text-transform: uppercase; }
         
-        /* Estilo para resaltar que son editables */
-        .info-editable { background: #fff !important; border: 1px solid #6366f1 !important; ring: 2px; ring-color: #indigo-100; }
+        .info-editable { background: #fff !important; border: 1px solid #6366f1 !important; }
         .input-editable { color: #6366f1 !important; font-weight: 900 !important; }
+
+        /* Estilos para carga de imágenes */
+        .preview-img { width: 100%; height: 120px; object-cover: cover; border-radius: 1rem; display: none; }
+        .drop-zone { border: 2px dashed #e2e8f0; border-radius: 1.5rem; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; }
+        .drop-zone:hover { border-color: #6366f1; background: #f8fafc; }
     </style>
 @endpush
 
 @section('content')
 <div class="py-6 bg-slate-50 min-h-screen">
     <div class="max-w-full mx-auto px-4">
-        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.store') }}" method="POST" class="animate-fade-in">
+        {{-- Importante: enctype para permitir subida de archivos --}}
+        <form id="monitoreoForm" action="{{ route('usuario.monitoreo.store') }}" method="POST" enctype="multipart/form-data" class="animate-fade-in">
             @csrf
             
             <input type="hidden" name="implementador" id="implementador_input">
@@ -61,7 +66,9 @@
                             </div>
                             <div>
                                 <p class="text-[8px] font-black text-indigo-300 uppercase tracking-widest">Implementador</p>
-                                <h2 class="text-sm font-bold uppercase">{{ Auth::user()->name }} {{ Auth::user()->apellido_paterno }}{{ Auth::user()->apellido_materno }}</h2>
+                                <h2 class="text-sm font-bold uppercase">
+                                    {{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}
+                                </h2>
                             </div>
                         </div>
                         <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
@@ -98,6 +105,28 @@
                                 <input type="text" name="responsable" id="responsable" required 
                                        class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg focus:border-indigo-500 font-bold text-xs uppercase text-slate-700">
                             </div>
+                        </div>
+                    </div>
+
+                    {{-- SECCIÓN DE IMÁGENES --}}
+                    <div class="p-6 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
+                        <h3 class="text-slate-800 font-black text-[10px] uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <i data-lucide="camera" class="w-4 h-4 text-indigo-600"></i> Evidencia (Máx. 2)
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            @for($i=1; $i<=2; $i++)
+                            <div class="relative group">
+                                <input type="file" name="imagenes[]" id="file_{{$i}}" accept="image/*" class="hidden file-input">
+                                <label for="file_{{$i}}" class="drop-zone" id="label_{{$i}}">
+                                    <i data-lucide="image-plus" class="w-6 h-6 text-slate-300 mb-1"></i>
+                                    <span class="text-[8px] font-bold text-slate-400 uppercase">Subir Foto {{$i}}</span>
+                                </label>
+                                <img src="#" id="preview_{{$i}}" class="preview-img">
+                                <button type="button" onclick="resetFile({{$i}})" id="remove_{{$i}}" class="hidden absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg">
+                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                            @endfor
                         </div>
                     </div>
                 </div>
@@ -159,14 +188,32 @@
 $(document).ready(function() {
     lucide.createIcons();
 
-    // 1. AUTOCOMPLETE ESTABLECIMIENTO
+    // Lógica para previsualización de archivos
+    $(".file-input").on("change", function() {
+        const id = $(this).attr('id').split('_')[1];
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $(`#preview_${id}`).attr('src', e.target.result).show();
+                $(`#label_${id}`).hide();
+                $(`#remove_${id}`).show();
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    window.resetFile = function(id) {
+        $(`#file_${id}`).val("");
+        $(`#preview_${id}`).hide();
+        $(`#label_${id}`).show();
+        $(`#remove_${id}`).hide();
+    };
+
+    // AUTOCOMPLETE ESTABLECIMIENTO
     $("#establecimiento_search").autocomplete({
         minLength: 2,
         source: "{{ route('establecimientos.buscar') }}",
-        focus: function(event, ui) {
-            // Evita que el campo de búsqueda cambie mientras navegas con flechas
-            return false;
-        },
         select: function(e, ui) {
             $("#establecimiento_id").val(ui.item.id);
             $("#distrito").val(ui.item.distrito || '—');
@@ -175,14 +222,12 @@ $(document).ready(function() {
             $("#red").val(ui.item.red || '—');
             $("#microred").val(ui.item.microred || '—');
             $("#responsable").val(ui.item.responsable || '');
-            
-            // Forzar que el cursor se mueva al campo categoría por si desea editarlo
             setTimeout(() => $("#categoria").focus(), 100);
             return true;
         }
     });
 
-    // 2. BUSCADOR INTELIGENTE DE PERSONAL
+    // BUSCADOR INTELIGENTE DE PERSONAL
     $("#buscar_miembro_inteligente").autocomplete({
         minLength: 2,
         source: function(request, response) {
@@ -207,15 +252,12 @@ $(document).ready(function() {
         }
     });
 
-    // 3. AGREGAR MANUAL POR DOC
     $('#btn_manual_add').on('click', function() {
         Swal.fire({
             title: 'Agregar Integrante',
-            text: 'Ingrese el número de documento',
             input: 'text',
-            inputAttributes: { maxlength: 12 },
             showCancelButton: true,
-            confirmButtonText: 'Buscar / Crear',
+            confirmButtonText: 'Buscar',
             confirmButtonColor: '#4f46e5',
         }).then((result) => {
             if (result.isConfirmed && result.value) {
@@ -231,82 +273,65 @@ $(document).ready(function() {
         const doc = data.doc || data.documento;
         if ($(`#row_${doc}`).length > 0) return;
 
-        const tipoDoc = data.tipo_doc || 'DNI';
-
         const row = `
             <tr id="row_${doc}" class="animate-fade-in">
                 <td>
                     <select name="equipo[${doc}][tipo_doc]" class="input-inline border-slate-200 py-1">
-                        <option value="DNI" ${tipoDoc == 'DNI' ? 'selected' : ''}>DNI</option>
-                        <option value="PASS" ${tipoDoc == 'PASS' ? 'selected' : ''}>PASS</option>
-                        <option value="DIE" ${tipoDoc == 'DIE' ? 'selected' : ''}>DIE</option>
+                        <option value="DNI" ${(data.tipo_doc||'DNI') == 'DNI' ? 'selected' : ''}>DNI</option>
+                        <option value="PASS">PASS</option>
                     </select>
                 </td>
                 <td>
                     <div class="flex flex-col leading-tight">
                         <span class="text-indigo-600 font-bold text-xs">${doc}</span>
                         <input type="hidden" name="equipo[${doc}][doc]" value="${doc}">
-                        <span class="badge-status ${isNew?'status-new':'status-reg'}">${isNew?'Nuevo':'Registrado'}</span>
                     </div>
                 </td>
                 <td><input type="text" name="equipo[${doc}][apellido_paterno]" value="${data.apellido_paterno || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
                 <td><input type="text" name="equipo[${doc}][apellido_materno]" value="${data.apellido_materno || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
                 <td><input type="text" name="equipo[${doc}][nombres]" value="${data.nombres || ''}" class="input-inline" required ${isNew?'':'readonly'}></td>
-                <td><input type="text" name="equipo[${doc}][cargo]" value="${data.cargo || ''}" class="input-inline border-slate-200" required placeholder="CARGO"></td>
+                <td><input type="text" name="equipo[${doc}][cargo]" value="${data.cargo || ''}" class="input-inline border-slate-200" required></td>
                 <td>
                     <select name="equipo[${doc}][institucion]" class="input-inline border-slate-200">
-                        <option value="DIRESA" ${data.institucion == 'DIRESA' ? 'selected' : ''}>DIRESA</option>
-                        <option value="MINSA" ${data.institucion == 'MINSA' ? 'selected' : ''}>MINSA</option>
-                        <option value="U.E HOSPITAL DE APOYO NASCA" ${data.institucion == 'U.E HOSPITAL DE APOYO NASCA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO NASCA</option>
-                        <option value="U.E HOSPITAL DE APOYO DE PALPA" ${data.institucion == 'U.E HOSPITAL DE APOYO DE PALPA' ? 'selected' : ''}>U.E HOSPITAL DE APOYO DE PALPA</option>
-                        <option value="U.E HOSPITAL SAN JOSE DE CHINCHA" ${data.institucion == 'U.E HOSPITAL SAN JOSE DE CHINCHA' ? 'selected' : ''}>U.E HOSPITAL SAN JOSE DE CHINCHA</option>
-                        <option value="U.E HOSPITAL SAN JUAN DE DIOS DE PISCO" ${data.institucion == 'U.E HOSPITAL SAN JUAN DE DIOS PISCO' ? 'selected' : ''}>U.E HOSPITAL SAN JUAN DE DIOS PISCO</option>
-                        <option value="U.E RED DE SALUD ICA" ${data.institucion == 'U.E RED DE SALUD ICA' ? 'selected' : ''}>U.E RED DE SALUD ICA</option>
-                        <option value="OTRO" ${data.institucion == 'OTRO' ? 'selected' : ''}>OTRO</option>
+                        <option value="DIRESA">DIRESA</option>
+                        <option value="MINSA">MINSA</option>
+                        <option value="U.E RED DE SALUD ICA">U.E RED DE SALUD ICA</option>
+                        <option value="OTRO">OTRO</option>
                     </select>
                 </td>
                 <td class="text-center">
-                    <button type="button" onclick="$(this).closest('tr').remove()" class="text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button type="button" onclick="$(this).closest('tr').remove()" class="text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
             </tr>`;
         $('#body_equipo').append(row);
         lucide.createIcons();
     }
 
-    // 4. ENVÍO DEL FORMULARIO
     $('#monitoreoForm').on('submit', function(e) {
         e.preventDefault();
         
         if ($('#body_equipo tr').not('#empty_row').length === 0) {
-            Swal.fire('Atención', 'Añada integrantes al equipo antes de continuar.', 'warning');
+            Swal.fire('Atención', 'Añada integrantes al equipo.', 'warning');
             return;
         }
 
-        // Convertir todos los campos editables a MAYÚSCULAS para la DB
-        // Incluye explícitamente categoría y responsable
         $(this).find('input[type="text"]').not('#implementador_input').each(function() {
             $(this).val($(this).val().toUpperCase().trim());
         });
 
-        // FORMATEAR IMPLEMENTADOR (Proper Case)
-        function toProperCase(str) {
-            return str.toLowerCase().replace(/\b\w/g, function(l) { return l.toUpperCase(); });
-        }
-
+        // Estandarización de nombre del Implementador (Apellidos + Nombres)
         let rawName = "{{ Auth::user()->apellido_paterno }} {{ Auth::user()->apellido_materno }} {{ Auth::user()->name }}";
-        $('#implementador_input').val(toProperCase(rawName));
+        $('#implementador_input').val(rawName.toUpperCase());
 
         Swal.fire({
             title: '¿Confirmar Registro?',
-            text: "Se guardará el acta y se proseguira con el registro de los modulos",
+            text: "Se guardará el acta y se proseguirá con el registro de los módulos",
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Sí, guardar',
             confirmButtonColor: '#4f46e5',
         }).then((result) => { 
-            if (result.isConfirmed) {
-                this.submit(); 
-            }
+            if (result.isConfirmed) { this.submit(); }
         });
     });
 });
