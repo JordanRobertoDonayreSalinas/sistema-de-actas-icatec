@@ -125,16 +125,11 @@ class FarmaciaController extends Controller
 
             if (!empty($equiposForm)) {
                 foreach ($equiposForm as $eq) {
-                    // Solo procesamos si hay una descripción para evitar filas vacías
                     if (!empty($eq['descripcion'])) {
                         
-                        // DEFINICIÓN DE LA VARIABLE (Evita el error Undefined variable)
-                        // Tomamos el valor del select. Si no existe, por defecto es 'PERSONAL'
-                        $valorPropio = 'PERSONAL'; 
-                        
-                        if (isset($eq['propio']) && !empty($eq['propio'])) {
-                            $valorPropio = mb_strtoupper($eq['propio'], 'UTF-8');
-                        }
+                        // EL SECRETO: Tu componente usa 'propiedad', pero tu tabla usa 'propio'.
+                        // Mapeamos el dato del formulario al nombre de tu columna en DB.
+                        $valorCapturado = $eq['propiedad'] ?? ($eq['propio'] ?? 'ESTABLECIMIENTO');
 
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
@@ -142,9 +137,9 @@ class FarmaciaController extends Controller
                             'descripcion'   => mb_strtoupper($eq['descripcion'], 'UTF-8'),
                             'cantidad'      => $eq['cantidad'] ?? 1,
                             'estado'        => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
-                            'propio'        => $valorPropio, // Ahora la variable siempre existe
-                            'nro_serie'     => $eq['nro_serie'] ?? null,
-                            'observaciones' => $eq['observaciones'] ?? null,
+                            'propio'        => trim(strtoupper($valorCapturado)), 
+                            'nro_serie'     => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
+                            'observaciones' => !empty($eq['observaciones']) ? mb_strtoupper($eq['observaciones'], 'UTF-8') : null,
                         ]);
                     }
                 }
