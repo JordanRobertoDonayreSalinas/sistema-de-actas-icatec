@@ -21,23 +21,40 @@ class PlanificacionPdfController extends Controller
                     ->where('modulo_nombre', $this->modulo)
                     ->first();
 
-        // Inicializamos equipos como array vacío
-        $equipos = [];
+        // 1. Intentamos cargar desde la tabla independiente (más seguro)
+        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo', $this->modulo)
+                                ->get();
 
         if ($detalle) {
             $detalle->contenido = json_decode($detalle->contenido, true);
             
-            // EXTRAEMOS LOS EQUIPOS DEL JSON
-            if (isset($detalle->contenido['equipos_data'])) {
-                // Convertimos el array en una colección de objetos para no romper el Blade
+            // 2. Si la tabla independiente está vacía, extraemos del JSON
+            if ($equipos->isEmpty() && isset($detalle->contenido['equipos_data'])) {
                 $equipos = collect($detalle->contenido['equipos_data'])->map(function($item) {
-                    return (object) $item;
+                    // Convertimos a objeto y mapeamos 'propiedad' a 'propio' para el PDF
+                    return (object) [
+                        'descripcion' => $item['descripcion'] ?? 'N/A',
+                        'cantidad'    => $item['cantidad'] ?? 1,
+                        'estado'      => $item['estado'] ?? 'N/A',
+                        'nro_serie'   => $item['nro_serie'] ?? null,
+                        'observaciones' => $item['observaciones'] ?? '',
+                        // MAPEO CRÍTICO: El PDF busca 'propio', el componente envía 'propiedad'
+                        'propio'      => $item['propiedad'] ?? ($item['propio'] ?? 'ESTABLECIMIENTO')
+                    ];
                 });
             }
         }
 
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.planificacion_familiar_pdf', compact('acta', 'detalle', 'equipos'))
-                ->setPaper('a4', 'portrait');
+        // 3. Estandarizamos los datos del detalle para evitar errores de "Array a String" en el PDF
+        $datos = $detalle ? $detalle->contenido : [];
+
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.planificacion_familiar_pdf', [
+            'acta' => $acta,
+            'detalle' => $detalle,
+            'equipos' => $equipos,
+            'datos' => $datos // Pasamos 'datos' por separado para facilitar el acceso en el Blade
+        ])->setPaper('a4', 'portrait');
 
         return $pdf->stream("MONITOREO_PLANIFICACION_ACTA_{$acta->id}.pdf");
     }
