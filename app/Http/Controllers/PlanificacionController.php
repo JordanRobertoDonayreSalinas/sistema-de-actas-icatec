@@ -36,7 +36,16 @@ class PlanificacionController extends Controller
             }
         }
 
-        // 2. BUSCAR DETALLE (Prioridad tabla nueva)
+        // --- TRUCO DE COMPATIBILIDAD FORZADA ---
+        // Como tu componente usa $eq->propio para el 'selected', 
+        // nos aseguramos de que el valor sea idéntico a las opciones del HTML.
+        $equipos = $equipos->map(function($item) {
+            // Limpiamos espacios y estandarizamos para que el Blade haga match
+            $item->propio = trim(strtoupper($item->propio ?? 'ESTABLECIMIENTO'));
+            return $item;
+        });
+
+        // 2. BUSCAR DETALLE
         $detalle = DB::table('mon_detalle_modulos')
                     ->where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', $this->modulo)
@@ -78,10 +87,7 @@ class PlanificacionController extends Controller
                 $foto2 = $request->file('foto_evidencia_2')->store('evidencias/planificacion', 'public');
             }
 
-            // --- 2. SINCRONIZAR EQUIPOS EN EL JSON ---
-            $datosForm['equipos_data'] = $equiposForm;
-
-            // --- 3. GUARDAR EN mon_detalle_modulos ---
+            // --- 2. GUARDAR EN mon_detalle_modulos ---
             $nombreFull = mb_strtoupper(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? ''), 'UTF-8');
             
             DB::table('mon_detalle_modulos')->updateOrInsert(
@@ -98,8 +104,7 @@ class PlanificacionController extends Controller
                 ]
             );
 
-             // --- 4. GUARDAR EN TABLA MAESTRA DE PROFESIONALES (mon_profesionales) ---
-            // Solo si el DNI no está vacío para evitar el error Column not found o Integrity constraint
+            // --- 3. GUARDAR EN TABLA PROFESIONALES ---
             if (!empty($personal['dni'])) {
                 DB::table('mon_profesionales')->updateOrInsert(
                     ['doc' => $personal['dni']], 
@@ -107,44 +112,35 @@ class PlanificacionController extends Controller
                         'nombres'          => mb_strtoupper($personal['nombre'] ?? 'SIN NOMBRE', 'UTF-8'),
                         'apellido_paterno' => mb_strtoupper($personal['apellido_paterno'] ?? '', 'UTF-8'),
                         'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
-                        'email' => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
-                        'telefono' => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'email'            => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
+                        'telefono'         => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
                         'updated_at'       => now(),
                         'created_at'       => now()
                     ]
                 );
             }
 
-            // --- 4. GUARDAR EN TABLA mon_monitoreo_modulos ---
-            MonitoreoModulos::updateOrCreate(
-                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
-                ['contenido' => $datosForm]
-            );
-
-            // --- 5. SINCRONIZAR EQUIPOS EN TABLA INDEPENDIENTE ---
+            // --- 4. SINCRONIZAR EQUIPOS (AJUSTADO AL COMPONENTE) ---
+            // Borramos para evitar duplicados y re-insertamos con la llave correcta
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
 
             if (!empty($equiposForm)) {
                 foreach ($equiposForm as $eq) {
-                    // Solo procesamos si hay una descripción
                     if (!empty($eq['descripcion'])) {
                         
-                        // VALIDACIÓN DEL CAMPO 'PROPIO'
-                        // Si no está definido, por defecto será 0 (Personal)
-                        $esPropio = 0; 
-                        if (isset($eq['propio'])) {
-                            $esPropio = (strtoupper($eq['propio']) === 'SI' || $eq['propio'] == 1) ? 1 : 0;
-                        }
+                        // EL SECRETO: Tu componente usa 'propiedad', pero tu tabla usa 'propio'.
+                        // Mapeamos el dato del formulario al nombre de tu columna en DB.
+                        $valorCapturado = $eq['propiedad'] ?? ($eq['propio'] ?? 'ESTABLECIMIENTO');
 
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
-                            'modulo'      => $this->modulo,
-                            'descripcion' => mb_strtoupper($eq['descripcion'], 'UTF-8'),
-                            'cantidad'    => $eq['cantidad'] ?? 1,
-                            'estado'      => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
-                            'propio'      => $esPropio, // Valor validado
-                            'nro_serie'   => $eq['nro_serie'] ?? null,
-                            'observaciones' => $eq['observaciones'] ?? null,
+                            'modulo'        => $this->modulo,
+                            'descripcion'   => mb_strtoupper($eq['descripcion'], 'UTF-8'),
+                            'cantidad'      => $eq['cantidad'] ?? 1,
+                            'estado'        => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
+                            'propio'        => trim(strtoupper($valorCapturado)), 
+                            'nro_serie'     => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
+                            'observaciones' => !empty($eq['observaciones']) ? mb_strtoupper($eq['observaciones'], 'UTF-8') : null,
                         ]);
                     }
                 }
