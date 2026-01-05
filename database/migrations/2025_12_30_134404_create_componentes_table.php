@@ -76,6 +76,7 @@ return new class extends Migration
             $table->foreignId('profesional_id')->constrained('mon_profesionales');
 
             $table->string('cant_consultorios'); 
+            $table->string('nombre_consultorio'); 
             $table->string('fua'); // Opciones: FUA ELECTRONICA, FUA MANUAL
             $table->string('referencia'); // Opciones: REFERENCIA POR SIHCE, DIRECTO A REFCON
             $table->string('receta'); // Opciones: RECETA POR SIHCE, RECETA MANUAL
