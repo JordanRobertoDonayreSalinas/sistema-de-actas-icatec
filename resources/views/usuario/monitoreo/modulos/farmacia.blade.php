@@ -258,7 +258,7 @@
                 {{-- 05. FOTOS CON ELIMINACIÓN --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                     <div class="space-y-4">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-2 italic">Foto de Almacén / Stock</label>
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-2 italic">Evidencia</label>
                         <div class="relative h-48 rounded-3xl border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
                             <template x-if="images.img1">
                                 <div class="relative w-full h-full group">
@@ -275,27 +275,6 @@
                                 </div>
                             </template>
                             <input type="file" name="foto_evidencia_1" id="input_foto_1" @change="previewImage($event, 'img1')" class="absolute inset-0 opacity-0 cursor-pointer">
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-2 italic">Foto de Área de Atención</label>
-                        <div class="relative h-48 rounded-3xl border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
-                            <template x-if="images.img2">
-                                <div class="relative w-full h-full group">
-                                    <img :src="images.img2" class="h-full w-full object-cover">
-                                    <button type="button" @click="removeImage('img2', 'input_foto_2', 'foto_2_actual')" class="btn-remove-image">
-                                        <i data-lucide="x" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                            </template>
-                            <template x-if="!images.img2">
-                                <div class="flex flex-col items-center gap-2 text-slate-300">
-                                    <i data-lucide="image-plus" class="w-10 h-10"></i>
-                                    <span class="text-[10px] font-black uppercase">Subir Foto</span>
-                                </div>
-                            </template>
-                            <input type="file" name="foto_evidencia_2" id="input_foto_2" @change="previewImage($event, 'img2')" class="absolute inset-0 opacity-0 cursor-pointer">
                         </div>
                     </div>
                 </div>
