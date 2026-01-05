@@ -86,7 +86,7 @@
                     <i data-lucide="external-link" class="w-48 h-48"></i>
                 </div>
                 <div class="relative z-10">
-                    <span class="px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-full text-indigo-300 text-[10px] font-black uppercase tracking-widest">Módulo Refcon</span>
+                    <span class="px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 rounded-full text-indigo-300 text-[10px] font-black uppercase tracking-widest">Módulo 16</span>
                     <h3 class="text-3xl font-black uppercase italic tracking-tight mt-2">REFCON</h3>
                 </div>
             </div>
