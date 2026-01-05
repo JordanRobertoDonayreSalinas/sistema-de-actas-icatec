@@ -24,9 +24,9 @@
             </div>
             
             {{-- Enlace de PDF Temporal --}}
-            <a href="{{ route('usuario.monitoreo.consulta-odontologia.pdf', $acta->id) }}" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-md transition-colors flex items-center gap-2">
+            {{-- <a href="{{ route('usuario.monitoreo.consulta-odontologia.pdf', $acta->id) }}" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-md transition-colors flex items-center gap-2">
                     <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
-            </a>
+            </a> --}}
 
             <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-colors">
                 Volver
@@ -145,6 +145,40 @@
                             </select>
                         </div>
                     </div>
+                    {{-- Comprimiso y declaracion --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                        
+                        {{-- 1. Declaración Jurada --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Firmó Declaración Jurada?</label>
+                            <div class="flex gap-4">
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="SI" x-model="form.capacitacion.decl_jurada" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 transition-all hover:bg-slate-50">SÍ</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="NO" x-model="form.capacitacion.decl_jurada" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-400 transition-all hover:bg-slate-50">NO</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- 2. Compromiso de Confidencialidad --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Firmó Compromiso Confidencialidad?</label>
+                            <div class="flex gap-4">
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="SI" x-model="form.capacitacion.comp_confidencialidad" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 transition-all hover:bg-slate-50">SÍ</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="NO" x-model="form.capacitacion.comp_confidencialidad" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-400 transition-all hover:bg-slate-50">NO</div>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 
@@ -192,14 +226,12 @@
                                 <th class="pb-4 pl-2 min-w-[150px]">Descripción</th>
                                 <th class="pb-4 w-40">Propiedad</th>
                                 <th class="pb-4 w-32">Estado</th>
-                                <th class="pb-4 w-40">Cód. Barras</th>
+                                <th class="pb-4 w-40">Nro. Serie / Cód</th>
                                 <th class="pb-4 min-w-[150px]">Observación</th>
                                 <th class="pb-4 w-10"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            
-                            {{-- Mensaje Vacío (Chequeamos el length del array) --}}
                             <tr x-show="form.inventario.length === 0">
                                 <td colspan="6" class="py-8 text-center text-slate-300">
                                     <div class="flex flex-col items-center justify-center gap-2">
@@ -208,19 +240,11 @@
                                     </div>
                                 </td>
                             </tr>
-
-                            {{-- Filas (Iteramos Array) --}}
                             <template x-for="(item, index) in form.inventario" :key="item.id">
                                 <tr class="group hover:bg-slate-50/50 transition-colors">
-                                    
-                                    {{-- Descripción (Leemos item.descripcion) --}}
                                     <td class="py-3 pl-2 align-middle">
                                         <span class="font-black text-slate-700 text-xs uppercase bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg" x-text="item.descripcion"></span>
-                                        {{-- Mostrar índice opcional para diferenciar: #1, #2... --}}
-                                        <span class="text-[9px] text-slate-300 font-bold ml-1" x-text="'#' + (index + 1)"></span>
                                     </td>
-
-                                    {{-- Propiedad --}}
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.propiedad" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
                                             <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
@@ -228,8 +252,6 @@
                                             <option value="SERVICIO">SERVICIO</option>
                                         </select>
                                     </td>
-
-                                    {{-- Estado --}}
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.estado" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
                                             <option value="OPERATIVO">OPERATIVO</option>
@@ -237,8 +259,6 @@
                                             <option value="INOPERATIVO">INOPERATIVO</option>
                                         </select>
                                     </td>
-
-                                    {{-- Código --}}
                                     <td class="py-3 px-2 align-middle">
                                         <div class="relative">
                                             <input type="text" x-model="item.codigo" placeholder="---" 
@@ -246,19 +266,12 @@
                                             <i data-lucide="scan-barcode" class="absolute left-2 top-2.5 w-3.5 h-3.5 text-slate-400"></i>
                                         </div>
                                     </td>
-
-                                    {{-- Observación --}}
                                     <td class="py-3 px-2 align-middle">
                                         <input type="text" x-model="item.observacion" placeholder="Sin obs."
                                                class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-medium uppercase focus:ring-indigo-500">
                                     </td>
-
-                                    {{-- Eliminar (Pasamos el index) --}}
                                     <td class="py-3 pr-2 align-middle text-right">
-                                        <button type="button" 
-                                                @click="eliminarItem(index)" 
-                                                class="text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-700 border border-red-200 transition-all p-2 rounded-lg shadow-sm" 
-                                                title="Quitar ítem">
+                                        <button type="button" @click="eliminarItem(index)" class="text-red-500 bg-red-50 hover:bg-red-100 border border-red-200 p-2 rounded-lg">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </td>
@@ -266,12 +279,6 @@
                             </template>
                         </tbody>
                     </table>
-                </div>
-
-                {{-- Comentarios Generales --}}
-                <div class="mt-4 border-t border-slate-100 pt-4">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Comentarios Generales</label>
-                    <textarea x-model="form.inventario_comentarios" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-indigo-500"></textarea>
                 </div>
             </div>
             
@@ -585,34 +592,24 @@
 
 <script>
     function odontologiaForm() {
-        // DATOS BD
         const dbCapacitacion  = @json($dbCapacitacion ?? null);
         const dbInventario    = @json($dbInventario ?? []);
         const dbDificultad    = @json($dbDificultad ?? null);
         const dbFotos         = @json($dbFotos ?? []);
         const dbInicioLabores = @json($dbInicioLabores ?? null);
-        // NUEVO: Variable DNI
         const dbDni           = @json($dbDni ?? null);
 
         // --- Inicializaciones ---
-        let initProfesional = {
-            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: ''
-        };
-        let initCapacitacion = { recibieron_cap: '', institucion_cap: '' };
+        let initProfesional = { tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: '' };
+        let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: ''};
 
         if (dbCapacitacion) {
             initCapacitacion.recibieron_cap = dbCapacitacion.recibieron_cap || '';
             initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
+            initCapacitacion.decl_jurada = dbCapacitacion.decl_jurada || ''; 
+            initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
             if (dbCapacitacion.profesional) {
-                initProfesional = {
-                    tipo_doc: dbCapacitacion.profesional.tipo_doc,
-                    doc: dbCapacitacion.profesional.doc,
-                    nombres: dbCapacitacion.profesional.nombres,
-                    apellido_paterno: dbCapacitacion.profesional.apellido_paterno,
-                    apellido_materno: dbCapacitacion.profesional.apellido_materno,
-                    email: dbCapacitacion.profesional.email,
-                    telefono: dbCapacitacion.profesional.telefono
-                };
+                initProfesional = { ...dbCapacitacion.profesional };
             }
         }
 
@@ -626,14 +623,7 @@
             initInicioLabores.orden_lab = dbInicioLabores.orden_laboratorio || '';
         }
 
-        // --- Inicializar Sección DNI (NUEVO) ---
-        let initDni = { 
-            tipo_dni: '', 
-            version_dnie: '', 
-            firma_sihce: '', 
-            comentarios: '' 
-        };
-
+        let initDni = { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' };
         if (dbDni) {
             initDni.tipo_dni = dbDni.tip_dni || '';
             initDni.version_dnie = dbDni.version_dni || '';
@@ -641,18 +631,18 @@
             initDni.comentarios = dbDni.comentarios || '';
         }
 
-        // Resto de inicializaciones...
+        // --- MAPEO DE INVENTARIO (EquipoComputo) ---
         let initInventario = [];
-        let initComentariosInv = '';
         if (dbInventario && dbInventario.length > 0) {
-            initComentariosInv = dbInventario[0].comentarios || '';
             initInventario = dbInventario.map(item => ({
                 id: Date.now() + Math.random(),
                 descripcion: item.descripcion,
-                propiedad: item.propiedad,
+                
+                // Mapeo BD nueva -> Formulario JS
+                propiedad: item.propio,       // BD: propio
                 estado: item.estado,
-                codigo: item.cod_barras || '',
-                observacion: item.observaciones
+                codigo: item.nro_serie || '', // BD: nro_serie
+                observacion: item.observacion
             }));
         }
 
@@ -666,10 +656,8 @@
             saving: false,
             buscando: false,
             msgProfesional: '',
-            
             files: [],
             oldFiles: dbFotos,
-
             listaOpciones: ['CPU', 'IMPRESORA', 'LAPTOP', 'LECTOR DE DNIe', 'MONITOR', 'MOUSE', 'SCANNER', 'TABLET', 'TECLADO', 'TICKETERA'], 
             itemSeleccionado: '',
 
@@ -677,35 +665,20 @@
                 profesional: initProfesional,
                 capacitacion: initCapacitacion,
                 inicio_labores: initInicioLabores,
-                // Agregamos la nueva sección
                 seccion_dni: initDni,
                 inventario: initInventario,
-                inventario_comentarios: initComentariosInv,
+                // inventario_comentarios eliminado
                 dificultades: initDificultades,
             },
 
-            // --- MANEJO DE ARCHIVOS (ACTUALIZADO) ---
+            // ... (Resto de funciones: handleFiles, guardarTodo, etc. se mantienen igual) ...
             handleFiles(event) {
-                // Filtramos para que solo pasen imágenes válidas
-                const newFiles = Array.from(event.target.files).filter(file => {
-                    return file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
-                });
-
-                if (newFiles.length < event.target.files.length) {
-                    alert("Algunos archivos fueron ignorados porque no son imágenes válidas (solo JPG/PNG).");
-                }
-
+                const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+                if (newFiles.length < event.target.files.length) alert("Solo se permiten imágenes.");
                 this.files = [...this.files, ...newFiles];
-                
-                // Limpiamos el input para permitir subir la misma foto si el usuario se equivocó y borró
                 event.target.value = ''; 
             },
-
-            removeFile(index) {
-                this.files.splice(index, 1);
-            },
-
-            // --- RESTO DE FUNCIONES (Sin cambios) ---
+            removeFile(index) { this.files.splice(index, 1); },
             agregarItem() {
                 if (!this.itemSeleccionado) return;
                 this.form.inventario.push({
@@ -718,8 +691,33 @@
                 });
                 this.itemSeleccionado = '';
             },
-            eliminarItem(index) {
-                this.form.inventario.splice(index, 1);
+            eliminarItem(index) { this.form.inventario.splice(index, 1); },
+            eliminarFotoGuardada(id, index) {
+                fetch(`/usuario/monitoreo/modulo/consulta-odontologia/foto/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                }).then(r=>r.json()).then(d=>{
+                    if(d.success) this.oldFiles.splice(index,1);
+                    else alert('Error: ' + d.message);
+                });
+            },
+            async buscarProfesional() {
+                let doc = this.form.profesional.doc;
+                if (!doc || doc.length < 8) return;
+                this.buscando = true;
+                this.msgProfesional = "Buscando...";
+                try {
+                    let r = await fetch(`/usuario/monitoreo/modulo/consulta-odontologia/buscar-profesional/${doc}`);
+                    let d = await r.json();
+                    if (d.success) {
+                        this.form.profesional = { ...this.form.profesional, ...d.data };
+                        this.msgProfesional = "Encontrado.";
+                    } else {
+                        this.msgProfesional = "No encontrado.";
+                        this.limpiarDatosPersonales();
+                    }
+                } catch (e) { this.msgProfesional = "Error."; } 
+                finally { this.buscando = false; }
             },
             limpiarDatosPersonales() {
                 this.form.profesional.nombres = '';
@@ -728,61 +726,20 @@
                 this.form.profesional.email = '';
                 this.form.profesional.telefono = '';
             },
-            async buscarProfesional() {
-                let doc = this.form.profesional.doc;
-                if (!doc || doc.length < 8) return;
-                this.buscando = true;
-                this.msgProfesional = "Buscando...";
-                try {
-                    let response = await fetch(`/usuario/monitoreo/modulo/consulta-odontologia/buscar-profesional/${doc}`);
-                    let data = await response.json();
-                    if (data.success) {
-                        this.form.profesional = { ...this.form.profesional, ...data.data };
-                        this.msgProfesional = "Encontrado.";
-                    } else {
-                        this.limpiarDatosPersonales();
-                        this.msgProfesional = "No encontrado.";
-                    }
-                } catch (error) { this.msgProfesional = "Error."; } 
-                finally { this.buscando = false; }
-            },
-            eliminarFotoGuardada(id, index) {
-                fetch(`/usuario/monitoreo/modulo/consulta-odontologia/foto/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' }
-                })
-                .then(r => r.json())
-                .then(d => {
-                    if (d.success) this.oldFiles.splice(index, 1);
-                    else alert('Error: ' + d.message);
-                });
-            },
             guardarTodo() {
                 this.saving = true;
-                let formData = new FormData();
-                formData.append('data', JSON.stringify(this.form));
-                this.files.forEach(file => formData.append('fotos[]', file));
+                let fd = new FormData();
+                fd.append('data', JSON.stringify(this.form));
+                this.files.forEach(f => fd.append('fotos[]', f));
 
                 fetch("{{ route('usuario.monitoreo.consulta-odontologia.store', $acta->id) }}", {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: formData
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.redirect) window.location.href = data.redirect;
-                        else window.location.reload();
-                    } else {
-                        this.saving = false;
-                        alert('Error: ' + JSON.stringify(data.message));
-                    }
-                })
-                .catch(error => {
-                    this.saving = false;
-                    alert('Error técnico.');
-                    console.error(error);
-                });
+                    body: fd
+                }).then(r=>r.json()).then(d=>{
+                    if(d.success) window.location.href = d.redirect || window.location.reload();
+                    else { alert('Error: ' + JSON.stringify(d.message)); this.saving=false; }
+                }).catch(e=>{ alert('Error técnico.'); console.error(e); this.saving=false; });
             }
         }
     }

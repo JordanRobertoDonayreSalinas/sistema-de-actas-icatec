@@ -11,9 +11,6 @@
                 <div class="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
                     <span class="text-2xl font-black text-indigo-600">03</span>
                 </div>
-
-                
-
                 <div>
                     <div class="flex items-center gap-3 mb-1">
                         <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
@@ -23,11 +20,6 @@
                 </div>
             </div>
             
-            {{-- Enlace de PDF Temporal --}}
-            <a href="{{ route('usuario.monitoreo.triaje.pdf', $acta->id) }}" target="_blank" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-md transition-colors flex items-center gap-2">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
-            </a>
-
             <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-colors">
                 Volver
             </a>
@@ -36,14 +28,12 @@
         {{-- FORMULARIO ÚNICO --}}
         <form @submit.prevent="guardarTodo" class="space-y-8">
 
-            {{-- 1. DATOS DEL PROFESIONAL (Color: Índigo) --}}
+            {{-- 1. DATOS DEL PROFESIONAL --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 {{-- Decoración --}}
                 <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-60 pointer-events-none"></div>
-                
                 <div class="relative z-10">
                     <div class="flex items-center gap-4 mb-8">
-                        {{-- Icono Unificado --}}
                         <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                             <i data-lucide="user-cog" class="text-white w-6 h-6"></i>
                         </div>
@@ -106,12 +96,11 @@
                 </div>
             </div>
 
-            {{-- 2. CAPACITACIÓN (Color unificado: Índigo) --}}
+            {{-- 2. CAPACITACIÓN --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
                 <div class="relative z-10">
                     <div class="flex items-center gap-4 mb-6">
-                        {{-- Icono Unificado --}}
                         <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                             <i data-lucide="graduation-cap" class="text-white w-6 h-6"></i>
                         </div>
@@ -126,7 +115,6 @@
                         <div class="flex gap-4">
                             <label class="cursor-pointer flex-1">
                                 <input type="radio" value="SI" x-model="form.capacitacion.recibieron_cap" class="peer sr-only">
-                                {{-- Estilos Checked en Índigo --}}
                                 <div class="text-center py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-white">SI</div>
                             </label>
                             <label class="cursor-pointer flex-1">
@@ -145,6 +133,36 @@
                             </select>
                         </div>
                     </div>
+                    
+                    {{-- NUEVOS CAMPOS: Declaración y Confidencialidad --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Firmó Declaración Jurada?</label>
+                            <div class="flex gap-4">
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="SI" x-model="form.capacitacion.decl_jurada" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 transition-all hover:bg-slate-50">SÍ</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="NO" x-model="form.capacitacion.decl_jurada" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-400 transition-all hover:bg-slate-50">NO</div>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Firmó Compromiso Confidencialidad?</label>
+                            <div class="flex gap-4">
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="SI" x-model="form.capacitacion.comp_confidencialidad" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 transition-all hover:bg-slate-50">SÍ</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" value="NO" x-model="form.capacitacion.comp_confidencialidad" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-lg border-2 border-slate-200 text-slate-400 font-bold text-xs peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-400 transition-all hover:bg-slate-50">NO</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -152,7 +170,6 @@
             {{-- 3. INVENTARIO DE EQUIPAMIENTO --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
-                
                 <div class="flex items-center gap-4 mb-8">
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i data-lucide="monitor" class="text-white w-6 h-6"></i>
@@ -163,14 +180,13 @@
                     </div>
                 </div>
 
-                {{-- BARRA DE AGREGAR (SIN RESTRICCIONES) --}}
+                {{-- BARRA DE AGREGAR --}}
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 items-end md:items-center">
                     <div class="flex-1 w-full">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Seleccionar Equipo</label>
                         <select x-model="itemSeleccionado" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase text-xs focus:ring-indigo-500 cursor-pointer">
                             <option value="">-- SELECCIONE UN ÍTEM --</option>
                             <template x-for="opcion in listaOpciones" :key="opcion">
-                                {{-- Quitamos el :disabled para permitir múltiples selecciones --}}
                                 <option :value="opcion" x-text="opcion"></option>
                             </template>
                         </select>
@@ -192,14 +208,12 @@
                                 <th class="pb-4 pl-2 min-w-[150px]">Descripción</th>
                                 <th class="pb-4 w-40">Propiedad</th>
                                 <th class="pb-4 w-32">Estado</th>
-                                <th class="pb-4 w-40">Cód. Barras</th>
+                                <th class="pb-4 w-40">Nro. Serie / Cód</th>
                                 <th class="pb-4 min-w-[150px]">Observación</th>
                                 <th class="pb-4 w-10"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            
-                            {{-- Mensaje Vacío (Chequeamos el length del array) --}}
                             <tr x-show="form.inventario.length === 0">
                                 <td colspan="6" class="py-8 text-center text-slate-300">
                                     <div class="flex flex-col items-center justify-center gap-2">
@@ -208,19 +222,11 @@
                                     </div>
                                 </td>
                             </tr>
-
-                            {{-- Filas (Iteramos Array) --}}
                             <template x-for="(item, index) in form.inventario" :key="item.id">
                                 <tr class="group hover:bg-slate-50/50 transition-colors">
-                                    
-                                    {{-- Descripción (Leemos item.descripcion) --}}
                                     <td class="py-3 pl-2 align-middle">
                                         <span class="font-black text-slate-700 text-xs uppercase bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg" x-text="item.descripcion"></span>
-                                        {{-- Mostrar índice opcional para diferenciar: #1, #2... --}}
-                                        <span class="text-[9px] text-slate-300 font-bold ml-1" x-text="'#' + (index + 1)"></span>
                                     </td>
-
-                                    {{-- Propiedad --}}
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.propiedad" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
                                             <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
@@ -228,8 +234,6 @@
                                             <option value="SERVICIO">SERVICIO</option>
                                         </select>
                                     </td>
-
-                                    {{-- Estado --}}
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.estado" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
                                             <option value="OPERATIVO">OPERATIVO</option>
@@ -237,8 +241,6 @@
                                             <option value="INOPERATIVO">INOPERATIVO</option>
                                         </select>
                                     </td>
-
-                                    {{-- Código --}}
                                     <td class="py-3 px-2 align-middle">
                                         <div class="relative">
                                             <input type="text" x-model="item.codigo" placeholder="---" 
@@ -246,19 +248,12 @@
                                             <i data-lucide="scan-barcode" class="absolute left-2 top-2.5 w-3.5 h-3.5 text-slate-400"></i>
                                         </div>
                                     </td>
-
-                                    {{-- Observación --}}
                                     <td class="py-3 px-2 align-middle">
                                         <input type="text" x-model="item.observacion" placeholder="Sin obs."
                                                class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-medium uppercase focus:ring-indigo-500">
                                     </td>
-
-                                    {{-- Eliminar (Pasamos el index) --}}
                                     <td class="py-3 pr-2 align-middle text-right">
-                                        <button type="button" 
-                                                @click="eliminarItem(index)" 
-                                                class="text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-700 border border-red-200 transition-all p-2 rounded-lg shadow-sm" 
-                                                title="Quitar ítem">
+                                        <button type="button" @click="eliminarItem(index)" class="text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-700 border border-red-200 transition-all p-2 rounded-lg shadow-sm" title="Quitar ítem">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </td>
@@ -267,19 +262,13 @@
                         </tbody>
                     </table>
                 </div>
-
-                {{-- Comentarios Generales --}}
-                <div class="mt-4 border-t border-slate-100 pt-4">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Comentarios Generales</label>
-                    <textarea x-model="form.inventario_comentarios" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-indigo-500"></textarea>
-                </div>
+                {{-- AQUÍ SE ELIMINÓ EL DIV DE COMENTARIOS GENERALES --}}
             </div>
             
 
-            {{-- 4. DIFICULTADES CON EL SISTEMA (Color unificado: Índigo) --}}
+            {{-- 4. DIFICULTADES CON EL SISTEMA --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
                 <div class="flex items-center gap-4 mb-6">
-                    {{-- Icono Unificado --}}
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i data-lucide="alert-circle" class="text-white w-6 h-6"></i>
                     </div>
@@ -309,31 +298,24 @@
                 </div>
             </div>
 
-            {{-- 5. EVIDENCIA FOTOGRÁFICA (Color unificado: Índigo) --}}
+            {{-- 5. EVIDENCIA FOTOGRÁFICA --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
                 <div class="flex items-center gap-4 mb-6">
-                    {{-- Icono Unificado --}}
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i data-lucide="camera" class="text-white w-6 h-6"></i>
                     </div>
                     <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Evidencia Fotográfica</h3>
                 </div>
 
-                {{-- ZONA DE CARGA (DRAG & DROP) --}}
+                {{-- ZONA DE CARGA --}}
                 <div class="border-2 border-dashed border-slate-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors relative cursor-pointer">
-                    {{-- CAMBIO AQUÍ: Agregado atributo accept --}}
-                    <input type="file" 
-                           multiple 
-                           @change="handleFiles" 
-                           accept="image/png, image/jpeg, image/jpg" 
-                           class="absolute inset-0 opacity-0 cursor-pointer">
-                           
+                    <input type="file" multiple @change="handleFiles" accept="image/png, image/jpeg, image/jpg" class="absolute inset-0 opacity-0 cursor-pointer">
                     <i data-lucide="cloud-upload" class="w-10 h-10 text-indigo-400 mb-3"></i>
                     <p class="text-indigo-600 font-bold uppercase text-sm">Clic para subir o arrastrar archivos</p>
                     <p class="text-xs text-slate-400 mt-1">PNG, JPG o JPEG (Máx. 5MB)</p>
                 </div>
                 
-                {{-- LISTA DE ARCHIVOS NUEVOS (Recién seleccionados) --}}
+                {{-- LISTA DE ARCHIVOS NUEVOS --}}
                 <div class="mt-4 space-y-2" x-show="files.length > 0">
                     <template x-for="(file, i) in files" :key="i">
                         <div class="flex items-center justify-between bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
@@ -345,30 +327,18 @@
                     </template>
                 </div>
 
-                {{-- GALERÍA DE FOTOS GUARDADAS (Vienen de la Base de Datos) --}}
+                {{-- GALERÍA DE FOTOS GUARDADAS --}}
                 <div class="mt-6 border-t border-slate-100 pt-6" x-show="oldFiles.length > 0">
                     <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Galería Guardada</h4>
-                    
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <template x-for="(foto, index) in oldFiles" :key="foto.id">
                             <div class="relative group aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                                
-                                {{-- Imagen --}}
                                 <img :src="'/storage/' + foto.url_foto" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                                
-                                {{-- Overlay con Acciones --}}
                                 <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">
-                                    
-                                    {{-- Botón Ver --}}
                                     <a :href="'/storage/' + foto.url_foto" target="_blank" class="flex items-center gap-2 text-white text-[10px] font-bold uppercase tracking-widest hover:text-indigo-300 transition-colors">
                                         <i data-lucide="eye" class="w-4 h-4"></i> Ver
                                     </a>
-
-                                    {{-- Botón Eliminar --}}
-                                    <button type="button" 
-                                            @click="eliminarFotoGuardada(foto.id, index)" 
-                                            class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-all transform hover:scale-110" 
-                                            title="Eliminar foto permanentemente">
+                                    <button type="button" @click="eliminarFotoGuardada(foto.id, index)" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-all transform hover:scale-110" title="Eliminar foto permanentemente">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
                                 </div>
@@ -378,7 +348,6 @@
                 </div>
             </div>
             
-
             {{-- BOTÓN GUARDAR --}}
             <div class="fixed bottom-6 right-6 z-50 md:static md:flex md:justify-end mt-10">
                 <button type="submit" :disabled="saving" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center gap-3 transition-all transform hover:scale-105 disabled:opacity-70 disabled:scale-100">
@@ -392,7 +361,6 @@
     </div>
 </div>
 
-
 <script>
     function triajeForm() {
         // DATOS BD
@@ -405,11 +373,13 @@
         let initProfesional = {
             tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: ''
         };
-        let initCapacitacion = { recibieron_cap: '', institucion_cap: '' };
+        let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: '' };
 
         if (dbCapacitacion) {
             initCapacitacion.recibieron_cap = dbCapacitacion.recibieron_cap || '';
             initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
+            initCapacitacion.decl_jurada = dbCapacitacion.decl_jurada || ''; 
+            initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
             if (dbCapacitacion.profesional) {
                 initProfesional = {
                     tipo_doc: dbCapacitacion.profesional.tipo_doc,
@@ -423,19 +393,18 @@
             }
         }
 
+        // --- INVENTARIO (Lectura desde EquipoComputo) ---
         let initInventario = [];
-        let initComentariosInv = '';
         if (dbInventario && dbInventario.length > 0) {
-            initComentariosInv = dbInventario[0].comentarios || '';
-            
             initInventario = dbInventario.map(item => ({
                 id: Date.now() + Math.random(),
                 descripcion: item.descripcion,
-                propiedad: item.propiedad,
+                
+                // MAPEO DE NOMBRES DE COLUMNA DE BD (mon_equipos_computo)
+                propiedad: item.propio,        // BD 'propio' -> JS 'propiedad'
                 estado: item.estado,
-                // Mapeamos la columna 'cod_barras' al campo 'codigo' del form
-                codigo: item.cod_barras || '', 
-                observacion: item.observaciones
+                codigo: item.nro_serie || '',  // BD 'nro_serie' -> JS 'codigo'
+                observacion: item.observacion  // BD 'observacion' -> JS 'observacion'
             }));
         }
 
@@ -453,7 +422,6 @@
             files: [],      
             oldFiles: dbFotos, 
 
-            // Lista específica para Triaje
             listaOpciones: ['MONITOR', 'CPU', 'TECLADO', 'MOUSE', 'IMPRESORA', 'LECTORA DE DNIe', 'TICKETERA'],
             itemSeleccionado: '',
 
@@ -461,24 +429,18 @@
                 profesional: initProfesional,
                 capacitacion: initCapacitacion,
                 inventario: initInventario,
-                inventario_comentarios: initComentariosInv,
                 dificultades: initDificultades,
             },
 
-            // --- MANEJO DE ARCHIVOS (ACTUALIZADO) ---
+            // --- MANEJO DE ARCHIVOS ---
             handleFiles(event) {
-                // Filtro estricto para imágenes
                 const newFiles = Array.from(event.target.files).filter(file => {
                     return file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
                 });
-
                 if (newFiles.length < event.target.files.length) {
-                    alert("Algunos archivos fueron ignorados porque no son imágenes válidas (solo JPG/PNG).");
+                    alert("Algunos archivos fueron ignorados porque no son imágenes válidas.");
                 }
-
                 this.files = [...this.files, ...newFiles];
-                
-                // Limpiar input para permitir re-selección
                 event.target.value = '';
             },
 
@@ -512,7 +474,6 @@
                 this.msgProfesional = "Buscando...";
 
                 try {
-                    // Ruta apuntando a TRIAJE
                     let response = await fetch(`/usuario/monitoreo/modulo/triaje/buscar-profesional/${doc}`);
                     let data = await response.json();
 
@@ -540,7 +501,6 @@
 
             // --- Eliminar Foto Antigua ---
             eliminarFotoGuardada(id, index) {
-                // Ruta apuntando a TRIAJE
                 fetch(`/usuario/monitoreo/modulo/triaje/foto/${id}`, {
                     method: 'DELETE',
                     headers: {
@@ -573,7 +533,6 @@
                     formData.append('fotos[]', file);
                 });
 
-                // Ruta apuntando a TRIAJE
                 fetch("{{ route('usuario.monitoreo.triaje.store', $acta->id) }}", {
                     method: 'POST',
                     headers: {
@@ -603,213 +562,4 @@
         }
     }
 </script>
-
-
-{{-- <script>
-    function triajeForm() {
-        // DATOS BD
-        const dbCapacitacion = @json($dbCapacitacion ?? null);
-        const dbInventario   = @json($dbInventario ?? []);
-        const dbDificultad   = @json($dbDificultad ?? null);
-        const dbFotos        = @json($dbFotos ?? []); // <--- Fotos existentes
-
-        // --- Inicializaciones (Igual que antes) ---
-        let initProfesional = {
-            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: ''
-        };
-        let initCapacitacion = { recibieron_cap: '', institucion_cap: '' };
-
-        if (dbCapacitacion) {
-            initCapacitacion.recibieron_cap = dbCapacitacion.recibieron_cap || '';
-            initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
-            if (dbCapacitacion.profesional) {
-                initProfesional = {
-                    tipo_doc: dbCapacitacion.profesional.tipo_doc,
-                    doc: dbCapacitacion.profesional.doc,
-                    nombres: dbCapacitacion.profesional.nombres,
-                    apellido_paterno: dbCapacitacion.profesional.apellido_paterno,
-                    apellido_materno: dbCapacitacion.profesional.apellido_materno,
-                    email: dbCapacitacion.profesional.email,
-                    telefono: dbCapacitacion.profesional.telefono
-                };
-            }
-        }
-
-        let initInventario = [];
-        let initComentariosInv = '';
-        if (dbInventario && dbInventario.length > 0) {
-            initComentariosInv = dbInventario[0].comentarios || '';
-            
-            initInventario = dbInventario.map(item => ({
-                id: Date.now() + Math.random(),
-                descripcion: item.descripcion,
-                propiedad: item.propiedad,
-                estado: item.estado,
-                
-                // CORRECCIÓN AQUÍ:
-                // Antes leíamos 'item.cantidad', ahora leemos la columna real 'item.cod_barras'
-                codigo: item.cod_barras || '', 
-                
-                observacion: item.observaciones
-            }));
-        }
-
-        let initDificultades = { institucion: '', medio: '' };
-        if (dbDificultad) {
-            initDificultades.institucion = dbDificultad.insti_comunica || '';
-            initDificultades.medio = dbDificultad.medio_comunica || '';
-        }
-
-        return {
-            saving: false,
-            buscando: false,
-            msgProfesional: '',
-            
-            // ARCHIVOS
-            files: [],      // Nuevos archivos a subir
-            oldFiles: dbFotos, // Fotos ya guardadas (solo lectura para mostrar)
-
-            listaOpciones: ['CPU', 'IMPRESORA', 'LAPTOP', 'LECTOR DE DNIe', 'MONITOR', 'MOUSE', 'SCANNER', 'TABLET', 'TECLADO', 'TICKETERA'],
-            itemSeleccionado: '',
-
-            form: {
-                profesional: initProfesional,
-                capacitacion: initCapacitacion,
-                inventario: initInventario,
-                inventario_comentarios: initComentariosInv,
-                dificultades: initDificultades,
-                inicio_labores: { consultorios: 0, fua: '', referencia: '', receta: '', orden_lab: '' },
-                seccion_dni: { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' },
-            },
-
-            // --- MANEJO DE ARCHIVOS ---
-            handleFiles(event) {
-                const selectedFiles = Array.from(event.target.files);
-                // Validar tamaño o tipo aquí si deseas
-                this.files = [...this.files, ...selectedFiles];
-            },
-
-            removeFile(index) {
-                this.files.splice(index, 1);
-            },
-
-            // --- Lógica Inventario y Buscador (Igual que antes) ---
-            agregarItem() {
-                if (!this.itemSeleccionado) return;
-                this.form.inventario.push({
-                    id: Date.now(),
-                    descripcion: this.itemSeleccionado,
-                    propiedad: 'ESTABLECIMIENTO',
-                    estado: 'BUENO',
-                    codigo: '',
-                    observacion: ''
-                });
-                this.itemSeleccionado = '';
-            },
-
-            eliminarFotoGuardada(id, index) {
-                // ELIMINADO: if(!confirm('¿Estás seguro...?')) return;
-                
-                // Procedemos directamente a borrar
-                fetch(`/usuario/monitoreo/modulo/triaje/foto/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Eliminamos visualmente sin preguntar
-                        this.oldFiles.splice(index, 1);
-                    } else {
-                        alert('Error al eliminar: ' + (data.message || 'Desconocido'));
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('Error de conexión.');
-                });
-            },
-
-            eliminarItem(index) {
-                this.form.inventario.splice(index, 1);
-            },
-
-            async buscarProfesional() {
-                let doc = this.form.profesional.doc;
-                if (!doc || doc.length < 8) return;
-                this.buscando = true;
-                this.msgProfesional = "Buscando...";
-                try {
-                    let response = await fetch(`/usuario/monitoreo/modulo/triaje/buscar-profesional/${doc}`);
-                    let data = await response.json();
-                    if (data.success) {
-                        this.form.profesional = { ...this.form.profesional, ...data.data };
-                        this.msgProfesional = "Encontrado.";
-                    } else {
-                        this.limpiarDatosPersonales();
-                        this.msgProfesional = "No encontrado.";
-                    }
-                } catch (error) { this.msgProfesional = "Error."; } 
-                finally { this.buscando = false; }
-            },
-
-            limpiarDatosPersonales() {
-                this.form.profesional.nombres = '';
-                this.form.profesional.apellido_paterno = '';
-                this.form.profesional.apellido_materno = '';
-                this.form.profesional.email = '';
-                this.form.profesional.telefono = '';
-            },
-
-            // --- GUARDADO CON FOTOS (FormData) ---
-            guardarTodo() {
-                this.saving = true;
-
-                // 1. CREAMOS EL PAQUETE DE DATOS
-                let formData = new FormData();
-                
-                // A. Agregamos el JSON de texto como un string en el campo 'data'
-                formData.append('data', JSON.stringify(this.form));
-
-                // B. Agregamos las fotos una por una en 'fotos[]'
-                this.files.forEach(file => {
-                    formData.append('fotos[]', file);
-                });
-
-                // 2. ENVIAMOS SIN HEADERS DE JSON (El navegador pondrá el multipart)
-                fetch("{{ route('usuario.monitoreo.triaje.store', $acta->id) }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        // IMPORTANTE: NO poner 'Content-Type': 'application/json'
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.redirect) window.location.href = data.redirect;
-                        else window.location.reload();
-                    } else {
-                        this.saving = false;
-                        alert('Error: ' + JSON.stringify(data.message));
-                    }
-                })
-                .catch(error => {
-                    this.saving = false;
-                    alert('Error técnico.');
-                    console.error(error);
-                });
-            }
-
-            
-        }
-    }
-</script> --}}
-
-
-
 @endsection

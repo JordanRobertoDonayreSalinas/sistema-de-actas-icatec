@@ -8,13 +8,14 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Acta;
 use App\Models\Profesional;
 use App\Models\ComCapacitacion;
-use App\Models\ComEquipamiento;
+//use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
 use App\Models\ComDocuAsisten;
 use App\Models\ComDni;
 
 use App\Models\MonitoreoModulos;
+use App\Models\EquipoComputo;
 
 class OdontologiaController extends Controller
 {
@@ -27,9 +28,9 @@ class OdontologiaController extends Controller
         $dbCapacitacion = ComCapacitacion::with('profesional')
                     ->where('acta_id', $id)->where('modulo_id', self::MODULO_ID)->first();
 
-        $dbInventario = ComEquipamiento::where('acta_id', $id)
-                            ->where('modulo_id', self::MODULO_ID)->get();
-        
+        $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo', self::MODULO_ID)->get();
+
         $dbDificultad = ComDificultad::where('acta_id', $id)
                             ->where('modulo_id', self::MODULO_ID)->first();
 
@@ -95,35 +96,57 @@ class OdontologiaController extends Controller
                 [
                     'profesional_id'  => $profesional->id,
                     'recibieron_cap'  => $datosCapacitacion['recibieron_cap'],
-                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? $datosCapacitacion['institucion_cap'] : null
+                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? $datosCapacitacion['institucion_cap'] : null,
+                    'decl_jurada'           => $datosCapacitacion['decl_jurada'] ?? null,
+                    'comp_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? null,
                 ]
             );
 
 
             // 3. INVENTARIO
-            ComEquipamiento::where('acta_id', $id)->where('modulo_id', 'ODONTOLOGIA')->delete();
-            $listaInventario = $data['inventario'] ?? [];
-            $comentarioGeneral = $data['inventario_comentarios'] ?? '';
 
+            // ComEquipamiento::where('acta_id', $id)->where('modulo_id', 'ODONTOLOGIA')->delete();
+            // $listaInventario = $data['inventario'] ?? [];
+            // $comentarioGeneral = $data['inventario_comentarios'] ?? '';
+
+            // if (!empty($listaInventario)) {
+            //     foreach ($listaInventario as $item) {
+                    
+            //         ComEquipamiento::create([
+            //             'acta_id'        => $id,
+            //             'modulo_id'      => 'ODONTOLOGIA',
+            //             'profesional_id' => $profesional->id,
+            //             'descripcion'    => $item['descripcion'],
+            //             'cantidad'       => '1', // Siempre 1 según tu indicación
+            //             'propiedad'      => $item['propiedad'],
+            //             'estado'         => $item['estado'],
+            //             'cod_barras'     => $item['codigo'] ?? null, 
+            //             'observaciones'  => $item['observacion'] ?? '',
+            //             'comentarios'    => $comentarioGeneral
+            //         ]);
+            //     }
+            // }
+
+
+            // Tabla de Capibara
+            EquipoComputo::where('cabecera_monitoreo_id', $id)
+                         ->where('modulo', self::MODULO_ID)
+                         ->delete();
+
+            $listaInventario = $data['inventario'] ?? [];
+
+            // B. Creamos los nuevos registros
             if (!empty($listaInventario)) {
                 foreach ($listaInventario as $item) {
-                    
-                    // YA NO CONCATENAMOS. Guardamos directo.
-                    
-                    ComEquipamiento::create([
-                        'acta_id'        => $id,
-                        'modulo_id'      => 'ODONTOLOGIA',
-                        'profesional_id' => $profesional->id,
-                        'descripcion'    => $item['descripcion'],
-                        'cantidad'       => '1', // Siempre 1 según tu indicación
-                        'propiedad'      => $item['propiedad'],
-                        'estado'         => $item['estado'],
-                        
-                        // Mapeo directo: JS 'codigo' -> BD 'cod_barras'
-                        'cod_barras'     => $item['codigo'] ?? null, 
-                        
-                        'observaciones'  => $item['observacion'] ?? '',
-                        'comentarios'    => $comentarioGeneral
+                    EquipoComputo::create([
+                        'cabecera_monitoreo_id' => $id,
+                        'modulo'                => self::MODULO_ID, // Nombre de columna correcto
+                        'descripcion'           => $item['descripcion'],
+                        'cantidad'              => '1', 
+                        'estado'                => $item['estado'],
+                        'nro_serie'             => $item['codigo'] ?? null, 
+                        'propio'                => $item['propiedad'],
+                        'observacion'           => $item['observacion'] ?? ''
                     ]);
                 }
             }

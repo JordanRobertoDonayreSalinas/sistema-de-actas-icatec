@@ -24,6 +24,8 @@ class ComCapacitacion extends Model
         'profesional_id',
         'recibieron_cap',
         'institucion_cap',
+        'decl_jurada',
+        'comp_confidencialidad'
     ];
 
     /**
