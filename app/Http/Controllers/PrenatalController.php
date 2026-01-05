@@ -109,6 +109,12 @@ class PrenatalController extends Controller
                 'personal_especialidad' => $input['personal_especialidad'] ?? null,
                 'personal_nombre'       => $input['personal_nombre'] ?? null,
 
+                'firma_dj' => $input['firma_dj'] ?? null,
+                'firma_confidencialidad' => $input['firma_confidencialidad'] ?? null,
+                'tipo_dni_fisico' => $input['tipo_dni_fisico'] ?? null,
+                'dnie_version' => $input['dnie_version'] ?? null,
+                'firma_sihce' => $input['firma_sihce'] ?? null,
+
                 // Capacitación
                 'capacitacion_recibida' => $input['capacitacion'] ?? null,
                 'capacitacion_entes'    => $input['capacitacion_ente'] ?? null, // Ahora es string (radio)

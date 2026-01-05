@@ -102,6 +102,12 @@ class CitaController extends Controller
             'personal_turno'  => $input['personal_turno'] ?? null,
             'personal_roles'  => $input['personal_rol'] ?? [],
 
+            'firma_dj' => $input['firma_dj'] ?? null,
+            'firma_confidencialidad' => $input['firma_confidencialidad'] ?? null,
+            'tipo_dni_fisico' => $input['tipo_dni_fisico'] ?? null,
+            'dnie_version' => $input['dnie_version'] ?? null,
+            'firma_sihce' => $input['firma_sihce'] ?? null,
+
             'capacitacion_recibida'      => $input['capacitacion'] ?? null,
             'capacitacion_entes'         => $input['capacitacion_ente'] ?? null,
             'capacitacion_otros_detalle' => $input['capacitacion_otros_detalle'] ?? null,

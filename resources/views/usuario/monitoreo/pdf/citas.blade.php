@@ -194,6 +194,7 @@
   <div class="section">
     <div class="section-title">1. Datos del Responsable</div>
     <table class="data-grid">
+      {{-- FILA 1: Nombre y DNI --}}
       <tr>
         <td width="60%">
           <span class="label">Responsable:</span>
@@ -204,6 +205,8 @@
           <span class="value">{{ $registro->personal_dni ?? '-' }}</span>
         </td>
       </tr>
+
+      {{-- FILA 2: Roles y Turno --}}
       <tr>
         <td>
           <span class="label">Roles Asignados:</span>
@@ -215,6 +218,8 @@
           <span class="value">{{ $registro->personal_turno ?? '-' }}</span>
         </td>
       </tr>
+
+      {{-- FILA 3: Capacitación --}}
       <tr>
         <td colspan="2">
           <span class="label">Capacitación:</span>
@@ -227,6 +232,35 @@
           </span>
         </td>
       </tr>
+
+      {{-- NUEVA FILA 4: Documentación Administrativa --}}
+      <tr>
+        <td>
+          <span class="label">Declaración Jurada:</span>
+          <span class="value" style="font-weight: bold;">{{ $registro->firma_dj ?? 'NO' }}</span>
+        </td>
+        <td>
+          <span class="label">Confidencialidad:</span>
+          <span class="value" style="font-weight: bold;">{{ $registro->firma_confidencialidad ?? 'NO' }}</span>
+        </td>
+      </tr>
+
+      {{-- NUEVA FILA 5: Tipo de DNI y Detalles --}}
+      <tr>
+        <td>
+          <span class="label">Tipo DNI Físico:</span>
+          <span class="value">{{ $registro->tipo_dni_fisico ?? '-' }}</span>
+        </td>
+        <td>
+          @if (($registro->tipo_dni_fisico ?? '') == 'ELECTRONICO')
+            <span class="label">Detalle DNIe:</span>
+            <span class="value">
+              Versión {{ $registro->dnie_version ?? '-' }} | Firma SIHCE: {{ $registro->firma_sihce ?? 'NO' }}
+            </span>
+          @endif
+        </td>
+      </tr>
+
     </table>
   </div>
 

@@ -186,6 +186,7 @@
   <div class="section">
     <div class="section-title">1. Datos del Responsable</div>
     <table class="data-grid">
+      {{-- FILA 1: Responsable y DNI --}}
       <tr>
         <td width="60%">
           <span class="label">Responsable:</span>
@@ -196,6 +197,8 @@
           <span class="value">{{ $registro->personal_dni ?? '-' }}</span>
         </td>
       </tr>
+
+      {{-- FILA 2: Especialidad y Consultorio --}}
       <tr>
         <td>
           <span class="label">Especialidad:</span>
@@ -206,6 +209,8 @@
           <span class="value">{{ $registro->nombre_consultorio ?? '-' }}</span>
         </td>
       </tr>
+
+      {{-- FILA 3: Capacitación --}}
       <tr>
         <td colspan="2">
           <span class="label">Capacitación:</span>
@@ -218,6 +223,46 @@
           </span>
         </td>
       </tr>
+
+      {{-- NUEVA FILA 4: Documentación Administrativa --}}
+      <tr>
+        <td>
+          <span class="label">Declaración Jurada:</span>
+          @if (($registro->firma_dj ?? '') == 'SI')
+            <span class="status-ok">SÍ FIRMÓ</span>
+          @else
+            <span class="status-err">{{ $registro->firma_dj ?? 'NO' }}</span>
+          @endif
+        </td>
+        <td>
+          <span class="label">Confidencialidad:</span>
+          @if (($registro->firma_confidencialidad ?? '') == 'SI')
+            <span class="status-ok">SÍ FIRMÓ</span>
+          @else
+            <span class="status-err">{{ $registro->firma_confidencialidad ?? 'NO' }}</span>
+          @endif
+        </td>
+      </tr>
+
+      {{-- NUEVA FILA 5: Tipo de DNI y Detalle --}}
+      <tr>
+        <td>
+          <span class="label">Tipo DNI Físico:</span>
+          <span class="value">{{ $registro->tipo_dni_fisico ?? '-' }}</span>
+        </td>
+        <td>
+          @if (($registro->tipo_dni_fisico ?? '') == 'ELECTRONICO')
+            <span class="label">Detalle DNIe:</span>
+            <span class="value">
+              Versión {{ $registro->dnie_version ?? '-' }} | Firma SIHCE:
+              <span class="{{ ($registro->firma_sihce ?? '') == 'SI' ? 'status-ok' : '' }}">
+                {{ $registro->firma_sihce ?? 'NO' }}
+              </span>
+            </span>
+          @endif
+        </td>
+      </tr>
+
     </table>
   </div>
 

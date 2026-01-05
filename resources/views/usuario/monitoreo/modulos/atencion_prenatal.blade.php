@@ -427,6 +427,157 @@
               </div>
             </div>
           </div>
+
+          {{-- ======================================================================== --}}
+          {{-- SECCIÓN: DOCUMENTACIÓN ADMINISTRATIVA                                    --}}
+          {{-- ======================================================================== --}}
+          <div class="mt-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+            <h3 class="text-xs font-bold text-slate-700 mb-3 uppercase border-b border-slate-100 pb-2">
+              <i data-lucide="file-signature" class="w-4 h-4 inline-block mr-1 text-indigo-500"></i>
+              Documentación Administrativa
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {{-- 1. Declaración Jurada --}}
+              <div>
+                <p class="text-xs font-bold text-slate-500 mb-2">¿Firmó declaración jurada?</p>
+                <div class="toggle-group w-full flex">
+                  <label class="flex-1">
+                    <input type="radio" name="contenido[firma_dj]" value="SI" class="toggle-radio"
+                      {{ ($registro->firma_dj ?? '') == 'SI' ? 'checked' : '' }}>
+                    <span class="toggle-btn w-full justify-center"><i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                      SÍ</span>
+                  </label>
+                  <label class="flex-1">
+                    <input type="radio" name="contenido[firma_dj]" value="NO" class="toggle-radio"
+                      {{ ($registro->firma_dj ?? '') == 'NO' ? 'checked' : '' }}>
+                    <span class="toggle-btn w-full justify-center"><i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                      NO</span>
+                  </label>
+                </div>
+              </div>
+
+              {{-- 2. Compromiso de Confidencialidad --}}
+              <div>
+                <p class="text-xs font-bold text-slate-500 mb-2">¿Firmó compromiso de confidencialidad?</p>
+                <div class="toggle-group w-full flex">
+                  <label class="flex-1">
+                    <input type="radio" name="contenido[firma_confidencialidad]" value="SI" class="toggle-radio"
+                      {{ ($registro->firma_confidencialidad ?? '') == 'SI' ? 'checked' : '' }}>
+                    <span class="toggle-btn w-full justify-center"><i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                      SÍ</span>
+                  </label>
+                  <label class="flex-1">
+                    <input type="radio" name="contenido[firma_confidencialidad]" value="NO" class="toggle-radio"
+                      {{ ($registro->firma_confidencialidad ?? '') == 'NO' ? 'checked' : '' }}>
+                    <span class="toggle-btn w-full justify-center"><i data-lucide="x" class="w-3 h-3 mr-1"></i>
+                      NO</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- ======================================================================== --}}
+          {{-- SECCIÓN: TIPO DE DNI Y FIRMA DIGITAL                                     --}}
+          {{-- ======================================================================== --}}
+          <div class="mt-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+            <h3 class="text-xs font-bold text-slate-700 mb-3 uppercase border-b border-slate-200 pb-2">
+              Tipo de Documento Físico y Firma
+            </h3>
+
+            {{-- Grid de Tarjetas de Selección --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+              {{-- TARJETA: DNI ELECTRÓNICO --}}
+              <label class="cursor-pointer relative group">
+                <input type="radio" name="contenido[tipo_dni_fisico]" value="ELECTRONICO" class="peer sr-only"
+                  onchange="toggleDniOptions('ELECTRONICO')"
+                  {{ ($registro->tipo_dni_fisico ?? '') == 'ELECTRONICO' ? 'checked' : '' }}>
+
+                <div
+                  class="p-3 rounded-lg border border-slate-200 bg-white transition-all
+                            peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:shadow-sm">
+                  <div class="flex items-center gap-3">
+                    <div class="bg-indigo-100 p-2 rounded-full text-indigo-600">
+                      <i data-lucide="credit-card" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-slate-800">DNI ELECTRÓNICO</h4>
+                      <span class="text-[10px] font-bold text-indigo-500">CON CHIP</span>
+                    </div>
+                    <div class="ml-auto hidden peer-checked:block text-indigo-600">
+                      <i data-lucide="check-circle-2" class="w-5 h-5 fill-indigo-600 text-white"></i>
+                    </div>
+                  </div>
+                </div>
+              </label>
+
+              {{-- TARJETA: DNI AZUL --}}
+              <label class="cursor-pointer relative group">
+                <input type="radio" name="contenido[tipo_dni_fisico]" value="AZUL" class="peer sr-only"
+                  onchange="toggleDniOptions('AZUL')"
+                  {{ ($registro->tipo_dni_fisico ?? '') == 'AZUL' ? 'checked' : '' }}>
+
+                <div
+                  class="p-3 rounded-lg border border-slate-200 bg-white transition-all
+                            peer-checked:border-sky-500 peer-checked:bg-sky-50 peer-checked:shadow-sm">
+                  <div class="flex items-center gap-3">
+                    <div class="bg-sky-100 p-2 rounded-full text-sky-600">
+                      <i data-lucide="user-square" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-slate-800">DNI AZUL</h4>
+                      <span class="text-[10px] font-bold text-slate-400">SIN CHIP</span>
+                    </div>
+                    <div class="ml-auto hidden peer-checked:block text-sky-600">
+                      <i data-lucide="check-circle-2" class="w-5 h-5 fill-sky-600 text-white"></i>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {{-- CONTENEDOR CONDICIONAL (Solo visible si es DNI ELECTRÓNICO) --}}
+            <div id="dnie-options-container"
+              class="hidden bg-white p-4 rounded-lg border border-indigo-100 animate-fadeIn">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {{-- Versión del DNIe --}}
+                <div>
+                  <label class="input-label mb-1">Versión del DNIe</label>
+                  <select name="contenido[dnie_version]" class="input-blue text-xs">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="1.0" {{ ($registro->dnie_version ?? '') == '1.0' ? 'selected' : '' }}>Versión 1.0
+                    </option>
+                    <option value="2.0" {{ ($registro->dnie_version ?? '') == '2.0' ? 'selected' : '' }}>Versión 2.0
+                    </option>
+                    <option value="3.0" {{ ($registro->dnie_version ?? '') == '3.0' ? 'selected' : '' }}>Versión 3.0
+                    </option>
+                  </select>
+                </div>
+
+                {{-- Firma Digital en SIHCE --}}
+                <div>
+                  <label class="input-label mb-1">¿Firma digitalmente en SIHCE?</label>
+                  <div class="toggle-group w-full flex">
+                    <label class="flex-1">
+                      <input type="radio" name="contenido[firma_sihce]" value="SI" class="toggle-radio"
+                        {{ ($registro->firma_sihce ?? '') == 'SI' ? 'checked' : '' }}>
+                      <span class="toggle-btn w-full justify-center text-xs">SÍ</span>
+                    </label>
+                    <label class="flex-1">
+                      <input type="radio" name="contenido[firma_sihce]" value="NO" class="toggle-radio"
+                        {{ ($registro->firma_sihce ?? '') == 'NO' ? 'checked' : '' }}>
+                      <span class="toggle-btn w-full justify-center text-xs">NO</span>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {{-- PASO 2: MATERIALES Y EQUIPOS --}}
@@ -1070,7 +1221,7 @@
         const badgeText = i.type.toUpperCase();
         d.innerHTML = `
             <img src="${i.url}" class="w-full h-full object-cover">
-            <button type="button" onclick="removeImage(${i.id})" class="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"><i data-lucide="x" class="w-3 h-3"></i></button>
+            <button type="button" onclick="removeImage(${i.id})" class=php artisan make:migration add_dni_admin_fields_to_prenatal_parto --table=mon_modulo_prenatal"absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg"><i data-lucide="x" class="w-3 h-3"></i></button>
             <div class="absolute top-2 left-2 ${badgeColor} text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm"><span>${badgeText}</span></div>
         `;
         cont.appendChild(d);
@@ -1134,5 +1285,22 @@
         document.getElementById('scanner-modal').classList.add('hidden');
       }
     }
+
+    function toggleDniOptions(tipo) {
+      const container = document.getElementById('dnie-options-container');
+      if (tipo === 'ELECTRONICO') {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    // Inicializar al cargar (por si estamos editando)
+    document.addEventListener("DOMContentLoaded", function() {
+      const selectedDni = document.querySelector('input[name="contenido[tipo_dni_fisico]"]:checked');
+      if (selectedDni) {
+        toggleDniOptions(selectedDni.value);
+      }
+    });
   </script>
 @endpush
