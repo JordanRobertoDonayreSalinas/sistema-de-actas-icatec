@@ -98,6 +98,23 @@ class PlanificacionController extends Controller
                 ]
             );
 
+             // --- 4. GUARDAR EN TABLA MAESTRA DE PROFESIONALES (mon_profesionales) ---
+            // Solo si el DNI no está vacío para evitar el error Column not found o Integrity constraint
+            if (!empty($personal['dni'])) {
+                DB::table('mon_profesionales')->updateOrInsert(
+                    ['doc' => $personal['dni']], 
+                    [
+                        'nombres'          => mb_strtoupper($personal['nombre'] ?? 'SIN NOMBRE', 'UTF-8'),
+                        'apellido_paterno' => mb_strtoupper($personal['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
+                        'email' => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
+                        'telefono' => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'updated_at'       => now(),
+                        'created_at'       => now()
+                    ]
+                );
+            }
+
             // --- 4. GUARDAR EN TABLA mon_monitoreo_modulos ---
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
