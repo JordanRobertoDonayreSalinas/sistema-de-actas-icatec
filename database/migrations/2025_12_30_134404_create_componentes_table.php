@@ -21,6 +21,8 @@ return new class extends Migration
 
             $table->string('recibieron_cap'); // Opciones: SI, NO.
             $table->string('institucion_cap')->nullable(); // Opciones: MINSA, DIRESA, UUEE
+            $table->string('decl_jurada'); // Opciones: SI,NO
+            $table->string('comp_confidencialidad'); // Opciones: SI, NO
             $table->timestamps();
         });
 

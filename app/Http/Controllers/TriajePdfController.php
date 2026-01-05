@@ -6,9 +6,10 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CabeceraMonitoreo;
 use App\Models\ComCapacitacion;
-use App\Models\ComEquipamiento;
+//use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
+use App\Models\EquipoComputo;
 
 class TriajePdfController extends Controller
 {
@@ -26,8 +27,8 @@ class TriajePdfController extends Controller
                             ->first();
 
         // Inventario
-        $dbInventario = ComEquipamiento::where('acta_id', $id)
-                            ->where('modulo_id', 'TRIAJE')
+        $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo', 'TRIAJE')
                             ->get();
 
         // Dificultades
