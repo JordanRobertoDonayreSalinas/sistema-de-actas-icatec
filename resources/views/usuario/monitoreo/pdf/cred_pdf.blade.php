@@ -85,19 +85,19 @@
         }
         
         .photo-box {
-            display: inline-block;
-            width: 45%; /* Esto coloca dos imágenes por fila */
-            margin: 10px 1%;
-            vertical-align: top;
+            display: block;        /* Cambia a block para que ocupe su propia línea */
+            width: 95%;           /* Casi todo el ancho de la página */
+            margin: 15px auto;    /* Centra el contenedor */
             text-align: center;
         }
-        
+
         .photo-box img {
-            width: 250px; /* Tamaño normal sugerido */
-            height: 180px; /* Altura fija para mantener uniformidad */
-            object-fit: cover; /* Recorta la imagen para llenar el recuadro sin deformarse */
+            width: 500px;         /* Aumentamos de 250px a 500px (o usa 100% si quieres total) */
+            height: 350px;        /* Aumentamos de 180px a 350px */
+            object-fit: contain;  /* CAMBIO CLAVE: contain para que la foto se vea COMPLETA sin recortes */
             border: 1px solid #e2e8f0;
             border-radius: 8px;
+            background-color: #f8fafc; /* Fondo suave por si la foto es muy delgada */
         }
         
         .photo-caption {
@@ -165,6 +165,7 @@
                 <th>Descripción Hardware</th>
                 <th class="text-center">Cant.</th>
                 <th class="text-center">Estado</th>
+                <th class="text-center">Propiedad</th>
                 <th class="text-center">Número de Serie</th>
                 
             </tr>
@@ -175,6 +176,7 @@
                 <td>{{ $eq->descripcion }}</td>
                 <td class="text-center">{{ $eq->cantidad }}</td>
                 <td class="text-center">{{ $eq->estado }}</td>
+                <td class="text-center">{{ $eq->propio }}</td>
                 <td>{{ $eq->nro_serie ? ''.$eq->nro_serie : '' }} {{ $eq->observaciones }}</td>
             </tr>
             @empty
