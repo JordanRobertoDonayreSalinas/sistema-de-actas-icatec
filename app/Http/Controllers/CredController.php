@@ -61,46 +61,48 @@ class CredController extends Controller
             DB::beginTransaction();
 
             $acta = CabeceraMonitoreo::findOrFail($id);
+            
+            // 1. CAPTURA DE DATOS
             $datosForm = $request->input('contenido', []);
             $personal = $datosForm['personal'] ?? null;
+            
+            // Obtenemos los equipos tal cual vienen del formulario (ya sin los eliminados)
             $equiposForm = $request->input('equipos', []);
 
             // --- 1. GESTIÓN DE FOTOS ---
             $foto1 = $request->input('foto_1_actual'); 
             $foto2 = $request->input('foto_2_actual');
-
             if ($request->hasFile('foto_evidencia_1')) {
                 if ($foto1) Storage::disk('public')->delete($foto1);
-                $foto1 = $request->file('foto_evidencia_1')->store('evidencias/cred', 'public');
+                $foto1 = $request->file('foto_evidencia_1')->store('evidencias/planificacion', 'public');
             }
             if ($request->hasFile('foto_evidencia_2')) {
                 if ($foto2) Storage::disk('public')->delete($foto2);
-                $foto2 = $request->file('foto_evidencia_2')->store('evidencias/cred', 'public');
+                $foto2 = $request->file('foto_evidencia_2')->store('evidencias/planificacion', 'public');
             }
 
-            // --- 2. ACTUALIZAR EQUIPOS DENTRO DEL JSON (Clave para guardar en mon_detalle_modulos) ---
-            // Guardamos la estructura completa de los equipos dentro del array de contenido
+            // --- 2. PUNTO CLAVE: SINCRONIZAR EL JSON ---
+            // Actualizamos el JSON con la lista de equipos filtrada del formulario
             $datosForm['equipos_data'] = $equiposForm;
 
-           // --- 3. GUARDAR EN TABLA DETALLE (mon_detalle_modulos) ---
-            $nombreCompleto = mb_strtoupper(trim(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? '')), 'UTF-8');
+            // --- 3. GUARDAR EN mon_detalle_modulos (CON EL JSON ACTUALIZADO) ---
+            $nombreFull = mb_strtoupper(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? ''), 'UTF-8');
             
             DB::table('mon_detalle_modulos')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
                 [
-                    'personal_nombre' => !empty($nombreCompleto) ? $nombreCompleto : 'SIN NOMBRE',
+                    'personal_nombre' => !empty(trim($nombreFull)) ? $nombreFull : 'SIN NOMBRE',
                     'personal_dni'    => $personal['dni'] ?? null,
                     'personal_turno'  => mb_strtoupper($personal['turno'] ?? 'N/A', 'UTF-8'),
                     'personal_roles'  => mb_strtoupper($personal['rol'] ?? 'RESPONSABLE', 'UTF-8'),
-                    'contenido'       => json_encode($datosForm),
+                    'contenido'       => json_encode($datosForm), // Aquí se guarda la lista nueva sin los eliminados
                     'foto_1'          => $foto1,
                     'foto_2'          => $foto2,
                     'updated_at'      => now()
                 ]
             );
 
-            // --- 4. GUARDAR EN TABLA MAESTRA DE PROFESIONALES (mon_profesionales) ---
-            // Solo si el DNI no está vacío para evitar el error Column not found o Integrity constraint
+            // --- 4. GUARDAR PROFESIONALES ---
             if (!empty($personal['dni'])) {
                 DB::table('mon_profesionales')->updateOrInsert(
                     ['doc' => $personal['dni']], 
@@ -108,38 +110,38 @@ class CredController extends Controller
                         'nombres'          => mb_strtoupper($personal['nombre'] ?? 'SIN NOMBRE', 'UTF-8'),
                         'apellido_paterno' => mb_strtoupper($personal['apellido_paterno'] ?? '', 'UTF-8'),
                         'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
-                        'email' => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
-                        'telefono' => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'email'            => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
+                        'telefono'         => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
                         'updated_at'       => now(),
                         'created_at'       => now()
                     ]
                 );
             }
 
-            // --- 4. GUARDAR EN TABLA ANTIGUA (mon_monitoreo_modulos) ---
+            // --- 5. ACTUALIZAR TABLA ANTIGUA ---
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
                 ['contenido' => $datosForm]
             );
 
-            // --- 5. GUARDAR EQUIPOS EN TABLA INDEPENDIENTE (mon_monitoreo_equipos) ---
+            // --- 6. SINCRONIZAR TABLA EquipoComputo ---
+            // Borramos todo lo anterior para este acta y módulo
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
 
             if (!empty($equiposForm)) {
-                // Busca esta parte en tu función store:
                 foreach ($equiposForm as $eq) {
                     if (!empty($eq['descripcion'])) {
+                        // Mapeo de 'propiedad' a 'propio' (ajustado a tu componente)
+                        $valorCapturado = $eq['propiedad'] ?? ($eq['propio'] ?? 'ESTABLECIMIENTO');
+
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
-                            'modulo'      => $this->modulo,
-                            'descripcion' => mb_strtoupper($eq['descripcion'], 'UTF-8'),
-                            'cantidad'    => $eq['cantidad'] ?? 1,
-                            'estado'      => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
-                            
-                            // CAMBIO AQUÍ: Guardamos el texto directo del formulario
-                            'propio'      => mb_strtoupper($eq['propio'] ?? 'ESTABLECIMIENTO', 'UTF-8'), 
-                            
-                            'nro_serie'   => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
+                            'modulo'        => $this->modulo,
+                            'descripcion'   => mb_strtoupper($eq['descripcion'], 'UTF-8'),
+                            'cantidad'      => $eq['cantidad'] ?? 1,
+                            'estado'        => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
+                            'propio'        => trim(strtoupper($valorCapturado)),
+                            'nro_serie'     => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
                             'observaciones' => !empty($eq['observaciones']) ? mb_strtoupper($eq['observaciones'], 'UTF-8') : null,
                         ]);
                     }
@@ -147,11 +149,11 @@ class CredController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Datos guardados correctamente en ambas tablas.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Datos actualizados correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error en CRED Store: " . $e->getMessage());
+            Log::error("Error Store: " . $e->getMessage());
             return back()->with('error', 'Error al guardar: ' . $e->getMessage())->withInput();
         }
     }
