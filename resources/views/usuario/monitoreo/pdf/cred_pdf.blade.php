@@ -112,7 +112,7 @@
 <body>
 
     <div class="header">
-        <h1>Módulo 08: Atención Integral del Niño (CRED)</h1>
+        <h1>Módulo 08: Control de Crecimiento y Desarrollo (CRED)</h1>
         <p>Acta de Monitoreo N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</p>
         <p>Establecimiento: {{ $acta->establecimiento->nombre ?? 'N/A' }}</p>
     </div>
