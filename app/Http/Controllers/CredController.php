@@ -82,13 +82,13 @@ class CredController extends Controller
             // Guardamos la estructura completa de los equipos dentro del array de contenido
             $datosForm['equipos_data'] = $equiposForm;
 
-            // --- 3. GUARDAR EN TABLA NUEVA (mon_detalle_modulos) ---
-            $nombreCompleto = mb_strtoupper(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? ''), 'UTF-8');
+           // --- 3. GUARDAR EN TABLA DETALLE (mon_detalle_modulos) ---
+            $nombreCompleto = mb_strtoupper(trim(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? '')), 'UTF-8');
             
             DB::table('mon_detalle_modulos')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
                 [
-                    'personal_nombre' => !empty(trim($nombreCompleto)) ? $nombreCompleto : 'SIN NOMBRE',
+                    'personal_nombre' => !empty($nombreCompleto) ? $nombreCompleto : 'SIN NOMBRE',
                     'personal_dni'    => $personal['dni'] ?? null,
                     'personal_turno'  => mb_strtoupper($personal['turno'] ?? 'N/A', 'UTF-8'),
                     'personal_roles'  => mb_strtoupper($personal['rol'] ?? 'RESPONSABLE', 'UTF-8'),
@@ -98,6 +98,23 @@ class CredController extends Controller
                     'updated_at'      => now()
                 ]
             );
+
+            // --- 4. GUARDAR EN TABLA MAESTRA DE PROFESIONALES (mon_profesionales) ---
+            // Solo si el DNI no está vacío para evitar el error Column not found o Integrity constraint
+            if (!empty($personal['dni'])) {
+                DB::table('mon_profesionales')->updateOrInsert(
+                    ['doc' => $personal['dni']], 
+                    [
+                        'nombres'          => mb_strtoupper($personal['nombre'] ?? 'SIN NOMBRE', 'UTF-8'),
+                        'apellido_paterno' => mb_strtoupper($personal['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
+                        'email' => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
+                        'telefono' => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'updated_at'       => now(),
+                        'created_at'       => now()
+                    ]
+                );
+            }
 
             // --- 4. GUARDAR EN TABLA ANTIGUA (mon_monitoreo_modulos) ---
             MonitoreoModulos::updateOrCreate(
@@ -109,6 +126,7 @@ class CredController extends Controller
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
 
             if (!empty($equiposForm)) {
+                // Busca esta parte en tu función store:
                 foreach ($equiposForm as $eq) {
                     if (!empty($eq['descripcion'])) {
                         EquipoComputo::create([
@@ -117,7 +135,10 @@ class CredController extends Controller
                             'descripcion' => mb_strtoupper($eq['descripcion'], 'UTF-8'),
                             'cantidad'    => $eq['cantidad'] ?? 1,
                             'estado'      => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
-                            'propio'      => (isset($eq['propio']) && (strtoupper($eq['propio']) === 'SI' || $eq['propio'] == 1)) ? 1 : 0,
+                            
+                            // CAMBIO AQUÍ: Guardamos el texto directo del formulario
+                            'propio'      => mb_strtoupper($eq['propio'] ?? 'ESTABLECIMIENTO', 'UTF-8'), 
+                            
                             'nro_serie'   => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
                             'observaciones' => !empty($eq['observaciones']) ? mb_strtoupper($eq['observaciones'], 'UTF-8') : null,
                         ]);
