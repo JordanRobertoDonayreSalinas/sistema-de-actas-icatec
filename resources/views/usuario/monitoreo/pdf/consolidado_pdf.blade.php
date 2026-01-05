@@ -164,7 +164,7 @@
     <div id="footer">
         <div class="footer-text">
             Acta de Monitoreo IPRESS NO ESPECIALIZADAS N° {{ ltrim($acta->id, '0') }}<br>
-            <span class="page-number"></span> | Fecha de generación del documento: {{ date('d/m/Y H:i:s') }}
+            <span class="page-number"></span> 
         </div>
     </div>
 

@@ -12,38 +12,35 @@ use Illuminate\Support\Facades\Auth;
 class GestionAdministrativaPdfController extends Controller
 {
     /**
-     * Genera el reporte PDF del Módulo 01 asegurando los datos del monitor.
+     * Genera el reporte PDF del Módulo 01 asegurando los datos del monitor y contenido técnico.
      */
     public function generar($id)
     {
-        // 1. Cargar el acta con la relación del establecimiento
-        $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
+        // 1. Cargar el acta optimizando la relación del establecimiento (solo id y nombre)
+        $acta = CabeceraMonitoreo::with('establecimiento:id,nombre')->findOrFail($id);
 
-        // 2. Cargar el detalle guardado para el Módulo 01
+        // 2. Cargar el detalle guardado para el Módulo 01 (JSON con Turno, DNI, Capacitación, etc.)
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                     ->where('modulo_nombre', 'gestion_administrativa')
                                     ->firstOrFail();
 
-        // 3. Cargar el inventario de equipos de este acta y módulo
+        // 3. Cargar el inventario de equipos de este acta y módulo específico
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo', 'gestion_administrativa')
                                 ->get();
 
-        // 4. CAPTURA DEL MONITOR (Usuario que genera el PDF)
-        // Obtenemos el usuario autenticado
+        // 4. CAPTURA DEL MONITOR (Usuario autenticado que genera el reporte)
         $user = Auth::user();
 
-        // Creamos el array con el orden: APELLIDOS, NOMBRES
-        // Usamos los nombres de columna exactos de tu SQL: tipo_documento y documento
-        // Si 'documento' es nulo, intentamos usar 'username' como respaldo
+        // Estructura de datos del monitor siguiendo el formato: APELLIDOS, NOMBRES
         $monitor = [
             'nombre'    => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
             'tipo_doc'  => $user->tipo_documento ?? 'DNI',
             'documento' => $user->documento ?? $user->username ?? '________'
         ];
 
-        // 5. Cargar la vista pasando el array 'monitor'
-        // Asegúrate que la vista se llame 'gestion_administrativa_pdf'
+        // 5. Cargar la vista técnica del PDF. 
+        // CORRECCIÓN: Se agrega '_pdf' al nombre de la vista para coincidir con el archivo en disco.
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.gestion_administrativa_pdf', compact(
             'acta', 
             'detalle', 
@@ -51,8 +48,8 @@ class GestionAdministrativaPdfController extends Controller
             'monitor'
         ));
 
-        // 6. Configuración de formato y visualización
+        // 6. Configuración de formato A4 vertical y generación del flujo de datos
         return $pdf->setPaper('a4', 'portrait')
-                   ->stream("Modulo01_Acta_" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
+                   ->stream("Acta_M01_ID" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
     }
 }

@@ -6,7 +6,7 @@
 <div class="py-12 bg-slate-50 min-h-screen">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
-        {{-- ENCABEZADO DIRECTO --}}
+        {{-- ENCABEZADO PRINCIPAL --}}
         <div class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
                 <div class="flex items-center gap-3 mb-1">
@@ -23,7 +23,6 @@
             </a>
         </div>
 
-        {{-- FORMULARIO --}}
         <form action="{{ route('usuario.monitoreo.gestion-administrativa.store', $acta->id) }}" 
               method="POST" 
               enctype="multipart/form-data" 
@@ -31,7 +30,26 @@
               id="form-monitoreo-final">
             @csrf
 
-            {{-- SECCIÓN 1: RRHH --}}
+            {{-- SECCIÓN 0: TURNO --}}
+            <div class="bg-indigo-600 rounded-[3rem] p-10 shadow-xl shadow-indigo-200/50 border border-indigo-500 relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                <div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                    <div class="flex items-center gap-4">
+                        <div class="h-14 w-14 bg-white/20 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border border-white/30">
+                            <i data-lucide="clock" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-black text-xl uppercase tracking-tight">Turno:</h3>
+                            <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-widest">Horario de evaluación</p>
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full max-w-2xl">
+                        <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
+                    </div>
+                </div>
+            </div>
+
+            {{-- SECCIÓN 1: DATOS DEL PROFESIONAL (RRHH) --}}
             <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="flex items-center gap-4 mb-8">
                     <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">1</div>
@@ -40,7 +58,7 @@
                 <x-busqueda-profesional prefix="rrhh" :detalle="$detalle" />
             </div>
 
-            {{-- SECCIÓN 2: SIHCE Y PROGRAMADOR --}}
+            {{-- SECCIÓN 2: ACCESO Y PROGRAMACIÓN SIHCE --}}
             <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="flex items-center gap-4 mb-8">
                     <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">2</div>
@@ -50,8 +68,8 @@
                 <div class="max-w-md mb-8">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuenta con acceso al sistema?</label>
                     <select name="contenido[cuenta_sihce]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 font-bold text-sm outline-none transition-all cursor-pointer shadow-sm uppercase" onchange="toggleProgramador(this.value)">
-                        <option value="SI" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'SI') ? 'selected' : '' }}>SÍ, POSEE CREDENCIALES ACTIVAS</option>
-                        <option value="NO" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'NO') ? 'selected' : '' }}>NO POSEE CREDENCIALES</option>
+                        <option value="SI" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'SI') ? 'selected' : '' }}>SI</option>
+                        <option value="NO" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'NO') ? 'selected' : '' }}>NO</option>
                     </select>
                 </div>
 
@@ -63,37 +81,42 @@
                 </div>
             </div>
 
-            {{-- SECCIÓN 3: CAPACITACIÓN Y EQUIPOS --}}
+            {{-- SECCIÓN 3: DOCUMENTACIÓN, DNI Y FIRMA (CON COMPONENTE) --}}
+            <x-documentacion_administrativa :detalle="$detalle" />
+
+            {{-- SECCIÓN 4 Y 5: CAPACITACIÓN --}}
             <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10 border-b border-slate-100 pb-10">
+                    {{-- PUNTO 4 --}}
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">3. ¿Recibió capacitación?</label>
-                        <select name="contenido[recibio_capacitacion]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase">
-                            <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SÍ, FUE CAPACITADO</option>
-                            <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO HA SIDO CAPACITADO</option>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">4. ¿Recibió capacitación?</label>
+                        <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion" onchange="toggleEntidadCapacitadora(this.value)" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase">
+                            <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">4. Entidad Capacitadora</label>
+                    {{-- PUNTO 5: DINÁMICO --}}
+                    <div id="wrapper_entidad_capacitadora" class="transition-all duration-300">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">5. Entidad Capacitadora</label>
                         <select name="contenido[inst_que_lo_capacito]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase">
                             <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
                             <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
+                            <option value="UNIDAD EJECUTORA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'UNIDAD EJECUTORA' ? 'selected' : '' }}>UNIDAD EJECUTORA</option>
                             <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
                         </select>
                     </div>
                 </div>
 
-                {{-- TABLA DE EQUIPOS: JALA ESTABLECIMIENTO, SERVICIO, PERSONAL --}}
                 <div class="mt-6">
                     <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
                 </div>
             </div>
 
-            {{-- SECCIÓN 4: COMUNICACIÓN Y PROGRAMACIÓN --}}
+            {{-- SECCIÓN 6, 7 Y 8: COMUNICACIÓN Y PROGRAMACIÓN --}}
             <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">5. ¿A quién comunica dificultades?</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">6. ¿A quién comunica dificultades?</label>
                         <select name="contenido[inst_a_quien_comunica]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase">
                             @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTRO'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
@@ -101,7 +124,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">6. ¿Qué medio utiliza?</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">7. ¿Qué medio utiliza?</label>
                         <select name="contenido[medio_que_utiliza]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase">
                             @foreach(['WHATSAPP','TELEFONO','EMAIL'] as $me)
                                 <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
@@ -111,7 +134,7 @@
                 </div>
                 
                 <div class="pt-6 border-t border-slate-100">
-                    <label class="block text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 italic">7. Programación actual en el SIHCE hasta:</label>
+                    <label class="block text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 italic">8. Programación actual en el SIHCE hasta:</label>
                     <div class="flex flex-wrap gap-4">
                         <select name="contenido[programacion_mes]" class="flex-1 min-w-[200px] px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 shadow-sm uppercase">
                             @foreach(['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] as $mes)
@@ -128,14 +151,14 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-indigo-400 mb-6 flex items-center gap-2">
-                            <i data-lucide="message-square" class="w-5 h-5"></i> 8. Comentarios
+                            <i data-lucide="message-square" class="w-5 h-5"></i> 9. Comentarios
                         </h3>
                         <textarea name="contenido[comentarios]" rows="5" class="w-full bg-white/5 border-2 border-white/10 rounded-3xl p-6 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/20 shadow-inner">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
                     </div>
                     
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-red-400 mb-6 flex items-center gap-2">
-                            <i data-lucide="camera" class="w-5 h-5"></i> 9. Evidencia Fotográfica
+                            <i data-lucide="camera" class="w-5 h-5"></i> 10. Evidencia Fotográfica
                         </h3>
                         
                         @if(isset($detalle->contenido['foto_evidencia']))
@@ -162,17 +185,15 @@
                 </div>
             </div>
 
-            {{-- BOTÓN DE GUARDADO FINAL --}}
             <div class="pt-10 pb-20">
-                <button type="submit" id="btn-submit-action" 
-                        class="w-full group bg-indigo-600 text-white p-10 rounded-[3rem] font-black shadow-2xl flex items-center justify-between hover:bg-indigo-700 transition-all duration-500 active:scale-[0.98]">
+                <button type="submit" id="btn-submit-action" class="w-full group bg-indigo-600 text-white p-10 rounded-[3rem] font-black shadow-2xl flex items-center justify-between hover:bg-indigo-700 transition-all duration-500 active:scale-[0.98]">
                     <div class="flex items-center gap-8 pointer-events-none">
                         <div class="h-16 w-16 bg-white/20 rounded-3xl flex items-center justify-center group-hover:rotate-12 transition-all shadow-lg border border-white/30">
                             <i data-lucide="save" id="icon-save-loader" class="w-8 h-8 text-white"></i>
                         </div>
                         <div class="text-left">
                             <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
-                            <p class="text-[10px] text-indigo-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo 01 con el Maestro</p>
+                            <p class="text-[10px] text-indigo-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo 01</p>
                         </div>
                     </div>
                     <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-indigo-600 transition-all duration-500">
@@ -188,6 +209,11 @@
     function toggleProgramador(val) {
         const section = document.getElementById('section_programador');
         val === 'NO' ? section.classList.remove('hidden') : section.classList.add('hidden');
+    }
+
+    function toggleEntidadCapacitadora(value) {
+        const wrapper = document.getElementById('wrapper_entidad_capacitadora');
+        wrapper.style.display = (value === 'SI') ? 'block' : 'none';
     }
 
     function previewImage(event) {
@@ -209,6 +235,11 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectCapacitacion = document.getElementById('recibio_capacitacion');
+        if (selectCapacitacion) toggleEntidadCapacitadora(selectCapacitacion.value);
+    });
 
     document.getElementById('form-monitoreo-final').onsubmit = function() {
         const btn = document.getElementById('btn-submit-action');

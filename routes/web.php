@@ -238,14 +238,15 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
                 });
 
-            // Módulo 18: Urgencias y Emergencias
-Route::prefix('modulo/urgencias')
-    ->name('urgencias.') // Nota el punto final: esto genera 'urgencias.index', 'urgencias.store', etc.
-    ->group(function () {
-        Route::get('/{id}', [UrgenciasController::class, 'index'])->name('index');
-        Route::post('/{id}', [UrgenciasController::class, 'store'])->name('store');
-        Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
-    });
+            // --- AQUÍ PEGAS TU BLOQUE TAL CUAL ---
+    Route::prefix('modulo/urgencias')
+        ->name('urgencias.') 
+        ->group(function () {
+            Route::get('/{id}', [UrgenciasController::class, 'index'])->name('index');
+            Route::post('/{id}', [UrgenciasController::class, 'store'])->name('store');
+            Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
+        });
+    // --- FIN DE TU BLOQUE ---
             // Módulo 13: Puerperio
             Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
                 Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');

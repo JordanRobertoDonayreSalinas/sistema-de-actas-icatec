@@ -13,13 +13,14 @@ class UrgenciasPdfController extends Controller
 {
     /**
      * Nombre del módulo para filtrar en las tablas detalle y equipos.
-     * Debe coincidir con el valor usado en UrgenciasController ($modulo).
+     * Debe coincidir con el valor usado en UrgenciasController.
      */
-    private $modulo = 'urgencias_emergencias';
+    private $modulo = 'urgencias';
 
     /**
      * Genera el reporte PDF del Módulo de Urgencias y Emergencias.
-     * * @param int $id ID de la Cabecera de Monitoreo
+     *
+     * @param int $id ID de la Cabecera de Monitoreo (Acta)
      * @return \Illuminate\Http\Response
      */
     public function generar($id)
@@ -27,18 +28,17 @@ class UrgenciasPdfController extends Controller
         // 1. Cargar el acta con la información del establecimiento
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Cargar el detalle guardado en JSON para el Módulo de Urgencias
-        // Nota: Se usa firstOrFail para asegurar que existan datos antes de generar el PDF
+        // 2. Cargar el detalle guardado en JSON para el Módulo de Urgencias (ID 18 o nombre específico)
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                     ->where('modulo_nombre', $this->modulo)
                                     ->firstOrFail();
 
-        // 3. Cargar el inventario de equipos de este acta y módulo específico
+        // 3. Cargar el inventario de equipos vinculado a este acta y módulo
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', $this->modulo)
-                                ->get();
+                                 ->where('modulo', $this->modulo)
+                                 ->get();
 
-        // 4. Obtener datos del Monitor Responsable desde la sesión activa (Auth)
+        // 4. Obtener datos del Monitor Responsable (Usuario en sesión) para el pie de página
         $user = Auth::user();
         $monitor = [
             'nombre'    => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
@@ -46,7 +46,7 @@ class UrgenciasPdfController extends Controller
             'documento' => $user->documento ?? $user->username ?? '________'
         ];
 
-        // 5. Preparar la data para la vista PDF
+        // 5. Preparar el conjunto de datos para la vista
         $data = [
             'acta'    => $acta,
             'detalle' => $detalle,
@@ -54,12 +54,13 @@ class UrgenciasPdfController extends Controller
             'monitor' => $monitor
         ];
 
-        // 6. Cargar la vista Blade específica para el PDF de Urgencias
-        // Ruta sugerida: resources/views/usuario/monitoreo/pdf/urgencias_pdf.blade.php
+        // 6. Cargar la vista Blade corregida (asegúrate de que el nombre del archivo sea este)
+        // Si el archivo está en resources/views/pdf/urgencias_pdf.blade.php usa 'pdf.urgencias_pdf'
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.urgencias_pdf', $data);
 
-        // 7. Configurar formato y retornar el stream del PDF
+        // 7. Configuración de DomPDF para renderizar el pie de página y numeración
+        // Se define tamaño A4 y orientación vertical
         return $pdf->setPaper('a4', 'portrait')
-                   ->stream("Modulo_Urgencias_Acta_" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
+                   ->stream("Reporte_Urgencias_Acta_" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
     }
 }

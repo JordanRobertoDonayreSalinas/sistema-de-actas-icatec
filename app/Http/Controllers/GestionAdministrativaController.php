@@ -10,11 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class GestionAdministrativaController extends Controller
 {
+    /**
+     * Busca un profesional por su número de documento.
+     */
     public function buscarProfesional($doc)
     {
         $profesional = Profesional::where('doc', trim($doc))->first();
@@ -32,16 +33,20 @@ class GestionAdministrativaController extends Controller
         return response()->json(['exists' => false]);
     }
 
+    /**
+     * Muestra la vista principal del Módulo 01.
+     */
     public function index($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
         $modulo = 'gestion_administrativa';
 
+        // Intentar obtener equipos actuales
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
             ->where('modulo', $modulo)
             ->get();
 
-        // Lógica de Guía Histórica si no hay equipos en el acta actual
+        // Lógica de "Guía Histórica": Si no hay equipos, buscar en la última acta del mismo establecimiento
         if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
                 ->where('id', '<', $id) 
@@ -50,8 +55,8 @@ class GestionAdministrativaController extends Controller
 
             if ($ultimaActaId) {
                 $equipos = EquipoComputo::where('cabecera_monitoreo_id', $ultimaActaId)
-                                        ->where('modulo', $modulo)
-                                        ->get();
+                    ->where('modulo', $modulo)
+                    ->get();
             }
         }
         
@@ -63,7 +68,7 @@ class GestionAdministrativaController extends Controller
     }
 
     /**
-     * Guarda los datos y sincroniza las tablas.
+     * Guarda los datos del módulo y sincroniza las tablas relacionadas.
      */
     public function store(Request $request, $id)
     {
@@ -76,7 +81,7 @@ class GestionAdministrativaController extends Controller
             $modulo = 'gestion_administrativa';
             $datos = $request->input('contenido', []);
 
-            // 1. Sincronizar Profesionales (Entrevistados)
+            // 1. Sincronizar Datos del Profesional Responsable (RRHH)
             if (isset($datos['rrhh']) && !empty($datos['rrhh']['doc'])) {
                 $info = $datos['rrhh'];
                 Profesional::updateOrCreate(
@@ -92,7 +97,7 @@ class GestionAdministrativaController extends Controller
                 );
             }
 
-            // 2. Equipos de Cómputo (Actualizado para guardar texto en 'propio')
+            // 2. Sincronizar Inventario de Equipos de Cómputo
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
             
             if ($request->has('equipos') && is_array($request->equipos)) {
@@ -105,14 +110,13 @@ class GestionAdministrativaController extends Controller
                             'cantidad'    => 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
                             'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? '', 'UTF-8'),
-                            // CAMBIO: Ahora guarda el valor directo (INSTITUCIONAL / PERSONAL) en lugar de 1/0
                             'propio'      => mb_strtoupper($eq['propio'] ?? 'PERSONAL', 'UTF-8'),
                         ]);
                     }
                 }
             }
 
-            // 3. Respuestas de Monitoreo
+            // 3. Sincronizar Tabla de Respuestas Maestras
             DB::table('mon_respuesta_entrevistado')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo' => $modulo],
                 [
@@ -125,21 +129,23 @@ class GestionAdministrativaController extends Controller
                 ]
             );
 
-            // 4. GESTIÓN DE ARCHIVOS
+            // 4. Gestión de Evidencia Fotográfica
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo_nombre', $modulo)
                                 ->first();
 
             if ($request->hasFile('foto_evidencia')) {
+                // Borrar foto anterior si existe
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                     Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
                 }
                 $datos['foto_evidencia'] = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
             } elseif ($registroPrevio) {
+                // Mantener la foto existente si no se sube una nueva
                 $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'] ?? null;
             }
 
-            // 5. Guardar JSON de detalle
+            // 5. Guardar el JSON consolidado en la tabla de módulos
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
                 ['contenido' => $datos]
@@ -152,24 +158,7 @@ class GestionAdministrativaController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error en GestionAdministrativaController@store: " . $e->getMessage());
-            return back()->withInput()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Error al guardar los datos: ' . $e->getMessage()]);
         }
-    }
-
-    public function pdf($id)
-    {
-        $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
-        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', 'gestion_administrativa')->firstOrFail();
-        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', 'gestion_administrativa')->get();
-        
-        $user = Auth::user();
-        $monitor = [
-            'nombre'    => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
-            'tipo_doc'  => $user->tipo_documento ?? 'DNI',
-            'documento' => $user->documento ?? $user->username ?? '________'
-        ];
-
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.gestion_administrativa', compact('acta', 'detalle', 'equipos', 'monitor'));
-        return $pdf->stream("Acta_Gestion_Adm_{$id}.pdf");
     }
 }
