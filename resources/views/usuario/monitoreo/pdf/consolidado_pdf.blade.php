@@ -56,12 +56,14 @@
         th, td { 
             border: 1px solid #e2e8f0; 
             padding: 6px 10px; 
+            word-wrap: break-word;
         }
         th {
             background-color: #f1f5f9;
             text-align: left;
-            font-size: 8.5px;
+            font-size: 8px;
             color: #475569;
+            text-transform: uppercase;
         }
         .bg-label { 
             background-color: #f8fafc; 
@@ -70,20 +72,20 @@
         }
         .uppercase { text-transform: uppercase; }
 
-        /* Estilo Estandarizado para Fotos (MAXIMIZADO) */
+        /* Fotos */
         .foto-grid {
             width: 100%;
             margin: 20px 0;
             text-align: center;
         }
         .foto-wrapper {
-            width: 350px; /* Tamaño máximo para 2 fotos horizontales */
-            height: 260px; 
+            width: 320px; 
+            height: 240px; 
             display: inline-block;
             margin: 8px;
             border: 1px solid #cbd5e1;
             background-color: #f8fafc;
-            border-radius: 10px;
+            border-radius: 8px;
             overflow: hidden;
             vertical-align: top;
         }
@@ -91,17 +93,17 @@
             width: 100%;
             height: 100%;
             display: block;
+            object-fit: cover;
         }
         .foto-caption {
-            font-size: 8.5px;
-            font-weight: 900;
+            font-size: 8px;
+            font-weight: bold;
             color: #1e293b;
-            margin-top: 8px;
+            margin-top: 5px;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
         }
 
-        /* Estilo de Firmas */
+        /* Firmas */
         .firmas-grid {
             width: 100%;
             margin-top: 20px;
@@ -116,7 +118,6 @@
             background-color: #ffffff;
             border-radius: 4px;
             padding: 15px 5px 10px 5px;
-            text-align: center;
         }
         .linea-firma { 
             border-top: 1px solid #94a3b8; 
@@ -137,7 +138,7 @@
             text-transform: uppercase;
         }
 
-        /* Pie de Página */
+        /* Footer */
         #footer {
             position: fixed;
             bottom: -1cm;
@@ -148,14 +149,8 @@
             border-top: 1px solid #e2e8f0;
             padding-top: 10px;
         }
-        .footer-text {
-            font-size: 8px;
-            color: #94a3b8;
-        }
-        .page-number:before {
-            content: "Página " counter(page);
-        }
-
+        .footer-text { font-size: 8px; color: #94a3b8; }
+        .page-number:before { content: "Página " counter(page); }
         .no-break { page-break-inside: avoid; }
     </style>
 </head>
@@ -170,22 +165,22 @@
 
     <div class="header">
         <h1>Acta de Monitoreo IPRESS NO ESPECIALIZADAS N° {{ ltrim($acta->id, '0') }}</h1>
-        <div class="establishment">{{ strtoupper($acta->establecimiento->nombre) }}</div>
+        <div class="establishment">{{ strtoupper($acta->establecimiento->nombre ?? 'ESTABLECIMIENTO NO REGISTRADO') }}</div>
     </div>
 
     <div class="section-header">1. Información de Control</div>
     <table>
         <tr>
-            <td class="bg-label">Fecha:</td>
+            <td class="bg-label">Fecha de Monitoreo:</td>
             <td>{{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Implementador:</td>
-            <td class="uppercase">{{ $monitor['nombre'] }}</td>
+            <td class="bg-label">Monitor / Implementador:</td>
+            <td class="uppercase">{{ $monitor['nombre'] ?? 'N/A' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Jefe del Establecimiento:</td>
-            <td class="uppercase">{{ $jefe['nombre'] }}</td>
+            <td class="uppercase">{{ $jefe['nombre'] ?? 'N/A' }}</td>
         </tr>
     </table>
 
@@ -210,9 +205,10 @@
             'farmacia'               => 'FARMACIA',
             'refcon'                 => 'REFCON',
             'laboratorio'            => 'LABORATORIO',
-            'urgencias_emergencias'  => 'URGENCIAS Y EMERGENCIAS'
+            'urgencias'              => 'URGENCIAS Y EMERGENCIAS'
         ];
         $yaImpresos = [];
+        $contadorModulo = 1;
     @endphp
 
     @foreach($ordenEstricto as $nombreTecnico => $tituloPublico)
@@ -222,65 +218,63 @@
                 $yaImpresos[] = $mod->id; 
                 $cont = is_string($mod->contenido) ? json_decode($mod->contenido, true) : $mod->contenido; 
             @endphp
-            @if(is_array($cont) && isset($cont[0]) && is_string($cont[0]) && str_contains($cont[0], '_')) @continue @endif
-
+            
             <div class="no-break">
-                <div style="background-color: #f1f5f9; padding: 4px 10px; font-weight: bold; font-size: 9px; margin-bottom: 2px; border: 1px solid #e2e8f0;">
-                    MÓDULO: {{ $tituloPublico }}
+                <div style="background-color: #f1f5f9; padding: 4px 10px; font-weight: bold; font-size: 9px; margin-bottom: 2px; border: 1px solid #e2e8f0; text-transform: uppercase;">
+                    MÓDULO {{ $contadorModulo }}: {{ $tituloPublico }}
                 </div>
                 @if(is_array($cont))
                     <table>
                         @foreach($cont as $key => $value)
-                            @if(!is_numeric($key) && !is_array($value) && !in_array($key, ['foto_evidencia', 'comentarios', 'observaciones', 'password', 'token']) && !str_contains(strtoupper($key), 'DOC'))
+                            @if(!is_numeric($key) && !is_array($value) && 
+                                !in_array(strtolower($key), ['id', 'acta_id', 'foto_evidencia', 'comentarios', 'observaciones', 'password', 'token', 'created_at', 'updated_at']) && 
+                                !str_contains(strtoupper($key), 'DOC'))
                                 <tr>
                                     <td class="bg-label">{{ strtoupper(str_replace(['_', 'inst'], [' ', 'entidad'], $key)) }}:</td>
-                                    <td class="uppercase">{{ $value }}</td>
+                                    <td class="uppercase">{{ is_bool($value) ? ($value ? 'SI' : 'NO') : $value }}</td>
                                 </tr>
                             @endif
                         @endforeach
                     </table>
                 @endif
             </div>
+            @php $contadorModulo++; @endphp
         @endif
     @endforeach
 
     <div class="section-header">3. DETALLE DE EQUIPAMIENTO POR MÓDULO</div>
-    @php $equiposPorModulo = $equipos->groupBy('modulo'); @endphp
-
-    @if($equiposPorModulo->count() > 0)
-        @foreach($ordenEstricto as $nombreTecnico => $tituloPublico)
-            @php $equiposModulo = $equiposPorModulo->get($nombreTecnico); @endphp
-            @if($equiposModulo && $equiposModulo->count() > 0)
-                <div class="no-break">
-                    <div style="padding: 4px 10px; font-weight: bold; font-size: 8.5px; color: #1e293b; border-bottom: 1px solid #cbd5e1; margin-bottom: 5px;">
-                        EQUIPOS EN {{ $tituloPublico }}
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th width="40%">DESCRIPCIÓN</th>
-                                <th width="30%">N° SERIE / CÓDIGO</th>
-                                <th width="30%">PROPIEDAD</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($equiposModulo as $eq)
-                                <tr class="uppercase">
-                                    <td>{{ $eq->descripcion }}</td>
-                                    <td style="font-family: monospace;">{{ $eq->nro_serie ?? '---' }}</td>
-                                    <td>{{ $eq->propio }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        @endforeach
+    
+    @if($equipos && $equipos->count() > 0)
+        <table>
+            <thead>
+                <tr>
+                    <th width="5%">N°</th>
+                    <th width="20%">MODULO</th>
+                    <th width="15%">SERIE/CÓDIGO</th>
+                    <th width="8%">CANT.</th>
+                    <th width="27%">DESCRIPCIÓN DEL EQUIPO</th>
+                    <th width="10%">ESTADO</th>
+                    <th width="15%">PROPIEDAD</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($equipos as $index => $eq)
+                    <tr class="uppercase" style="font-size: 8px;">
+                        <td style="text-align: center;">{{ $index + 1 }}</td>
+                        <td>{{ $ordenEstricto[$eq->modulo] ?? $eq->modulo }}</td>
+                        <td style="font-family: monospace;">{{ $eq->nro_serie ?? '---' }}</td>
+                        <td style="text-align: center;">{{ $eq->cantidad ?? '1' }}</td>
+                        <td>{{ $eq->descripcion }}</td>
+                        <td style="text-align: center;">{{ $eq->estado ?? 'N/A' }}</td>
+                        <td>{{ $eq->propio ?? '---' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     @else
         <p style="padding-left: 10px; font-style: italic; color: #64748b;">No se registró equipamiento tecnológico en este monitoreo.</p>
     @endif
 
-    {{-- SECCIÓN: PANEL FOTOGRÁFICO MAXIMIZADO --}}
     <div class="no-break">
         <div class="section-header">4. PANEL FOTOGRÁFICO DE EVIDENCIAS</div>
         @if($acta->foto1 || $acta->foto2)
@@ -309,13 +303,13 @@
         <div class="firmas-grid">
             <div class="firma-card">
                 <div class="linea-firma"></div>
-                <span class="nombre-firma">{{ $monitor['nombre'] }}</span>
+                <span class="nombre-firma">{{ $monitor['nombre'] ?? 'MONITOR' }}</span>
                 <span class="cargo-firma">Implementador</span>
             </div>
             <div class="firma-card">
                 <div class="linea-firma"></div>
-                <span class="nombre-firma">{{ $jefe['nombre'] }}</span>
-                <span class="cargo-firma">Jefe de Establecimiento</span>
+                <span class="nombre-firma">{{ $jefe['nombre'] ?? 'JEFE DE ESTABLECIMIENTO' }}</span>
+                <span class="cargo-firma">Jefe del Establecimiento</span>
             </div>
             @foreach($equipoMonitoreo as $miembro)
                 <div class="firma-card">
