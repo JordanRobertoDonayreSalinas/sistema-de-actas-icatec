@@ -35,6 +35,18 @@ class CredPdfController extends Controller
                                     ->where('modulo', $this->modulo)
                                     ->get();
 
+            // 4. Mapeo explícito de los nuevos campos para evitar errores de índices nulos en el PDF
+            $identidad = $datos['dni_firma'] ?? [
+                'tipo_dni' => 'N/A',
+                'version_dnie' => 'N/A',
+                'firma_digital_sihce' => 'no'
+            ];
+
+            $documentacion = $datos['documentacion'] ?? [
+                'declaracion_jurada' => 'no',
+                'compromiso_confidencialidad' => 'no'
+            ];
+            
             $pdf = Pdf::loadView('usuario.monitoreo.pdf.cred_pdf', [
                 'acta'    => $acta,
                 'detalle' => $detalle, 
