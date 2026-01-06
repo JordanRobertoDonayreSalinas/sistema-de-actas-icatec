@@ -36,11 +36,8 @@ class PlanificacionController extends Controller
             }
         }
 
-        // --- TRUCO DE COMPATIBILIDAD FORZADA ---
-        // Como tu componente usa $eq->propio para el 'selected', 
-        // nos aseguramos de que el valor sea idéntico a las opciones del HTML.
+        // Truco de compatibilidad para el select de propiedad
         $equipos = $equipos->map(function($item) {
-            // Limpiamos espacios y estandarizamos para que el Blade haga match
             $item->propio = trim(strtoupper($item->propio ?? 'ESTABLECIMIENTO'));
             return $item;
         });
@@ -70,11 +67,26 @@ class PlanificacionController extends Controller
             DB::beginTransaction();
 
             $acta = CabeceraMonitoreo::findOrFail($id);
+            
+            // 1. CAPTURA DEL ARRAY PRINCIPAL
             $datosForm = $request->input('contenido', []);
             $personal = $datosForm['personal'] ?? null;
             $equiposForm = $request->input('equipos', []);
 
-            // --- 1. GESTIÓN DE FOTOS ---
+            // 2. SINCRONIZACIÓN MANUAL DE CAMPOS (DNI Y DOCUMENTACIÓN)
+            // Esto asegura que se metan en el JSON final aunque vengan de inputs anidados
+            $datosForm['dni_firma'] = [
+                'tipo_dni_fisico' => $request->input('contenido.dni_firma.tipo_dni_fisico'),
+                'dnie_version'    => $request->input('contenido.dni_firma.dnie_version'),
+                'firma_sihce'     => $request->input('contenido.dni_firma.firma_sihce')
+            ];
+
+            $datosForm['documentacion'] = [
+                'firma_dj'               => $request->input('contenido.documentacion.firma_dj'),
+                'firma_confidencialidad' => $request->input('contenido.documentacion.firma_confidencialidad')
+            ];
+
+            // 3. GESTIÓN DE FOTOS
             $foto1 = $request->input('foto_1_actual'); 
             $foto2 = $request->input('foto_2_actual');
 
@@ -87,7 +99,11 @@ class PlanificacionController extends Controller
                 $foto2 = $request->file('foto_evidencia_2')->store('evidencias/planificacion', 'public');
             }
 
-            // --- 2. GUARDAR EN mon_detalle_modulos ---
+            // Sincronizar equipos al JSON para persistencia de vista
+            $datosForm['equipos_data'] = $equiposForm;
+            $jsonFinal = json_encode($datosForm);
+
+            // 4. GUARDAR EN mon_detalle_modulos (TABLA NUEVA)
             $nombreFull = mb_strtoupper(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? ''), 'UTF-8');
             
             DB::table('mon_detalle_modulos')->updateOrInsert(
@@ -97,14 +113,24 @@ class PlanificacionController extends Controller
                     'personal_dni'    => $personal['dni'] ?? null,
                     'personal_turno'  => mb_strtoupper($personal['turno'] ?? 'N/A', 'UTF-8'),
                     'personal_roles'  => mb_strtoupper($personal['rol'] ?? 'RESPONSABLE', 'UTF-8'),
-                    'contenido'       => json_encode($datosForm),
+                    'contenido'       => $jsonFinal,
                     'foto_1'          => $foto1,
                     'foto_2'          => $foto2,
                     'updated_at'      => now()
                 ]
             );
 
-            // --- 3. GUARDAR EN TABLA PROFESIONALES ---
+            // 5. GUARDAR EN mon_monitoreo_modulos (TABLA ANTIGUA)
+            // Aquí forzamos la actualización de la columna contenido
+            DB::table('mon_monitoreo_modulos')->updateOrInsert(
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
+                [
+                    'contenido'  => $jsonFinal,
+                    'updated_at' => now()
+                ]
+            );
+
+            // 6. GUARDAR EN TABLA PROFESIONALES
             if (!empty($personal['dni'])) {
                 DB::table('mon_profesionales')->updateOrInsert(
                     ['doc' => $personal['dni']], 
@@ -114,22 +140,17 @@ class PlanificacionController extends Controller
                         'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
                         'email'            => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
                         'telefono'         => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
-                        'updated_at'       => now(),
-                        'created_at'       => now()
+                        'updated_at'       => now()
                     ]
                 );
             }
 
-            // --- 4. SINCRONIZAR EQUIPOS (AJUSTADO AL COMPONENTE) ---
-            // Borramos para evitar duplicados y re-insertamos con la llave correcta
+            // 7. SINCRONIZAR EQUIPOS
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
 
             if (!empty($equiposForm)) {
                 foreach ($equiposForm as $eq) {
                     if (!empty($eq['descripcion'])) {
-                        
-                        // EL SECRETO: Tu componente usa 'propiedad', pero tu tabla usa 'propio'.
-                        // Mapeamos el dato del formulario al nombre de tu columna en DB.
                         $valorCapturado = $eq['propiedad'] ?? ($eq['propio'] ?? 'ESTABLECIMIENTO');
 
                         EquipoComputo::create([
@@ -147,7 +168,7 @@ class PlanificacionController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Planificación Familiar guardada exitosamente.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Datos guardados correctamente en ambas tablas.');
 
         } catch (\Exception $e) {
             DB::rollBack();
