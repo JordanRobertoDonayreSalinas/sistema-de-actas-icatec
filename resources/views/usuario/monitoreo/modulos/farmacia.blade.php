@@ -174,7 +174,7 @@
                                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">De parte de quién:</p>
                                 <div class="flex flex-wrap gap-6">
                                     @php $entes_guardados = (array)($detalle->contenido['capacitacion']['ente'] ?? []); @endphp
-                                    @foreach(['MINSA', 'DIRIS / DIRESA', 'UE'] as $ente)
+                                    @foreach(['MINSA', 'DIRESA', 'UE'] as $ente)
                                     <label class="flex items-center gap-2 text-[10px] font-bold text-slate-600 cursor-pointer">
                                         <input type="checkbox" name="contenido[capacitacion][ente][]" value="{{ $ente }}" {{ in_array($ente, $entes_guardados) ? 'checked' : '' }} class="rounded text-indigo-600"> {{ $ente }}
                                     </label>
@@ -377,7 +377,7 @@
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-indigo-700 uppercase italic">¿A quién comunica dificultades?</label>
                             <div class="flex gap-4">
-                                @foreach(['MINSA', 'DIRIS/DIRESA', 'UE'] as $com)
+                                @foreach(['MINSA', 'DIRESA', 'UE'] as $com)
                                 <label class="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
                                     <input type="radio" name="contenido[soporte][comunica]" value="{{$com}}" {{ ($detalle->contenido['soporte']['comunica'] ?? '') == $com ? 'checked' : '' }}> {{$com}}
                                 </label>
