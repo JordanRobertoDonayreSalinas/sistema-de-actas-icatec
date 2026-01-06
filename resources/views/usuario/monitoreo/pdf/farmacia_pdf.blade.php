@@ -53,6 +53,8 @@
             overflow: hidden;
             display: block;
         }
+
+    
         .img-box img { width: 100%; height: 180px; object-fit: cover; }
         .photo-label { margin-top: 5px; font-size: 8px; font-weight: bold; color: #475569; text-transform: uppercase; }
         
@@ -101,6 +103,39 @@
                     <br><small>({{ implode(', ', (array)$detalle->contenido['capacitacion']['ente']) }})</small>
                 @endif
             </td> -->
+        </tr>
+        <tr>
+            <th>Declaración Jurada</th>
+            <td>
+                <span class="badge {{ ($datos['documentacion']['firma_dj'] ?? '') == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $datos['documentacion']['firma_dj'] ?? 'NO' }}
+                </span>
+            </td>
+            <th>Compromiso Confidencialidad</th>
+            <td>
+                <span class="badge {{ ($datos['documentacion']['firma_confidencialidad'] ?? '') == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $datos['documentacion']['firma_confidencialidad'] ?? 'NO' }}
+                </span>
+            </td>
+        </tr>
+
+        <tr>
+            <th>Tipo de DNI Físico</th>
+            {{-- Si NO es electrónico, ocupamos las 3 celdas restantes (colspan="3") --}}
+            <td @if(($datos['dni_firma']['tipo_dni_fisico'] ?? ($datos['tipo_dni_fisico'] ?? '')) != 'ELECTRONICO') colspan="3" @endif>
+                <strong>
+                    DNI {{ $datos['dni_firma']['tipo_dni_fisico'] ?? ($datos['tipo_dni_fisico'] ?? 'AZUL') }}
+                </strong>
+            </td>
+
+            {{-- Solo si es electrónico mostramos estas dos celdas --}}
+            @if(($datos['dni_firma']['tipo_dni_fisico'] ?? ($datos['tipo_dni_fisico'] ?? '')) == 'ELECTRONICO')
+                <th style="background-color: #f8fafc; color: #475569;">DETALLE DEL DNIe</th>
+                <td>
+                    <span style="font-weight: bold;">VERSIÓN:</span> {{ $datos['dni_firma']['dnie_version'] ?? ($datos['dnie_version'] ?? '---') }} <br>
+                    <span style="font-weight: bold;">FIRMA SIHCE:</span> {{ $datos['dni_firma']['firma_sihce'] ?? ($datos['firma_sihce'] ?? 'NO') }}
+                </td>
+            @endif
         </tr>
     </table>
 
