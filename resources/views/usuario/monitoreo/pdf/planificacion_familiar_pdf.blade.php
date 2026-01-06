@@ -101,110 +101,136 @@
             <td>{{ $detalle->contenido['personal']['contacto'] ?? 'N/A' }}</td>
             
         </tr>
-        
-    </table>
-
-    <div class="section-header">02. Capacitación</div>
-    <table class="table-data">
         <tr>
-            <th width="30%">¿Recibió Capacitación?</th>
-            {{-- Corrección: Acceder a través de ->contenido --}}
-            <td>{{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}</td>
-            
-            <th width="30%">Entidades:</th>
+            <th>Declaración Jurada</th>
             <td>
-                @if(isset($detalle->contenido['capacitacion']['ente']))
-                    @if(is_array($detalle->contenido['capacitacion']['ente']))
-                        {{ implode(', ', $detalle->contenido['capacitacion']['ente']) }}
-                    @else
-                        {{ $detalle->contenido['capacitacion']['ente'] }}
-                    @endif
-                @else
-                    N/A
-                @endif
+                <span class="badge {{ ($datos['documentacion']['firma_dj'] ?? '') == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $datos['documentacion']['firma_dj'] ?? 'NO' }}
+                </span>
+            </td>
+            <th>Confidencialidad</th>
+            <td>
+                <span class="badge {{ ($datos['documentacion']['firma_confidencialidad'] ?? '') == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $datos['documentacion']['firma_confidencialidad'] ?? 'NO' }}
+                </span>
             </td>
         </tr>
+        <tr>
+            <th>Tipo de DNI Físico</th>
+            <td @if(($datos['dni_firma']['tipo_dni_fisico'] ?? '') != 'ELECTRONICO') colspan="3" @endif>
+                <span class="text-indigo">DNI {{ $datos['dni_firma']['tipo_dni_fisico'] ?? 'AZUL' }}</span>
+            </td>
+            @if(($datos['dni_firma']['tipo_dni_fisico'] ?? '') == 'ELECTRONICO')
+               <th style="background-color: #f8fafc; color: #475569;">DETALLE DEL DNIe</th>
+                <td>
+                    <span style="font-weight: bold;">VERSIÓN:</span> {{ $datos['dni_firma']['dnie_version'] ?? ($datos['dnie_version'] ?? '---') }} <br>
+                    <span style="font-weight: bold;">FIRMA SIHCE:</span> {{ $datos['dni_firma']['firma_sihce'] ?? ($datos['firma_sihce'] ?? 'NO') }}
+                </td>
+            @endif
+        </tr>
     </table>
+        
+    <div class="section-header">02. Capacitación</div>
+        <table class="table-data">
+            <tr>
+                <th width="30%">¿Recibió Capacitación?</th>
+                {{-- Corrección: Acceder a través de ->contenido --}}
+                <td>{{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}</td>
+                
+                <th width="30%">Entidades:</th>
+                <td>
+                    @if(isset($detalle->contenido['capacitacion']['ente']))
+                        @if(is_array($detalle->contenido['capacitacion']['ente']))
+                            {{ implode(', ', $detalle->contenido['capacitacion']['ente']) }}
+                        @else
+                            {{ $detalle->contenido['capacitacion']['ente'] }}
+                        @endif
+                    @else
+                        N/A
+                    @endif
+                </td>
+            </tr>
+        </table>
 
-    <div class="section-header">03. Insumos y Equipamiento</div>
-    <table class="table-data">
+        <div class="section-header">03. Insumos y Equipamiento</div>
+        <table class="table-data">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th class="text-center" width="50">Cant.</th>
+                    <th class="text-center" width="80">Estado</th>
+                    <th class="text-center" width="100">Propiedad</th>
+                    <th>Número de Serie</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($equipos as $eq)
+                <tr class="uppercase">
+                    <td>{{ $eq->descripcion ?? 'N/A' }}</td>
+                    <td class="text-center">{{ $eq->cantidad ?? '0' }}</td>
+                    <td class="text-center">{{ $eq->estado ?? 'N/A' }}</td>
+                    <td class="text-center">
+                        {{ is_object($eq) ? ($eq->propio ?? 'N/A') : ($eq['propio'] ?? 'N/A') }}
+                    </td>
+                    <td>{{ $eq->nro_serie ?? 'S/N' }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="text-center">No se registraron equipos.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        <div class="section-header">04. Procesos HIS y Tiempos</div>
+        <table class="table-data">
+            <tr>
+                <th width="35%">Tiempo Promedio Atención (min):</th>
+                <td class="text-center" width="15%">{{ $detalle->contenido['tiempo_atencion'] ?? '0' }}</td>
+                <th width="35%">Atenciones P.F. al mes:</th>
+                <td class="text-center" width="15%">{{ $detalle->contenido['atenciones_mes'] ?? '0' }}</td>
+            </tr>
+        </table>
+        <table class="table-data" style="margin-top: 0;">
+            <thead>
+                <tr>
+                    <th width="85%">Indicador de Evaluación</th>
+                    <th width="15%" class="text-center">Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $preguntasHis = [
+                        'contingencia'    => '¿Existe cuaderno de contingencia ante caída de internet?',
+                        'coord_estad'     => '¿Coordina con estadística para validar cierres mensuales?',
+                        'conoce_anul'     => '¿Conoce el procedimiento para anular registros?',
+                        'cierre_producc'  => '¿Realiza el cierre de su hoja de producción (HIS)?'
+                    ];
+                @endphp
+                @foreach($preguntasHis as $key => $texto)
+                <tr>
+                    <td>{{ $texto }}</td>
+                    <td class="text-center uppercase">
+                        {{ $detalle->contenido['preguntas'][$key] ?? 'N/A' }}
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div class="section-header">05. Dificultades y Soporte</div>
+        <table class="table-data" style="width: 100%;">
         <thead>
             <tr>
-                <th>Descripción</th>
-                <th class="text-center" width="50">Cant.</th>
-                <th class="text-center" width="80">Estado</th>
-                <th class="text-center" width="100">Propiedad</th>
-                <th>Número de Serie</th>
+                <th style="text-align: center;">¿A quién comunica dificultades?</th>
+                <th style="text-align: center;">¿Qué medio utiliza?</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($equipos as $eq)
-            <tr class="uppercase">
-                <td>{{ $eq->descripcion ?? 'N/A' }}</td>
-                <td class="text-center">{{ $eq->cantidad ?? '0' }}</td>
-                <td class="text-center">{{ $eq->estado ?? 'N/A' }}</td>
-                <td class="text-center">
-                    {{ is_object($eq) ? ($eq->propio ?? 'N/A') : ($eq['propio'] ?? 'N/A') }}
-                </td>
-                <td>{{ $eq->nro_serie ?? 'S/N' }}</td>
+            <tr class="text-center uppercase">
+                <td style="text-align: center;">{{ $detalle->contenido['soporte']['comunica'] ?? 'N/A' }}</td>
+                <td style="text-align: center;">{{ $detalle->contenido['soporte']['medio'] ?? 'N/A' }}</td>
             </tr>
-            @empty
-            <tr><td colspan="5" class="text-center">No se registraron equipos.</td></tr>
-            @endforelse
         </tbody>
     </table>
-
-    <div class="section-header">04. Procesos HIS y Tiempos</div>
-    <table class="table-data">
-        <tr>
-            <th width="35%">Tiempo Promedio Atención (min):</th>
-            <td class="text-center" width="15%">{{ $detalle->contenido['tiempo_atencion'] ?? '0' }}</td>
-            <th width="35%">Atenciones P.F. al mes:</th>
-            <td class="text-center" width="15%">{{ $detalle->contenido['atenciones_mes'] ?? '0' }}</td>
-        </tr>
-    </table>
-    <table class="table-data" style="margin-top: 0;">
-        <thead>
-            <tr>
-                <th width="85%">Indicador de Evaluación</th>
-                <th width="15%" class="text-center">Resultado</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $preguntasHis = [
-                    'contingencia'    => '¿Existe cuaderno de contingencia ante caída de internet?',
-                    'coord_estad'     => '¿Coordina con estadística para validar cierres mensuales?',
-                    'conoce_anul'     => '¿Conoce el procedimiento para anular registros?',
-                    'cierre_producc'  => '¿Realiza el cierre de su hoja de producción (HIS)?'
-                ];
-            @endphp
-            @foreach($preguntasHis as $key => $texto)
-            <tr>
-                <td>{{ $texto }}</td>
-                <td class="text-center uppercase">
-                    {{ $detalle->contenido['preguntas'][$key] ?? 'N/A' }}
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <div class="section-header">05. Dificultades y Soporte</div>
-    <table class="table-data" style="width: 100%;">
-    <thead>
-        <tr>
-            <th style="text-align: center;">¿A quién comunica dificultades?</th>
-            <th style="text-align: center;">¿Qué medio utiliza?</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr class="text-center uppercase">
-            <td style="text-align: center;">{{ $detalle->contenido['soporte']['comunica'] ?? 'N/A' }}</td>
-            <td style="text-align: center;">{{ $detalle->contenido['soporte']['medio'] ?? 'N/A' }}</td>
-        </tr>
-    </tbody>
-</table>
 
     @if(!empty($detalle->foto_1) || !empty($detalle->foto_2))
     <div class="section-header">06. Evidencias Fotográficas</div>
