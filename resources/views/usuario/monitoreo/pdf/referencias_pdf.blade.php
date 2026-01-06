@@ -106,7 +106,39 @@ a
             <td>{{ $detalle->contenido['personal']['contacto'] ?? 'N/A' }}</td>
             
         </tr>
-        
+
+        {{-- DOCUMENTACIÓN: Corregido acceso a llaves --}}
+        <tr>
+            <th>¿Firmó Declaración Jurada?</th>
+            <td>
+                @php $dj = strtoupper($datos['documentacion']['firma_dj'] ?? 'NO'); @endphp
+                <span class="badge {{ $dj == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $dj }}
+                </span>
+            </td>
+            <th>¿Firmó Confidencialidad?</th>
+            <td>
+                @php $conf = strtoupper($datos['documentacion']['firma_confidencialidad'] ?? 'NO'); @endphp
+                <span class="badge {{ $conf == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $conf }}
+                </span>
+            </td>
+        </tr>
+
+        {{-- IDENTIDAD DIGITAL: Lógica condicional --}}
+        <tr>
+            <th>Tipo de DNI Físico</th>
+            <td @if(($datos['dni_firma']['tipo_dni_fisico'] ?? '') != 'ELECTRONICO') colspan="3" @endif>
+                <span class="text-indigo">DNI {{ $datos['dni_firma']['tipo_dni_fisico'] ?? 'AZUL' }}</span>
+            </td>
+            @if(($datos['dni_firma']['tipo_dni_fisico'] ?? '') == 'ELECTRONICO')
+                <th style="background-color: #f1f5f9;">Detalle DNIe</th>
+                <td>
+                    Versión: {{ $datos['dni_firma']['dnie_version'] ?? '---' }} <br>
+                    Firma SIHCE: {{ $datos['dni_firma']['firma_sihce'] ?? 'NO' }}
+                </td>
+            @endif
+        </tr>
     </table>
 
     <div class="section-header">02. Capacitación</div>
@@ -131,7 +163,7 @@ a
         </tr>
     </table>
 
-    <div class="section-header">02. Insumos y Equipamiento</div>
+    <div class="section-header">03. Insumos y Equipamiento</div>
     <table class="table-data">
         <thead>
             <tr>
@@ -157,7 +189,7 @@ a
         </tbody>
     </table>
 
-    <div class="section-header">03. Gestión de Referencias</div>
+    <div class="section-header">04. Gestión de Referencias</div>
     <table class="table-data">
         <thead>
             <tr>
@@ -186,7 +218,7 @@ a
         </tbody>
     </table>
 
-    <div class="section-header">04. Dificultades y Soporte</div>
+    <div class="section-header">05. Dificultades y Soporte</div>
     <table class="table-data" style="width: 100%;">
     <tr>
         <th style="text-align: center;">¿A quién comunica dificultades?</th>
@@ -203,7 +235,7 @@ a
 </table>
 
     @if(!empty($detalle->foto_1) || !empty($detalle->foto_2))
-    <div class="section-header">05. Evidencias Fotográficas</div>
+    <div class="section-header">06. Evidencias Fotográficas</div>
     <table class="photo-table">
         <tr>
             @if(!empty($detalle->foto_1))
