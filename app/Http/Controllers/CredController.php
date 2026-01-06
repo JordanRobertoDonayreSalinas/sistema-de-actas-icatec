@@ -148,6 +148,19 @@ class CredController extends Controller
                 }
             }
 
+                // 2. CAPTURA DE CAMPOS NUEVOS (Los que están fuera de 'contenido' en el Blade)
+            // Los insertamos manualmente en el array para que viajen al JSON
+            $datosForm['dni_firma'] = [
+                'tipo_dni'            => $request->input('tipo_dni'),
+                'version_dnie'        => $request->input('version_dnie'),
+                'firma_digital_sihce' => $request->input('firma_digital_sihce')
+            ];
+
+            $datosForm['documentacion'] = [
+                'declaracion_jurada'          => $request->input('declaracion_jurada'),
+                'compromiso_confidencialidad' => $request->input('compromiso_confidencialidad')
+            ];
+
             DB::commit();
             return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Datos actualizados correctamente.');
 
