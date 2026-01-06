@@ -14,28 +14,31 @@ class ReferenciasPdfController extends Controller
 
     public function generar($id)
     {
-        // 1. Cargar Cabecera con Establecimiento y Monitor
+        // 1. Cargar Cabecera
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
 
-        // 2. Buscar Detalle en mon_detalle_modulos
+        // 2. Buscar Detalle
         $detalle = DB::table('mon_detalle_modulos')
                     ->where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', $this->modulo)
                     ->first();
 
-        // 3. Cargar Equipos del módulo Referencias
+        // 3. Cargar Equipos
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo', $this->modulo)
                                 ->get();
 
-        if ($detalle) {
-            $detalle->contenido = is_string($detalle->contenido) 
+        // 4. EXTRAER DATOS DEL JSON (Punto Crítico)
+        $datos = [];
+        if ($detalle && !empty($detalle->contenido)) {
+            // Decodificamos el JSON a un array asociativo
+            $datos = is_string($detalle->contenido) 
                 ? json_decode($detalle->contenido, true) 
-                : $detalle->contenido;
+                : (array)$detalle->contenido;
         }
 
-        // 4. Generación del PDF
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.referencias_pdf', compact('acta', 'detalle', 'equipos'))
+        // 5. Generación del PDF (Pasamos 'datos' explícitamente)
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.referencias_pdf', compact('acta', 'detalle', 'equipos', 'datos'))
                   ->setPaper('a4', 'portrait');
 
         return $pdf->stream("MONITOREO_REFERENCIAS_ACTA_{$acta->id}.pdf");
