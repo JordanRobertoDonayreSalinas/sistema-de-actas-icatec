@@ -183,19 +183,161 @@
                     </div>
                 </div>
 
-                {{-- 02. EQUIPOS --}}
+                {{-- SECCIÓN 2: DOCUMENTACIÓN ADMINISTRATIVA --}}
+                <div class="mt-6 mb-6 border-t border-slate-100 pt-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                            <i data-lucide="file-signature" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-700 uppercase tracking-tight">Documentación Administrativa</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Declaración Jurada --}}
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <p class="text-[10px] font-black text-slate-400 uppercase mb-3">¿Firmó declaración jurada?</p>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
+                                    <input type="radio" name="contenido[documentacion][firma_dj]" value="SI" 
+                                        {{ ($detalle->contenido['documentacion']['firma_dj'] ?? '') == 'SI' ? 'checked' : '' }}> SÍ
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
+                                    <input type="radio" name="contenido[documentacion][firma_dj]" value="NO" 
+                                        {{ ($detalle->contenido['documentacion']['firma_dj'] ?? '') == 'NO' ? 'checked' : '' }}> NO
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Compromiso de Confidencialidad --}}
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <p class="text-[10px] font-black text-slate-400 uppercase mb-3">¿Firmó compromiso de confidencialidad?</p>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
+                                    <input type="radio" name="contenido[documentacion][firma_confidencialidad]" value="SI" 
+                                        {{ ($detalle->contenido['documentacion']['firma_confidencialidad'] ?? '') == 'SI' ? 'checked' : '' }}> SÍ
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
+                                    <input type="radio" name="contenido[documentacion][firma_confidencialidad]" value="NO" 
+                                        {{ ($detalle->contenido['documentacion']['firma_confidencialidad'] ?? '') == 'NO' ? 'checked' : '' }}> NO
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- SECCIÓN 03: TIPO DE DNI Y FIRMA DIGITAL --}}
+                {{-- ======================================================================== --}}
+                <div class="mt-6 border-t border-slate-100 pt-6" x-data="{ tipoDni: '{{ $detalle->contenido['dni_firma']['tipo_dni_fisico'] ?? ($registro->tipo_dni_fisico ?? 'AZUL') }}' }">
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">02</span>
+                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Tipo de DNI y Firma Digital</h4>
+                    </div>
+
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-4 italic">Seleccione el tipo de documento físico</p>
+
+                    {{-- Grid de Tarjetas de Selección --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+                        {{-- TARJETA: DNI ELECTRÓNICO --}}
+                        <label class="cursor-pointer relative group">
+                            <input type="radio" name="contenido[dni_firma][tipo_dni_fisico]" value="ELECTRONICO" class="peer sr-only"
+                                x-model="tipoDni" @change="toggleDniOptions('ELECTRONICO')"
+                                {{ ($detalle->contenido['dni_firma']['tipo_dni_fisico'] ?? '') == 'ELECTRONICO' ? 'checked' : '' }}>
+
+                            <div class="p-6 rounded-[2rem] border-2 transition-all duration-200 border-slate-100 bg-white hover:border-indigo-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/30">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-indigo-100 p-3 rounded-2xl text-indigo-600">
+                                        <i data-lucide="credit-card" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-black text-slate-800 text-sm uppercase">DNI ELECTRÓNICO</h4>
+                                        <span class="text-[9px] font-black text-indigo-500 bg-indigo-100/50 px-2 py-0.5 rounded-full uppercase">Con Chip</span>
+                                    </div>
+                                    <div class="ml-auto hidden peer-checked:block text-indigo-600">
+                                        <i data-lucide="check-circle-2" class="w-6 h-6 fill-indigo-600 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        {{-- TARJETA: DNI AZUL --}}
+                        <label class="cursor-pointer relative group">
+                            <input type="radio" name="contenido[dni_firma][tipo_dni_fisico]" value="AZUL" class="peer sr-only"
+                                x-model="tipoDni" @change="toggleDniOptions('AZUL')"
+                                {{ ($detalle->contenido['dni_firma']['tipo_dni_fisico'] ?? '') == 'AZUL' ? 'checked' : '' }}>
+
+                            <div class="p-6 rounded-[2rem] border-2 transition-all duration-200 border-slate-100 bg-white hover:border-sky-300 peer-checked:border-sky-600 peer-checked:bg-sky-50/30">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-sky-100 p-3 rounded-2xl text-sky-600">
+                                        <i data-lucide="user-square" class="w-6 h-6"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-black text-slate-800 text-sm uppercase">DNI AZUL</h4>
+                                        <span class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Tradicional</span>
+                                    </div>
+                                    <div class="ml-auto hidden peer-checked:block text-sky-600">
+                                        <i data-lucide="check-circle-2" class="w-6 h-6 fill-sky-600 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    {{-- CONTENEDOR CONDICIONAL --}}
+                    <div id="dnie-options-container" 
+                        x-show="tipoDni === 'ELECTRONICO'" 
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        class="bg-indigo-50/50 p-8 rounded-[2.5rem] border border-indigo-100 space-y-8">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {{-- Versión del DNIe --}}
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-indigo-700 uppercase tracking-widest ml-2">Versión del DNIe</label>
+                                <select name="contenido[dni_firma][dnie_version]" class="input-standard">
+                                    <option value="">-- SELECCIONE --</option>
+                                    <option value="1.0" {{ ($detalle->contenido['dni_firma']['dnie_version'] ?? '') == '1.0' ? 'selected' : '' }}>VERSIÓN 1.0</option>
+                                    <option value="2.0" {{ ($detalle->contenido['dni_firma']['dnie_version'] ?? '') == '2.0' ? 'selected' : '' }}>VERSIÓN 2.0</option>
+                                    <option value="3.0" {{ ($detalle->contenido['dni_firma']['dnie_version'] ?? '') == '3.0' ? 'selected' : '' }}>VERSIÓN 3.0</option>
+                                </select>
+                            </div>
+
+                            {{-- Firma Digital en SIHCE --}}
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-indigo-700 uppercase tracking-widest ml-2 block">¿Firma digitalmente en SIHCE?</label>
+                                <div class="flex items-center gap-8 mt-4">
+                                    <label class="flex items-center gap-2 cursor-pointer font-black text-xs text-slate-500 group">
+                                        <input type="radio" name="contenido[dni_firma][firma_sihce]" value="SI" 
+                                            class="w-5 h-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                            {{ ($detalle->contenido['dni_firma']['firma_sihce'] ?? '') == 'SI' ? 'checked' : '' }}> 
+                                        <span class="group-hover:text-indigo-600 transition-colors">SÍ</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer font-black text-xs text-slate-500 group">
+                                        <input type="radio" name="contenido[dni_firma][firma_sihce]" value="NO" 
+                                            class="w-5 h-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                                            {{ ($detalle->contenido['dni_firma']['firma_sihce'] ?? '') == 'NO' ? 'checked' : '' }}> 
+                                        <span class="group-hover:text-red-500 transition-colors">NO</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 04. EQUIPOS --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4 border-b border-slate-100 pb-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">02</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">03</span>
                         <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Insumos y Equipamiento</h4>
                     </div>
                     <x-tabla-equipos :equipos="$equipos" modulo="cred" />
                 </div>
 
-                {{-- 03. MÉTRICAS --}}
+                {{-- 05. MÉTRICAS --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">03</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">04</span>
                         <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest">Métricas de Atenciones CRED</h4>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
@@ -224,10 +366,10 @@
                     </div>
                 </div>
 
-                {{-- 04. SOPORTE --}}
+                {{-- 06. SOPORTE --}}
                 <div class="space-y-6">
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">04</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">05</span>
                         <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest">Dificultades y Soporte</h4>
                     </div>
                     <div class="p-8 bg-indigo-50/30 rounded-[2.5rem] border border-indigo-100 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -254,7 +396,7 @@
                     </div>
                 </div>
 
-                {{-- 05. FOTOS CORREGIDAS CON OPCIÓN DE ELIMINAR --}}
+                {{-- 07. FOTOS CORREGIDAS CON OPCIÓN DE ELIMINAR --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                     <div class="space-y-4">
                         <label class="text-[10px] font-black uppercase text-slate-400 ml-2 italic">Evidencia 01</label>
@@ -355,5 +497,35 @@
             });
         }
     });
+
+    // Función para mostrar/ocultar opciones de DNIe
+    function toggleDniOptions(tipo) {
+      const container = document.getElementById('dnie-options-container');
+
+      if (tipo === 'ELECTRONICO') {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+        // Opcional: Limpiar los campos internos si se cambia a DNI Azul
+        // document.querySelector('select[name="contenido[dnie_version]"]').value = "";
+        // document.querySelectorAll('input[name="contenido[firma_sihce]"]').forEach(el => el.checked = false);
+      }
+    }
+
+    // Ejecutar al cargar la página (para ediciones donde ya hay datos guardados)
+    document.addEventListener("DOMContentLoaded", function() {
+      // Verificar cuál radio button está seleccionado al inicio
+      const selectedDni = document.querySelector('input[name="contenido[tipo_dni_fisico]"]:checked');
+      if (selectedDni) {
+        toggleDniOptions(selectedDni.value);
+      }
+
+      // Reinicializar iconos si usas Lucide
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
 </script>
+
+
 @endpush
