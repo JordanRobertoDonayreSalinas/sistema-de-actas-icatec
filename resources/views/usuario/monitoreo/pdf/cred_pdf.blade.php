@@ -138,8 +138,44 @@
             <th>Teléfono</th>
             <td>{{ $datos['personal']['contacto'] ?? 'No registrado' }}</td>
         </tr>
+        <tr>
+            <th>Declaración Jurada</th>
+            <td>
+                <span class="badge {{ ($datos['documentacion']['firma_dj'] ?? '') == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $datos['documentacion']['firma_dj'] ?? 'NO' }}
+                </span>
+            </td>
+            <th>Compromiso Confidencialidad</th>
+            <td>
+                <span class="badge {{ ($datos['documentacion']['firma_confidencialidad'] ?? '') == 'SI' ? 'badge-success' : 'badge-danger' }}">
+                    {{ $datos['documentacion']['firma_confidencialidad'] ?? 'NO' }}
+                </span>
+            </td>
+        </tr>
+
+        <tr>
+            <th>Tipo de DNI Físico</th>
+            {{-- Si NO es electrónico, ocupamos las 3 celdas restantes (colspan="3") --}}
+            <td @if(($datos['dni_firma']['tipo_dni_fisico'] ?? ($datos['tipo_dni_fisico'] ?? '')) != 'ELECTRONICO') colspan="3" @endif>
+                <strong>
+                    DNI {{ $datos['dni_firma']['tipo_dni_fisico'] ?? ($datos['tipo_dni_fisico'] ?? 'AZUL') }}
+                </strong>
+            </td>
+
+            {{-- Solo si es electrónico mostramos estas dos celdas --}}
+            @if(($datos['dni_firma']['tipo_dni_fisico'] ?? ($datos['tipo_dni_fisico'] ?? '')) == 'ELECTRONICO')
+                <th style="background-color: #f8fafc; color: #475569;">DETALLE DEL DNIe</th>
+                <td>
+                    <span style="font-weight: bold;">VERSIÓN:</span> {{ $datos['dni_firma']['dnie_version'] ?? ($datos['dnie_version'] ?? '---') }} <br>
+                    <span style="font-weight: bold;">FIRMA SIHCE:</span> {{ $datos['dni_firma']['firma_sihce'] ?? ($datos['firma_sihce'] ?? 'NO') }}
+                </td>
+            @endif
+        </tr>
     </table>
-    <div class="section-title">2. Capacitación</div>
+ 
+
+
+    <div class="section-title">3. Capacitación</div>
     <table>
         <tr>
             <th width="30%">¿Recibió Capacitación?</th>
@@ -158,7 +194,7 @@
             </td>
         </tr>
     </table>
-    <div class="section-title">3. Inventario de Equipamiento Computarizado</div>
+    <div class="section-title">4. Inventario de Equipamiento Computarizado</div>
     <table>
         <thead>
             <tr>
@@ -185,7 +221,7 @@
         </tbody>
     </table>
 
-    <div class="section-title">4. Métricas de Atención Mes Actual</div>
+    <div class="section-title">5. Métricas de Atención Mes Actual</div>
     <table class="table">
         <tr>
             <th>Atenciones CRED del mes</th>
@@ -195,7 +231,7 @@
         </tr>
     </table>
 
-    <div class="section-title">5. Soporte y Comunicación</div>
+    <div class="section-title">6. Soporte y Comunicación</div>
     <table class="table-data" style="width: 100%;">
     <tr>
         <th style="text-align: center;">¿A quién comunica dificultades?</th>
@@ -207,7 +243,7 @@
     </tr>
 </table>
 
-    <div class="section-title">6. Evidencia Fotográfica</div>
+    <div class="section-title">7. Evidencia Fotográfica</div>
     <div class="photo-section">
         {{-- Foto 1 --}}
         @if(!empty($detalle->foto_1))
