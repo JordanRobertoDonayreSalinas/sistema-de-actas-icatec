@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Acta;
+use App\Models\CabeceraMonitoreo;
 use App\Models\Profesional;
 use App\Models\ComCapacitacion;
 //use App\Models\ComEquipamiento;
@@ -20,10 +20,10 @@ use App\Models\EquipoComputo;
 class PsicologiaController extends Controller
 {
     // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
-    const MODULO_ID = 'PSICOLOGIA';
+    const MODULO_ID = 'consulta_psicologia';
 
     public function index($id){
-        $acta = Acta::with('establecimiento')->findOrFail($id);
+        $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
         
         $dbCapacitacion = ComCapacitacion::with('profesional')
                     ->where('acta_id', $id)->where('modulo_id', self::MODULO_ID)->first();
@@ -59,11 +59,11 @@ class PsicologiaController extends Controller
     }
 
     // 3. STORE: Guarda y Redirige
+    // 3. STORE: Guarda y Redirige
     public function store(Request $request, $id)
     {
         $data = json_decode($request->input('data'), true);
 
-        // Validamos manualmente porque $request->validate no lee directo del JSON string
         if (!$data || !isset($data['profesional']['doc'])) {
              return response()->json(['success' => false, 'message' => 'Faltan datos del profesional'], 422);
         }
@@ -71,41 +71,43 @@ class PsicologiaController extends Controller
         try {
             DB::beginTransaction();
 
+            // ---------------------------------------------------------
+            // A. GUARDADO SQL (TABLAS RELACIONALES) - ESTO ESTÁ BIEN
+            // ---------------------------------------------------------
+
             // 1. PROFESIONAL
             $datosProfesional = $data['profesional'];
             $profesional = Profesional::updateOrCreate(
-                ['doc' => $datosProfesional['doc'], 'tipo_doc' => $datosProfesional['tipo_doc'] ?? 'DNI'],
+                ['doc' => $datosProfesional['doc']],
                 [
+                    'tipo_doc'         => $datosProfesional['tipo_doc'] ?? 'DNI',
                     'apellido_paterno' => $datosProfesional['apellido_paterno'],
                     'apellido_materno' => $datosProfesional['apellido_materno'],
                     'nombres'          => $datosProfesional['nombres'],
-                    'email'            => $datosProfesional['email'],
-                    'telefono'         => $datosProfesional['telefono'],
+                    'email'            => $datosProfesional['email'] ?? null,
+                    'telefono'         => $datosProfesional['telefono'] ?? null,
                 ]
             );
 
-            // 2. CAPACITACIÓN
+            // 2. CAPACITACIÓN (SQL)
             $datosCapacitacion = $data['capacitacion'];
             ComCapacitacion::updateOrCreate(
-                ['acta_id' => $id, 'modulo_id' => 'PSICOLOGIA'],
+                ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
                 [
                     'profesional_id'  => $profesional->id,
                     'recibieron_cap'  => $datosCapacitacion['recibieron_cap'],
-                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? $datosCapacitacion['institucion_cap'] : null,
+                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
                     'decl_jurada'           => $datosCapacitacion['decl_jurada'] ?? null,
                     'comp_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? null,
                 ]
             );
 
-
-            // 3. INVENTARIO
-            // A. Limpiar registros previos
+            // 3. INVENTARIO (SQL)
             EquipoComputo::where('cabecera_monitoreo_id', $id)
                          ->where('modulo', self::MODULO_ID)
                          ->delete();
 
             $listaInventario = $data['inventario'] ?? [];
-
             if (!empty($listaInventario)) {
                 foreach ($listaInventario as $item) {
                     EquipoComputo::create([
@@ -121,10 +123,10 @@ class PsicologiaController extends Controller
                 }
             }
 
-            // 4. DIFICULTADES
+            // 4. DIFICULTADES (SQL)
             $datosDificultad = $data['dificultades'];
             ComDificultad::updateOrCreate(
-                ['acta_id' => $id, 'modulo_id' => 'PSICOLOGIA'],
+                ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
                 [
                     'profesional_id' => $profesional->id,
                     'insti_comunica' => $datosDificultad['institucion'] ?? null,
@@ -132,27 +134,23 @@ class PsicologiaController extends Controller
                 ]
             );
 
-            // 3. INICIO LABORES (NUEVO BLOQUE)
+            // 5. INICIO LABORES (SQL)
             $datosInicio = $data['inicio_labores'] ?? [];
             ComDocuAsisten::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
                 [
                     'profesional_id'    => $profesional->id,
-                    // Mapeo JS -> BD
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
                     'receta'            => $datosInicio['receta'] ?? null,
                     'orden_laboratorio' => $datosInicio['orden_lab'] ?? null,
-                    // 'comentarios'    => $datosInicio['comentarios'] ?? null, // Si agregas campo de texto
                 ]
             );
 
-
-            // 4. SECCIÓN DNI (NUEVO BLOQUE)
+            // 6. SECCIÓN DNI (SQL)
             $datosDni = $data['seccion_dni'] ?? [];     
-            // Lógica: Si es DNI AZUL, limpiamos versión y firma
             $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO';
             
             ComDni::updateOrCreate(
@@ -160,52 +158,90 @@ class PsicologiaController extends Controller
                 [
                     'profesional_id' => $profesional->id,
                     'tip_dni'        => $datosDni['tipo_dni'] ?? null,
-                    // Si no es electrónico, guardamos null en versión y firma
                     'version_dni'    => $esElectronico ? ($datosDni['version_dnie'] ?? null) : null,
                     'firma_sihce'    => $esElectronico ? ($datosDni['firma_sihce'] ?? null) : null,
                     'comentarios'    => $datosDni['comentarios'] ?? null,
                 ]
             );
 
-            // ----------------------------------------------------
-            // 5. FOTOS (NUEVO BLOQUE)
-            // ----------------------------------------------------
+            // ---------------------------------------------------------
+            // B. TRANSFORMACIÓN JSON (AQUÍ ESTÁ LA SOLUCIÓN AL PDF)
+            // ---------------------------------------------------------
+            // Creamos un array nuevo "plano" que coincida con lo que pide el PDF
+            
+            $contenidoParaPDF = [
+                'profesional'            => $data['profesional'],
+                
+                // Mapeo manual de claves anidadas a claves planas
+                'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
+                'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
+                'turno'                  => 'MAÑANA',
+                
+                'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
+                'firmo_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
+                'recibio_capacitacion'   => $datosCapacitacion['recibieron_cap'] ?? 'NO',
+                'inst_capacitacion'      => ($datosCapacitacion['recibieron_cap'] === 'SI') ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
+                
+                'tipo_dni_fisico'        => ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO' ? 'ELECTRONICO' : 'AZUL',
+                'dnie_version'           => $esElectronico ? ($datosDni['version_dnie'] ?? null) : null,
+                'dnie_firma_sihce'       => $esElectronico ? ($datosDni['firma_sihce'] ?? null) : null,
+                'dni_observacion'        => $datosDni['comentarios'] ?? null,
+                
+                'comunica_a'             => $datosDificultad['institucion'] ?? null,
+                'medio_soporte'          => $datosDificultad['medio'] ?? null,
+
+                'fua'                    => $datosInicio['fua'] ?? null,
+                'receta'                 => $datosInicio['receta'] ?? null,
+                
+                // Estos campos extra aseguran que no falle si la vista los pide
+                'comentarios'            => null 
+            ];
+
+            // ---------------------------------------------------------
+            // C. FOTOS
+            // ---------------------------------------------------------
             $rutasFotos = [];
+            
+            // Recuperar fotos anteriores si existen en la BD
+            $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo_nombre', 'consulta_psicologia')->first();
+            
+            if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+                $prev = $registroPrevio->contenido['foto_evidencia'];
+                $rutasFotos = is_array($prev) ? $prev : [$prev];
+            }
+
+            // Guardar nuevas fotos
             if ($request->hasFile('fotos')) {
                 foreach ($request->file('fotos') as $foto) {
-                    // Guardar en carpeta: storage/app/public/evidencia_fotos
-                    // Asegúrate de correr: php artisan storage:link
                     $path = $foto->store('evidencia_fotos', 'public');
-
+                    
                     ComFotos::create([
                         'acta_id'        => $id,
-                        'modulo_id'      => 'PSICOLOGIA',
+                        'modulo_id'      => 'consulta_psicologia',
                         'profesional_id' => $profesional->id,
                         'url_foto'       => $path
                     ]);
                     
-                    // Agregamos la ruta al array temporal
                     $rutasFotos[] = $path;
                 }
             }
 
-            // Usamos el array $data original y le agregamos las fotos
-            $contenidoParaGuardar = $data;
-            $contenidoParaGuardar['fotos_evidencia'] = $rutasFotos;
+            // Agregamos las fotos al JSON "Plano" (Usando singular para estandarizar con medicina)
+            $contenidoParaPDF['foto_evidencia'] = $rutasFotos;
 
-            // Parar actualizar el estado en la tabla
+            // ---------------------------------------------------------
+            // D. GUARDAR EN MONITOREO_MODULOS
+            // ---------------------------------------------------------
             MonitoreoModulos::updateOrCreate(
                 [
-                    'cabecera_monitoreo_id' => $id, // Relación con el ID del acta
-                    'modulo_nombre'         => 'consulta_psicologia'   // Identificador de este formulario
-                    
+                    'cabecera_monitoreo_id' => $id, 
+                    'modulo_nombre'         => 'consulta_psicologia'
                 ],
                 [
-                    'contenido' => $contenidoParaGuardar, // Texto fijo que solicitaste
+                    'contenido' => $contenidoParaPDF, // ¡AQUÍ GUARDAMOS EL ARRAY TRANSFORMADO!
                     'pdf_firmado_path' => null
                 ]
-
-                
             );
 
             DB::commit();

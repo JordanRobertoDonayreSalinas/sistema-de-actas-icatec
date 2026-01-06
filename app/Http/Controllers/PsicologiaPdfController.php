@@ -6,11 +6,13 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CabeceraMonitoreo;
 use App\Models\ComCapacitacion;
-use App\Models\ComEquipamiento;
+//use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
 use App\Models\ComDocuAsisten; 
 use App\Models\ComDni;
+
+use App\Models\EquipoComputo;
 
 
 class PsicologiaPdfController extends Controller
@@ -21,7 +23,7 @@ class PsicologiaPdfController extends Controller
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
         
         // Identificador constante
-        $modId = 'PSICOLOGIA';
+        $modId = 'consulta_psicologia';
 
         // 2. Cargar datos específicos
         
@@ -38,8 +40,8 @@ class PsicologiaPdfController extends Controller
                             ->where('modulo_id', $modId)->first();
 
         // Inventario
-        $dbInventario = ComEquipamiento::where('acta_id', $id)
-                            ->where('modulo_id', $modId)->get();
+        $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo', $modId)->get();
 
         // Dificultades
         $dbDificultad = ComDificultad::where('acta_id', $id)

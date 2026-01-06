@@ -239,13 +239,29 @@
                             @endif
                         @endforeach
                     </table>
+
+                    {{-- Fotos guardadas en el JSON del módulo --}}
+                    @if(!empty($cont['fotos_evidencia']) && is_array($cont['fotos_evidencia']))
+                        <div style="margin-top:8px;">
+                            <div style="font-weight:700; font-size:9px; margin-bottom:6px;">EVIDENCIAS FOTOGRÁFICAS</div>
+                            <div class="foto-grid">
+                                @foreach($cont['fotos_evidencia'] as $ruta)
+                                    @if(!empty($ruta) && file_exists(public_path('storage/' . $ruta)))
+                                        <div class="foto-wrapper">
+                                            <img src="{{ public_path('storage/' . $ruta) }}">
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 @endif
             </div>
         @endif
     @endforeach
 
     <div class="section-header">3. DETALLE DE EQUIPAMIENTO POR MÓDULO</div>
-    @php $equiposPorModulo = $equipos->groupBy('modulo'); @endphp
+    @php $equiposPorModulo = $equipos->groupBy(function($e){ return strtolower($e->modulo); }); @endphp
 
     @if($equiposPorModulo->count() > 0)
         @foreach($ordenEstricto as $nombreTecnico => $tituloPublico)

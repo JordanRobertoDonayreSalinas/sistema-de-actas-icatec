@@ -18,27 +18,27 @@ class TriajePdfController extends Controller
         // 1. Cargar datos generales del Acta
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
 
-        // 2. Cargar datos específicos del módulo TRIAJE
+        // 2. Cargar datos específicos del módulo triaje
         
         // Capacitación y Profesional
         $dbCapacitacion = ComCapacitacion::with('profesional')
                             ->where('acta_id', $id)
-                            ->where('modulo_id', 'TRIAJE')
+                            ->where('modulo_id', 'triaje')
                             ->first();
 
         // Inventario
         $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo', 'TRIAJE')
+                            ->where('modulo', 'triaje')
                             ->get();
 
         // Dificultades
         $dbDificultad = ComDificultad::where('acta_id', $id)
-                            ->where('modulo_id', 'TRIAJE')
+                            ->where('modulo_id', 'triaje')
                             ->first();
 
         // Fotos
         $dbFotos = ComFotos::where('acta_id', $id)
-                        ->where('modulo_id', 'TRIAJE')
+                        ->where('modulo_id', 'triaje')
                         ->get();
 
         // 3. Preparar el PDF

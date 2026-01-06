@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Acta;
+use App\Models\CabeceraMonitoreo;
 use App\Models\Profesional;
 use App\Models\ComCapacitacion;
 //use App\Models\ComEquipamiento;
@@ -19,22 +19,19 @@ class TriajeController extends Controller
 {
     // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
     public function index($id){
-        $acta = Acta::with('establecimiento')->findOrFail($id);
+        $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
         
         $dbCapacitacion = ComCapacitacion::with('profesional')
-                    ->where('acta_id', $id)->where('modulo_id', 'TRIAJE')->first();
-
-        // $dbInventario = ComEquipamiento::where('acta_id', $id)
-        //                     ->where('modulo_id', 'TRIAJE')->get();
+                ->where('acta_id', $id)->where('modulo_id', 'triaje')->first();
 
         $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo', 'TRIAJE')->get();
+                    ->where('modulo', 'triaje')->get();
         
         $dbDificultad = ComDificultad::where('acta_id', $id)
-                            ->where('modulo_id', 'TRIAJE')->first();
+                    ->where('modulo_id', 'triaje')->first();
 
         $dbFotos = ComFotos::where('acta_id', $id)
-                        ->where('modulo_id', 'TRIAJE')->get();
+                ->where('modulo_id', 'triaje')->get();
 
         return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos'));
     }
@@ -51,100 +48,77 @@ class TriajeController extends Controller
         }
     }
 
-    // 3. STORE: Guarda y Redirige
     public function store(Request $request, $id)
     {
-        // AHORA RECIBIMOS UN FORM-DATA HÍBRIDO.
-        // El texto viene en un campo llamado 'data' (string JSON)
-        // Las fotos vienen en 'fotos[]'
-        
-        // 1. Decodificar el JSON de datos
+        // 1. Decodificar el JSON de datos que viene del frontend
         $data = json_decode($request->input('data'), true);
 
-        // Validamos manualmente porque $request->validate no lee directo del JSON string
+        // Validación básica
         if (!$data || !isset($data['profesional']['doc'])) {
-             return response()->json(['success' => false, 'message' => 'Faltan datos del profesional'], 422);
+            return response()->json(['success' => false, 'message' => 'Faltan datos del profesional'], 422);
         }
 
         try {
             DB::beginTransaction();
 
+            // =========================================================
+            // A. GUARDADO EN TABLAS SQL (Para reportes y estadísticas)
+            // =========================================================
+
             // 1. PROFESIONAL
             $datosProfesional = $data['profesional'];
             $profesional = Profesional::updateOrCreate(
-                ['doc' => $datosProfesional['doc'], 'tipo_doc' => $datosProfesional['tipo_doc'] ?? 'DNI'],
+                ['doc' => $datosProfesional['doc']], 
                 [
+                    'tipo_doc'         => $datosProfesional['tipo_doc'] ?? 'DNI',
                     'apellido_paterno' => $datosProfesional['apellido_paterno'],
                     'apellido_materno' => $datosProfesional['apellido_materno'],
                     'nombres'          => $datosProfesional['nombres'],
-                    'email'            => $datosProfesional['email'],
-                    'telefono'         => $datosProfesional['telefono'],
+                    'email'            => $datosProfesional['email'] ?? null,
+                    'telefono'         => $datosProfesional['telefono'] ?? null,
                 ]
             );
 
-            // 2. CAPACITACIÓN
-            $datosCapacitacion = $data['capacitacion'];
-            ComCapacitacion::updateOrCreate(
-                ['acta_id' => $id, 'modulo_id' => 'TRIAJE'],
-                [
-                    'profesional_id'  => $profesional->id,
-                    'recibieron_cap'  => $datosCapacitacion['recibieron_cap'],
-                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? $datosCapacitacion['institucion_cap'] : null,
-                    'decl_jurada'           => $datosCapacitacion['decl_jurada'] ?? null,
-                    'comp_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? null,
-                ]
-            );
+            // 2. CAPACITACIÓN (Tabla SQL)
+            $datosCapacitacion = $data['capacitacion'] ?? [];
+            if (!empty($datosCapacitacion)) {
+                ComCapacitacion::updateOrCreate(
+                    ['acta_id' => $id, 'modulo_id' => 'triaje'],
+                    [
+                        'profesional_id'        => $profesional->id,
+                        'recibieron_cap'        => $datosCapacitacion['recibieron_cap'] ?? 'NO',
+                        'institucion_cap'       => ($datosCapacitacion['recibieron_cap'] === 'SI') ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
+                        'decl_jurada'           => $datosCapacitacion['decl_jurada'] ?? 'NO',
+                        'comp_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
+                    ]
+                );
+            }
 
-
-            // 3. INVENTARIO
-            // ComEquipamiento::where('acta_id', $id)->where('modulo_id', 'TRIAJE')->delete();
-            // $listaInventario = $data['inventario'] ?? [];
-            // $comentarioGeneral = $data['inventario_comentarios'] ?? '';
-
-            // if (!empty($listaInventario)) {
-            //     foreach ($listaInventario as $item) {
-            //         ComEquipamiento::create([
-            //             'acta_id'        => $id,
-            //             'modulo_id'      => 'TRIAJE',
-            //             'profesional_id' => $profesional->id,
-            //             'descripcion'    => $item['descripcion'],
-            //             'cantidad'       => '1', // Ingreso Manual
-            //             'propiedad'      => $item['propiedad'],
-            //             'estado'         => $item['estado'],
-            //             'cod_barras'     => $item['codigo'] ?? null, 
-            //             'observaciones'  => $item['observacion'] ?? '',
-            //             'comentarios'    => $comentarioGeneral
-            //         ]);
-            //     }
-            // }
-
-            // Tabla de Capibara
+            // 3. INVENTARIO (Tabla SQL - CRUCIAL para que ConsolidadoPdfController línea 25 funcione)
             EquipoComputo::where('cabecera_monitoreo_id', $id)
-                         ->where('modulo', 'TRIAJE')
-                         ->delete();
+                            ->where('modulo', 'triaje') 
+                            ->delete();
 
             $listaInventario = $data['inventario'] ?? [];
-
-            // B. Creamos los nuevos registros
             if (!empty($listaInventario)) {
                 foreach ($listaInventario as $item) {
                     EquipoComputo::create([
                         'cabecera_monitoreo_id' => $id,
-                        'modulo'                => 'TRIAJE', // Nombre de columna correcto
-                        'descripcion'           => $item['descripcion'],
-                        'cantidad'              => '1', 
-                        'estado'                => $item['estado'],
+                        'modulo'                => 'triaje', 
+                        'descripcion'           => $item['descripcion'] ?? 'SIN DESCRIPCION',
+                        'cantidad'              => 1, 
+                        'estado'                => $item['estado'] ?? 'REGULAR',
                         'nro_serie'             => $item['codigo'] ?? null, 
-                        'propio'                => $item['propiedad'],
+                        'propio'                => $item['propiedad'] ?? 'ESTABLECIMIENTO',
                         'observacion'           => $item['observacion'] ?? ''
                     ]);
                 }
             }
 
-            // 4. DIFICULTADES
-            $datosDificultad = $data['dificultades'];
+            // 4. DIFICULTADES (Tabla SQL)
+            $datosDificultad = $data['dificultades'] ?? [];
             ComDificultad::updateOrCreate(
-                ['acta_id' => $id, 'modulo_id' => 'TRIAJE'],
+                ['acta_id' => $id, 'modulo_id' => 'triaje'],
                 [
                     'profesional_id' => $profesional->id,
                     'insti_comunica' => $datosDificultad['institucion'] ?? null,
@@ -152,40 +126,81 @@ class TriajeController extends Controller
                 ]
             );
 
-            // ----------------------------------------------------
-            // 5. FOTOS (NUEVO BLOQUE)
-            // ----------------------------------------------------
+            // =========================================================
+            // B. PREPARACIÓN DEL JSON PARA EL PDF (TRANSFORMACIÓN)
+            // =========================================================
+            
+            // AQUÍ ESTÁ LA CLAVE: "Aplanamos" los datos para que tengan la misma estructura 
+            // que 'ConsultaMedicina' y el PDF los reconozca automáticamente.
+
+            $contenidoParaPDF = [
+                'profesional'            => $data['profesional'], // Mantenemos objeto profesional
+                
+                // Mapeamos Capacitación (Sacamos los datos del array anidado al nivel raíz)
+                'recibio_capacitacion'   => $datosCapacitacion['recibieron_cap'] ?? 'NO',
+                'inst_capacitacion'      => ($datosCapacitacion['recibieron_cap'] ?? 'NO') === 'SI' ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
+                'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
+                'firmo_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
+                
+                // Mapeamos Dificultades/Comunicación
+                'comunica_a'             => $datosDificultad['institucion'] ?? null,
+                'medio_soporte'          => $datosDificultad['medio'] ?? null,
+                
+                // Campos extra que Medicina usa y Triaje podría necesitar vacíos para no romper la vista
+                'num_consultorios'       => '1', // Opcional, según lógica
+                'comentarios'            => null
+            ];
+
+            // =========================================================
+            // C. GESTIÓN DE FOTOS
+            // =========================================================
+            
             $rutasFotos = [];
+            // 1. Recuperar fotos existentes si no se han borrado
+            $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo_nombre', 'triaje')->first();
+            
+            // Intentamos recuperar fotos del JSON anterior si existen
+            if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+                $prev = $registroPrevio->contenido['foto_evidencia'];
+                $rutasFotos = is_array($prev) ? $prev : [$prev];
+            }
+            
+            // Si el frontend envía 'foto_evidencia' (array de strings) con las fotos que deben quedar
+            // usamos eso para filtrar. (Opcional, depende de tu frontend).
+            // Por ahora asumimos que agregamos las nuevas:
+
+            // 2. Guardar nuevas fotos
             if ($request->hasFile('fotos')) {
                 foreach ($request->file('fotos') as $foto) {
-                    // Guardar en carpeta: storage/app/public/evidencia_fotos
-                    // Asegúrate de correr: php artisan storage:link
                     $path = $foto->store('evidencia_fotos', 'public');
-
+                    
+                    // Tabla auxiliar
                     ComFotos::create([
                         'acta_id'        => $id,
-                        'modulo_id'      => 'TRIAJE',
+                        'modulo_id'      => 'triaje',
                         'profesional_id' => $profesional->id,
                         'url_foto'       => $path
                     ]);
 
-                    // Agregamos la ruta al array temporal
                     $rutasFotos[] = $path;
                 }
             }
+            
+            // Agregamos las fotos al JSON estandarizado
+            $contenidoParaPDF['foto_evidencia'] = $rutasFotos;
 
-            // Usamos el array $data original y le agregamos las fotos
-            $contenidoParaGuardar = $data;
-            $contenidoParaGuardar['fotos_evidencia'] = $rutasFotos;
+            // =========================================================
+            // D. GUARDAR JSON FINAL EN MONITOREO_MODULOS
+            // =========================================================
 
-            // Parar actualizar el estado en la tabla
             MonitoreoModulos::updateOrCreate(
                 [
-                    'cabecera_monitoreo_id' => $id, // Relación con el ID del acta
-                    'modulo_nombre'         => 'triaje'   // Identificador de este formulario
+                    'cabecera_monitoreo_id' => $id,
+                    'modulo_nombre'         => 'triaje'
                 ],
                 [
-                    'contenido' => $contenidoParaGuardar, // Texto fijo que solicitaste
+                    'contenido' => $contenidoParaPDF, // Ahora guardamos el array transformado
                     'pdf_firmado_path' => null
                 ]
             );
