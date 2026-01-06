@@ -21,7 +21,7 @@ class PlanificacionPdfController extends Controller
                     ->where('modulo_nombre', $this->modulo)
                     ->first();
 
-        // 1. Intentamos cargar desde la tabla independiente (más seguro)
+        // 1. Cargamos equipos de la tabla (Sincronizado previamente en el Store)
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo', $this->modulo)
                                 ->get();
@@ -29,31 +29,43 @@ class PlanificacionPdfController extends Controller
         if ($detalle) {
             $detalle->contenido = json_decode($detalle->contenido, true);
             
-            // 2. Si la tabla independiente está vacía, extraemos del JSON
+            // 2. Si la tabla está vacía, extraemos del JSON (Respaldo)
             if ($equipos->isEmpty() && isset($detalle->contenido['equipos_data'])) {
                 $equipos = collect($detalle->contenido['equipos_data'])->map(function($item) {
-                    // Convertimos a objeto y mapeamos 'propiedad' a 'propio' para el PDF
                     return (object) [
                         'descripcion' => $item['descripcion'] ?? 'N/A',
                         'cantidad'    => $item['cantidad'] ?? 1,
                         'estado'      => $item['estado'] ?? 'N/A',
                         'nro_serie'   => $item['nro_serie'] ?? null,
-                        'observaciones' => $item['observaciones'] ?? '',
-                        // MAPEO CRÍTICO: El PDF busca 'propio', el componente envía 'propiedad'
+                        'observacion' => $item['observaciones'] ?? '', // Nota: Usamos observacion (singular) para el objeto
                         'propio'      => $item['propiedad'] ?? ($item['propio'] ?? 'ESTABLECIMIENTO')
                     ];
                 });
             }
         }
 
-        // 3. Estandarizamos los datos del detalle para evitar errores de "Array a String" en el PDF
+        // 3. Extraemos los datos del contenido para acceso directo en el Blade
         $datos = $detalle ? $detalle->contenido : [];
+
+        // 4. Mapeo explícito de los nuevos campos para evitar errores de índices nulos en el PDF
+        $identidad = $datos['dni_firma'] ?? [
+            'tipo_dni' => 'N/A',
+            'version_dnie' => 'N/A',
+            'firma_digital_sihce' => 'no'
+        ];
+
+        $documentacion = $datos['documentacion'] ?? [
+            'declaracion_jurada' => 'no',
+            'compromiso_confidencialidad' => 'no'
+        ];
 
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.planificacion_familiar_pdf', [
             'acta' => $acta,
             'detalle' => $detalle,
             'equipos' => $equipos,
-            'datos' => $datos // Pasamos 'datos' por separado para facilitar el acceso en el Blade
+            'datos' => $datos,
+            'identidad' => $identidad,     // Nueva variable para el Blade
+            'documentacion' => $documentacion // Nueva variable para el Blade
         ])->setPaper('a4', 'portrait');
 
         return $pdf->stream("MONITOREO_PLANIFICACION_ACTA_{$acta->id}.pdf");
