@@ -247,9 +247,9 @@
                                     </td>
                                     <td class="py-3 px-2 align-middle">
                                         <select x-model="item.propiedad" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
-                                            <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
+                                            <option value="COMPARTIDO">COMPARTIDO</option>
+                                            <option value="EXCLUSIVO">EXCLUSIVO</option>
                                             <option value="PERSONAL">PERSONAL</option>
-                                            <option value="SERVICIO">SERVICIO</option>
                                         </select>
                                     </td>
                                     <td class="py-3 px-2 align-middle">
