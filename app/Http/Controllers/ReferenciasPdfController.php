@@ -4,49 +4,48 @@ namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
 use App\Models\EquipoComputo;
-use App\Models\MonitoreoModulos; 
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class ReferenciasPdfController extends Controller
 {
-    private $modulo = 'REFERENCIAS'; 
+    // Se cambia a minúsculas para coincidir con lo guardado por ReferenciasController
+    private $modulo = 'referencias'; 
 
     public function generar($id)
     {
-        // 1. Cargar la cabecera
+        // 1. Cargar la cabecera con relaciones
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
 
-        // 2. Buscar el detalle en la tabla mon_monitoreo_modulos
-        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+        /**
+         * 2. Buscar el detalle en la tabla mon_detalle_modulos.
+         * Es CRÍTICO usar esta tabla porque aquí es donde ReferenciasController 
+         * guarda las columnas foto_1 y foto_2.
+         */
+        $detalle = DB::table('mon_detalle_modulos')
+                    ->where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', $this->modulo)
                     ->first();
 
-        // 3. Buscar equipos
+        // 3. Buscar equipos asociados al módulo
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo', $this->modulo)
                                 ->get();
 
-        // 4. Procesar datos del JSON
+        // 4. Procesar datos del JSON contenido
         $datos = [];
         if ($detalle) {
-            // El modelo MonitoreoModulos ya tiene cast 'array' para 'contenido'
-            $datos = $detalle->contenido ?? [];
+            // Al usar DB::table el contenido llega como string, debemos decodificarlo
+            $datos = json_decode($detalle->contenido, true) ?? [];
             
-            /** * PUNTO CRÍTICO PARA LAS FOTOS:
-             * Si las fotos se guardaron dentro del JSON 'contenido', las extraemos 
-             * para que el objeto $detalle las tenga disponibles como propiedades
-             * y la validación !empty($detalle->foto_1) de la vista funcione.
+            /** * Mapeo de fotos para la vista:
+             * Como usamos DB::table, el objeto $detalle ya tiene las propiedades 
+             * foto_1 y foto_2 directamente desde las columnas de la tabla.
              */
-            if (!isset($detalle->foto_1) && isset($datos['foto_1'])) {
-                $detalle->foto_1 = $datos['foto_1'];
-            }
-            if (!isset($detalle->foto_2) && isset($datos['foto_2'])) {
-                $detalle->foto_2 = $datos['foto_2'];
-            }
         }
 
-        // 5. Generar el PDF
+        // 5. Generar el PDF enviando las variables a la vista
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.referencias_pdf', compact('acta', 'detalle', 'equipos', 'datos'))
                   ->setPaper('a4', 'portrait');
 
