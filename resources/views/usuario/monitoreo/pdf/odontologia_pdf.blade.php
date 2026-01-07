@@ -74,7 +74,7 @@
     </div>
 
     {{-- 1. DATOS DEL PROFESIONAL --}}
-    <div class="section-title">1. Datos del Profesional Responsable</div>
+    <div class="section-title">1. Datos del Profesional</div>
     @if($dbCapacitacion && $dbCapacitacion->profesional)
         <table class="info-grid">
             <tr>
@@ -221,7 +221,7 @@
                     @endif
 
                     <div style="font-weight: bold; font-size: 10px; margin-top: 4px;">
-                        RESPONSABLE DE ODONTOLOGÍA
+                        PROFESIONAL DE ODONTOLOGÍA
                     </div>
 
                 </div>

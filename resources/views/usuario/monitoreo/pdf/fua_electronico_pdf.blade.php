@@ -152,10 +152,6 @@
             <td>{{ $detalle->contenido['profesional']['email'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Cargo</td>
-            <td class="uppercase">MEDICO</td>
-        </tr>
-        <tr>
             <td class="bg-label">¿Firmó Declaración Jurada?</td>
             <td class="uppercase">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
         </tr>
