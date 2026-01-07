@@ -22,11 +22,11 @@ class OdontologiaPdfController extends Controller
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
         
         // Identificador constante
-        $modId = 'ODONTOLOGIA';
+        $modId = 'consulta_odontologia';
 
-        // 2. Cargar datos específicos
+        // 2. Cargar datos espec铆ficos
         
-        // Capacitación y Profesional
+        // Capacitaci贸n y Profesional
         $dbCapacitacion = ComCapacitacion::with('profesional')
                             ->where('acta_id', $id)->where('modulo_id', $modId)->first();
 
@@ -34,7 +34,7 @@ class OdontologiaPdfController extends Controller
         $dbInicioLabores = ComDocuAsisten::where('acta_id', $id)
                             ->where('modulo_id', $modId)->first();
 
-        // NUEVO: Sección DNI
+        // NUEVO: Secci贸n DNI
         $dbDni = ComDni::where('acta_id', $id)
                             ->where('modulo_id', $modId)->first();
 
