@@ -12,38 +12,66 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class MonitoreoController extends Controller
 {
     /**
-     * Listado principal de monitoreos con filtros de búsqueda y paginación.
+     * Listado principal: Muestra todos los monitoreos con filtros de estado y fechas predefinidas.
      */
     public function index(Request $request)
     {
-        $query = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'detalles'])
-            ->where('user_id', Auth::id());
+        // 1. Configurar fechas predefinidas (Primer día del mes actual y hoy)
+        $fecha_inicio = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $fecha_fin = $request->input('fecha_fin', Carbon::now()->format('Y-m-d'));
 
+        $query = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'detalles', 'user']);
+
+        // 2. Filtro por Monitor / Implementador
         if ($request->filled('implementador')) {
             $query->where('implementador', $request->input('implementador'));
         }
 
+        // 3. Filtro por Provincia
         if ($request->filled('provincia')) {
             $query->whereHas('establecimiento', function ($q) use ($request) {
                 $q->where('provincia', $request->input('provincia'));
             });
         }
 
-        if ($request->filled('fecha_inicio') && $request->filled('fecha_fin')) {
-            $query->whereBetween('fecha', [$request->fecha_inicio, $request->fecha_fin]);
+        // 4. FILTRO POR ESTADO (Acta Final)
+        if ($request->filled('estado')) {
+            if ($request->estado == 'firmada') {
+                $query->where('firmado', 1);
+            } elseif ($request->estado == 'pendiente') {
+                $query->where('firmado', 0);
+            }
         }
 
+        // 5. Aplicar rango de fechas
+        $query->whereBetween('fecha', [$fecha_inicio, $fecha_fin]);
+
+        // 6. Obtener resultados paginados
         $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
 
+        // 7. Calcular Estadísticas (Basadas en los resultados filtrados)
+        $totalActas = $monitoreos->total();
         $countCompletados = (clone $query)->where('firmado', 1)->count();
+        $countPendientes = $totalActas - $countCompletados;
+
+        // 8. Datos para los Selects de los filtros
         $implementadores = CabeceraMonitoreo::distinct()->pluck('implementador');
         $provincias = Establecimiento::distinct()->pluck('provincia');
 
-        return view('usuario.monitoreo.index', compact('monitoreos', 'countCompletados', 'implementadores', 'provincias'));
+        return view('usuario.monitoreo.index', compact(
+            'monitoreos', 
+            'countCompletados', 
+            'countPendientes', 
+            'implementadores', 
+            'provincias',
+            'fecha_inicio',
+            'fecha_fin'
+        ));
     }
 
     public function create()
@@ -104,7 +132,7 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * GUARDAR PASO 1: Cabecera, Integrantes e Imágenes.
+     * GUARDAR PASO 1: Cabecera e Integrantes.
      */
     public function store(Request $request)
     {
@@ -166,9 +194,6 @@ class MonitoreoController extends Controller
         }
     }
 
-    /**
-     * ACTUALIZAR PASO 1 Y EVIDENCIAS.
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -183,14 +208,12 @@ class MonitoreoController extends Controller
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
             
-            // Actualizar datos de cabecera
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
             $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
             $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8');
             $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
 
-            // Procesar imágenes (solo si se suben nuevas)
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
                 if (isset($files[0])) {
@@ -205,7 +228,6 @@ class MonitoreoController extends Controller
 
             $monitoreo->save();
 
-            // Sincronizar equipo (Eliminar y volver a crear)
             MonitoreoEquipo::where('cabecera_monitoreo_id', $id)->delete();
             foreach ($request->equipo as $persona) {
                 if (!empty($persona['doc'])) {
@@ -254,7 +276,7 @@ class MonitoreoController extends Controller
             'puerperio'              => ['nombre' => '13. Puerperio', 'icon' => 'home'],
             'fua_electronico'        => ['nombre' => '14. FUA Electrónico', 'icon' => 'file-digit'],
             'farmacia'               => ['nombre' => '15. Farmacia', 'icon' => 'pill'],
-            'referencias'            => ['nombre' => '16. Referencias y Contrareferencias', 'icon' => 'map-pinned'],
+            'referencias'            => ['nombre' => '16. Refcon', 'icon' => 'map-pinned'],
             'laboratorio'            => ['nombre' => '17. Laboratorio', 'icon' => 'test-tube-2'],
             'urgencias'              => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
         ];
@@ -318,15 +340,44 @@ class MonitoreoController extends Controller
         return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))->setPaper('a4', 'portrait')->stream("ACTA_CONSOLIDADA_NRO_{$acta->id}.pdf");
     }
 
+    /**
+     * SUBIR PDF: Corregido para soportar respuestas JSON en peticiones AJAX.
+     */
     public function subirPDF(Request $request, $id)
     {
-        $request->validate(['pdf_firmado' => 'required|mimes:pdf|max:10240']);
-        $monitoreo = CabeceraMonitoreo::where('user_id', Auth::id())->findOrFail($id);
-        if ($request->hasFile('pdf_firmado')) {
-            if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
-            $path = $request->file('pdf_firmado')->store('monitoreos_firmados/consolidados', 'public');
-            $monitoreo->update(['firmado_pdf' => $path, 'firmado' => true]);
+        try {
+            $request->validate(['pdf_firmado' => 'required|mimes:pdf|max:10240']);
+            
+            $monitoreo = CabeceraMonitoreo::findOrFail($id);
+
+            if ($request->hasFile('pdf_firmado')) {
+                if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
+                
+                $path = $request->file('pdf_firmado')->store('monitoreos_firmados/consolidados', 'public');
+                
+                $monitoreo->update([
+                    'firmado_pdf' => $path, 
+                    'firmado' => true
+                ]);
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Acta consolidada cargada con éxito.'
+                    ]);
+                }
+            }
+
+            return back()->with('success', 'Acta consolidada cargada con éxito.');
+
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al procesar: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Error: ' . $e->getMessage());
         }
-        return back()->with('success', 'Acta consolidada cargada con éxito.');
     }
 }

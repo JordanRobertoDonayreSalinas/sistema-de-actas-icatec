@@ -79,6 +79,13 @@
                     <i data-lucide="activity" class="w-5 h-5"></i>
                     <span class="font-medium">Actas de Monitoreo</span>
                 </a>
+
+                {{-- DOCUMENTOS ADMINISTRATIVOS --}}
+                <a href="{{ route('usuario.documentos.index') }}" 
+                   class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.documentos.*') ? 'bg-indigo-600/10 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="folder-open" class="w-5 h-5"></i>
+                    <span class="font-medium">Documentos Administrativos</span>
+                </a>
             </nav>
         </aside>
 
@@ -146,7 +153,6 @@
             lucide.createIcons();
         });
 
-        // Helper global para refrescar iconos en componentes dinámicos
         window.refreshLucide = () => {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();

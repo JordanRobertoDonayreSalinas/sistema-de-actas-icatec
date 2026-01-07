@@ -64,9 +64,9 @@
                         <td class="px-4 py-4">
                             {{-- CORRECCIÓN: 'propio' en minúsculas para coincidir con el controlador --}}
                             <select name="equipos[{{ $index }}][propio]" class="input-table-select">
-                                <option value="ESTABLECIMIENTO" {{ $eq->propio == 'ESTABLECIMIENTO' ? 'selected' : '' }}>ESTABLECIMIENTO</option>
+                                <option value="COMPARTIDO" {{ $eq->propio == 'COMPARTIDO' ? 'selected' : '' }}>COMPARTIDO</option>
+                                <option value="EXCLUSIVO" {{ $eq->propio == 'EXCLUSIVO' ? 'selected' : '' }}>EXCLUSIVO</option>
                                 <option value="PERSONAL" {{ $eq->propio == 'PERSONAL' ? 'selected' : '' }}>PERSONAL</option>
-                                <option value="SERVICIO" {{ $eq->propio == 'SERVICIO' ? 'selected' : '' }}>SERVICIO</option>
                             </select>
                         </td>
                         <td class="px-4 py-4">
@@ -203,9 +203,9 @@
             </td>
             <td class="px-4 py-4">
                 <select name="equipos[${uniqueId}][propio]" class="input-table-select">
-                    <option value="SERVICIO">SERVICIO</option>
+                    <option value="COMPARTIDO">COMPARTIDO</option>
+                    <option value="EXCLUSIVO">EXCLUSIVO</option>
                     <option value="PERSONAL">PERSONAL</option>
-                    <option value="ESTABLECIMIENTO">ESTABLECIMIENTO</option>
                 </select>
             </td>
             <td class="px-4 py-4"><input type="text" name="equipos[${uniqueId}][observacion]" class="input-table-text uppercase"></td>

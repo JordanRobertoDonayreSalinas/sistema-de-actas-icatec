@@ -5,7 +5,7 @@
 {{-- HEADER SUPERIOR --}}
 @section('header-content')
     <h1 class="text-xl font-bold text-slate-800 tracking-tight">
-        Bienvenido de nuevo, {{ Auth::user()->name }} 
+        Bienvenido de nuevo, {{ Auth::user()->apellido_paterno }} {{ Auth::user()->name }} 
     </h1>
     <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
         <span>Plataforma</span>
@@ -34,7 +34,7 @@
                                 <h3 class="mt-1 text-4xl font-extrabold tracking-tight">{{ $totalActas }}</h3>
                             </div>
                             <div class="rounded-xl bg-white/20 p-3 backdrop-blur-sm">
-                                <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <i data-lucide="file-text" class="h-8 w-8 text-white"></i>
                             </div>
                         </div>
                         <div class="h-px w-full bg-white/20 mb-4"></div>
@@ -69,7 +69,7 @@
                                 <h3 class="mt-1 text-2xl font-bold tracking-tight">Top Actividad</h3>
                             </div>
                             <div class="rounded-xl bg-white/20 p-3 backdrop-blur-sm">
-                                <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                <i data-lucide="building-2" class="h-8 w-8 text-white"></i>
                             </div>
                         </div>
 
@@ -102,12 +102,7 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
-
-        
-        </div>
-
     </div>
 @endsection

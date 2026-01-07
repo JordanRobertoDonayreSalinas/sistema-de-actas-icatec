@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 // Importación de Controladores
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\MonitoreoController;
@@ -90,6 +91,15 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
         });
 
+        // --- SECCIÓN: DOCUMENTOS ADMINISTRATIVOS ---
+        Route::prefix('documentos-administrativos')->name('documentos.')->group(function () {
+            Route::get('/', [DocumentoAdministrativoController::class, 'index'])->name('index');
+            Route::get('/crear', [DocumentoAdministrativoController::class, 'create'])->name('create');
+            Route::post('/guardar', [DocumentoAdministrativoController::class, 'store'])->name('store');
+            Route::get('/{id}/pdf', [DocumentoAdministrativoController::class, 'generarPDF'])->name('pdf');
+            Route::post('/{id}/subir-firmado', [DocumentoAdministrativoController::class, 'subirFirmado'])->name('subir-firmado');
+        });
+
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
 
@@ -103,63 +113,37 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/modulos', [MonitoreoController::class, 'gestionarModulos'])->name('modulos');
             Route::post('/{id}/toggle-modulos', [MonitoreoController::class, 'toggleModulos'])->name('toggle');
 
-            // --- GESTIÓN DE FIRMAS POR MÓDULO (Controlador especializado) ---
-            // 1. Ruta para procesar la subida del archivo
+            // GESTIÓN DE FIRMAS POR MÓDULO
             Route::post('/{id}/subir-pdf-firmado', [FirmasMonitoreoController::class, 'subir'])->name('subir-pdf-firmado');
-            // 2. Ruta para visualizar el PDF cargado en el navegador
             Route::get('/{id}/ver-pdf-firmado/{modulo}', [FirmasMonitoreoController::class, 'ver'])->name('ver-pdf-firmado');
 
             Route::get('/{id}/editar-acta', [EditMonitoreoController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update');
 
             // Módulo 01: Gestión Administrativa
-            // Quitamos 'usuario.monitoreo' del name si ya estás dentro de un grupo con ese nombre
-            Route::prefix('modulo/gestion-administrativa')
-                ->name('gestion-administrativa.')
-                ->group(function () {
-                    Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
-                });
+            Route::prefix('modulo/gestion-administrativa')->name('gestion-administrativa.')->group(function () {
+                Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+                Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+            });
+
             // Módulo 02: Citas
             Route::prefix('modulo/citas')->name('citas.')->group(function () {
-                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
                 Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
-
                 Route::get('/{id}', [CitaController::class, 'index'])->name('index');
                 Route::post('/{id}', [CitaController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
             });
+
             // Módulo 03: Triaje
             Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
                 Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
                 Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
-
                 Route::get('/buscar-profesional/{doc}', [TriajeController::class, 'buscarProfesional'])->name('buscarProfesional');
                 Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');
             });
 
-
-            // Módulo 05: Odontologia
-            Route::prefix('modulo/consulta-odontologia')->name('consulta-odontologia.')->group(function () {
-                Route::get('/{id}', [OdontologiaController::class, 'index'])->name('index');
-                Route::post('/{id}', [OdontologiaController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [OdontologiaPdfController::class, 'generar'])->name('pdf');
-
-                Route::get('/buscar-profesional/{doc}', [OdontologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
-                Route::delete('/foto/{id}', [OdontologiaController::class, 'eliminarFoto'])->name('eliminarFoto');
-            });
-
-            // Módulo 07: Psicologia
-            Route::prefix('modulo/consulta-psicologia')->name('consulta-psicologia.')->group(function () {
-                Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
-                Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
-
-                Route::get('/buscar-profesional/{doc}', [PsicologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
-                Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');
-            });
             // Módulo 04: Consulta Externa - Medicina
             Route::prefix('modulo/consulta-medicina')->name('consulta-medicina.')->group(function () {
                 Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
@@ -167,11 +151,36 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
             });
 
+            // Módulo 05: Odontologia
+            Route::prefix('modulo/consulta-odontologia')->name('consulta-odontologia.')->group(function () {
+                Route::get('/{id}', [OdontologiaController::class, 'index'])->name('index');
+                Route::post('/{id}', [OdontologiaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [OdontologiaPdfController::class, 'generar'])->name('pdf');
+                Route::get('/buscar-profesional/{doc}', [OdontologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [OdontologiaController::class, 'eliminarFoto'])->name('eliminarFoto');
+            });
+
             // Módulo 06: Consulta Externa - Nutrición
             Route::prefix('modulo/consulta-nutricion')->name('consulta-nutricion.')->group(function () {
                 Route::get('/{id}', [ConsultaNutricionController::class, 'index'])->name('index');
                 Route::post('/{id}', [ConsultaNutricionController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [ConsultaNutricionPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 07: Psicologia
+            Route::prefix('modulo/consulta-psicologia')->name('consulta-psicologia.')->group(function () {
+                Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
+                Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
+                Route::get('/buscar-profesional/{doc}', [PsicologiaController::class, 'buscarProfesional'])->name('buscarProfesional');
+                Route::delete('/foto/{id}', [PsicologiaController::class, 'eliminarFoto'])->name('eliminarFoto');
+            });
+
+            // Módulo 08: CRED
+            Route::prefix('modulo/cred')->name('cred.')->group(function () {
+                Route::get('/{id}', [CredController::class, 'index'])->name('index');
+                Route::post('/{id}', [CredController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [CredPdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 09: Inmunizaciones
@@ -183,38 +192,41 @@ Route::middleware(['auth'])->group(function () {
 
             // Módulo 10: Atencion Prenatal
             Route::prefix('modulo/atencion_prenatal')->name('atencion-prenatal.')->group(function () {
-                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
                 Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
-
                 Route::get('/{id}', [PrenatalController::class, 'index'])->name('index');
                 Route::post('/{id}', [PrenatalController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [PrenatalController::class, 'generar'])->name('pdf');
             });
 
-            // Módulo 12: Atencion Prenatal
-            Route::prefix('modulo/parto')->name('parto.')->group(function () {
-                // Nueva ruta de búsqueda (Colócala ANTES de las rutas con {id} para evitar conflictos)
-                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
-
-                Route::get('/{id}', [PartoController::class, 'index'])->name('index');
-                Route::post('/{id}', [PartoController::class, 'create'])->name('create');
-                Route::get('/{id}/pdf', [PartoController::class, 'generar'])->name('pdf');
-            });
-
-            // Módulo 08: CRED
-            Route::prefix('modulo/cred')->name('cred.')->group(function () {
-                Route::get('/{id}', [CredController::class, 'index'])->name('index');
-                Route::post('/{id}', [CredController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [CredPdfController::class, 'generar'])->name('pdf');
-            });
-
             // Módulo 11: Planificación Familiar
-            // Se usa guion medio en el 'name' porque el panel de módulos hace el str_replace('_', '-', $slug)
             Route::prefix('modulo/planificacion-familiar')->name('planificacion-familiar.')->group(function () {
                 Route::get('/{id}', [PlanificacionController::class, 'index'])->name('index');
                 Route::post('/{id}', [PlanificacionController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [PlanificacionPdfController::class, 'generar'])->name('pdf');
             });
+
+            // Módulo 12: Parto
+            Route::prefix('modulo/parto')->name('parto.')->group(function () {
+                Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
+                Route::get('/{id}', [PartoController::class, 'index'])->name('index');
+                Route::post('/{id}', [PartoController::class, 'create'])->name('create');
+                Route::get('/{id}/pdf', [PartoController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 13: Puerperio
+            Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
+                Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
+                Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 14: FUA Electrónico
+            Route::prefix('modulo/fua-electronico')->name('fua-electronico.')->group(function () {
+                Route::get('/{id}', [FuaElectronicoController::class, 'index'])->name('index');
+                Route::post('/{id}', [FuaElectronicoController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [FuaElectronicoPdfController::class, 'generar'])->name('pdf');
+            });
+
             // Módulo 15: Farmacia
             Route::prefix('modulo/farmacia')->name('farmacia.')->group(function () {
                 Route::get('/{id}', [FarmaciaController::class, 'index'])->name('index');
@@ -230,45 +242,28 @@ Route::middleware(['auth'])->group(function () {
             });
 
             // Módulo 17: Laboratorio
-            Route::prefix('modulo/laboratorio')
-                ->name('laboratorio.')
-                ->group(function () {
-                    Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
-                    Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
-                });
-
-            // --- AQUÍ PEGAS TU BLOQUE TAL CUAL ---
-    Route::prefix('modulo/urgencias')
-        ->name('urgencias.') 
-        ->group(function () {
-            Route::get('/{id}', [UrgenciasController::class, 'index'])->name('index');
-            Route::post('/{id}', [UrgenciasController::class, 'store'])->name('store');
-            Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
-        });
-    // --- FIN DE TU BLOQUE ---
-            // Módulo 13: Puerperio
-            Route::prefix('modulo/puerperio')->name('puerperio.')->group(function () {
-                Route::get('/{id}', [PuerperioController::class, 'index'])->name('index');
-                Route::post('/{id}', [PuerperioController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [PuerperioPdfController::class, 'generar'])->name('pdf');
+            Route::prefix('modulo/laboratorio')->name('laboratorio.')->group(function () {
+                Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
+                Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
             });
 
-            // Módulo 14: FUA Electrónico
-            Route::prefix('modulo/fua-electronico')->name('fua-electronico.')->group(function () {
-                Route::get('/{id}', [FuaElectronicoController::class, 'index'])->name('index');
-                Route::post('/{id}', [FuaElectronicoController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [FuaElectronicoPdfController::class, 'generar'])->name('pdf');
+            // Módulo 18: Urgencias
+            Route::prefix('modulo/urgencias')->name('urgencias.')->group(function () {
+                Route::get('/{id}', [UrgenciasController::class, 'index'])->name('index');
+                Route::post('/{id}', [UrgenciasController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
             });
 
-            // Motor de PDF consolidado y visor final
-            Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('pdf');
-            Route::post('/{id}/subir-pdf', [MonitoreoController::class, 'subirPDF'])->name('subirPDF');
-            Route::get('/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
+            // MOTOR DE CONSOLIDADO
+            Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
+            Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
+            Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
         });
+
     });
 
-    // Esta es la ruta que dispara el botón "Acta Consolidada"
+    // Acta Consolidada (Global)
     Route::get('monitoreo/{id}/consolidado/pdf', [ConsolidadoPdfController::class, 'generar'])
         ->name('usuario.monitoreo.pdf');
 

@@ -34,7 +34,15 @@
 @section('content')
 
     @php
+        // Definir fechas por defecto: primer día del mes actual y hoy
+        $fechaInicioDefault = now()->startOfMonth()->format('Y-m-d');
+        $fechaFinDefault = now()->format('Y-m-d');
+
         $filtersAreActive = request()->anyFilled(['implementador', 'provincia', 'firmado', 'fecha_inicio', 'fecha_fin']);
+        
+        // Si no hay filtro en el request, usamos los valores por defecto
+        $valInicio = request('fecha_inicio', $fechaInicioDefault);
+        $valFin = request('fecha_fin', $fechaFinDefault);
     @endphp
 
     <div x-data="{ open: {{ $filtersAreActive ? 'true' : 'false' }} }" class="w-full">
@@ -115,13 +123,13 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Desde</label>
-                        <input type="date" name="fecha_inicio" value="{{ request('fecha_inicio') }}" 
-                            class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 py-2.5">
+                        <input type="date" name="fecha_inicio" value="{{ $valInicio }}" 
+                            class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2.5">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Hasta</label>
-                        <input type="date" name="fecha_fin" value="{{ request('fecha_fin') }}" 
-                            class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 py-2.5">
+                        <input type="date" name="fecha_fin" value="{{ $valFin }}" 
+                            class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2.5">
                     </div>
                 </div>
 
@@ -173,7 +181,6 @@
                                             @if (!empty($acta->firmado_pdf))
                                                 <a href="{{ asset('storage/' . $acta->firmado_pdf) }}" target="_blank" class="text-slate-400 hover:text-emerald-600 p-1"><i data-lucide="eye" class="w-3.5 h-3.5"></i></a>
                                             @endif
-                                            {{-- RUTA CORREGIDA: usuario.actas.subirPDF --}}
                                             <form action="{{ route('usuario.actas.subirPDF', $acta->id) }}" method="POST" enctype="multipart/form-data" class="inline-block m-0">
                                                 @csrf
                                                 <input type="file" name="pdf_firmado" accept="application/pdf" onchange="this.form.submit()" hidden id="pdf-{{ $acta->id }}">
@@ -181,7 +188,6 @@
                                             </form>
                                         @else
                                             <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Pendiente</span>
-                                            {{-- RUTA CORREGIDA: usuario.actas.subirPDF --}}
                                             <form action="{{ route('usuario.actas.subirPDF', $acta->id) }}" method="POST" enctype="multipart/form-data" class="inline-block m-0 ml-1">
                                                 @csrf
                                                 <input type="file" name="pdf_firmado" accept="application/pdf" onchange="this.form.submit()" hidden id="pdf-u-{{ $acta->id }}">
@@ -192,7 +198,6 @@
                                 </td>
                                 <td class="px-3 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        {{-- RUTA CORREGIDA: usuario.actas.generarPDF --}}
                                         <a href="{{ route('usuario.actas.generarPDF', $acta->id) }}" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="PDF"><i data-lucide="file-text" class="w-4 h-4"></i></a>
                                         <a href="{{ route('usuario.actas.edit', $acta->id) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></a>
                                     </div>
@@ -215,8 +220,24 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Inicializar Lucide icons si es necesario para elementos dinámicos
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        });
+
         @if (session('success'))
-            Swal.fire({ icon: 'success', title: '¡Éxito!', text: @json(session('success')), confirmButtonColor: '#10b981', timer: 3000, toast: true, position: 'top-end', showConfirmButton: false });
+            Swal.fire({ 
+                icon: 'success', 
+                title: '¡Éxito!', 
+                text: @json(session('success')), 
+                confirmButtonColor: '#10b981', 
+                timer: 3000, 
+                toast: true, 
+                position: 'top-end', 
+                showConfirmButton: false 
+            });
         @endif
     </script>
 @endpush

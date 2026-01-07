@@ -21,7 +21,7 @@
         [x-cloak] { display: none !important; }
 
         .progress-bar-container {
-            width: 80px;
+            width: 100%;
             height: 6px;
             background-color: #e2e8f0;
             border-radius: 999px;
@@ -40,20 +40,27 @@
     <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
         <span>Operaciones</span>
         <span class="text-slate-300">•</span>
-        <span>Actas de Monitoreo</span>
+        <span>Panel de Control de Monitoreo</span>
     </div>
 @endsection
 
 @section('content')
 
     @php
-        $filtersAreActive = request()->anyFilled(['implementador', 'provincia', 'fecha_inicio', 'fecha_fin']);
+        // Filtros de fecha automáticos (Mes actual)
+        $fechaInicioDefault = now()->startOfMonth()->format('Y-m-d');
+        $fechaFinDefault = now()->format('Y-m-d');
+
+        $filtersAreActive = request()->anyFilled(['implementador', 'provincia', 'fecha_inicio', 'fecha_fin', 'estado']);
+        
+        $valInicio = request('fecha_inicio', $fechaInicioDefault);
+        $valFin = request('fecha_fin', $fechaFinDefault);
     @endphp
 
     <div x-data="{ open: {{ $filtersAreActive ? 'true' : 'false' }} }" class="w-full">
 
         {{-- TARJETA AZUL SUPERIOR --}}
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-500 p-5 rounded-2xl shadow-xl mb-6 relative overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-700 to-indigo-600 p-5 rounded-2xl shadow-xl mb-6 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
             <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -61,11 +68,15 @@
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg border border-slate-700 flex flex-col items-center min-w-[100px]">
                             <span class="text-2xl font-bold leading-none">{{ $monitoreos->total() }}</span>
-                            <span class="text-[0.65rem] uppercase tracking-widest text-slate-400 font-semibold mt-1">Total</span>
+                            <span class="text-[0.65rem] uppercase tracking-widest text-slate-400 font-semibold mt-1">TOTAL</span>
                         </div>
-                        <div class="bg-white/20 backdrop-blur-md text-white rounded-xl px-5 py-2.5 border border-white/30 flex flex-col items-center min-w-[100px]">
-                            <span class="text-2xl font-bold leading-none">{{ $countCompletados ?? 0 }}</span>
-                            <span class="text-[0.65rem] uppercase tracking-widest text-blue-100 font-semibold mt-1">Finalizados</span>
+                        <div class="bg-emerald-500/20 backdrop-blur-md text-white rounded-xl px-5 py-2.5 border border-emerald-500/30 flex flex-col items-center min-w-[100px]">
+                            <span class="text-2xl font-bold leading-none text-emerald-400">{{ $countCompletados ?? 0 }}</span>
+                            <span class="text-[0.65rem] uppercase tracking-widest text-emerald-100 font-semibold mt-1">FIRMADAS</span>
+                        </div>
+                        <div class="bg-amber-500/20 backdrop-blur-md text-white rounded-xl px-5 py-2.5 border border-amber-500/30 flex flex-col items-center min-w-[100px]">
+                            <span class="text-2xl font-bold leading-none text-amber-400">{{ $countPendientes ?? 0 }}</span>
+                            <span class="text-[0.65rem] uppercase tracking-widest text-amber-100 font-semibold mt-1">Pendientes</span>
                         </div>
                     </div>
                 </div>
@@ -86,7 +97,7 @@
             </div>
         </div>
 
-        {{-- FILTROS --}}
+        {{-- FILTROS ACTUALIZADOS CON "ESTADO" --}}
         <form x-show="open" x-cloak 
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
@@ -94,7 +105,7 @@
             class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
             
             <div class="flex flex-wrap lg:flex-nowrap items-end gap-4">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow w-full">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 flex-grow w-full">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Implementador</label>
                         <select name="implementador" class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2.5">
@@ -113,14 +124,25 @@
                             @endforeach
                         </select>
                     </div>
+
+                    {{-- NUEVO FILTRO DE ESTADO --}}
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Estado</label>
+                        <select name="estado" class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2.5">
+                            <option value="">Todos</option>
+                            <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>Firmado</option>
+                            <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Desde</label>
-                        <input type="date" name="fecha_inicio" value="{{ request('fecha_inicio') }}" 
+                        <input type="date" name="fecha_inicio" value="{{ $valInicio }}" 
                             class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2.5">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Hasta</label>
-                        <input type="date" name="fecha_fin" value="{{ request('fecha_fin') }}" 
+                        <input type="date" name="fecha_fin" value="{{ $valFin }}" 
                             class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2.5">
                     </div>
                 </div>
@@ -146,7 +168,10 @@
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">#</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Fecha</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Establecimiento</th>
-                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Estado Firmas</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">Provincia/Distrito</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Implementador</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Módulos Firmados</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Acta Consolidada</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-right">Acciones</th>
                         </tr>
                     </thead>
@@ -154,95 +179,112 @@
                         @forelse($monitoreos as $monitoreo)
                             @php
                                 $misDetalles = $monitoreo->detalles ?? collect();
-
-                                // 1. Intentar obtener configuración guardada
                                 $configMod = $misDetalles->where('modulo_nombre', 'config_modulos')->first();
                                 
-                                $activosKeys = [];
-                                if ($configMod) {
-                                    $activosKeys = is_array($configMod->contenido) 
-                                        ? $configMod->contenido 
-                                        : json_decode($configMod->contenido, true);
-                                }
-
-                                // LÓGICA DE CONTINGENCIA: Si no hay configuración guardada, asume los 18 por defecto
-                                if (empty($activosKeys)) {
-                                    $activosKeys = [
-                                        'gestion_administrativa', 'citas', 'triaje', 'consulta_medicina', 
-                                        'consulta_odontologia', 'consulta_nutricion', 'consulta_psicologia', 
-                                        'cred', 'inmunizaciones', 'atencion_prenatal', 'planificacion_familiar', 
-                                        'parto', 'puerperio', 'fua_electronico', 'farmacia', 
-                                        'referencias', 'laboratorio', 'urgencias'
-                                    ];
-                                }
-
-                                $activosKeys = array_filter((array)$activosKeys); // Limpieza de nulos
+                                $activosKeys = $configMod ? (is_array($configMod->contenido) ? $configMod->contenido : json_decode($configMod->contenido, true)) : [
+                                    'gestion_administrativa', 'citas', 'triaje', 'consulta_medicina', 'consulta_odontologia', 
+                                    'consulta_nutricion', 'consulta_psicologia', 'cred', 'inmunizaciones', 'atencion_prenatal', 
+                                    'planificacion_familiar', 'parto', 'puerperio', 'fua_electronico', 'farmacia', 'referencias', 
+                                    'laboratorio', 'urgencias'
+                                ];
+                                $activosKeys = array_filter((array)$activosKeys);
                                 $totalHabilitados = count($activosKeys);
 
-                                // 2. Contar firmas reales filtrando solo las que pertenecen a módulos activos
-                                $firmadosCount = $misDetalles->filter(function($detalle) use ($activosKeys) {
-                                    return in_array($detalle->modulo_nombre, $activosKeys) 
-                                        && !empty($detalle->pdf_firmado_path);
-                                })->count();
-
+                                $firmadosCount = $misDetalles->filter(fn($d) => in_array($d->modulo_nombre, $activosKeys) && !empty($d->pdf_firmado_path))->count();
                                 $porcentaje = $totalHabilitados > 0 ? ($firmadosCount / $totalHabilitados) * 100 : 0;
-                                $estaFinalizado = ($totalHabilitados > 0 && $firmadosCount === $totalHabilitados);
                             @endphp
 
                             <tr class="hover:bg-blue-50/30 transition-colors group">
                                 <td class="px-3 py-3 font-mono font-bold text-slate-700">{{ $monitoreo->id }}</td>
-                                <td class="px-3 py-3 text-slate-600">
-                                    {{ \Carbon\Carbon::parse($monitoreo->fecha)->format('d/m/Y') }}
-                                </td>
+                                <td class="px-3 py-3 text-slate-600">{{ \Carbon\Carbon::parse($monitoreo->fecha)->format('d/m/Y') }}</td>
                                 <td class="px-3 py-3">
                                     <div class="flex flex-col">
                                         <span class="font-semibold text-slate-800">{{ $monitoreo->establecimiento->nombre ?? '—' }}</span>
-                                        <div class="flex items-center gap-2 mt-0.5">
-                                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200">
-                                                {{ $monitoreo->categoria_congelada ?? '—' }}
-                                            </span>
-                                            <span class="text-[9px] text-slate-400 uppercase font-medium">{{ $monitoreo->establecimiento->distrito }}</span>
-                                        </div>
+                                        <span class="text-[9px] w-fit px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200 mt-1">
+                                            {{ $monitoreo->categoria_congelada ?? '—' }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-center">
+                                    <div class="flex flex-col">
+                                        <span class="font-medium text-slate-700">{{ $monitoreo->establecimiento->provincia ?? '—' }}</span>
+                                        <span class="text-[10px] text-slate-400 uppercase tracking-tighter">{{ $monitoreo->establecimiento->distrito ?? '—' }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <div class="flex flex-col min-w-[150px]">
+                                        <span class="font-bold text-slate-700 leading-tight">
+                                            @if($monitoreo->user)
+                                                {{ mb_strtoupper("{$monitoreo->user->apellido_paterno} {$monitoreo->user->apellido_materno} {$monitoreo->user->name}", 'UTF-8') }}
+                                            @else
+                                                <span class="text-slate-400 italic text-[10px]">NO ASIGNADO</span>
+                                            @endif
+                                        </span>
                                     </div>
                                 </td>
                                 
-                                {{-- COLUMNA DE ESTADO DINÁMICO --}}
-                                <td class="px-3 py-3">
+                                {{-- COLUMNA MÓDULOS --}}
+                                <td class="px-3 py-3 min-w-[110px]">
                                     <div class="flex flex-col">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <span class="flex items-center gap-1 {{ $estaFinalizado ? 'text-emerald-600 font-black' : 'text-orange-500 font-bold' }} text-[10px] uppercase tracking-tighter">
-                                                <i data-lucide="{{ $estaFinalizado ? 'check-circle-2' : 'clock' }}" class="w-3 h-3"></i>
-                                                {{ $estaFinalizado ? 'Firmado' : 'En Proceso' }}
+                                        <div class="flex items-center justify-between mb-0.5">
+                                            <span class="text-[10px] font-bold text-slate-500">{{ $firmadosCount }}/{{ $totalHabilitados }}</span>
+                                            <span class="text-[9px] font-black {{ $porcentaje == 100 ? 'text-emerald-500' : 'text-amber-500' }}">
+                                                {{ round($porcentaje) }}%
                                             </span>
-                                            <span class="text-[10px] font-mono font-bold text-slate-500">{{ $firmadosCount }}/{{ $totalHabilitados }}</span>
                                         </div>
                                         <div class="progress-bar-container">
-                                            <div class="progress-bar-fill {{ $estaFinalizado ? 'bg-emerald-500' : 'bg-orange-400' }}" 
-                                                 style="width: {{ $porcentaje }}%"></div>
+                                            <div class="progress-bar-fill {{ $porcentaje == 100 ? 'bg-emerald-500' : 'bg-amber-400' }}" style="width: {{ $porcentaje }}%"></div>
                                         </div>
                                     </div>
                                 </td>
 
+                                {{-- COLUMNA ACTA FINAL --}}
+                                <td class="px-3 py-3 text-center">
+                                    @if($monitoreo->firmado)
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[9px] uppercase border border-emerald-200">
+                                            <i data-lucide="check-circle-2" class="w-3 h-3"></i> Firmada
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-500 font-bold text-[9px] uppercase border border-slate-200">
+                                            <i data-lucide="clock" class="w-3 h-3"></i> Pendiente
+                                        </span>
+                                    @endif
+                                </td>
+
                                 <td class="px-3 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
-                                        <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" 
-                                           class="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-all" 
-                                           title="Gestionar Módulos">
+                                        <button onclick="abrirModalSubir({{ $monitoreo->id }})" 
+                                            class="p-1.5 rounded-lg {{ $monitoreo->firmado ? 'text-emerald-500 bg-emerald-50' : 'text-slate-400 hover:bg-slate-50' }} transition-all" 
+                                            title="Subir acta consolidada firmada">
+                                            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                                        </button>
+
+                                        <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-all" title="Gestionar módulos">
                                             <i data-lucide="layers" class="w-4 h-4"></i>
                                         </a>
-                                        <a href="{{ route('usuario.monitoreo.pdf', $monitoreo->id) }}" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Ver PDF">
+
+                                        <a href="{{ route('usuario.monitoreo.pdf', $monitoreo->id) }}" target="_blank" 
+                                           class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" 
+                                           title="Ver acta consolidada">
                                             <i data-lucide="file-text" class="w-4 h-4"></i>
                                         </a>
-                                        <a href="{{ route('usuario.monitoreo.edit', $monitoreo->id) }}" 
-                                           class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" 
-                                           title="Editar Acta">
+
+                                        @if($monitoreo->firmado_pdf)
+                                            <a href="{{ asset('storage/' . $monitoreo->firmado_pdf) }}" target="_blank" 
+                                               class="p-1.5 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all" 
+                                               title="Ver acta consolidada firmada">
+                                                <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                                            </a>
+                                        @endif
+
+                                        <a href="{{ route('usuario.monitoreo.edit', $monitoreo->id) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Editar acta">
                                             <i data-lucide="pencil" class="w-4 h-4"></i>
                                         </a>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">No se encontraron registros de monitoreo</td></tr>
+                            <tr><td colspan="8" class="px-6 py-12 text-center text-slate-400">No se encontraron registros de monitoreo para el periodo seleccionado</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -261,18 +303,60 @@
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof lucide !== 'undefined') lucide.createIcons();
         });
-        
-        @if (session('success'))
-            Swal.fire({ 
-                icon: 'success', 
-                title: '¡Éxito!', 
-                text: @json(session('success')), 
-                confirmButtonColor: '#3b82f6', 
-                timer: 3000, 
-                toast: true, 
-                position: 'top-end', 
-                showConfirmButton: false 
+
+        function abrirModalSubir(id) {
+            Swal.fire({
+                title: 'Subir acta consolidada firmada',
+                text: 'Adjunte el archivo PDF con las firmas correspondientes.',
+                input: 'file',
+                inputAttributes: {
+                    'accept': 'application/pdf',
+                    'aria-label': 'Subir acta consolidada firmada'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Subir PDF',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3b82f6',
+                showLoaderOnConfirm: true,
+                preConfirm: (file) => {
+                    if (!file) {
+                        Swal.showValidationMessage('Debe seleccionar un archivo PDF');
+                        return;
+                    }
+                    
+                    const formData = new FormData();
+                    formData.append('pdf_firmado', file);
+                    formData.append('_token', '{{ csrf_token() }}');
+
+                    return fetch(`/usuario/monitoreo/${id}/subir-consolidado-final`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.message || 'Error en el servidor'); });
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Hubo un problema: ${error.message}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Acta Cargada!',
+                        text: 'El acta consolidada ha sido registrada correctamente.',
+                        timer: 2000
+                    }).then(() => location.reload());
+                }
             });
-        @endif
+        }
     </script>
 @endpush

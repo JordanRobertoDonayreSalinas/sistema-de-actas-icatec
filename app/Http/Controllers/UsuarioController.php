@@ -17,64 +17,54 @@ class UsuarioController extends Controller
 {
     /**
      * DASHBOARD DEL USUARIO
-     * Muestra estadísticas personales del implementador logueado.
+     * Muestra estadísticas GLOBALES e HISTÓRICAS ordenadas por fecha reciente.
      * Vista: resources/views/usuario/dashboard/dashboard.blade.php
      */
     public function index()
     {
-        // Construimos el nombre exacto como se guarda en el campo 'implementador' de las actas
-        $nombreCompleto = trim(Auth::user()->apellido_paterno . ' ' . Auth::user()->apellido_materno . ' ' . Auth::user()->name);
-        
-        $totalActas = Acta::where('implementador', $nombreCompleto)->count(); 
+        // 1. Total de Actas global histórico (sin filtro de año)
+        $totalActas = Acta::count(); 
 
-        // Ranking de establecimientos donde el usuario ha trabajado (Top 5)
-        $topEstablecimientos = Establecimiento::withCount(['actas' => function($query) use ($nombreCompleto) {
-                $query->where('implementador', $nombreCompleto);
-            }])
+        // 2. Mapeo de meses en español
+        $mesesEspañol = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        ];
+
+        // 3. Actas por mes y año (Ordenado de más reciente a más antiguo)
+        // Se agrupa por año y mes para diferenciar periodos (ej. Enero 2025 vs Enero 2026)
+        $actasPorMes = Acta::selectRaw('YEAR(fecha) as anio, MONTH(fecha) as mes, COUNT(*) as total')
+            ->groupBy('anio', 'mes')
+            ->orderBy('anio', 'desc') 
+            ->orderBy('mes', 'desc') 
+            ->get()
+            ->map(function($item) use ($mesesEspañol) {
+                return [
+                    // Formato: "Mes Año" (ej: Enero 2026)
+                    'nombre_mes' => $mesesEspañol[$item->mes] . ' ' . $item->anio,
+                    'total' => $item->total
+                ];
+            });
+
+        // 4. Ranking de establecimientos histórico global (Top 5 con más actividad)
+        $topEstablecimientos = Establecimiento::withCount('actas')
             ->having('actas_count', '>', 0)
             ->orderBy('actas_count', 'desc')
             ->take(5)
             ->get();
 
-        // Mapeo de meses completos en español
-        $mesesEspañol = [
-            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
-            7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
-        ];
-
-        // Actas por mes del año actual (Orden DESC: más reciente primero)
-        $actasPorMesRaw = Acta::select(
-                DB::raw('MONTH(fecha) as month'),
-                DB::raw('COUNT(*) as total')
-            )
-            ->where('implementador', $nombreCompleto)
-            ->whereYear('fecha', date('Y'))
-            ->groupBy('month')
-            ->orderBy('month', 'desc')
-            ->get();
-
-        $actasPorMes = $actasPorMesRaw->map(function ($item) use ($mesesEspañol) {
-            return [
-                'nombre_mes' => $mesesEspañol[$item->month] ?? 'S/N', 
-                'total' => $item->total
-            ];
-        }); 
-
         return view('usuario.dashboard.dashboard', compact('totalActas', 'actasPorMes', 'topEstablecimientos'));
     }
 
     /**
-     * LISTADO DE ASISTENCIAS TÉCNICAS
-     * Vista: resources/views/usuario/asistencia/index.blade.php
+     * LISTADO DE ASISTENCIAS TÉCNICAS (Vista Global Histórica)
      */
     public function actasIndex(Request $request)
     {
         $query = Acta::query();
 
-        // Aplicación de filtros dinámicos
-        if ($request->filled('implementador')) {
-            $query->where('implementador', $request->implementador);
-        }
+        // Filtros dinámicos sobre todas las actas del sistema
         if ($request->filled('provincia')) {
             $query->whereHas('establecimiento', function($q) use ($request) {
                 $q->where('provincia', $request->provincia);
@@ -88,38 +78,18 @@ class UsuarioController extends Controller
         }
 
         $actas = $query->orderBy('fecha', 'desc')->paginate(10);
-
-        // Datos para cargar los selects de los filtros
-        $implementadores = Acta::distinct()->pluck('implementador');
+        
         $provincias = Establecimiento::distinct()->pluck('provincia');
-
-        // Contadores para la tarjeta superior
+        
+        // Contadores globales históricos
         $countFirmadas = Acta::where('firmado', 1)->count();
         $countPendientes = Acta::where('firmado', 0)->count();
 
-        return view('usuario.asistencia.index', compact('actas', 'implementadores', 'provincias', 'countFirmadas', 'countPendientes'));
+        return view('usuario.asistencia.index', compact('actas', 'provincias', 'countFirmadas', 'countPendientes'));
     }
 
     /**
-     * CREAR ACTA (FORMULARIO)
-     * Vista: resources/views/usuario/asistencia/create.blade.php
-     */
-    public function actasCreate()
-    {
-        return view('usuario.asistencia.create');
-    }
-
-    /**
-     * EDITAR ACTA (FORMULARIO)
-     * Vista: resources/views/usuario/asistencia/edit.blade.php
-     */
-    public function actasEdit(Acta $acta)
-    {
-        return view('usuario.asistencia.edit', compact('acta'));
-    }
-
-    /**
-     * SUBIR O REEMPLAZAR PDF FIRMADO (Acción vía listado)
+     * SUBIR O REEMPLAZAR PDF FIRMADO
      */
     public function subirPDF(Request $request, $id)
     {
@@ -148,30 +118,21 @@ class UsuarioController extends Controller
     }
 
     /**
-     * LISTADO DE MONITOREO
-     * Vista: resources/views/usuario/monitoreo/index.blade.php
+     * LISTADO DE MONITOREO (Vista Global Histórica)
      */
     public function monitoreoIndex(Request $request)
     {
-        // Filtrar actas que sean de tipo monitoreo (según tu lógica de 'tema')
+        // Filtrar todas las actas que contengan "Monitoreo" en el sistema
         $query = Acta::where('tema', 'like', '%Monitoreo%');
 
-        if ($request->filled('implementador')) {
-            $query->where('implementador', $request->implementador);
-        }
-
         $monitoreos = $query->orderBy('fecha', 'desc')->paginate(10);
-        
-        $implementadores = Acta::distinct()->pluck('implementador');
-        $provincias = Establecimiento::distinct()->pluck('provincia');
-        $countCompletados = $monitoreos->where('firmado', 1)->count();
+        $countCompletados = (clone $query)->where('firmado', 1)->count();
 
-        return view('usuario.monitoreo.index', compact('monitoreos', 'implementadores', 'provincias', 'countCompletados'));
+        return view('usuario.monitoreo.index', compact('monitoreos', 'countCompletados'));
     }
 
     /**
      * GESTIÓN DE PERFIL
-     * Vista: resources/views/usuario/perfil/perfil.blade.php
      */
     public function perfil()
     {
@@ -179,6 +140,9 @@ class UsuarioController extends Controller
         return view('usuario.perfil.perfil', compact('user'));
     }
 
+    /**
+     * ACTUALIZAR PERFIL
+     */
     public function perfilUpdate(Request $request)
     {
         $user = Auth::user();
