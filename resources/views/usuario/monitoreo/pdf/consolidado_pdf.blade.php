@@ -184,38 +184,76 @@
         </tr>
     </table>
 
+    {{-- Equipo de Acompañamiento --}}
+    @if(isset($equipoMonitoreo) && $equipoMonitoreo->count() > 0)
+        <div style="font-weight: bold; font-size: 10px; margin: 10px 0 5px 0; color: #1e293b; padding-left: 5px;">EQUIPO DE ACOMPAÑAMIENTO:</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%">NOMBRE COMPLETO</th>
+                    <th style="width: 25%">DNI</th>
+                    <th style="width: 25%">CARGO</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($equipoMonitoreo as $acom)
+                <tr>
+                    <td class="uppercase">{{ trim(($acom->nombres ?? '') . ' ' . ($acom->apellido_paterno ?? '') . ' ' . ($acom->apellido_materno ?? '')) }}</td>
+                    <td class="uppercase">{{ $acom->dni ?? $acom->doc ?? '-' }}</td>
+                    <td class="uppercase">{{ $acom->cargo ?? '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
     <div class="section-header">2. RESUMEN DE HALLAZGOS POR MÓDULOS</div>
 
     @php
+        // Lista ESTRICTA de módulos permitidos. Cualquier cosa que no esté aquí, SE IGNORA.
         $ordenEstricto = [
             'gestion_administrativa' => 'GESTION ADMINISTRATIVA',
             'citas'                  => 'CITAS',
             'triaje'                 => 'TRIAJE',
             'consulta_medicina'      => 'CONSULTA EXTERNA: MEDICINA',
             'consulta_odontologia'   => 'CONSULTA EXTERNA: ODONTOLOGIA',
+            'odontologia'            => 'CONSULTA EXTERNA: ODONTOLOGIA', // Fallback
             'consulta_nutricion'     => 'CONSULTA EXTERNA: NUTRICION',
+            'nutricion'              => 'CONSULTA EXTERNA: NUTRICION', // Fallback
             'consulta_psicologia'    => 'CONSULTA EXTERNA: PSICOLOGIA',
+            'psicologia'             => 'CONSULTA EXTERNA: PSICOLOGIA', // Fallback
             'cred'                   => 'CRED',
             'inmunizaciones'         => 'INMUNIZACIONES',
             'atencion_prenatal'      => 'ATENCION PRENATAL',
+            'prenatal'               => 'ATENCION PRENATAL', // Fallback
             'planificacion_familiar' => 'PLANIFICACION FAMILIAR',
+            'planificacion'          => 'PLANIFICACION FAMILIAR', // Fallback
             'parto'                  => 'PARTO',
             'puerperio'              => 'PUERPERIO',
             'fua_electronico'        => 'FUA ELECTRONICO',
             'farmacia'               => 'FARMACIA',
-            'refcon'                 => 'REFCON',
+            'referencias'            => 'REFERENCIAS Y CONTRAREFERENCIAS',
+            'refcon'                 => 'REFERENCIAS Y CONTRAREFERENCIAS', // Fallback
             'laboratorio'            => 'LABORATORIO',
             'urgencias'              => 'URGENCIAS Y EMERGENCIAS'
         ];
-        $yaImpresos = [];
+        
+        $impresos = []; // Control para no repetir módulos
         $contadorModulo = 1;
+        $hiddenKeys = ['id', 'acta_id', 'foto_evidencia', 'fotos_evidencia', 'comentarios', 'observaciones', 'password', 'token', 'created_at', 'updated_at', '_token'];
     @endphp
 
     @foreach($ordenEstricto as $nombreTecnico => $tituloPublico)
-        @php $mod = $modulos->where('modulo_nombre', $nombreTecnico)->first(); @endphp
-        @if($mod && !in_array($mod->id, $yaImpresos))
+        @php 
+            $mod = $modulos->first(function($item) use ($nombreTecnico) {
+                return strtolower($item->modulo_nombre) === strtolower($nombreTecnico);
+            });
+        @endphp
+
+        {{-- IMPRIMIR SOLO SI EXISTE, NO HA SIDO IMPRESO Y TIENE CONTENIDO REAL --}}
+        @if($mod && !in_array($mod->id, $impresos))
             @php 
-                $yaImpresos[] = $mod->id; 
+                $impresos[] = $mod->id; 
                 $cont = is_string($mod->contenido) ? json_decode($mod->contenido, true) : $mod->contenido; 
             @endphp
             
@@ -223,40 +261,81 @@
                 <div style="background-color: #f1f5f9; padding: 4px 10px; font-weight: bold; font-size: 9px; margin-bottom: 2px; border: 1px solid #e2e8f0; text-transform: uppercase;">
                     MÓDULO {{ $contadorModulo }}: {{ $tituloPublico }}
                 </div>
+                
                 @if(is_array($cont))
-                    <table>
-                        @foreach($cont as $key => $value)
-                            @if(!is_numeric($key) && !is_array($value) && 
-                                !in_array(strtolower($key), ['id', 'acta_id', 'foto_evidencia', 'comentarios', 'observaciones', 'password', 'token', 'created_at', 'updated_at']) && 
-                                !str_contains(strtoupper($key), 'DOC'))
-                                <tr>
-                                    <td class="bg-label">{{ strtoupper(str_replace(['_', 'inst'], [' ', 'entidad'], $key)) }}:</td>
-                                    <td class="uppercase">{{ is_bool($value) ? ($value ? 'SI' : 'NO') : $value }}</td>
-                                </tr>
+                    @php
+                        $filasUnificadas = [];
+                        foreach($cont as $k => $v) {
+                            if(in_array($k, $hiddenKeys)) continue;
+                            if(is_array($v)) {
+                                if(!isset($v[0])) { // Es grupo asociativo, lo aplanamos
+                                    foreach($v as $subK => $subV) {
+                                        if(!is_array($subV) && !in_array($subK, $hiddenKeys) && $subV !== null && trim($subV) !== '') {
+                                            $newKey = $k . ' ' . $subK;
+                                            $filasUnificadas[$newKey] = $subV;
+                                        }
+                                    }
+                                }
+                            } else {
+                                if($v !== null && trim($v) !== '') {
+                                    $filasUnificadas[$k] = $v;
+                                }
+                            }
+                        }
+                    @endphp
+
+                    @if(count($filasUnificadas) > 0)
+                        <table>
+                            @foreach($filasUnificadas as $label => $val)
+                            <tr>
+                                <td class="bg-label">{{ strtoupper(str_replace(['_', 'inst'], [' ', 'entidad'], $label)) }}:</td>
+                                <td class="uppercase">{{ is_bool($val) ? ($val ? 'SI' : 'NO') : $val }}</td>
+                            </tr>
+                            @endforeach
+                        </table>
+                    @endif
+
+                    {{-- Fotos (Compatibilidad para ambos formatos de guardado) --}}
+                    @php $fotosEncontradas = false; @endphp
+                    
+                    {{-- 1. Formato nuevo (array 'fotos_evidencia') --}}
+                    @if(!empty($cont['fotos_evidencia']) && is_array($cont['fotos_evidencia']))
+                        @foreach($cont['fotos_evidencia'] as $ruta)
+                            @if(!empty($ruta) && file_exists(public_path('storage/' . $ruta)))
+                                @if(!$fotosEncontradas) 
+                                    <div style="margin-top:8px;"><div style="font-weight:700; font-size:9px; margin-bottom:6px;">EVIDENCIAS FOTOGRÁFICAS</div><div class="foto-grid"> 
+                                    @php $fotosEncontradas = true; @endphp
+                                @endif
+                                <div class="foto-wrapper"><img src="{{ public_path('storage/' . $ruta) }}"></div>
                             @endif
                         @endforeach
-                    </table>
-
-                    {{-- Fotos guardadas en el JSON del módulo --}}
-                    @if(!empty($cont['fotos_evidencia']) && is_array($cont['fotos_evidencia']))
-                        <div style="margin-top:8px;">
+                        @if($fotosEncontradas) </div></div> @endif
+                    @endif
+                    
+                    {{-- 2. Formato antiguo (claves 'foto_1', 'foto_2') --}}
+                    @if(!$fotosEncontradas && (!empty($cont['foto_1']) || !empty($cont['foto_2'])))
+                         <div style="margin-top:8px;">
                             <div style="font-weight:700; font-size:9px; margin-bottom:6px;">EVIDENCIAS FOTOGRÁFICAS</div>
                             <div class="foto-grid">
-                                @foreach($cont['fotos_evidencia'] as $ruta)
-                                    @if(!empty($ruta) && file_exists(public_path('storage/' . $ruta)))
-                                        <div class="foto-wrapper">
-                                            <img src="{{ public_path('storage/' . $ruta) }}">
-                                        </div>
-                                    @endif
-                                @endforeach
+                                @if(!empty($cont['foto_1']) && file_exists(public_path('storage/' . $cont['foto_1'])))
+                                    <div class="foto-wrapper"><img src="{{ public_path('storage/' . $cont['foto_1']) }}"></div>
+                                @endif
+                                @if(!empty($cont['foto_2']) && file_exists(public_path('storage/' . $cont['foto_2'])))
+                                    <div class="foto-wrapper"><img src="{{ public_path('storage/' . $cont['foto_2']) }}"></div>
+                                @endif
                             </div>
                         </div>
                     @endif
+
+                @else
+                    <div style="padding: 10px; border: 1px solid #e2e8f0; font-style: italic;">Sin información detallada registrada.</div>
                 @endif
             </div>
             @php $contadorModulo++; @endphp
         @endif
     @endforeach
+
+    {{-- HE ELIMINADO EL BLOQUE "RED DE SEGURIDAD (EXTRA)" PARA EVITAR QUE APAREZCA 'CONFIG MODULOS' O BASURA --}}
 
     <div class="section-header">3. DETALLE DE EQUIPAMIENTO POR MÓDULO</div>
     
@@ -277,7 +356,7 @@
                 @foreach($equipos as $index => $eq)
                     <tr class="uppercase" style="font-size: 8px;">
                         <td style="text-align: center;">{{ $index + 1 }}</td>
-                        <td>{{ $ordenEstricto[$eq->modulo] ?? $eq->modulo }}</td>
+                        <td>{{ strtoupper(str_replace('_', ' ', $eq->modulo)) }}</td>
                         <td style="font-family: monospace;">{{ $eq->nro_serie ?? '---' }}</td>
                         <td style="text-align: center;">{{ $eq->cantidad ?? '1' }}</td>
                         <td>{{ $eq->descripcion }}</td>
@@ -330,7 +409,7 @@
             @foreach($equipoMonitoreo as $miembro)
                 <div class="firma-card">
                     <div class="linea-firma"></div>
-                    <span class="nombre-firma">{{ strtoupper(($miembro->apellido_paterno ?? '') . ' ' . ($miembro->apellido_materno ?? ''). ' ' . ($miembro->nombres ?? '')) }}</span>
+                    <span class="nombre-firma">{{ strtoupper(trim(($miembro->apellido_paterno ?? '') . ' ' . ($miembro->apellido_materno ?? ''). ' ' . ($miembro->nombres ?? ''))) }}</span>
                     <span class="cargo-firma">{{ strtoupper($miembro->institucion ?? 'Acompañante Técnico') }}</span>
                 </div>
             @endforeach

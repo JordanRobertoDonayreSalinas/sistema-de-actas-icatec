@@ -186,7 +186,8 @@
     <h1>Acta de Monitoreo - Citas (Ventanilla y Caja)</h1>
     <p>
       <strong>Establecimiento:</strong> {{ $acta->establecimiento->nombre ?? 'No especificado' }} &nbsp;|&nbsp;
-      <strong>Fecha de Monitoreo:</strong> {{ $acta->created_at->format('d/m/Y H:i A') }} &nbsp;|&nbsp;
+      {{-- CAMBIO REALIZADO AQUÍ: Se usa el campo 'fecha' formateado --}}
+      <strong>Fecha de Monitoreo:</strong> {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }} &nbsp;|&nbsp;
       <strong>ID:</strong> {{ $acta->id }}
     </p>
   </div>

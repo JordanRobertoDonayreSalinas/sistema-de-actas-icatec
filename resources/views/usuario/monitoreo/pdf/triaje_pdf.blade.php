@@ -66,8 +66,8 @@
         <h1>Ficha de Monitoreo - Triaje</h1>
         <p>
             Acta N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
-            {{-- Fecha real del acta --}}
-            Fecha: {{ \Carbon\Carbon::parse($acta->fecha_generacion ?? $acta->created_at)->format('d/m/Y') }}
+            {{-- CORRECCIÓN AQUÍ: Usamos el campo 'fecha' de la tabla --}}
+            Fecha: {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}
         </p>
         <p>
             {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre ?? 'Establecimiento Desconocido' }}

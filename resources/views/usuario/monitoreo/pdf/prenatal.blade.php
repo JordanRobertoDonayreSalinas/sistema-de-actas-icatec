@@ -178,7 +178,8 @@
     <h1>Acta de Monitoreo - Atención Pre Natal</h1>
     <p>
       <strong>Establecimiento:</strong> {{ $acta->establecimiento->nombre ?? 'No especificado' }} &nbsp;|&nbsp;
-      <strong>Fecha:</strong> {{ $acta->created_at->format('d/m/Y H:i A') }} &nbsp;|&nbsp;
+      {{-- CAMBIO REALIZADO AQUÍ: Se usa el campo 'fecha' formateado --}}
+      <strong>Fecha:</strong> {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }} &nbsp;|&nbsp;
       <strong>ID Acta:</strong> {{ $acta->id }}
     </p>
   </div>
