@@ -734,7 +734,7 @@
                     <td class="p-2 align-middle">
                       <select name="contenido[equipos][{{ $idx }}][propiedad]"
                         class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
-                        <option value="ESTABLECIMIENTO"
+                        <option value="EXCLUSIVO"
                           {{ ($item['propiedad'] ?? '') == 'EXCLUSIVO' ? 'selected' : '' }}>Exclusivo
                         </option>
                         <option value="COMPARTIDO" {{ ($item['propiedad'] ?? '') == 'COMPARTIDO' ? 'selected' : '' }}>
