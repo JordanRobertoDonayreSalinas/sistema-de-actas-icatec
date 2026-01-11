@@ -241,53 +241,83 @@ class CitaController extends Controller
     }
 
 
-    // IMPRIMIR PDF
     public function generar($idActa)
-    {
-        // 1. Aumentar el tiempo límite por si acaso (opcional, pero recomendado)
-        set_time_limit(120);
+{
+    // 1. Configuración inicial
+    set_time_limit(120);
 
-        $acta = CabeceraMonitoreo::findOrFail($idActa);
-        $registro = ModuloCita::where('monitoreo_id', $idActa)->firstOrFail();
+    $acta = CabeceraMonitoreo::findOrFail($idActa);
+    $registro = ModuloCita::where('monitoreo_id', $idActa)->firstOrFail();
 
-        // 2. CONVERTIR FOTOS A BASE64 (Para evitar el bloqueo de imágenes)
-        $fotosBase64 = [];
-        if (!empty($registro->fotos_evidencia)) {
-            foreach ($registro->fotos_evidencia as $url) {
-                // Convertimos la URL pública a una ruta de archivo en tu disco duro
-                // Ejemplo: http://127.0.0.1:8000/storage/fotos/img.png -> C:\...\public\storage\fotos\img.png
-                $rutaRelativa = str_replace(url('/'), '', $url);
-                $path = public_path($rutaRelativa);
-
-                if (file_exists($path)) {
-                    $type = pathinfo($path, PATHINFO_EXTENSION);
-                    $data = file_get_contents($path);
-                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                    $fotosBase64[] = $base64;
-                }
-            }
-        }
-
-        // Sobrescribimos la variable para la vista (ahora son códigos largos, no links)
-        $registro->fotos_evidencia = $fotosBase64;
-
-        // 3. HACER LO MISMO CON LA FIRMA (Si existe)
-        if ($registro->firma_grafica && str_contains($registro->firma_grafica, 'http')) {
-            $rutaRelativa = str_replace(url('/'), '', $registro->firma_grafica);
+    // 2. Lógica de Imágenes a Base64
+    $fotosBase64 = [];
+    if (!empty($registro->fotos_evidencia)) {
+        foreach ($registro->fotos_evidencia as $url) {
+            $rutaRelativa = str_replace(url('/'), '', $url);
             $path = public_path($rutaRelativa);
+
             if (file_exists($path)) {
                 $type = pathinfo($path, PATHINFO_EXTENSION);
                 $data = file_get_contents($path);
-                $registro->firma_grafica = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                $fotosBase64[] = $base64;
             }
         }
+    }
+    $registro->fotos_evidencia = $fotosBase64;
 
-        // 4. Generar PDF (Ya no necesitas isRemoteEnabled porque las imágenes van incrustadas)
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.citas', compact('acta', 'registro'));
-
-        return $pdf->stream('reporte_citas.pdf');
+    // 3. Lógica de Firma a Base64
+    if ($registro->firma_grafica && str_contains($registro->firma_grafica, 'http')) {
+        $rutaRelativa = str_replace(url('/'), '', $registro->firma_grafica);
+        $path = public_path($rutaRelativa);
+        if (file_exists($path)) {
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $registro->firma_grafica = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
     }
 
+    $profesional = \App\Models\Profesional::where('doc', $registro->personal_dni)->first();
+
+    // ---------------------------------------------------------
+    // 4. GENERACIÓN DEL PDF (CORREGIDO)
+    // ---------------------------------------------------------
+
+    // A. Cargamos la vista
+    $pdf = Pdf::loadView('usuario.monitoreo.pdf.citas', compact('acta', 'registro', 'profesional'));
+    
+    // B. Configuramos papel
+    $pdf->setPaper('A4', 'portrait');
+
+    // C. Renderizamos en memoria
+    $pdf->render();
+
+    $dom_pdf = $pdf->getDomPDF();
+    $canvas = $dom_pdf->getCanvas(); 
+
+    // Configuración de fuente
+    $fontMetrics = $dom_pdf->getFontMetrics();
+    $font = $fontMetrics->get_font("Helvetica", "bold");
+    
+    // --- CAMBIOS DE AJUSTE FINO ---
+    $size = 8; // Igualamos a 8pt del CSS para que se vean idénticos
+    $color = [0.392, 0.455, 0.545]; 
+
+    $w = $canvas->get_width();
+    $h = $canvas->get_height();
+    
+    // Coordenadas:
+    $x = $w - 75; 
+    
+    // AQUÍ ESTÁ EL TRUCO VERTICAL:
+    // Antes tenías ($h - 43). Al poner ($h - 49), "restamos más",
+    // lo que hace que el texto SUBA unos milímetros en la hoja.
+    $y = $h - 49;  
+
+    $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
+
+    return $pdf->stream('reporte_citas.pdf');
+}
 
     public function buscarProfesional(Request $request)
     {
