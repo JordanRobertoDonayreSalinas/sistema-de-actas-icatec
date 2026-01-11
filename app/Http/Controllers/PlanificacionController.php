@@ -78,7 +78,8 @@ class PlanificacionController extends Controller
             $datosForm['dni_firma'] = [
                 'tipo_dni_fisico' => $request->input('contenido.dni_firma.tipo_dni_fisico'),
                 'dnie_version'    => $request->input('contenido.dni_firma.dnie_version'),
-                'firma_sihce'     => $request->input('contenido.dni_firma.firma_sihce')
+                'firma_sihce'     => $request->input('contenido.dni_firma.firma_sihce'),
+                'observaciones'   => $request->input('contenido.dni_firma.observaciones') // Captura de nuevas obs
             ];
 
             $datosForm['documentacion'] = [
@@ -161,7 +162,7 @@ class PlanificacionController extends Controller
                             'estado'        => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
                             'propio'        => trim(strtoupper($valorCapturado)), 
                             'nro_serie'     => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
-                            'observaciones' => !empty($eq['observaciones']) ? mb_strtoupper($eq['observaciones'], 'UTF-8') : null,
+                            'observacion' => !empty($eq['observacion']) ? mb_strtoupper($eq['observacion'], 'UTF-8') : null,
                         ]);
                     }
                 }

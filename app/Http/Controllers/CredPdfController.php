@@ -54,8 +54,15 @@ class CredPdfController extends Controller
                 'equipos' => $equipos
             ]);
 
-            $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
-            $pdf->getDomPDF()->set_option("chroot", base_path());
+            // 2. CONFIGURACIÓN DEL MOTOR DOMPDF (AQUÍ VAN LAS OPCIONES)
+            $pdf->setOption([
+                'isPhpEnabled'      => true,    // <--- ESTA ES LA LÍNEA QUE NECESITAS
+                'isRemoteEnabled'   => true,    // Para cargar imágenes externas/storage
+                'chroot'            => base_path(),
+            ]);
+
+            // $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
+            // $pdf->getDomPDF()->set_option("chroot", base_path());
 
             return $pdf->stream("Reporte_CRED_{$id}.pdf");
 
