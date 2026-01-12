@@ -298,6 +298,65 @@
                 </div>
             </div>
 
+            {{--  SECCIÓN INICIO LABORES --}}
+            <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
+                
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                        <i data-lucide="clipboard-list" class="text-white w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Inicio Labores</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configuración Inicial</p>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    {{-- Grid: Cantidad y Nombre de Consultorio --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {{-- Cantidad Consultorios --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cantidad de Consultorios</label>
+                            <div class="relative">
+                                <input type="number" 
+                                       min="0" 
+                                       x-model="form.inicio_labores.consultorios" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        {{-- Nombre del Consultorio (NUEVO) --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombre del Consultorio</label>
+                            <div class="relative">
+                                <input type="text" 
+                                       placeholder="Ej: Consultorio 01"
+                                       x-model="form.inicio_labores.nombre_consultorio" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase">
+                            </div>
+                        </div>
+
+                        {{-- NUEVO CAMPO: TURNO --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Turno</label>
+                            <div class="relative">
+                                <select x-model="form.inicio_labores.turno" 
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase cursor-pointer">
+                                    <option value="" disabled>Seleccione...</option>
+                                    <option value="MAÑANA">MAÑANA</option>
+                                    <option value="TARDE">TARDE</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    
+                </div>
+            </div>
+
             {{-- 5. EVIDENCIA FOTOGRÁFICA --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
                 <div class="flex items-center gap-4 mb-6">
@@ -363,51 +422,57 @@
 
 <script>
     function triajeForm() {
-        // DATOS BD
+        // 1. RECEPCIÓN DE DATOS DESDE EL CONTROLADOR
         const dbCapacitacion = @json($dbCapacitacion ?? null);
         const dbInventario   = @json($dbInventario ?? []);
         const dbDificultad   = @json($dbDificultad ?? null);
         const dbFotos        = @json($dbFotos ?? []);
+        // NUEVO: Recibir datos de inicio labores
+        const dbInicioLabores = @json($dbInicioLabores ?? null);
 
         // --- Inicializaciones ---
+        
+        // A. Profesional
         let initProfesional = {
             tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: ''
         };
+        // B. Capacitación
         let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: '' };
 
+        // Mapeo si existen datos previos de Capacitación/Profesional
         if (dbCapacitacion) {
             initCapacitacion.recibieron_cap = dbCapacitacion.recibieron_cap || '';
             initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
             initCapacitacion.decl_jurada = dbCapacitacion.decl_jurada || ''; 
             initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
             if (dbCapacitacion.profesional) {
-                initProfesional = {
-                    tipo_doc: dbCapacitacion.profesional.tipo_doc,
-                    doc: dbCapacitacion.profesional.doc,
-                    nombres: dbCapacitacion.profesional.nombres,
-                    apellido_paterno: dbCapacitacion.profesional.apellido_paterno,
-                    apellido_materno: dbCapacitacion.profesional.apellido_materno,
-                    email: dbCapacitacion.profesional.email,
-                    telefono: dbCapacitacion.profesional.telefono
-                };
+                initProfesional = { ...dbCapacitacion.profesional };
             }
         }
 
-        // --- INVENTARIO (Lectura desde EquipoComputo) ---
+        // C. NUEVO: Inicio Labores (Aquí conectamos los campos nuevos)
+        let initInicioLabores = { consultorios: '', nombre_consultorio: '', turno: '' };
+        
+        if (dbInicioLabores) {
+            initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
+            initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
+            initInicioLabores.turno = dbInicioLabores.turno || '';
+        }
+
+        // D. Inventario
         let initInventario = [];
         if (dbInventario && dbInventario.length > 0) {
             initInventario = dbInventario.map(item => ({
                 id: Date.now() + Math.random(),
                 descripcion: item.descripcion,
-                
-                // MAPEO DE NOMBRES DE COLUMNA DE BD (mon_equipos_computo)
-                propiedad: item.propio,        // BD 'propio' -> JS 'propiedad'
+                propiedad: item.propio,
                 estado: item.estado,
-                codigo: item.nro_serie || '',  // BD 'nro_serie' -> JS 'codigo'
-                observacion: item.observacion  // BD 'observacion' -> JS 'observacion'
+                codigo: item.nro_serie || '',
+                observacion: item.observacion
             }));
         }
 
+        // E. Dificultades
         let initDificultades = { institucion: '', medio: '' };
         if (dbDificultad) {
             initDificultades.institucion = dbDificultad.insti_comunica || '';
@@ -418,35 +483,28 @@
             saving: false,
             buscando: false,
             msgProfesional: '',
-            
             files: [],      
             oldFiles: dbFotos, 
-
-            listaOpciones: ['MONITOR', 'CPU', 'TECLADO', 'MOUSE', 'IMPRESORA', 'LECTORA DE DNIe', 'TICKETERA'],
+            listaOpciones: ['CPU', 'IMPRESORA', 'LAPTOP', 'LECTOR DE DNIe', 'MONITOR', 'MOUSE', 'SCANNER', 'TABLET', 'TECLADO', 'TICKETERA'],
             itemSeleccionado: '',
 
             form: {
                 profesional: initProfesional,
                 capacitacion: initCapacitacion,
+                // NUEVO: Agregamos el objeto al formulario principal
+                inicio_labores: initInicioLabores, 
                 inventario: initInventario,
                 dificultades: initDificultades,
             },
 
             // --- MANEJO DE ARCHIVOS ---
             handleFiles(event) {
-                const newFiles = Array.from(event.target.files).filter(file => {
-                    return file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
-                });
-                if (newFiles.length < event.target.files.length) {
-                    alert("Algunos archivos fueron ignorados porque no son imágenes válidas.");
-                }
+                const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+                if (newFiles.length < event.target.files.length) alert("Solo imágenes permitidas.");
                 this.files = [...this.files, ...newFiles];
                 event.target.value = '';
             },
-
-            removeFile(index) {
-                this.files.splice(index, 1);
-            },
+            removeFile(index) { this.files.splice(index, 1); },
 
             // --- Inventario ---
             agregarItem() {
@@ -461,10 +519,7 @@
                 });
                 this.itemSeleccionado = '';
             },
-
-            eliminarItem(index) {
-                this.form.inventario.splice(index, 1);
-            },
+            eliminarItem(index) { this.form.inventario.splice(index, 1); },
 
             // --- Buscador ---
             async buscarProfesional() {
@@ -472,26 +527,20 @@
                 if (!doc || doc.length < 8) return;
                 this.buscando = true;
                 this.msgProfesional = "Buscando...";
-
                 try {
-                    let response = await fetch(`/usuario/monitoreo/modulo/triaje/buscar-profesional/${doc}`);
-                    let data = await response.json();
-
-                    if (data.success) {
-                        this.form.profesional = { ...this.form.profesional, ...data.data };
+                    let r = await fetch(`/usuario/monitoreo/modulo/triaje/buscar-profesional/${doc}`);
+                    let d = await r.json();
+                    if (d.success) {
+                        this.form.profesional = { ...this.form.profesional, ...d.data };
                         this.msgProfesional = "Encontrado.";
                     } else {
-                        this.limpiarDatosPersonales();
+                        this.limpiarDatos();
                         this.msgProfesional = "No encontrado.";
                     }
-                } catch (error) { 
-                    this.msgProfesional = "Error."; 
-                } finally { 
-                    this.buscando = false; 
-                }
+                } catch (e) { this.msgProfesional = "Error."; } 
+                finally { this.buscando = false; }
             },
-
-            limpiarDatosPersonales() {
+            limpiarDatos() {
                 this.form.profesional.nombres = '';
                 this.form.profesional.apellido_paterno = '';
                 this.form.profesional.apellido_materno = '';
@@ -499,67 +548,36 @@
                 this.form.profesional.telefono = '';
             },
 
-            // --- Eliminar Foto Antigua ---
+            // --- Eliminar Foto ---
             eliminarFotoGuardada(id, index) {
                 fetch(`/usuario/monitoreo/modulo/triaje/foto/${id}`, {
                     method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        this.oldFiles.splice(index, 1);
-                    } else {
-                        alert('Error al eliminar: ' + (data.message || 'Desconocido'));
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('Error de conexión.');
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                }).then(r=>r.json()).then(d=>{
+                    if(d.success) this.oldFiles.splice(index, 1);
+                    else alert('Error: ' + d.message);
                 });
             },
 
-            // --- Guardar Todo ---
+            // --- Guardar ---
             guardarTodo() {
                 this.saving = true;
-                
-                let formData = new FormData();
-                formData.append('data', JSON.stringify(this.form));
-
-                this.files.forEach(file => {
-                    formData.append('fotos[]', file);
-                });
+                let fd = new FormData();
+                fd.append('data', JSON.stringify(this.form)); // Aquí ya va incluido inicio_labores
+                this.files.forEach(f => fd.append('fotos[]', f));
 
                 fetch("{{ route('usuario.monitoreo.triaje.store', $acta->id) }}", {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        } else {
-                            window.location.reload();
-                        }
-                    } else {
-                        this.saving = false;
-                        alert('Error: ' + JSON.stringify(data.message));
-                    }
-                })
-                .catch(error => {
-                    this.saving = false;
-                    alert('Error técnico.');
-                    console.error(error);
-                });
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: fd
+                }).then(r=>r.json()).then(d=>{
+                    if(d.success) window.location.href = d.redirect || window.location.reload();
+                    else { alert('Error: ' + JSON.stringify(d.message)); this.saving=false; }
+                }).catch(e=>{ alert('Error técnico.'); console.error(e); this.saving=false; });
             }
         }
     }
 </script>
+
+
 @endsection

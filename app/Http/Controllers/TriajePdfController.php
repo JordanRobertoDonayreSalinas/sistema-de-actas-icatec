@@ -5,74 +5,77 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CabeceraMonitoreo;
-use App\Models\MonitoreoModulos; 
+use App\Models\ComCapacitacion;
+//use App\Models\ComEquipamiento;
+use App\Models\ComDificultad;
+use App\Models\ComFotos;
 use App\Models\EquipoComputo;
+use App\Models\ComDocuAsisten; 
+use App\Models\MonitoreoModulos;
 
-class OdontologiaPdfController extends Controller
+class TriajePdfController extends Controller
 {
     public function generar($id)
     {
-        // 1. Cargar la cabecera (Igual que en Triaje)
+        // 1. Cargar datos generales del Acta
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
+
+        // 2. Cargar datos específicos del módulo triaje
+
+        // --- NUEVO CÓDIGO AQUÍ ---
+        // Buscamos el registro en MonitoreoModulos
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', 'triaje')
+                            ->first();
+
+        // Inyectamos el updated_at como una nueva propiedad dentro de $acta
+        // Le pondremos 'fecha_validacion' para no sobrescribir el updated_at original del acta
+        $acta->fecha_validacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
+        // -------------------------
         
-        // 2. Buscar en la NUEVA tabla (Diferente a Triaje)
-        $monitoreo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_id', 'odontologia')
-                                    ->first();
+        // Capacitación y Profesional
+        $dbCapacitacion = ComCapacitacion::with('profesional')
+                            ->where('acta_id', $id)
+                            ->where('modulo_id', 'triaje')
+                            ->first();
 
-        if (!$monitoreo) {
-            return "Aviso: No se encontraron datos en 'mon_monitoreo_modulos' para Odontología. Asegúrese de haber guardado el formulario.";
-        }
-
-        // 3. Extraer el contenido JSON
-        $data = (object) $monitoreo->contenido;
-
-        // 4. Mapear datos para que la vista Blade los reconozca
-        $profesional = isset($data->profesional) ? (object) $data->profesional : null;
+        // NUEVO: Inicio de Labores
+        $dbInicioLabores = ComDocuAsisten::where('acta_id', $id)
+                            ->where('modulo_id', 'triaje')->first();
         
-        $dbCapacitacion = (object)[
-            'profesional' => $profesional,
-            'recibieron_cap' => $data->recibio_capacitacion ?? '-',
-            'institucion_cap' => $data->inst_capacitacion ?? 'N/A',
-            'decl_jurada' => $data->firmo_dj ?? '-',
-            'comp_confidencialidad' => $data->firmo_confidencialidad ?? '-'
-        ];
-
-        $dbInicioLabores = (object)[
-            'cant_consultorios' => $data->num_consultorios ?? '-',
-            'nombre_consultorio' => $data->denominacion_consultorio ?? '-',
-            'fua' => $data->fua ?? '-',
-            'referencia' => '-', 
-            'receta' => $data->receta ?? '-',
-            'orden_laboratorio' => '-' 
-        ];
-
-        $dbDni = (object)[
-            'tip_dni' => $data->tipo_dni_fisico ?? '-',
-            'version_dni' => $data->dnie_version ?? 'N/A',
-            'firma_sihce' => $data->dnie_firma_sihce ?? 'N/A',
-            'comentarios' => $data->dni_observacion ?? ''
-        ];
-
-        $dbDificultad = (object)[
-            'insti_comunica' => $data->comunica_a ?? '-',
-            'medio_comunica' => $data->medio_soporte ?? '-'
-        ];
-
-        $dbFotos = collect($data->foto_evidencia ?? [])->map(function($path) {
-            return (object)['url_foto' => $path];
-        });
-
-        // El inventario sigue en la tabla de equipos de cómputo
+        // Inventario
         $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo', 'ODONTOLOGIA') 
-                                    ->get();
+                            ->where('modulo', 'triaje')
+                            ->get();
 
-        // 5. Generar PDF
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.odontologia_pdf', compact(
-            'acta', 'dbCapacitacion', 'dbInicioLabores', 'dbDni', 'dbInventario', 'dbDificultad', 'dbFotos'
+        // Dificultades
+        $dbDificultad = ComDificultad::where('acta_id', $id)
+                            ->where('modulo_id', 'triaje')
+                            ->first();
+
+        // Fotos
+        $dbFotos = ComFotos::where('acta_id', $id)
+                        ->where('modulo_id', 'triaje')
+                        ->get();
+
+        // 3. Preparar el PDF
+        // 'usuario.monitoreo.pdf.triaje_pdf' será la vista que crearemos a continuación
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.triaje_pdf', compact(
+            'acta', 
+            'dbCapacitacion', 
+            'dbInventario', 
+            'dbDificultad', 
+            'dbInicioLabores',
+            'dbFotos'
         ));
 
-        return $pdf->setPaper('a4')->stream("Reporte_Odontologia_$id.pdf");
+
+        $pdf->setOption('isPhpEnabled', true);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        // 4. Retornar el PDF al navegador
+        // 'stream' lo muestra en el navegador, 'download' lo descarga directo.
+        return $pdf->stream('Reporte_Triaje_' . $acta->id . '.pdf');
     }
 }

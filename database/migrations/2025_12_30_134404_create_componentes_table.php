@@ -79,11 +79,12 @@ return new class extends Migration
 
             $table->string('cant_consultorios'); 
             $table->string('nombre_consultorio'); 
-            $table->string('fua'); // Opciones: FUA ELECTRONICA, FUA MANUAL
-            $table->string('referencia'); // Opciones: REFERENCIA POR SIHCE, DIRECTO A REFCON
-            $table->string('receta'); // Opciones: RECETA POR SIHCE, RECETA MANUAL
-            $table->string('orden_laboratorio'); // Opciones: ORDEN POR SIHCE / ORDEN MANUAL
-            $table->text('comentarios')->nullable();; 
+            $table->string('turno'); // Opciones: MAÑANA, TARDE
+            $table->string('fua')->nullable(); // Opciones: FUA ELECTRONICA, FUA MANUAL
+            $table->string('referencia')->nullable(); // Opciones: REFERENCIA POR SIHCE, DIRECTO A REFCON
+            $table->string('receta')->nullable(); // Opciones: RECETA POR SIHCE, RECETA MANUAL
+            $table->string('orden_laboratorio')->nullable(); // Opciones: ORDEN POR SIHCE / ORDEN MANUAL
+            $table->text('comentarios')->nullable();
             $table->timestamps();
         });
 
