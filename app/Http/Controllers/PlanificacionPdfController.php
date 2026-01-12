@@ -59,6 +59,8 @@ class PlanificacionPdfController extends Controller
             'compromiso_confidencialidad' => 'no'
         ];
 
+        
+
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.planificacion_familiar_pdf', [
             'acta' => $acta,
             'detalle' => $detalle,
@@ -67,6 +69,13 @@ class PlanificacionPdfController extends Controller
             'identidad' => $identidad,     // Nueva variable para el Blade
             'documentacion' => $documentacion // Nueva variable para el Blade
         ])->setPaper('a4', 'portrait');
+
+        // 2. CONFIGURACIÓN DEL MOTOR DOMPDF (AQUÍ VAN LAS OPCIONES)
+            $pdf->setOption([
+                'isPhpEnabled'      => true,    // <--- ESTA ES LA LÍNEA QUE NECESITAS
+                'isRemoteEnabled'   => true,    // Para cargar imágenes externas/storage
+                'chroot'            => base_path(),
+            ]);
 
         return $pdf->stream("MONITOREO_PLANIFICACION_ACTA_{$acta->id}.pdf");
     }
