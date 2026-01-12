@@ -4,230 +4,381 @@
     <meta charset="UTF-8">
     <title>Reporte de Odontología</title>
     <style>
-        body { font-family: sans-serif; font-size: 11px; color: #333; }
-        
-        /* Encabezado */
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
-        .header h1 { color: #4f46e5; margin: 0; text-transform: uppercase; font-size: 18px; }
-        .header p { margin: 2px 0; color: #666; }
-        
-        /* Títulos */
-        .section-title { 
-            background-color: #f3f4f6; 
-            color: #1f2937; 
-            padding: 8px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            margin-top: 20px; 
-            border-left: 4px solid #4f46e5;
-            font-size: 12px;
+        /* --- CONFIGURACIÓN GENERAL --- */
+        body { 
+            font-family: 'Helvetica', sans-serif; 
+            font-size: 10px; 
+            color: #333; 
+            margin: 0; 
+            padding-top: 0;
         }
 
-        /* Grillas */
-        .info-grid { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        .info-grid td { padding: 5px; vertical-align: top; }
-        .label { font-weight: bold; color: #6b7280; display: block; font-size: 9px; text-transform: uppercase; }
-        .value { font-weight: bold; color: #111; }
+        @page {
+            margin: 1cm 1.5cm 1.5cm 1.5cm; /* Márgenes para no cortar contenido */
+        }
 
-        /* Tablas */
-        .table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-        .table th { background-color: #4f46e5; color: white; padding: 6px; text-align: left; text-transform: uppercase; }
-        .table td { border-bottom: 1px solid #e5e7eb; padding: 6px; }
-        .table tr:nth-child(even) { background-color: #f9fafb; }
+        /* --- ENCABEZADO SUPERIOR --- */
+        .main-header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid #4f46e5; 
+            padding-bottom: 10px; 
+        }
+        .main-header h1 { 
+            color: #4f46e5; 
+            margin: 0; 
+            font-size: 16px; 
+            text-transform: uppercase; 
+        }
+        .main-header p { 
+            margin: 3px 0; 
+            font-size: 10px; 
+            color: #555; 
+        }
 
-        /* Galería de Fotos (Mejorada: Grandes y Centradas) */
-        .gallery { 
+        /* --- TÍTULOS DE SECCIÓN (ESTILO NUEVO) --- */
+        .section-header {
+            background-color: #f3f4f6; /* Fondo gris claro */
+            border-left: 5px solid #4f46e5; /* Barra azul a la izquierda */
+            padding: 6px 10px;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #1f2937;
             margin-top: 15px;
+            margin-bottom: 0; /* Pegado a la tabla */
+        }
+
+        /* --- TABLAS DE DETALLE (GRILLA) --- */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+        .details-table td, .details-table th {
+            border: 1px solid #e5e7eb; /* Bordes grises suaves */
+            padding: 6px 8px;
+            vertical-align: middle;
+        }
+        
+        /* Celdas de "Etiqueta" (Izquierda) */
+        .label-cell {
+            background-color: #ffffff;
+            font-weight: bold;
+            color: #374151; /* Gris oscuro */
+            width: 25%; /* Ancho fijo para etiquetas */
+        }
+
+        /* Celdas de "Valor" (Derecha) */
+        .value-cell {
+            color: #000;
+        }
+
+        /* --- TABLA DE INVENTARIO (LISTA) --- */
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+        .inventory-table th {
+            background-color: #4f46e5;
+            color: white;
+            padding: 5px;
+            font-size: 9px;
+            text-align: left;
+            text-transform: uppercase;
+        }
+        .inventory-table td {
+            border: 1px solid #e5e7eb;
+            padding: 5px;
+            font-size: 9px;
+        }
+
+        /* --- GALERÍA DE FOTOS --- */
+        .gallery { 
+            width: 100%; 
+            margin-top: 10px; 
+            text-align: center; 
+        }
+        .photo-box {
+            display: inline-block;
+            width: 48%;
+            margin: 2px;
+            border: 1px solid #ddd;
+            padding: 4px;
+            background: #fff;
+        }
+        .photo-box img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+        }
+
+        /* --- FIRMAS --- */
+        .signature-section {
+            margin-top: 40px;
             width: 100%;
             text-align: center;
         }
-        .photo-container { 
-            display: inline-block; 
-            width: 45%;           
-            margin: 1%; 
-            vertical-align: top; 
+
+        .signature-frame {
+            width: 350px;
+            height: 160px;         /* <--- AUMENTADO (Antes 120px) */
+            margin: 0 auto;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;   /* Bordes redondeados */
+            position: relative;    /* Necesario para anclar el texto abajo */
             background-color: #fff;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
         }
-        .photo { 
-            width: 100%; 
-            height: 250px;        
-            object-fit: contain;  
-            display: block;
+
+        .signature-box {
+            position: absolute;    /* Se pega al fondo del marco */
+            bottom: 15px;          /* Distancia desde abajo */
+            left: 0;
+            right: 0;
+            width: 85%;            /* Ancho de la línea interna */
+            margin: 0 auto;
+            border-top: 1px solid #000; /* La línea de firma */
+            padding-top: 8px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    {{-- ENCABEZADO --}}
-    <div class="header">
-        <h1>Ficha de Monitoreo - Odontología</h1>
+    {{-- ENCABEZADO GENERAL --}}
+    <div class="main-header">
+        <h1>MODULO 05 - CONSULTA EXTERNA: Odontología</h1>
         <p>
-            Acta N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
-            Fecha: {{ \Carbon\Carbon::parse($acta->fecha_generacion ?? $acta->created_at)->format('d/m/Y') }}
-        </p>
-        <p>
-            {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre ?? 'Establecimiento Desconocido' }}
+            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre ?? '-' }} |
+            FECHA: {{ \Carbon\Carbon::parse($acta->fecha_generacion ?? $acta->fecha_validacion)->format('d/m/Y') }}
         </p>
     </div>
 
-    {{-- 1. DATOS DEL PROFESIONAL --}}
-    <div class="section-title">1. Datos del Profesional</div>
-    @if($dbCapacitacion && $dbCapacitacion->profesional)
-        <table class="info-grid">
-            <tr>
-                <td><span class="label">Nombre Completo</span> <span class="value">{{ $dbCapacitacion->profesional->apellido_paterno }} {{ $dbCapacitacion->profesional->apellido_materno }}, {{ $dbCapacitacion->profesional->nombres }}</span></td>
-                <td><span class="label">Documento</span> <span class="value">{{ $dbCapacitacion->profesional->tipo_doc }}: {{ $dbCapacitacion->profesional->doc }}</span></td>
-                <td><span class="label">Contacto</span> <span class="value">{{ $dbCapacitacion->profesional->telefono }}</span></td>
-            </tr>
-            <tr>
-                <td colspan="3"><span class="label">Email</span> <span class="value">{{ $dbCapacitacion->profesional->email }}</span></td>
-            </tr>
-        </table>
-    @else
-        <p style="padding:10px; color:#999;">No se registró información del profesional.</p>
-    @endif
-
-    {{-- 2. CAPACITACIÓN (ACTUALIZADO) --}}
-    <div class="section-title">2. Capacitación</div>
-    <table class="info-grid">
+    {{-- 1. DETALLES DEL CONSULTORIO --}}
+    <div class="section-header">1. DETALLES DEL CONSULTORIO</div>
+    <table class="details-table">
+        {{-- FILA 1: Cantidad --}}
         <tr>
-            <td width="50%">
-                <span class="label">¿Recibió Capacitación?</span> 
-                <span class="value">{{ $dbCapacitacion->recibieron_cap ?? '-' }}</span>
-            </td>
-            <td>
-                <span class="label">Entidad</span> 
-                <span class="value">{{ $dbCapacitacion->institucion_cap ?? 'N/A' }}</span>
-            </td>
+            <td class="label-cell">CANTIDAD CONSULTORIOS:</td>
+            {{-- colspan="3" asegura que la celda llegue hasta el borde derecho --}}
+            <td class="value-cell" colspan="3">{{ $dbInicioLabores->cant_consultorios ?? '-' }}</td>
         </tr>
-        {{-- FILA NUEVA --}}
+
+        {{-- FILA 2: Consultorio Entrevistado --}}
         <tr>
-            <td>
-                <span class="label">Declaración Jurada</span> 
-                <span class="value">{{ $dbCapacitacion->decl_jurada ?? '-' }}</span>
+            <td class="label-cell">CONSULTORIO ENTREVISTADO:</td>
+            <td class="value-cell" colspan="3">{{ $dbInicioLabores->nombre_consultorio ?? '-' }}</td>
+        </tr>
+
+        {{-- FILA 3: Turno --}}
+        <tr>
+            <td class="label-cell">TURNO:</td> 
+            <td class="value-cell" colspan="3">{{ $dbInicioLabores->turno ?? '-' }}</td> 
+        </tr>
+    </table>
+
+    {{-- 2. DATOS DEL PROFESIONAL --}}
+    <div class="section-header">2. DATOS DEL PROFESIONAL</div>
+    @php 
+        $prof = $dbCapacitacion->profesional ?? null; 
+    @endphp
+    <table class="details-table">
+        <tr>
+            <td class="label-cell">APELLIDOS Y NOMBRES:</td>
+            <td class="value-cell">
+                {{ $prof ? "$prof->apellido_paterno $prof->apellido_materno, $prof->nombres" : 'NO REGISTRADO' }}
             </td>
-            <td>
-                <span class="label">Compromiso Confidencialidad</span> 
-                <span class="value">{{ $dbCapacitacion->comp_confidencialidad ?? '-' }}</span>
+            <td class="label-cell">CARGO:</td>
+            <td class="value-cell">ODONTÓLOGO</td>
+        </tr>
+        <tr>
+            <td class="label-cell">TIPO DOC:</td>
+            <td class="value-cell">{{ $prof->tipo_doc ?? '-' }}</td>
+            <td class="label-cell">¿FIRMÓ DECLARACIÓN JURADA?</td>
+            <td class="value-cell">{{ $dbCapacitacion->decl_jurada ?? 'NO' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">DOCUMENTO:</td>
+            <td class="value-cell">{{ $prof->doc ?? '-' }}</td>
+            <td class="label-cell">¿FIRMÓ COMP. CONFIDENCIALIDAD?</td>
+            <td class="value-cell">{{ $dbCapacitacion->comp_confidencialidad ?? 'NO' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">CORREO:</td>
+            <td class="value-cell">{{ $prof->email ?? '-' }}</td>
+            <td class="label-cell">CELULAR:</td>
+            <td class="value-cell">{{ $prof->telefono ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell" colspan="2"></td>
+            <td class="label-cell">¿UTILIZA SIHCE?</td>
+            <td class="value-cell">
+                 {{-- Lógica: Si el FUA o Receta es electrónico/SIHCE, asumimos SI --}}
+                 @if(isset($dbInicioLabores) && (str_contains(strtoupper($dbInicioLabores->fua), 'SIHCE') || str_contains(strtoupper($dbInicioLabores->receta), 'SIHCE')))
+                    SI
+                 @else
+                    NO
+                 @endif
             </td>
         </tr>
     </table>
 
-    {{-- 3. INICIO DE LABORES --}}
-    <div class="section-title">3. Inicio de Labores</div>
-    <table class="info-grid">
+    {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
+    <div class="section-header">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
+    <table class="details-table">
         <tr>
-            <td><span class="label">N° Consultorios</span> <span class="value">{{ $dbInicioLabores->cant_consultorios ?? '-' }}</span></td>
-            <td><span class="label">Nombre Consultorio</span> <span class="value">{{ $dbInicioLabores->nombre_consultorio ?? '-' }}</span></td>
-            <td><span class="label">Tipo FUA</span> <span class="value">{{ str_replace('_', ' ', $dbInicioLabores->fua ?? '-') }}</span></td>
+            <td class="label-cell">TIPO DNI:</td>
+            <td class="value-cell">{{ str_replace('_', ' ', $dbDni->tip_dni ?? '-') }}</td>
+            <td class="label-cell">VERSIÓN DNIe:</td>
+            <td class="value-cell">{{ $dbDni->version_dni ?? '-' }}</td>
         </tr>
         <tr>
-            <td><span class="label">Tipo Referencia</span> <span class="value">{{ $dbInicioLabores->referencia ?? '-' }}</span></td>
-            <td><span class="label">Emisión Receta</span> <span class="value">{{ $dbInicioLabores->receta ?? '-' }}</span></td>
-            <td><span class="label">Orden Laboratorio</span> <span class="value">{{ $dbInicioLabores->orden_laboratorio ?? '-' }}</span></td>
+            <td class="label-cell">¿REALIZA FIRMA EN SIHCE?</td>
+            <td class="value-cell" colspan="3">{{ $dbDni->firma_sihce ?? 'NO' }}</td>
         </tr>
     </table>
 
-    {{-- 4. SECCIÓN DNI --}}
-    <div class="section-title">4. Identidad Digital (DNI)</div>
-    <table class="info-grid">
+    {{-- 4. DETALLES DE CAPACITACIÓN --}}
+    <div class="section-header">4. DETALLES DE CAPACITACIÓN</div>
+    <table class="details-table">
         <tr>
-            <td><span class="label">Tipo de Documento</span> <span class="value">{{ str_replace('_', ' ', $dbDni->tip_dni ?? '-') }}</span></td>
-            <td><span class="label">Versión DNIe</span> <span class="value">{{ $dbDni->version_dni ?? 'N/A' }}</span></td>
-            <td><span class="label">Firma en SIHCE</span> <span class="value">{{ $dbDni->firma_sihce ?? 'N/A' }}</span></td>
+            <td class="label-cell">¿RECIBIÓ CAPACITACIÓN?</td>
+            <td class="value-cell">{{ $dbCapacitacion->recibieron_cap ?? '-' }}</td>
+            <td class="label-cell">ENTIDAD CAPACITADORA:</td>
+            <td class="value-cell">{{ $dbCapacitacion->institucion_cap ?? 'N/A' }}</td>
         </tr>
-        @if(!empty($dbDni->comentarios))
-        <tr>
-            <td colspan="3">
-                <span class="label">Observaciones DNI</span>
-                <span class="value">{{ $dbDni->comentarios }}</span>
-            </td>
-        </tr>
-        @endif
     </table>
 
-    {{-- 5. INVENTARIO (Ahora leyendo de EquipoComputo) --}}
-    <div class="section-title">3. Inventario de Equipamiento</div>
-    <table class="table">
+    {{-- 5. MATERIALES (INICIO DE LABORES) --}}
+    <div class="section-header">5. MATERIALES (INICIO DE LABORES)</div>
+    <table class="details-table">
+        <tr>
+            <td class="label-cell">TIPO FUA:</td>
+            <td class="value-cell">{{ str_replace('_', ' ', $dbInicioLabores->fua ?? '-') }}</td>
+            <td class="label-cell">EMISIÓN DE RECETA:</td>
+            <td class="value-cell">{{ str_replace('_', ' ', $dbInicioLabores->receta ?? '-') }}</td>
+        </tr>
+        <tr>
+            <td class="label-cell">TIPO REFERENCIA:</td>
+            <td class="value-cell">{{ $dbInicioLabores->referencia ?? '-' }}</td>
+            <td class="label-cell">ORDEN LABORATORIO:</td>
+            <td class="value-cell">{{ $dbInicioLabores->orden_laboratorio ?? '-' }}</td>
+        </tr>
+    </table>
+
+    {{-- 6. EQUIPAMIENTO DEL CONSULTORIO --}}
+    <div class="section-header">6. EQUIPAMIENTO DEL CONSULTORIO</div>
+    <table class="inventory-table">
         <thead>
             <tr>
-                <th>Descripción</th>
-                <th>Propiedad</th>
-                <th>Estado</th>
-                <th>Nro. Serie</th>
-                <th>Observación</th>
+                <th width="30%">DESCRIPCIÓN</th>
+                <th width="10%">CANTIDAD</th>
+                <th width="15%">ESTADO</th>
+                <th width="15%">PROPIEDAD</th>
+                <th width="15%">N.SERIE / C.PAT</th>
+                <th width="15%">OBSERVACIÓN</th>
             </tr>
         </thead>
         <tbody>
             @forelse($dbInventario as $item)
-                <tr>
-                    <td>{{ $item->descripcion }}</td>
-                    {{-- Cambiado a 'propio' --}}
-                    <td>{{ $item->propio }}</td>
-                    <td>{{ $item->estado }}</td>
-                    {{-- Cambiado a 'nro_serie' --}}
-                    <td>{{ $item->nro_serie ?? '-' }}</td>
-                    {{-- Cambiado a 'observacion' --}}
-                    <td>{{ $item->observacion }}</td>
-                </tr>
+            <tr>
+                <td>{{ $item->descripcion }}</td>
+                <td style="text-align: center;">{{ $item->cantidad ?? '1' }}</td>
+                <td>{{ $item->estado }}</td>
+                <td>{{ $item->propio }}</td>
+                <td>{{ $item->nro_serie ?? '-' }}</td>
+                <td>{{ $item->observacion }}</td>
+            </tr>
             @empty
-                <tr><td colspan="5" style="text-align:center; padding:10px;">Sin equipamiento registrado</td></tr>
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 10px; color: #777;">Sin equipamiento registrado</td>
+            </tr>
             @endforelse
         </tbody>
     </table>
 
-    {{-- 6. DIFICULTADES --}}
-    <div class="section-title">6. Dificultades con el Sistema</div>
-    <table class="info-grid">
+    {{-- 7. SOPORTE --}}
+    <div class="section-header">7. SOPORTE</div>
+    <table class="details-table">
         <tr>
-            <td><span class="label">Institución Coordina</span> <span class="value">{{ $dbDificultad->insti_comunica ?? '-' }}</span></td>
-            <td><span class="label">Medio Comunicación</span> <span class="value">{{ $dbDificultad->medio_comunica ?? '-' }}</span></td>
+            <td class="label-cell">INSTITUCIÓN QUE COORDINA:</td>
+            <td class="value-cell">{{ $dbDificultad->insti_comunica ?? '-' }}</td>
+            <td class="label-cell">MEDIO DE COMUNICACIÓN:</td>
+            <td class="value-cell">{{ $dbDificultad->medio_comunica ?? '-' }}</td>
         </tr>
     </table>
 
-    {{-- 7. FOTOS --}}
-    <div class="section-title">7. Evidencia Fotográfica</div>
-    <div class="gallery">
-        @forelse($dbFotos as $foto)
-            <div class="photo-container">
-                <img src="{{ public_path('storage/' . $foto->url_foto) }}" class="photo">
-            </div>
-        @empty
-            <p style="padding:10px; color:#999; text-align: center;">No hay evidencia fotográfica adjunta.</p>
-        @endforelse
-    </div>
-
-    {{-- 8. FIRMAS --}}
-    <div class="section-title">8. Firmas</div>
-    <table style="width: 100%; margin-top: 80px;">
+    {{-- 8. COMENTARIOS --}}
+    <div class="section-header">8. COMENTARIOS</div>
+    <table class="details-table">
         <tr>
-            <td style="text-align: center;">
-                <div style="width: 250px; margin: 0 auto; border-top: 1px solid #333; padding-top: 5px;">
-                    
-                    @if($dbCapacitacion && $dbCapacitacion->profesional)
-                        <div class="value" style="text-transform: uppercase; font-size: 10px;">
-                            {{ $dbCapacitacion->profesional->apellido_paterno }} 
-                            {{ $dbCapacitacion->profesional->apellido_materno }}, 
-                            {{ $dbCapacitacion->profesional->nombres }}
-                        </div>
-                        <div style="font-size: 9px; color: #666; margin-top: 2px;">
-                            {{ $dbCapacitacion->profesional->tipo_doc }}: {{ $dbCapacitacion->profesional->doc }}
-                        </div>
-                    @else
-                        <div class="value">PROFESIONAL NO REGISTRADO</div>
-                    @endif
-
-                    <div style="font-weight: bold; font-size: 10px; margin-top: 4px;">
-                        PROFESIONAL DE ODONTOLOGÍA
-                    </div>
-
-                </div>
+            <td style="padding: 10px; height: 40px; vertical-align: top;">
+                {{-- Prioridad: Comentarios DNI > Observaciones Acta > Texto default --}}
+                {{ $dbDni->comentarios ?? ($acta->observaciones ?? 'Sin comentarios adicionales registrados.') }}
             </td>
         </tr>
     </table>
+
+    {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
+    <div class="section-header">9. EVIDENCIA FOTOGRÁFICA</div>
+    <div class="gallery">
+        @forelse($dbFotos as $foto)
+            <div class="photo-box">
+                <img src="{{ public_path('storage/' . $foto->url_foto) }}">
+            </div>
+        @empty
+            <p style="padding: 20px; color: #999;">No se adjuntaron fotografías.</p>
+        @endforelse
+    </div>
+
+    {{-- 10. FIRMA (CONSULTA EXTERNA) --}}
+    <div class="section-header">10. FIRMA (CONSULTA EXTERNA)</div>
+    
+    <div class="signature-section">
+        {{-- Nuevo Marco Estilo Tarjeta --}}
+        <div class="signature-frame">
+            
+            {{-- Tu estructura de datos original --}}
+            <div class="signature-box">
+                @if($prof)
+                    <div style="font-weight: bold; font-size: 11px; color: #1e293b;">
+                        {{ $prof->apellido_paterno }} {{ $prof->apellido_materno }}, {{ $prof->nombres }}
+                    </div>                
+                    <div style="font-size: 10px; color: #64748b; margin-top: 1px;">
+                        {{ $prof->tipo_doc }}: {{ $prof->doc }}
+                    </div>
+                    {{-- Si deseas mantener el texto "FIRMA DEL ENTREVISTADO" o quitarlo para que se vea igual a la imagen --}}
+                    <div style="font-weight: bold; font-size: 9px; margin-top: 4px;">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
+                @else
+                    <div style="padding: 10px;">FIRMA PENDIENTE</div>
+                @endif
+            </div>
+            
+        </div>
+    </div>
+
+    {{-- SCRIPT PIE DE PÁGINA (PAGINACIÓN CORREGIDA) --}}
+    <script type="text/php">
+        if (isset($pdf)) {
+            $y = $pdf->get_height() - 30;
+            $font = $fontMetrics->get_font("helvetica", "normal");
+            $size = 8;
+            $color = array(0.3, 0.3, 0.3);
+
+            // Texto Izquierdo
+            $pdf->page_text(40, $y, "SISTEMA DE ACTAS", $font, $size, $color);
+
+            // Texto Derecho
+            $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
+            $dummyText = "PAG: 10 / 10"; 
+            $width = $fontMetrics->get_text_width($dummyText, $font, $size);
+            $x = $pdf->get_width() - $width - 30;
+            
+            $pdf->page_text($x, $y, $text, $font, $size, $color);
+        }
+    </script>
 
 </body>
 </html>

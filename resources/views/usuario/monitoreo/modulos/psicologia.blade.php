@@ -359,6 +359,19 @@
                             </div>
                         </div>
 
+                        {{-- NUEVO CAMPO: TURNO --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Turno</label>
+                            <div class="relative">
+                                <select x-model="form.inicio_labores.turno" 
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase cursor-pointer">
+                                    <option value="" disabled>Seleccione...</option>
+                                    <option value="MAÑANA">MAÑANA</option>
+                                    <option value="TARDE">TARDE</option>
+                                </select>
+                            </div>
+                        </div>
+
                     </div>
 
                     {{-- Grid de Opciones --}}
@@ -616,10 +629,11 @@
             }
         }
 
-        let initInicioLabores = { consultorios: '', nombre_consultorio: '', fua: '', referencia: '', receta: '', orden_lab: '' };
+        let initInicioLabores = { consultorios: '', nombre_consultorio: '', turno: '', fua: '', referencia: '', receta: '', orden_lab: '' };
         if (dbInicioLabores) {
             initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
             initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
+            initInicioLabores.turno = dbInicioLabores.turno || '';
             initInicioLabores.fua = dbInicioLabores.fua || '';
             initInicioLabores.referencia = dbInicioLabores.referencia || '';
             initInicioLabores.receta = dbInicioLabores.receta || '';

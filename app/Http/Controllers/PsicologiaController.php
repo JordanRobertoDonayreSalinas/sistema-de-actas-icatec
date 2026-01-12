@@ -142,6 +142,7 @@ class PsicologiaController extends Controller
                     'profesional_id'    => $profesional->id,
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
+                    'turno'             => $datosInicio['turno'] ?? null,
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
                     'receta'            => $datosInicio['receta'] ?? null,
@@ -175,7 +176,7 @@ class PsicologiaController extends Controller
                 // Mapeo manual de claves anidadas a claves planas
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
-                'turno'                  => 'MAÑANA',
+                'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
                 
                 'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
                 'firmo_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
