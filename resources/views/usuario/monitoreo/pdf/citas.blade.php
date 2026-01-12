@@ -85,15 +85,16 @@
             </div>
         </div>
 
-        <div class="section-title">1. DATOS DEL PROFESIONAL</div>
+   <div class="section-title">1. DATOS DEL PROFESIONAL</div>
         <table>
             <tr>
                 <td class="bg-label">APELLIDOS Y NOMBRES</td>
-                <td>{{ $registro->personal_nombre ?? '-' }}</td>
+                <td class="uppercase">{{ $registro->personal_nombre ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">TIPO DOC</td>
-                <td>{{ $profesional->tipo_doc ?? 'N/A' }}</td>
+                {{-- Lee directo del registro guardado, no del modelo externo --}}
+                <td>{{ $registro->personal_tipo_doc ?? 'DNI' }}</td> 
             </tr>
             <tr>
                 <td class="bg-label">DOCUMENTO</td>
@@ -101,27 +102,41 @@
             </tr>
             <tr>
                 <td class="bg-label">CARGO</td>
-                <td>{{ $registro->cargo ?? '-' }}</td>
+                <td class="uppercase">{{ $registro->personal_cargo ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">CORREO ELECTRÓNICO</td>
-                <td>{{ $profesional->email ?? '-' }}</td>
+                {{-- CAMBIO CLAVE AQUÍ: Usar $registro->personal_correo --}}
+                <td>{{ $registro->personal_correo ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">CELULAR</td>
-                <td>{{ $profesional->telefono ?? '-' }}</td>
+                {{-- CAMBIO CLAVE AQUÍ: Usar $registro->personal_celular --}}
+                <td>{{ $registro->personal_celular ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">ROLES ASIGNADOS</td>
-                <td>{{ !empty($registro->personal_roles) ? implode(', ', $registro->personal_roles) : 'NINGUNO' }}</td>
+                {{-- Asegura decodificar si está guardado como JSON --}}
+                <td>
+                    @if(is_array($registro->personal_roles))
+                        {{ implode(', ', $registro->personal_roles) }}
+                    @elseif(is_string($registro->personal_roles))
+                         {{-- Intenta limpiar si viene como string ["ROL"] --}}
+                        {{ str_replace(['[', ']', '"'], '', $registro->personal_roles) }}
+                    @else
+                        NINGUNO
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td class="bg-label">TURNO</td>
                 <td>{{ $registro->personal_turno ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="bg-label">¿UTILIZA SIHCE?</td> <td>{{ $registro->utiliza_sihce ?? '-' }}</td>
+                <td class="bg-label">¿UTILIZA SIHCE?</td> 
+                <td>{{ $registro->utiliza_sihce ?? 'NO' }}</td>
             </tr>
+            {{-- Solo mostrar si SIHCE es SI, o mostrar siempre --}}
             <tr>
                 <td class="bg-label">¿FIRMÓ DECLARACIÓN JURADA?</td>
                 <td>{{ $registro->firma_dj ?? '-' }}</td>
@@ -145,10 +160,6 @@
             <tr>
                 <td class="bg-label">¿FIRMA DIGITALMENTE EN SIHCE?</td>
                 <td>{{ $registro->firma_sihce ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">OBSERVACIONES</td>
-                <td>{{ $registro->observaciones_dni ?? '-' }}</td>
             </tr>
         </table>
 

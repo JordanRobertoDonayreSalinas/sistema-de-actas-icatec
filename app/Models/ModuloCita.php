@@ -17,6 +17,10 @@ class ModuloCita extends Model
         'personal_dni',
         'personal_turno',
         'personal_roles',
+        'personal_correo',  // <--- IMPORTANTE
+        'personal_celular', // <--- IMPORTANTE
+        'personal_cargo',
+        'utiliza_sihce',
         'firma_dj',
         'firma_confidencialidad',
         'tipo_dni_fisico',
@@ -24,7 +28,6 @@ class ModuloCita extends Model
         'firma_sihce',
         'capacitacion_recibida',
         'capacitacion_entes',
-        'capacitacion_otros_detalle',
         'insumos_disponibles',
         'equipos_listado',
         'equipos_observaciones',
@@ -36,8 +39,7 @@ class ModuloCita extends Model
         'calidad_socializa_con',
         'dificultad_comunica_a',
         'dificultad_medio_uso',
-        'fotos_evidencia',
-        'firma_grafica'
+        'fotos_evidencia'
     ];
 
     // Casting automático: Array <-> JSON
