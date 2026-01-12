@@ -39,7 +39,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    
                     {{-- 1. FECHA (Izquierda) --}}
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Fecha de Monitoreo</label>
@@ -317,7 +316,7 @@
             </div>
 
             {{-- SECCIÓN 4: DETALLES DE CAPACITACIÓN --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 seccion-numerada">
+            <div id="seccion_capacitacion" class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 seccion-numerada {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
                 <div class="flex items-center gap-4 mb-8">
                     <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">4</div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Detalles de Capacitación</h3>
@@ -543,16 +542,24 @@
         actualizarCorrelativo();
     });
 
-    // Muestra/Oculta Doc. Administrativa y Soporte según SIHCE
+    // Muestra/Oculta Doc. Administrativa, Capacitación y Soporte según SIHCE
     function toggleSihce(valor) {
         const bloqueDoc = document.getElementById('bloque_doc_administrativa');
         const bloqueSoporte = document.getElementById('seccion_soporte');
+        const bloqueCapacitacion = document.getElementById('seccion_capacitacion');
         
         if (valor === 'SI') {
             if(bloqueDoc) bloqueDoc.classList.remove('hidden');
+            if(bloqueCapacitacion) {
+                bloqueCapacitacion.classList.remove('hidden');
+                // [NUEVO] Si el select aparece vacío, forzamos que seleccione "---"
+                const selectCapacitacion = bloqueCapacitacion.querySelector('select[name="contenido[inst_capacitacion]"]');
+                if (selectCapacitacion && !selectCapacitacion.value) {
+                    selectCapacitacion.value = 'MINSA';
+                }
+            }
             if(bloqueSoporte) {
                 bloqueSoporte.classList.remove('hidden');
-
                 // [NUEVO] Si el select aparece vacío, forzamos que seleccione "---"
                 const selectSoporte = bloqueSoporte.querySelector('select[name="contenido[comunica_a]"]');
                 if (selectSoporte && !selectSoporte.value) {
@@ -564,6 +571,15 @@
                 bloqueDoc.classList.add('hidden');
                 // Limpiar radios internos para que se guarden como NULL
                 bloqueDoc.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+            }
+            if(bloqueCapacitacion) {
+                bloqueCapacitacion.classList.add('hidden');
+                // Limpiamos radios y selects internos
+                bloqueCapacitacion.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+                bloqueCapacitacion.querySelectorAll('select').forEach(s => s.value = '');
+                // Opcional: Ocultar también el sub-bloque de institución por si acaso
+                const subBloqueInst = document.getElementById('section_inst_capacitacion');
+                if(subBloqueInst) subBloqueInst.classList.add('hidden'); 
             }
             if(bloqueSoporte) {
                 bloqueSoporte.classList.add('hidden');
@@ -614,6 +630,7 @@
             blockDnie.classList.add('hidden');
         }
     }
+
     // Muestra/Oculta sección de Institución de Capacitación
     function toggleInstCapacitacion(value) {
         const section = document.getElementById('section_inst_capacitacion');

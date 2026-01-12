@@ -359,7 +359,6 @@
             <div class="firma-box">
                 <div class="firma-linea"></div>
                 <div class="firma-nombre">{{ strtoupper($profNombreCompleto) }}</div>
-                <div class="firma-label">MEDICO</div>
                 <div class="firma-label">{{ $rawTipoDoc }}: {{ $docFinal }}</div>
                 <div class="firma-label">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
             </div>

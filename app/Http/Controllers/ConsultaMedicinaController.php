@@ -74,6 +74,8 @@ class ConsultaMedicinaController extends Controller
             if (($datos['utiliza_sihce'] ?? '') === 'NO') {
                 $datos['firmo_dj']               = null;
                 $datos['firmo_confidencialidad'] = null;
+                $datos['recibio_capacitacion']   = null;
+                $datos['inst_capacitacion']      = null;
                 $datos['comunica_a']             = null;
                 $datos['medio_soporte']          = null;
             }
@@ -93,7 +95,6 @@ class ConsultaMedicinaController extends Controller
                 $datos['inst_capacitacion'] = null;
             }
             
-
             // REGLA D:LÓGICA DE LIMPIEZA DE DATOS (DNI AZUL vs DNI ELECTRÓNICO)
             $tipoDni = $datos['tipo_dni_fisico'] ?? null;
 

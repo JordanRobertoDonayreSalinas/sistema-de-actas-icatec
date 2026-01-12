@@ -70,22 +70,66 @@
     </style>
 </head>
 <body>
+    {{-- BLOQUE DE CONFIGURACIÓN GLOBAL --}}
+    @php 
+        $n = 1; // Contador de secciones
 
+        // --------------------------------------------------------
+        // PREPARAMOS LOS DATOS DEL PROFESIONAL UNA SOLA VEZ
+        // --------------------------------------------------------
+        
+        // A. Obtener datos crudos
+        $rawTipoDoc = $detalle->contenido['profesional']['tipo_doc'] ?? '---';
+        $rawNumDoc  = $detalle->contenido['profesional']['doc'] ?? '---';
+        
+        // B. Aplicar lógica de recorte para C.E. (Quitar los 2 primeros caracteres)
+        $docFinal = $rawNumDoc; // Valor por defecto
+        
+        if (in_array(strtoupper($rawTipoDoc), ['CE', 'C.E.', 'C.E'])) {
+            // Solo recortamos si tiene longitud suficiente
+            if (strlen($rawNumDoc) > 2) {
+                $docFinal = substr($rawNumDoc, 2); 
+            }
+        }
+
+        // C. Preparar Nombre Completo (También lo reutilizaremos)
+        $pNom = $detalle->contenido['profesional']['nombres'] ?? '';
+        $pPat = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
+        $pMat = $detalle->contenido['profesional']['apellido_materno'] ?? '';
+        $profNombreCompleto = trim($pPat . ' ' . $pMat . ' ' . $pNom);
+        
+        if(empty($profNombreCompleto)) {
+            $profNombreCompleto = $detalle->contenido['profesional']['apellidos_nombres'] ?? '---';
+        }
+    @endphp
     <div class="header">
         <h1>Módulo 09: Inmunizaciones</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
-            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}
+            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | 
+            ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
+            FECHA: 
+            @php
+                // 1. Buscamos la fecha específica del módulo
+                $fechaRaw = $detalle->contenido['fecha_monitoreo_inmunizaciones'] ?? null;
+                
+                // 2. Si existe, la formateamos. Si no, usamos la fecha general del acta
+                if ($fechaRaw) {
+                    echo \Carbon\Carbon::parse($fechaRaw)->format('d/m/Y');
+                } else {
+                    echo \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y');
+                }
+            @endphp
         </div>
     </div>
 
-    <div class="section-title">1. Detalles de consultorio</div>
+    <div class="section-title">{{ $n++ }}. Detalles del consultorio</div>
     <table>
         <tr>
-            <td class="bg-label">Cantidad de Consultorios</td>
-            <td class="uppercase">{{ $detalle->contenido['numero_consultorio'] ?? '---' }}</td>
+            <td class="bg-label">Cantidad</td>
+            <td class="uppercase">{{ $detalle->contenido['numero_consultorio'] ?? '0' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Denominación del Consultorio</td>
+            <td class="bg-label">CONSULTORIO ENTREVISTADO</td>
             <td class="uppercase">{{ $detalle->contenido['denominacion_consultorio'] ?? '---' }}</td>
         </tr>
         <tr>
@@ -96,57 +140,66 @@
             <td class="bg-label">¿Es un consultorio compartido?</td>
             <td class="uppercase">{{ $detalle->contenido['es_compartido'] ?? '---' }}</td>
         </tr>
+        @if(($detalle->contenido['es_compartido'] ?? '') != 'NO')
         <tr>
             <td class="bg-label">¿Con qué servicio/profesional?</td>
             <td class="uppercase">{{ $detalle->contenido['con_quien_comparte'] ?? '---' }}</td>
         </tr>
+        @endif
     </table>
 
-    <div class="section-title">2. Datos del Profesional Responsable</div>
+    <div class="section-title">{{ $n++ }}. Datos del Profesional Responsable</div>
     <table>
         <tr>
             <td class="bg-label">Nombres y Apellidos</td>
-            <td class="uppercase">
-                @php
-                    $profNombre = $detalle->contenido['profesional']['nombres'] ?? '';
-                    $profApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
-                    $profApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
-                    $profCompleto = trim($profApellidoPaterno . ' ' . $profApellidoMaterno . ' ' . $profNombre);
-                    if(empty($profCompleto)) {
-                        $profCompleto = $detalle->contenido['profesional']['apellidos_nombres'] ?? '---';
-                    }
-                @endphp
-                {{ strtoupper($profCompleto) }}
-            </td>
+            <td class="uppercase">{{ strtoupper($profNombreCompleto) }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Tipo Doc.</td>
+            <td>{{ $rawTipoDoc }}</td>
         </tr>
         <tr>
             <td class="bg-label">Documento</td>
-            <td>{{ $detalle->contenido['profesional']['doc'] ?? '---' }}</td>
+            <td>{{ $docFinal }}</td>
         </tr>
         <tr>
             <td class="bg-label">Correo</td>
             <td>{{ $detalle->contenido['profesional']['email'] ?? '---' }}</td>
         </tr>
         <tr>
+            <td class="bg-label">Celular</td>
+            <td>{{ $detalle->contenido['profesional']['telefono'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Utiliza SIHCE?</td>
+            <td class="uppercase">{{ $detalle->contenido['utiliza_sihce'] ?? '---' }}</td>
+        </tr>
+        <tr>
             <td class="bg-label">Cargo</td>
             <td class="uppercase">LIC. ENFERMERIA</td>
         </tr>
-        <tr>
-            <td class="bg-label">¿Firmó Declaración Jurada?</td>
-            <td class="uppercase">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
-        </tr>
-        <tr>
-            <td class="bg-label">¿Firmó Compromiso de Confidencialidad?</td>
-            <td class="uppercase">{{ $detalle->contenido['firmo_confidencialidad'] ?? '---' }}</td>
-        </tr>
+        {{-- DOC ADMIN: Se muestra si SIHCE NO es 'NO' (o sea SI o vacío) --}}
+        @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
+            <tr>
+                <td class="bg-label">¿Firmó Declaración Jurada?</td>
+                <td class="uppercase">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿Firmó Compromiso de Confidencialidad?</td>
+                <td class="uppercase">{{ $detalle->contenido['firmo_confidencialidad'] ?? '---' }}</td>
+            </tr>
+        @endif
     </table>
 
-    <div class="section-title">3. Tipo de DNI y Firma Digital</div>
+    @if(($detalle->contenido['profesional']['tipo_doc'] ?? '') == 'DNI')
+    <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
     <table>
         <tr>
             <td class="bg-label">Tipo de DNI</td>
             <td class="uppercase">{{ $detalle->contenido['tipo_dni_fisico'] ?? '---' }}</td>
         </tr>
+        {{-- Si es AZUL, ocultamos estos campos --}}
+        @if(($detalle->contenido['tipo_dni_fisico'] ?? '') != 'AZUL')
         <tr>
             <td class="bg-label">Versión DNIe</td>
             <td class="uppercase">{{ $detalle->contenido['dnie_version'] ?? '---' }}</td>
@@ -155,25 +208,33 @@
             <td class="bg-label">¿Firma digitalmente en SIHCE?</td>
             <td class="uppercase">{{ $detalle->contenido['dnie_firma_sihce'] ?? '---' }}</td>
         </tr>
+        @endif
         <tr>
             <td class="bg-label">Observaciones/Motivo de Uso</td>
             <td class="uppercase">{{ $detalle->contenido['dni_observacion'] ?? 'SIN OBSERVACIONES' }}</td>
         </tr>
     </table>
+    @endif
 
-    <div class="section-title">4. Detalles de Capacitación</div>
+    {{-- SECCIÓN 4: CAPACITACIÓN (CONDICIONAL SIHCE) --}}
+    @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
+    <div class="section-title">{{ $n++ }}. Detalles de Capacitación</div>
     <table>
         <tr>
             <td class="bg-label">¿Recibió Capacitación?</td>
             <td>{{ $detalle->contenido['recibio_capacitacion'] ?? '---' }}</td>
         </tr>
+        {{-- Sub-condición: Solo mostrar institución si SÍ recibió capacitación --}}
+        @if(($detalle->contenido['recibio_capacitacion'] ?? '') != 'NO')
         <tr>
             <td class="bg-label">¿De parte de quién?</td>
             <td>{{ $detalle->contenido['inst_capacitacion'] ?? '---' }}</td>
         </tr>
+        @endif
     </table>
+    @endif
 
-    <div class="section-title">5. Equipamiento del Área</div>
+    <div class="section-title">{{ $n++ }}. Equipamiento del Consultorio</div>
     @php
         $equipos = \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $acta->id)
                     ->where('modulo', 'inmunizaciones')
@@ -187,7 +248,7 @@
                     <th width="12%">Cantidad</th>
                     <th width="15%">Estado</th>
                     <th width="18%">Propiedad</th>
-                    <th width="15%">N° Serie</th>
+                    <th width="15%">N.SERIE/C.PAT</th>
                     <th width="15%">Observación</th>
                 </tr>
             </thead>
@@ -208,19 +269,26 @@
         <div style="color: #94a3b8; font-style: italic; padding: 8px;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
 
-    <div class="section-title">6. Utilización de Reportes del Sistema</div>
+    {{-- SECCIÓN 7: REPORTES (CONDICIONAL SIHCE) --}}
+    @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
+    <div class="section-title">{{ $n++ }}. Utilización de Reportes del Sistema</div>
     <table>
         <tr>
             <td class="bg-label">¿Utiliza reportes del Sistema?</td>
             <td>{{ $detalle->contenido['utiliza_reportes'] ?? '---' }}</td>
         </tr>
+        @if(($detalle->contenido['utiliza_reportes'] ?? '') != 'NO')
         <tr>
             <td class="bg-label">Si es "SÍ" con quién lo socializa</td>
             <td class="uppercase">{{ $detalle->contenido['socializa_reportes'] ?? '---' }}</td>
         </tr>
+        @endif
     </table>
+    @endif
 
-    <div class="section-title">7. Soporte Técnico</div>
+    {{-- SECCIÓN 7: SOPORTE (CONDICIONAL SIHCE) --}}
+    @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
+    <div class="section-title">{{ $n++ }}. Soporte</div>
     <table>
         <tr>
             <td class="bg-label">¿A quién le comunica?</td>
@@ -231,14 +299,17 @@
             <td>{{ $detalle->contenido['medio_soporte'] ?? '---' }}</td>
         </tr>
     </table>
+    @endif
 
-    <div class="section-title">8. Comentarios</div>
+    {{-- 8. COMENTARIOS --}}
+
+    <div class="section-title">{{ $n++ }}. Comentarios</div>
     <div style="border: 1px solid #e2e8f0; padding: 10px; min-height: 40px;" class="uppercase">
         {{ $detalle->contenido['comentarios'] ?? 'SIN COMENTARIOS.' }}
     </div>
 
     {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
-    <div class="section-title">9. Evidencia Fotográfica</div>
+    <div class="section-title">{{ $n++ }}. Evidencia Fotográfica</div>
 
     @if(!empty($imagenesData) && is_array($imagenesData) && count($imagenesData) > 0)
         
@@ -279,25 +350,13 @@
 
     {{-- 10. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
     <div class="firma-section">
-        <div class="section-title">10. Firma del entrevistado</div>
+        <div class="section-title">{{ $n++ }}. Firma del entrevistado</div>
         <div class="firma-container">
             <div class="firma-box">
                 <div class="firma-linea"></div>
-                <div class="firma-nombre">
-                    @php
-                        $profesionalNombre = $detalle->contenido['profesional']['nombres'] ?? '';
-                        $profesionalApellidoPaterno = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
-                        $profesionalApellidoMaterno = $detalle->contenido['profesional']['apellido_materno'] ?? '';
-                        $profesional = trim($profesionalApellidoPaterno . ' ' . $profesionalApellidoMaterno . ', ' . $profesionalNombre);
-                        if(empty($profesional)) {
-                            $profesional = $detalle->contenido['profesional']['apellidos_nombres'] ?? '___________________';
-                        }
-                    @endphp
-                    {{ strtoupper($profesional) }}
-                </div>
-                
-                <div class="firma-label">LIC. ENFERMERIA</div>
-                <div class="firma-label">DNI: {{ $detalle->contenido['profesional']['doc'] ?? '___________________' }}</div>
+                <div class="firma-nombre">{{ strtoupper($profNombreCompleto) }}</div>
+                <div class="firma-label">{{ $rawTipoDoc }}: {{ $docFinal }}</div>
+                <div class="firma-label">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
             </div>
         </div>
     </div>
