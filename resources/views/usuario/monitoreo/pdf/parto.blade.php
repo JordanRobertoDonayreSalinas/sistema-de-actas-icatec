@@ -60,7 +60,7 @@
 </head>
 <body>
     <div class="footer-frame">
-        SISTEMA DE ACTAS - ATENCIÓN DE PARTO
+        SISTEMA DE ACTAS
     </div>
 
     <div class="header">

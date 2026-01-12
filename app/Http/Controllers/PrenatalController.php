@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
 use App\Models\EquipoComputo; // Asegúrate de importar este modelo
+use App\Models\ModuloParto;
 use App\Models\ModuloPrenatal;
 use App\Models\MonitoreoModulos;
 use App\Models\Profesional; // Si usas búsqueda, impórtalo
@@ -274,29 +275,30 @@ class PrenatalController extends Controller
 
     public function generar($idActa)
     {
-        set_time_limit(120); // Aumentar tiempo límite por si acaso
+        // 1. Configuración inicial
+        set_time_limit(120);
 
         $acta = CabeceraMonitoreo::findOrFail($idActa);
-        $registro = ModuloPrenatal::where('monitoreo_id', $idActa)->firstOrFail();
+        $registro = ModuloParto::where('monitoreo_id', $idActa)->firstOrFail();
 
-        // Convertir fotos a Base64 para el PDF
+        // 2. Lógica de Imágenes a Base64
+        $fotosBase64 = [];
         if (!empty($registro->fotos_evidencia)) {
-            $base64 = [];
             foreach ($registro->fotos_evidencia as $url) {
-                // Limpieza de URL para obtener path local
                 $rutaRelativa = str_replace(url('/'), '', $url);
                 $path = public_path($rutaRelativa);
 
                 if (file_exists($path)) {
                     $type = pathinfo($path, PATHINFO_EXTENSION);
                     $data = file_get_contents($path);
-                    $base64[] = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    $fotosBase64[] = $base64;
                 }
             }
-            $registro->fotos_evidencia = $base64;
         }
+        $registro->fotos_evidencia = $fotosBase64;
 
-        // Convertir firma a Base64 si existe
+        // 3. Lógica de Firma a Base64
         if ($registro->firma_grafica && str_contains($registro->firma_grafica, 'http')) {
             $rutaRelativa = str_replace(url('/'), '', $registro->firma_grafica);
             $path = public_path($rutaRelativa);
@@ -307,7 +309,32 @@ class PrenatalController extends Controller
             }
         }
 
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.prenatal', compact('acta', 'registro'));
-        return $pdf->stream('Prenatal_' . $idActa . '.pdf');
+        // 4. GENERACIÓN DEL PDF CON NUMERACIÓN
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.parto', compact('acta', 'registro'));
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->render();
+
+        // --- LÓGICA DE CANVAS PARA PIE DE PÁGINA ---
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->getCanvas();
+
+        // Configuración de fuente
+        $fontMetrics = $dom_pdf->getFontMetrics();
+        $font = $fontMetrics->get_font("Helvetica", "bold");
+
+        // Ajustes finos (Idénticos a Citas)
+        $size = 8;
+        $color = [0.392, 0.455, 0.545]; // Color gris azulado (#64748b)
+
+        $w = $canvas->get_width();
+        $h = $canvas->get_height();
+
+        // Coordenadas
+        $x = $w - 75;
+        $y = $h - 49;
+
+        $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
+
+        return $pdf->stream('Parto_' . $idActa . '.pdf');
     }
 }

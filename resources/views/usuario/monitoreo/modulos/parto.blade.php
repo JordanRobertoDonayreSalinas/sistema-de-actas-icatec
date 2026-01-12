@@ -170,7 +170,7 @@
     {{-- FORMULARIO --}}
     <form action="{{ route('usuario.monitoreo.parto.create', $acta->id) }}" method="POST" enctype="multipart/form-data" id="mainForm">
       @csrf
-      <input type="hidden" name="modulo_nombre" value="atencion_parto">
+      <input type="hidden" name="modulo_nombre" value="parto">
 
       {{-- ======================================================================== --}}
       {{-- SECCIÓN 1: DATOS DEL RESPONSABLE                                       --}}
