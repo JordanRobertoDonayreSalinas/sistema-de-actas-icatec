@@ -8,12 +8,12 @@
         @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }
         body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 15px; text-transform: uppercase; color: #4f46e5; }
+        .header h1 { margin: 0; font-size: 16px; text-transform: uppercase; color: #4f46e5; font-weight: bold; }
         .section-title { background-color: #f1f5f9; padding: 6px 10px; font-weight: bold; text-transform: uppercase; border-left: 4px solid #4f46e5; margin-top: 15px; margin-bottom: 5px; font-size: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px; }
         th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; word-wrap: break-word; }
         th { background-color: #f8fafc; color: #475569; font-size: 8.5px; text-transform: uppercase; }
-        .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%; }
+        .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%;  text-transform: uppercase;}
         .uppercase { text-transform: uppercase; }
         .text-center { text-align: center; }
         
@@ -73,19 +73,19 @@
 
     <div class="header">
         <h1>Módulo 6: Consulta Externa - Nutrición</h1>
-        <div style="font-weight: bold; color: #64748b; font-size: 10px;">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | E.E.S.S.: {{ strtoupper($acta->establecimiento->nombre) }}
+        <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
+            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}
         </div>
     </div>
 
-    <div class="section-title">1. Detalles de consultorio</div>
+    <div class="section-title">1. Detalles del consultorio</div>
     <table>
         <tr>
             <td class="bg-label">Cantidad</td>
             <td>{{ $detalle->contenido['num_consultorios'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Denominación</td>
+            <td class="bg-label">Consultorio Entrevistado</td>
             <td class="uppercase">{{ $detalle->contenido['denominacion_consultorio'] ?? '---' }}</td>
         </tr>
         <tr>
@@ -97,7 +97,7 @@
     <div class="section-title">2. Datos del profesional</div>
     <table>
         <tr>
-            <td class="bg-label">Nombres y Apellidos</td>
+            <td class="bg-label">Apellidos y Nombres</td>
             <td class="uppercase">
                 @php
                     $profNombre = $detalle->contenido['profesional']['nombres'] ?? '';
@@ -112,12 +112,24 @@
             </td>
         </tr>
         <tr>
+            <td class="bg-label">Tipo Doc.</td>
+            <td>{{ $detalle->contenido['profesional']['tipo_doc'] ?? '---' }}</td>
+        </tr>
+        <tr>
             <td class="bg-label">Documento</td>
             <td>{{ $detalle->contenido['profesional']['doc'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Correo</td>
             <td>{{ $detalle->contenido['profesional']['email'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Celular</td>
+            <td>{{ $detalle->contenido['profesional']['telefono'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">¿Utiliza SIHCE?</td>
+            <td class="uppercase">{{ $detalle->contenido['usa_sihce'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Cargo</td>
@@ -133,7 +145,7 @@
         </tr>
     </table>
     
-    <div class="section-title">3. Tipo de DNI y Firma Digital</div>
+    <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
     <table>
         <tr>
             <td class="bg-label">Tipo de DNI</td>
@@ -148,7 +160,7 @@
             <td class="uppercase">{{ $detalle->contenido['dnie_firma_sihce'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Observaciones/Motivo de Uso</td>
+            <td class="bg-label">Observaciones</td>
             <td class="uppercase">{{ $detalle->contenido['dni_observacion'] ?? '---' }}</td>
         </tr>
     </table>
@@ -193,7 +205,7 @@
         @endif
     </div>
 
-    <div class="section-title">6. Equipamiento del Área</div>
+    <div class="section-title">6. Equipamiento del Consultorio</div>
     @php
         $equipos = \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $acta->id)
                     ->where('modulo', 'consulta_nutricion')
@@ -207,7 +219,7 @@
                     <th width="12%">Cantidad</th>
                     <th width="15%">Estado</th>
                     <th width="18%">Propiedad</th>
-                    <th width="15%">N° Serie</th>
+                    <th width="15%">N.SERIE/C.PAT</th>
                     <th width="15%">Observación</th>
                 </tr>
             </thead>
@@ -228,14 +240,14 @@
         <div style="color: #94a3b8; font-style: italic; padding: 8px;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
 
-    <div class="section-title">7. Soporte Técnico</div>
+    <div class="section-title">7. Soporte</div>
     <table>
         <tr>
-            <td class="bg-label">¿A quién le comunica?</td>
+            <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
             <td class="uppercase">{{ $detalle->contenido['comunica_a'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">¿Qué medio utiliza?</td>
+            <td class="bg-label">MEDIO QUE UTILIZA</td>
             <td>{{ $detalle->contenido['medio_soporte'] ?? '---' }}</td>
         </tr>
     </table>
@@ -287,7 +299,7 @@
 
     {{-- 10. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
     <div class="firma-section">
-        <div class="section-title">10. Firma del entrevistado</div>
+        <div class="section-title">10. Firma</div>
         <div class="firma-container">
             <div class="firma-box">
                 <div class="firma-linea"></div>
@@ -305,7 +317,8 @@
                 </div>
                 
                 <div class="firma-label">NUTRICIONISTA</div>
-                <div class="firma-label">DNI: {{ $detalle->contenido['profesional']['doc'] ?? '___________________' }}</div>
+                <div class="firma-label">{{ $detalle->contenido['profesional']['tipo_doc'] ?? '' }}: {{ $detalle->contenido['profesional']['doc'] ?? '___________________' }}</div>
+                <div class="firma-label">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
             </div>
         </div>
     </div>

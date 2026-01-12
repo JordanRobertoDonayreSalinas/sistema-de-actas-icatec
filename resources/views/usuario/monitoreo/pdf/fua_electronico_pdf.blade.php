@@ -10,7 +10,7 @@
         
         /* Encabezado */
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 15px; text-transform: uppercase; color: #4f46e5; }
+        .header h1 { margin: 0; font-size: 16px; text-transform: uppercase; color: #4f46e5; font-weight: bold;}
         
         /* Títulos de Sección */
         .section-title { 
@@ -30,7 +30,7 @@
         th { background-color: #f8fafc; color: #475569; font-size: 8.5px; text-transform: uppercase; font-weight: bold; }
         
         /* Utilidades */
-        .bg-label { background-color: #f8fafc; font-weight: bold; width: 35%; color: #334155; }
+        .bg-label { background-color: #f8fafc; font-weight: bold; width: 35%; color: #334155;  text-transform: uppercase;}
         .uppercase { text-transform: uppercase; }
         .text-center { text-align: center; }
         .font-bold { font-weight: bold; }
@@ -103,9 +103,8 @@
     {{-- ENCABEZADO --}}
     <div class="header">
         <h1>Módulo 14: FUA Electrónico</h1>
-        <div style="font-weight: bold; color: #64748b; font-size: 10px;">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | E.E.S.S.: {{ strtoupper($acta->establecimiento->nombre) }}
-        </div>
+        <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
+            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}
     </div>
 
     {{-- SECCIÓN 1: DATOS DEL SISTEMA --}}

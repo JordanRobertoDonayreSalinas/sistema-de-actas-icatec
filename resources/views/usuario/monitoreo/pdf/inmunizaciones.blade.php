@@ -8,12 +8,12 @@
         @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }
         body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 15px; text-transform: uppercase; color: #4f46e5; }
+        .header h1 { margin: 0; font-size: 16px; text-transform: uppercase; color: #4f46e5; font-weight: bold; }
         .section-title { background-color: #f1f5f9; padding: 6px 10px; font-weight: bold; text-transform: uppercase; border-left: 4px solid #4f46e5; margin-top: 15px; margin-bottom: 5px; font-size: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px; }
         th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; word-wrap: break-word; }
         th { background-color: #f8fafc; color: #475569; font-size: 8.5px; text-transform: uppercase; }
-        .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%; }
+        .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%; text-transform: uppercase; }
         .uppercase { text-transform: uppercase; }
         .text-center { text-align: center; }
         
@@ -73,8 +73,8 @@
 
     <div class="header">
         <h1>Módulo 09: Inmunizaciones</h1>
-        <div style="font-weight: bold; color: #64748b; font-size: 10px;">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | E.E.S.S.: {{ strtoupper($acta->establecimiento->nombre) }}
+        <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
+            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}
         </div>
     </div>
 
