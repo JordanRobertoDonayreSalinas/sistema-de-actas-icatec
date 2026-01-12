@@ -20,6 +20,9 @@ class ModuloParto extends Model
         'personal_dni',
         'personal_especialidad',
         'personal_nombre',
+        'personal_correo',
+        'personal_celular',
+        'utiliza_sihce',
         'firma_dj',
         'firma_confidencialidad',
         'tipo_dni_fisico',
@@ -27,9 +30,7 @@ class ModuloParto extends Model
         'firma_sihce',
         'capacitacion_recibida',
         'capacitacion_entes',
-        'capacitacion_otros_detalle',
         'insumos_disponibles',
-        'materiales_otros',
         'equipos_listado',
         'equipos_observaciones',
         'nro_consultorios',
@@ -39,8 +40,7 @@ class ModuloParto extends Model
         'gestion_reportes_socializa',
         'dificultad_comunica_a',
         'dificultad_medio_uso',
-        'fotos_evidencia',
-        'firma_grafica'
+        'fotos_evidencia'
     ];
 
     // 3. Conversión de JSON a Array y viceversa
