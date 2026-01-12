@@ -60,6 +60,13 @@ class FarmaciaPdfController extends Controller
             'identidad'
         ))->setPaper('a4', 'portrait');
 
+        // 2. CONFIGURACIÓN DEL MOTOR DOMPDF (AQUÍ VAN LAS OPCIONES)
+            $pdf->setOption([
+                'isPhpEnabled'      => true,    // <--- ESTA ES LA LÍNEA QUE NECESITAS
+                'isRemoteEnabled'   => true,    // Para cargar imágenes externas/storage
+                'chroot'            => base_path(),
+            ]);
+
         return $pdf->stream("MONITOREO_FARMACIA_ACTA_{$id}.pdf");
     }
 }

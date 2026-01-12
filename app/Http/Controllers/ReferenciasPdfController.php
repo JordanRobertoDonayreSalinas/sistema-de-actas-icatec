@@ -49,6 +49,13 @@ class ReferenciasPdfController extends Controller
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.referencias_pdf', compact('acta', 'detalle', 'equipos', 'datos'))
                   ->setPaper('a4', 'portrait');
 
+         // 2. CONFIGURACIÓN DEL MOTOR DOMPDF (AQUÍ VAN LAS OPCIONES)
+            $pdf->setOption([
+                'isPhpEnabled'      => true,    // <--- ESTA ES LA LÍNEA QUE NECESITAS
+                'isRemoteEnabled'   => true,    // Para cargar imágenes externas/storage
+                'chroot'            => base_path(),
+            ]);
+
         return $pdf->stream("MONITOREO_REFERENCIAS_ACTA_{$acta->id}.pdf");
     }
 }
