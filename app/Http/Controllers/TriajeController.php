@@ -11,6 +11,7 @@ use App\Models\ComCapacitacion;
 //use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
+use App\Models\ComDocuAsisten;
 
 use App\Models\MonitoreoModulos;
 use App\Models\EquipoComputo;
@@ -32,8 +33,11 @@ class TriajeController extends Controller
 
         $dbFotos = ComFotos::where('acta_id', $id)
                 ->where('modulo_id', 'triaje')->get();
+        
+        $dbInicioLabores = ComDocuAsisten::where('acta_id', $id)
+                            ->where('modulo_id', 'triaje')->first();
 
-        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos'));
+        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores'));
     }
 
     // 2. BUSCADOR (Sin cambios)
@@ -126,6 +130,22 @@ class TriajeController extends Controller
                 ]
             );
 
+            // 5. INICIO LABORES / TABLAS AUXILIARES
+            $datosInicio = $data['inicio_labores'] ?? [];
+            ComDocuAsisten::updateOrCreate(
+                ['acta_id' => $id, 'modulo_id' => 'triaje'],
+                [
+                    'profesional_id'    => $profesional->id,
+                    'cant_consultorios' => $datosInicio['consultorios'] ?? null,
+                    'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
+                    'turno'             => $datosInicio['turno'] ?? null,
+                    'fua'               => null,
+                    'referencia'        => null,
+                    'receta'            => null,
+                    'orden_laboratorio' => null,
+                ]
+            );
+
             // =========================================================
             // B. PREPARACIÓN DEL JSON PARA EL PDF (TRANSFORMACIÓN)
             // =========================================================
@@ -135,6 +155,11 @@ class TriajeController extends Controller
 
             $contenidoParaPDF = [
                 'profesional'            => $data['profesional'], // Mantenemos objeto profesional
+
+                // Mapeo de Inicio de Labores
+                'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
+                'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
+                'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
                 
                 // Mapeamos Capacitación (Sacamos los datos del array anidado al nivel raíz)
                 'recibio_capacitacion'   => $datosCapacitacion['recibieron_cap'] ?? 'NO',

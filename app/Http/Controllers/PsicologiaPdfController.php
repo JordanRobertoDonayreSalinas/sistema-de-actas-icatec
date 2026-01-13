@@ -13,7 +13,7 @@ use App\Models\ComDocuAsisten;
 use App\Models\ComDni;
 
 use App\Models\EquipoComputo;
-
+use App\Models\MonitoreoModulos;
 
 class PsicologiaPdfController extends Controller
 {
@@ -24,6 +24,16 @@ class PsicologiaPdfController extends Controller
         
         // Identificador constante
         $modId = 'consulta_psicologia';
+
+        // --- NUEVO CÓDIGO AQUÍ ---
+        // Buscamos el registro en MonitoreoModulos
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', $modId)
+                            ->first();
+
+        // Inyectamos el updated_at como una nueva propiedad dentro de $acta
+        // Le pondremos 'fecha_validacion' para no sobrescribir el updated_at original del acta
+        $acta->fecha_validacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
 
         // 2. Cargar datos específicos
         
@@ -61,6 +71,8 @@ class PsicologiaPdfController extends Controller
             'dbDificultad', 
             'dbFotos'
         ));
+
+        $pdf->setOption('isPhpEnabled', true);
 
         $pdf->setPaper('a4', 'portrait');
 

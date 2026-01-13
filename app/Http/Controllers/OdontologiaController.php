@@ -142,6 +142,7 @@ class OdontologiaController extends Controller
                     'profesional_id'    => $profesional->id,
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
+                    'turno'             => $datosInicio['turno'] ?? null,
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
                     'receta'            => $datosInicio['receta'] ?? null,
@@ -176,7 +177,7 @@ class OdontologiaController extends Controller
                 // Mapeo de Inicio de Labores
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
-                'turno'                  => 'MAÑANA', // O el campo que corresponda si lo tienes
+                'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
                 
                 // Mapeo de Capacitación y Documentación
                 'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
