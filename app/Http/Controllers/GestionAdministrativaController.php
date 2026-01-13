@@ -73,7 +73,8 @@ class GestionAdministrativaController extends Controller
     public function store(Request $request, $id)
     {
         $request->validate([
-            'foto_evidencia' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'contenido.fecha' => 'required|date', // Validar la fecha
+            'foto_evidencia'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         try {
@@ -98,6 +99,7 @@ class GestionAdministrativaController extends Controller
             }
 
             // 2. Sincronizar Inventario de Equipos de Cómputo
+            // Primero borramos los anteriores para insertar los nuevos (Estrategia de reemplazo completo)
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
             
             if ($request->has('equipos') && is_array($request->equipos)) {
@@ -107,16 +109,19 @@ class GestionAdministrativaController extends Controller
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $modulo,
                             'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
-                            'cantidad'    => 1,
+                            'cantidad'    => 1, // Por defecto 1 según tu lógica visual
                             'estado'      => $eq['estado'] ?? 'BUENO',
                             'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? '', 'UTF-8'),
                             'propio'      => mb_strtoupper($eq['propio'] ?? 'PERSONAL', 'UTF-8'),
+                            
+                            // *** AQUÍ ESTABA EL ERROR: FALTABA ESTA LÍNEA ***
+                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
                         ]);
                     }
                 }
             }
 
-            // 3. Sincronizar Tabla de Respuestas Maestras
+            // 3. Sincronizar Tabla de Respuestas Maestras (Si la usas para reportes globales)
             DB::table('mon_respuesta_entrevistado')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo' => $modulo],
                 [
@@ -135,7 +140,7 @@ class GestionAdministrativaController extends Controller
                                 ->first();
 
             if ($request->hasFile('foto_evidencia')) {
-                // Borrar foto anterior si existe
+                // Borrar foto anterior si existe y subir nueva
                 if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                     Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
                 }

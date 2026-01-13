@@ -6,7 +6,7 @@
 <div class="py-12 bg-slate-50 min-h-screen">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
-        {{-- ENCABEZADO PRINCIPAL --}}
+        {{-- ENCABEZADO SUPERIOR --}}
         <div class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
                 <div class="flex items-center gap-3 mb-1">
@@ -26,194 +26,329 @@
         <form action="{{ route('usuario.monitoreo.gestion-administrativa.store', $acta->id) }}" 
               method="POST" 
               enctype="multipart/form-data" 
-              class="space-y-8" 
+              class="space-y-6" 
               id="form-monitoreo-final">
             @csrf
-
-            {{-- SECCIÓN 0: TURNO --}}
-            <div class="bg-indigo-600 rounded-[3rem] p-10 shadow-xl shadow-indigo-200/50 border border-indigo-500 relative overflow-hidden">
-                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                <div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                    <div class="flex items-center gap-4">
-                        <div class="h-14 w-14 bg-white/20 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border border-white/30">
-                            <i data-lucide="clock" class="w-8 h-8"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-white font-black text-xl uppercase tracking-tight">Turno:</h3>
-                            <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-widest">Horario de evaluación</p>
-                        </div>
-                    </div>
-                    <div class="flex-1 w-full max-w-2xl">
-                        <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
-                    </div>
-                </div>
-            </div>
-
-            {{-- SECCIÓN 1: DATOS DEL PROFESIONAL (RRHH) --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">1</div>
-                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Responsable de Recursos Humanos</h3>
-                </div>
-                <x-busqueda-profesional prefix="rrhh" :detalle="$detalle" />
-            </div>
-
-            {{-- SECCIÓN 2: ACCESO Y PROGRAMACIÓN SIHCE --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">2</div>
-                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Acceso y Programación SIHCE</h3>
+            
+            {{-- 1.- DATOS GENERALES --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">1</span>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DATOS GENERALES</h3>
                 </div>
                 
-                <div class="max-w-md mb-8">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuenta con acceso al sistema?</label>
-                    <select name="contenido[cuenta_sihce]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 font-bold text-sm outline-none transition-all cursor-pointer shadow-sm uppercase" onchange="toggleProgramador(this.value)">
-                        <option value="SI" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'SI') ? 'selected' : '' }}>SI</option>
-                        <option value="NO" {{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'NO') ? 'selected' : '' }}>NO</option>
-                    </select>
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    {{-- FECHA --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Fecha de Monitoreo</label>
+                        <input type="date" 
+                               name="contenido[fecha]" 
+                               value="{{ $detalle->contenido['fecha'] ?? date('Y-m-d') }}" 
+                               class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-indigo-500 transition-all">
+                    </div>
 
-                <div id="section_programador" class="{{ (isset($detalle->contenido['cuenta_sihce']) && $detalle->contenido['cuenta_sihce'] == 'NO') ? '' : 'hidden' }} mt-6 p-8 bg-orange-50/30 rounded-[2.5rem] border-2 border-dashed border-orange-200">
-                    <p class="text-orange-700 font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
-                        <i data-lucide="user-cog" class="w-4 h-4"></i> ¿Quién programa los turnos y consultorios?
-                    </p>
-                    <x-busqueda-profesional prefix="programador" :detalle="$detalle" />
+                    {{-- TURNO --}}
+                    <div>
+                       <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
+                    </div>
                 </div>
             </div>
 
-            {{-- SECCIÓN 3: DOCUMENTACIÓN, DNI Y FIRMA (CON COMPONENTE) --}}
-            <x-documentacion_administrativa :detalle="$detalle" />
+            {{-- 2.- DATOS DEL PROFESIONAL --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL</h3>
+                </div>
 
-            {{-- SECCIÓN 4 Y 5: CAPACITACIÓN --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10 border-b border-slate-100 pb-10">
-                    {{-- PUNTO 4 --}}
+                {{-- Componente de Búsqueda --}}
+                <div class="mb-6">
+                <x-busqueda-profesional prefix="rrhh" :detalle="$detalle" />
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {{-- CARGO --}}
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">4. ¿Recibió capacitación?</label>
-                        <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion" onchange="toggleEntidadCapacitadora(this.value)" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase">
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Cargo</label>
+                        <select name="contenido[cargo_profesional]" id="cargo_profesional" onchange="toggleCargoManual(this.value)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500 transition-all cursor-pointer">
+                            <option value="MEDICO" {{ ($detalle->contenido['cargo_profesional'] ?? '') == 'MEDICO' ? 'selected' : '' }}>MEDICO</option>
+                            <option value="ENFERMERA" {{ ($detalle->contenido['cargo_profesional'] ?? '') == 'ENFERMERA' ? 'selected' : '' }}>ENFERMERA</option>
+                            <option value="OBSTETRA" {{ ($detalle->contenido['cargo_profesional'] ?? '') == 'OBSTETRA' ? 'selected' : '' }}>OBSTETRA</option>
+                            <option value="TECNICO" {{ ($detalle->contenido['cargo_profesional'] ?? '') == 'TECNICO' ? 'selected' : '' }}>TECNICO</option>
+                            <option value="OTROS" {{ ($detalle->contenido['cargo_profesional'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS (ESPECIFICAR)</option>
+                        </select>
+                        <div id="div_cargo_manual" class="mt-2 {{ ($detalle->contenido['cargo_profesional'] ?? '') == 'OTROS' ? '' : 'hidden' }}">
+                            <input type="text" name="contenido[cargo_profesional_manual]" value="{{ $detalle->contenido['cargo_profesional_manual'] ?? '' }}" class="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl font-bold text-sm uppercase outline-none text-indigo-700 placeholder-indigo-300" placeholder="Escriba el cargo aquí...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+                    {{-- 1. SIHCE (PRIMERO) --}}
+                    <div>
+                        <label class="block text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-2">¿Utiliza SIHCE?</label>
+                        <select name="contenido[cuenta_sihce]" id="cuenta_sihce" onchange="toggleSihceAndDocs(this.value)" class="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-100 rounded-xl font-bold text-sm uppercase outline-none text-indigo-700 cursor-pointer hover:bg-indigo-100 transition-colors">
+                            <option value="SI" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+
+                    {{-- 2. DDJJ --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Declaración Jurada?</label>
+                        <select name="contenido[firmo_dj]" id="firmo_dj" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500">
+                            <option value="SI" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+
+                    {{-- 3. CONFIDENCIALIDAD --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Compromiso Confidencialidad?</label>
+                        <select name="contenido[firmo_confidencialidad]" id="firmo_confidencialidad" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500">
+                            <option value="SI" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 3.- DETALLE DE DNI Y FIRMA DIGITAL --}}
+            <div id="section_dni_detalle" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 hidden">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">3</span>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DETALLE DE DNI Y FIRMA DIGITAL</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- TIPO DE DNI --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Tipo de DNI</label>
+                        <select name="contenido[tipo_dni]" id="tipo_dni" onchange="toggleDniElectronico(this.value)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500 cursor-pointer">
+                            <option value="">SELECCIONE...</option>
+                            <option value="ELECTRONICO" {{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? 'selected' : '' }}>ELECTRÓNICO</option>
+                            <option value="AZUL" {{ ($detalle->contenido['tipo_dni'] ?? '') == 'AZUL' ? 'selected' : '' }}>AZUL</option>
+                        </select>
+                    </div>
+
+                    {{-- OBSERVACIONES --}}
+                    <div class="md:row-span-2">
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Observaciones</label>
+                        <textarea name="contenido[observaciones_dni]" rows="4" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500" >{{ $detalle->contenido['observaciones_dni'] ?? '' }}</textarea>
+                    </div>
+
+                    {{-- SUB-SECCIÓN DNIe (Condicional) --}}
+                    <div id="bloque_dnie" class="col-span-1 grid grid-cols-1 gap-6 hidden">
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Versión DNIe</label>
+                            <select name="contenido[version_dnie]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500">
+                                <option value="" selected disabled>SELECCIONAR...</option>
+                                <option value="1.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '1.0' ? 'selected' : '' }}>1.0</option>
+                                <option value="2.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '2.0' ? 'selected' : '' }}>2.0</option>
+                                <option value="3.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '3.0' ? 'selected' : '' }}>3.0</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firma Digitalmente en SIHCE?</label>
+                            <select name="contenido[firma_digital_sihce]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500">
+                                <option value="SI" {{ ($detalle->contenido['firma_digital_sihce'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                                <option value="NO" {{ ($detalle->contenido['firma_digital_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 4.- DETALLES DE CAPACITACIÓN --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DETALLES DE CAPACITACIÓN</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Recibió Capacitación?</label>
+                        <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion" onchange="toggleEntidadCapacitadora(this.value)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase cursor-pointer">
                             <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
                             <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
                     </div>
-                    {{-- PUNTO 5: DINÁMICO --}}
-                    <div id="wrapper_entidad_capacitadora" class="transition-all duration-300">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">5. Entidad Capacitadora</label>
-                        <select name="contenido[inst_que_lo_capacito]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase">
-                            <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
-                            <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
+                    <div id="wrapper_entidad_capacitadora" class="hidden">
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿De parte de quién?</label>
+                        <select name="contenido[inst_que_lo_capacito]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase cursor-pointer">
                             <option value="UNIDAD EJECUTORA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'UNIDAD EJECUTORA' ? 'selected' : '' }}>UNIDAD EJECUTORA</option>
+                            <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
+                            <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
                             <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
                         </select>
                     </div>
                 </div>
-
-                <div class="mt-6">
-                    <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
-                </div>
             </div>
 
-            {{-- SECCIÓN 6, 7 Y 8: COMUNICACIÓN Y PROGRAMACIÓN --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
+            {{-- 5.- EQUIPAMIENTO DEL CONSULTORIO --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DEL CONSULTORIO</h3>
+                </div>
+                <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
+            </div>
+
+            {{-- 7.- SOPORTE (Oculto si SIHCE es NO) --}}
+            <div id="section_soporte" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">SOPORTE TÉCNICO</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">6. ¿A quién comunica dificultades?</label>
-                        <select name="contenido[inst_a_quien_comunica]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase">
-                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTRO'] as $op)
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Ante dificultades se comunica con:</label>
+                        <select name="contenido[inst_a_quien_comunica]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
+                            @foreach(['DIRESA','UNIDAD EJECUTORA','JEFE DE ESTABLECIMIENTO','MINSA','OTROS'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">7. ¿Qué medio utiliza?</label>
-                        <select name="contenido[medio_que_utiliza]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase">
-                            @foreach(['WHATSAPP','TELEFONO','EMAIL'] as $me)
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Medio que utiliza:</label>
+                        <select name="contenido[medio_que_utiliza]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
+                            @foreach(['CELULAR','EMAIL','WHATSAPP','OTROS'] as $me)
                                 <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-                
-                <div class="pt-6 border-t border-slate-100">
-                    <label class="block text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 italic">8. Programación actual en el SIHCE hasta:</label>
-                    <div class="flex flex-wrap gap-4">
-                        <select name="contenido[programacion_mes]" class="flex-1 min-w-[200px] px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 shadow-sm uppercase">
-                            @foreach(['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] as $mes)
-                                <option value="{{ $mes }}" {{ ($detalle->contenido['programacion_mes'] ?? '') == $mes ? 'selected' : '' }}>{{ $mes }}</option>
-                            @endforeach
-                        </select>
-                        <input type="number" name="contenido[programacion_anio]" value="{{ $detalle->contenido['programacion_anio'] ?? date('Y') }}" class="w-32 px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-black text-center text-indigo-600 outline-none" min="2024" max="2030">
-                    </div>
+            </div>
+
+            {{-- 8.- PROGRAMACIÓN ACTUAL EN EL SIHCE HASTA --}}
+            <div id="section_programacion" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">PROGRAMACIÓN ACTUAL EN EL SIHCE HASTA:</h3>
+                </div>
+                <div>
+                    <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">SELECCIONE FECHA (MES Y AÑO)</label>
+                    <input type="month" 
+                           name="contenido[fecha_programacion]" 
+                           value="{{ $detalle->contenido['fecha_programacion'] ?? '' }}" 
+                           class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500 transition-all text-slate-700 cursor-pointer">
                 </div>
             </div>
 
-            {{-- SECCIÓN FINAL: COMENTARIOS Y FOTO --}}
-            <div class="bg-slate-900 rounded-[3.5rem] p-12 shadow-2xl text-white relative overflow-hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
+            {{-- 9.- COMENTARIOS y 10.- EVIDENCIA --}}
+            <div class="bg-slate-900 rounded-[3rem] p-10 shadow-2xl text-white">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {{-- 9.- COMENTARIOS --}}
                     <div>
-                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-indigo-400 mb-6 flex items-center gap-2">
-                            <i data-lucide="message-square" class="w-5 h-5"></i> 9. Comentarios
-                        </h3>
-                        <textarea name="contenido[comentarios]" rows="5" class="w-full bg-white/5 border-2 border-white/10 rounded-3xl p-6 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/20 shadow-inner">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-indigo-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">9</span>
+                            <h3 class="text-white font-black text-lg uppercase tracking-tight">COMENTARIOS</h3>
+                        </div>
+                        <textarea name="contenido[comentarios]" rows="6" class="w-full bg-white/10 border-2 border-white/20 rounded-2xl p-4 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/30">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
                     </div>
                     
+                    {{-- 10.- EVIDENCIA --}}
                     <div>
-                        <h3 class="text-sm font-black uppercase tracking-[0.3em] text-red-400 mb-6 flex items-center gap-2">
-                            <i data-lucide="camera" class="w-5 h-5"></i> 10. Evidencia Fotográfica
-                        </h3>
-                        
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-red-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">10</span>
+                            <h3 class="text-white font-black text-lg uppercase tracking-tight">EVIDENCIA FOTOGRÁFICA</h3>
+                        </div>
                         @if(isset($detalle->contenido['foto_evidencia']))
-                            <div class="mb-6 relative group w-full max-w-xs">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
-                                <div class="rounded-3xl overflow-hidden border-4 border-indigo-500/30 shadow-2xl">
-                                    <img src="{{ asset('storage/' . $detalle->contenido['foto_evidencia']) }}" 
-                                         class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700">
+                            <div class="mb-4 relative group w-full">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
+                                <div class="rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg h-32 w-32 bg-black/50">
+                                    <img src="{{ asset('storage/' . $detalle->contenido['foto_evidencia']) }}" class="w-full h-full object-cover">
                                 </div>
                             </div>
                         @endif
-
                         <div class="relative group">
                             <input type="file" name="foto_evidencia" id="foto_evidencia" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
-                            <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2.5rem] p-10 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all duration-500 shadow-inner">
-                                <i data-lucide="upload-cloud" id="upload-icon" class="w-10 h-10 text-indigo-400 mb-4"></i>
-                                <span id="file-name-display" class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center leading-relaxed">
-                                    {{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA REEMPLAZAR IMAGEN' : 'SUBIR FOTO DE EVIDENCIA' }}
+                            <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner h-48 border-spacing-4">
+                                <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-indigo-400 mb-2"></i>
+                                <span id="file-name-display" class="text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">
+                                    {{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}
                                 </span>
-                                <img id="img-preview" src="#" alt="Vista previa" class="hidden mt-4 w-32 h-32 object-cover rounded-2xl border-2 border-indigo-500 shadow-2xl">
+                                <img id="img-preview" src="#" class="hidden mt-2 w-20 h-20 object-cover rounded-lg border-2 border-indigo-500">
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="pt-10 pb-20">
-                <button type="submit" id="btn-submit-action" class="w-full group bg-indigo-600 text-white p-10 rounded-[3rem] font-black shadow-2xl flex items-center justify-between hover:bg-indigo-700 transition-all duration-500 active:scale-[0.98]">
-                    <div class="flex items-center gap-8 pointer-events-none">
-                        <div class="h-16 w-16 bg-white/20 rounded-3xl flex items-center justify-center group-hover:rotate-12 transition-all shadow-lg border border-white/30">
-                            <i data-lucide="save" id="icon-save-loader" class="w-8 h-8 text-white"></i>
-                        </div>
-                        <div class="text-left">
-                            <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
-                            <p class="text-[10px] text-indigo-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo 01</p>
-                        </div>
-                    </div>
-                    <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-indigo-600 transition-all duration-500">
-                        <i data-lucide="chevron-right" class="w-7 h-7"></i>
-                    </div>
-                </button>
+                {{-- 11.- FIRMA --}}
+                <div class="mt-12 pt-10 border-t border-white/10 text-center">
+                    
+                    <button type="submit" id="btn-submit-action" class="w-full md:w-auto px-12 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl uppercase tracking-widest shadow-lg shadow-emerald-500/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2 mx-auto">
+                        <span id="btn-text">GUARDAR</span>
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    function toggleProgramador(val) {
-        const section = document.getElementById('section_programador');
-        val === 'NO' ? section.classList.remove('hidden') : section.classList.add('hidden');
+    function toggleCargoManual(val) {
+        const div = document.getElementById('div_cargo_manual');
+        if (val === 'OTROS') {
+            div.classList.remove('hidden');
+        } else {
+            div.classList.add('hidden');
+        }
     }
 
-    function toggleEntidadCapacitadora(value) {
+    function toggleSihceAndDocs(val) {
+        const sectionSoporte = document.getElementById('section_soporte');
+        const sectionProgramacion = document.getElementById('section_programacion');
+        const djSelect = document.getElementById('firmo_dj');
+        const confSelect = document.getElementById('firmo_confidencialidad');
+
+        if (val === 'SI') {
+            sectionSoporte.classList.remove('hidden');
+            sectionProgramacion.classList.remove('hidden');
+        } else {
+            sectionSoporte.classList.add('hidden');
+            sectionProgramacion.classList.add('hidden');
+            if(djSelect) djSelect.value = 'NO';
+            if(confSelect) confSelect.value = 'NO';
+        }
+    }
+
+    function toggleSihce(val) {
+        toggleSihceAndDocs(val);
+    }
+
+    function toggleDniElectronico(val) {
+        const bloque = document.getElementById('bloque_dnie');
+        if (val === 'ELECTRONICO') {
+            bloque.classList.remove('hidden');
+        } else {
+            bloque.classList.add('hidden');
+        }
+    }
+
+    function toggleEntidadCapacitadora(val) {
         const wrapper = document.getElementById('wrapper_entidad_capacitadora');
-        wrapper.style.display = (value === 'SI') ? 'block' : 'none';
+        if (val === 'SI') {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+        }
+    }
+
+    function checkNationality(tipoDoc) {
+        const sectionDni = document.getElementById('section_dni_detalle');
+        if (tipoDoc === 'DNI') {
+            sectionDni.classList.remove('hidden');
+        } else {
+            sectionDni.classList.add('hidden');
+            const dniSelect = document.getElementById('tipo_dni');
+            if (dniSelect) {
+                dniSelect.value = "";
+                toggleDniElectronico(""); 
+            }
+        }
     }
 
     function previewImage(event) {
@@ -221,16 +356,14 @@
         const preview = document.getElementById('img-preview');
         const icon = document.getElementById('upload-icon');
         const fileName = document.getElementById('file-name-display');
-        const dropzone = document.getElementById('dropzone');
-
+        
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 preview.src = e.target.result;
                 preview.classList.remove('hidden');
                 icon.classList.add('hidden');
-                fileName.innerText = "NUEVA IMAGEN: " + input.files[0].name.toUpperCase();
-                dropzone.classList.add('bg-indigo-500/10', 'border-indigo-500');
+                fileName.innerText = "NUEVA: " + input.files[0].name.substring(0, 15).toUpperCase() + "...";
             }
             reader.readAsDataURL(input.files[0]);
         }
@@ -239,14 +372,33 @@
     document.addEventListener('DOMContentLoaded', function() {
         const selectCapacitacion = document.getElementById('recibio_capacitacion');
         if (selectCapacitacion) toggleEntidadCapacitadora(selectCapacitacion.value);
+
+        const selectSihce = document.getElementById('cuenta_sihce');
+        if (selectSihce) toggleSihceAndDocs(selectSihce.value);
+
+        const selectDni = document.getElementById('tipo_dni');
+        if (selectDni) toggleDniElectronico(selectDni.value);
+
+        const selectCargo = document.getElementById('cargo_profesional');
+        if (selectCargo) toggleCargoManual(selectCargo.value);
+
+        const docTypeSelect = document.getElementById('tipo_rrhh');
+        if (docTypeSelect) {
+            checkNationality(docTypeSelect.value);
+            docTypeSelect.addEventListener('change', function() {
+                checkNationality(this.value);
+            });
+        }
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
     document.getElementById('form-monitoreo-final').onsubmit = function() {
         const btn = document.getElementById('btn-submit-action');
-        const icon = document.getElementById('icon-save-loader');
+        const text = document.getElementById('btn-text');
         btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-        icon.innerHTML = '<i data-lucide="loader-2" class="w-8 h-8 text-white animate-spin"></i>';
+        btn.classList.add('opacity-75', 'cursor-wait');
+        text.innerText = "GUARDANDO...";
         if (typeof lucide !== 'undefined') lucide.createIcons();
         return true;
     };
