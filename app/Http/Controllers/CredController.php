@@ -52,7 +52,9 @@ class CredController extends Controller
             $detalle->contenido = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : $detalle->contenido;
         }
 
-        return view('usuario.monitoreo.modulos.cred', compact('acta', 'detalle', 'equipos'));
+        $fechaParaVista = $detalle->fecha_registro ?? $acta->fecha;
+
+        return view('usuario.monitoreo.modulos.cred', compact('acta', 'detalle', 'equipos', 'fechaParaVista'));
     }
 
     public function store(Request $request, $id)

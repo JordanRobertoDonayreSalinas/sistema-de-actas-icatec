@@ -58,7 +58,9 @@ class PlanificacionController extends Controller
             $detalle->contenido = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : $detalle->contenido;
         }
 
-        return view('usuario.monitoreo.modulos.planificacion_familiar', compact('acta', 'detalle', 'equipos'));
+        $fechaParaVista = $detalle->fecha_registro ?? $acta->fecha;
+
+        return view('usuario.monitoreo.modulos.planificacion_familiar', compact('acta', 'detalle', 'equipos', 'fechaParaVista'));
     }
 
     public function store(Request $request, $id)
@@ -67,6 +69,11 @@ class PlanificacionController extends Controller
             DB::beginTransaction();
 
             $acta = CabeceraMonitoreo::findOrFail($id);
+
+             // 1. CAPTURAR LA FECHA
+            $fecha_monitoreo = $request->input('fecha_monitoreo') ?? ($acta->fecha ?? now()->format('Y-m-d'));
+            $acta->fecha = $fecha_monitoreo;
+            $acta->save();
             
             // 1. CAPTURA DEL ARRAY PRINCIPAL
             $datosForm = $request->input('contenido', []);
@@ -102,6 +109,7 @@ class PlanificacionController extends Controller
 
             // Sincronizar equipos al JSON para persistencia de vista
             $datosForm['equipos_data'] = $equiposForm;
+            $datosForm['fecha_registro'] = $fecha_monitoreo;
             $jsonFinal = json_encode($datosForm);
 
             // 4. GUARDAR EN mon_detalle_modulos (TABLA NUEVA)
@@ -117,6 +125,7 @@ class PlanificacionController extends Controller
                     'contenido'       => $jsonFinal,
                     'foto_1'          => $foto1,
                     'foto_2'          => $foto2,
+                    'fecha_registro'  => $fecha_monitoreo,
                     'updated_at'      => now()
                 ]
             );
