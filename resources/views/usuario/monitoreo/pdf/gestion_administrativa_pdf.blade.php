@@ -5,7 +5,6 @@
     <title>REPORTE MÓDULO 01 - GESTIÓN ADMINISTRATIVA</title>
     <style>
         /* Configuración de Página */
-        /* Margen inferior amplio (2cm) para que quepa el pie de página */
         @page { margin: 0.8cm 0.8cm 2cm 0.8cm; }
         body { font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: #333; line-height: 1.4; }
         
@@ -15,29 +14,49 @@
         .text-uppercase { text-transform: uppercase; }
         .font-bold { font-weight: bold; }
         
-        /* Encabezado Principal */
-        .main-header { text-align: center; margin-bottom: 15px; }
-        .module-title { font-size: 14px; font-weight: bold; color: #1e293b; margin: 0; text-transform: uppercase; }
-        .acta-info { font-size: 9px; color: #64748b; margin-top: 4px; text-transform: uppercase; font-weight: bold; }
-        .separator-line { border-bottom: 1px solid #cbd5e1; margin: 10px 0 15px 0; }
+        /* --- ENCABEZADO ESTILO NUEVO (IGUAL A LA IMAGEN) --- */
+        .main-header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .module-title { 
+            font-size: 16px; /* Tamaño grande */
+            font-weight: bold; 
+            color: #4f46e5; /* Color Azul/Indigo */
+            text-transform: uppercase; 
+            margin: 0 0 5px 0;
+        }
+        .acta-info { 
+            font-size: 10px; 
+            color: #64748b; /* Gris suave */
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin: 0;
+        }
+        .header-bar { 
+            margin-top: 10px;
+            border-bottom: 3px solid #4f46e5; /* Línea gruesa azul */
+            width: 100%;
+        }
 
         /* Tablas */
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed; }
         
-        /* Cabeceras de Sección */
+        /* Cabeceras de Sección (Estilo Barra Gris) */
         .section-header { 
             background-color: #f1f5f9; 
-            color: #334155;
-            padding: 6px 10px; 
+            color: #1e293b; /* Texto oscuro */
+            padding: 8px 10px; 
             font-weight: bold; 
             text-transform: uppercase; 
-            font-size: 10px; 
+            font-size: 11px; 
             text-align: left;
             border: 1px solid #e2e8f0;
+            border-left: 4px solid #4f46e5; /* Pequeño detalle azul a la izquierda */
         }
 
         /* Celdas */
-        th.table-head { background-color: #f8fafc; color: #475569; font-size: 8px; text-transform: uppercase; padding: 5px; border: 1px solid #e2e8f0; font-weight: bold; }
+        th.table-head { background-color: #f8fafc; color: #475569; font-size: 9px; text-transform: uppercase; padding: 6px; border: 1px solid #e2e8f0; font-weight: bold; }
         td { padding: 6px 8px; border: 1px solid #e2e8f0; text-align: left; vertical-align: middle; word-wrap: break-word; }
         
         /* Columnas de Etiqueta vs Dato */
@@ -63,10 +82,10 @@
         .signature-name { font-weight: bold; font-size: 9px; text-transform: uppercase; }
         .signature-role { font-size: 8px; color: #64748b; text-transform: uppercase; }
 
-        /* Estilo visual para la línea del pie de página */
+        /* Pie de Página */
         .footer-line { 
             position: fixed; 
-            bottom: 35px; /* Ajustado para estar sobre el texto */
+            bottom: 35px; 
             left: 0; 
             right: 0; 
             height: 1px; 
@@ -76,18 +95,18 @@
 </head>
 <body>
 
-    {{-- LÍNEA DECORATIVA DEL PIE DE PÁGINA (El texto va por script PHP) --}}
+    {{-- LÍNEA DECORATIVA DEL PIE DE PÁGINA --}}
     <div class="footer-line"></div>
 
-    {{-- ENCABEZADO --}}
+    {{-- ENCABEZADO NUEVO ESTILO --}}
     <div class="main-header">
         <h1 class="module-title">MÓDULO 01: GESTIÓN ADMINISTRATIVA</h1>
         <p class="acta-info">
-            ACTA Nº {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ACTA Nº {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre }} | 
             FECHA: {{ isset($detalle->contenido['fecha']) ? date('d/m/Y', strtotime($detalle->contenido['fecha'])) : date('d/m/Y') }}
         </p>
-        <div class="separator-line"></div>
+        <div class="header-bar"></div> {{-- BARRA AZUL --}}
     </div>
 
     {{-- 1. DATOS GENERALES --}}
@@ -116,15 +135,6 @@
             <tr>
                 <td class="label-col">{{ $detalle->contenido['rrhh']['tipo_doc'] ?? 'DOCUMENTO DE IDENTIDAD' }}</td>
                 <td class="data-col">{{ $detalle->contenido['rrhh']['doc'] ?? '---' }}</td>
-            </tr>
-            <tr>
-                <td class="label-col">Cargo</td>
-                <td class="data-col">
-                    {{ $detalle->contenido['cargo_profesional'] ?? '' }}
-                    @if(($detalle->contenido['cargo_profesional'] ?? '') == 'OTROS')
-                        - {{ $detalle->contenido['cargo_profesional_manual'] ?? '' }}
-                    @endif
-                </td>
             </tr>
             <tr>
                 <td class="label-col">¿Utiliza SIHCE?</td>
@@ -238,7 +248,6 @@
                         @php
                             try {
                                 $fechaObj = \Carbon\Carbon::createFromFormat('Y-m', $detalle->contenido['fecha_programacion']);
-                                // locale('es') fuerza el idioma español
                                 $mes = strtoupper($fechaObj->locale('es')->isoFormat('MMMM'));
                                 $anio = $fechaObj->year;
                             } catch (\Exception $e) {
@@ -282,45 +291,39 @@
 
     {{-- 9. FIRMA --}}
     <div class="signature-section">
-        <div class="section-header" style="margin-bottom: 40px;">9. FIRMA DEL ENTREVISTADO</div>
+        <div class="section-header" style="margin-bottom: 40px;">9. FIRMA</div>
         
         <div class="signature-box">
             <div style="height: 30px;"></div> 
             <div class="signature-line"></div>
             <div class="signature-name">
-                {{ $detalle->contenido['rrhh']['nombres'] ?? '' }} 
+                
                 {{ $detalle->contenido['rrhh']['apellido_paterno'] ?? '' }} 
                 {{ $detalle->contenido['rrhh']['apellido_materno'] ?? '' }}
+                {{ $detalle->contenido['rrhh']['nombres'] ?? '' }} 
             </div>
-            <div class="signature-role">
-                {{ $detalle->contenido['cargo_profesional'] ?? 'PROFESIONAL DE SALUD' }}
-            </div>
+            
             <div class="signature-role">
                 {{ $detalle->contenido['rrhh']['tipo_doc'] ?? 'DNI' }}: {{ $detalle->contenido['rrhh']['doc'] ?? '________' }}
+            </div>
+            <div class="signature-role">
+                {{ $detalle->contenido['cargo_profesional'] ?? 'PROFESIONAL ENTREVISTADO' }}
             </div>
         </div>
     </div>
 
-    {{-- SCRIPT PARA PIE DE PÁGINA (Paginación y Texto) --}}
+    {{-- SCRIPT PARA PIE DE PÁGINA --}}
     <script type="text/php">
         if (isset($pdf)) {
-            // Configuración de fuente y color
             $font = $fontMetrics->get_font("Helvetica", "bold");
             $size = 8;
-            $color = array(0.2, 0.2, 0.2); // Gris muy oscuro para el texto
-            
-            // Coordenada Y (Altura desde abajo)
-            $y = $pdf->get_height() - 28; // Justo debajo de la línea 'footer-line' que está en bottom: 35px
+            $color = array(0.2, 0.2, 0.2);
+            $y = $pdf->get_height() - 28;
 
-            // 1. TEXTO IZQUIERDA
             $textLeft = "SISTEMA DE ACTAS";
             $pdf->page_text(30, $y, $textLeft, $font, $size, $color);
 
-            // 2. TEXTO DERECHA (Paginación)
             $textRight = "PAG {PAGE_NUM}/{PAGE_COUNT}";
-            
-            // Calculamos ancho del texto para alinearlo a la derecha (Margen derecho 30 aprox)
-            // Usamos un ancho estimado ya que no podemos calcular dinámicamente fácil en este bloque
             $pdf->page_text($pdf->get_width() - 80, $y, $textRight, $font, $size, $color);
         }
     </script>

@@ -212,8 +212,8 @@
             </td>
             <td class="px-4 py-4">
                 <select name="equipos[${uniqueId}][propio]" class="input-table-select">
-                    <option value="COMPARTIDO">COMPARTIDO</option>
                     <option value="EXCLUSIVO">EXCLUSIVO</option>
+                    <option value="COMPARTIDO">COMPARTIDO</option>
                     <option value="PERSONAL">PERSONAL</option>
                 </select>
             </td>
