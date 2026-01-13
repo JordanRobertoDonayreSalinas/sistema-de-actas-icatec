@@ -18,7 +18,7 @@ class CredController extends Controller
     {
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
         
-        // 1. Cargar Equipos (Lógica de arrastre histórico)
+        // 1. Cargar Equipos (Arrastre histórico)
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo', $this->modulo)
                                 ->get();
@@ -36,7 +36,7 @@ class CredController extends Controller
             }
         }
 
-        // 2. BUSCAR DETALLE (Prioridad tabla nueva)
+        // 2. BUSCAR DETALLE (Prioridad tabla mon_detalle_modulos)
         $detalle = DB::table('mon_detalle_modulos')
                     ->where('cabecera_monitoreo_id', $id)
                     ->where('modulo_nombre', $this->modulo)
@@ -52,7 +52,9 @@ class CredController extends Controller
             $detalle->contenido = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : $detalle->contenido;
         }
 
-        return view('usuario.monitoreo.modulos.cred', compact('acta', 'detalle', 'equipos'));
+        $fechaParaVista = $detalle->fecha_registro ?? $acta->fecha;
+
+        return view('usuario.monitoreo.modulos.cred', compact('acta', 'detalle', 'equipos', 'fechaParaVista'));
     }
 
     public function store(Request $request, $id)
@@ -61,31 +63,52 @@ class CredController extends Controller
             DB::beginTransaction();
 
             $acta = CabeceraMonitoreo::findOrFail($id);
+
+            // 1. CAPTURAR LA FECHA
+            $fecha_monitoreo = $request->input('fecha_monitoreo') ?? ($acta->fecha ?? now()->format('Y-m-d'));
+            $acta->fecha = $fecha_monitoreo;
+            $acta->save();
             
-            // 1. CAPTURA DE DATOS
+            // 2. CAPTURA DE DATOS BASE
             $datosForm = $request->input('contenido', []);
             $personal = $datosForm['personal'] ?? null;
-            
-            // Obtenemos los equipos tal cual vienen del formulario (ya sin los eliminados)
             $equiposForm = $request->input('equipos', []);
 
             // --- 1. GESTIÓN DE FOTOS ---
             $foto1 = $request->input('foto_1_actual'); 
             $foto2 = $request->input('foto_2_actual');
+
             if ($request->hasFile('foto_evidencia_1')) {
                 if ($foto1) Storage::disk('public')->delete($foto1);
-                $foto1 = $request->file('foto_evidencia_1')->store('evidencias/planificacion', 'public');
+                $foto1 = $request->file('foto_evidencia_1')->store('evidencias/cred', 'public');
             }
             if ($request->hasFile('foto_evidencia_2')) {
                 if ($foto2) Storage::disk('public')->delete($foto2);
-                $foto2 = $request->file('foto_evidencia_2')->store('evidencias/planificacion', 'public');
+                $foto2 = $request->file('foto_evidencia_2')->store('evidencias/cred', 'public');
             }
 
-            // --- 2. PUNTO CLAVE: SINCRONIZAR EL JSON ---
-            // Actualizamos el JSON con la lista de equipos filtrada del formulario
-            $datosForm['equipos_data'] = $equiposForm;
+            // --- 3. PROCESAR DATOS DE DNI Y DOCUMENTACIÓN (ANTES DE GUARDAR) ---
+            $tipoDniFisico = $request->input('contenido.dni_firma.tipo_dni_fisico', 'AZUL');
+            
+            $dniData = [
+                'tipo_dni_fisico' => $tipoDniFisico,
+                'dnie_version'    => ($tipoDniFisico === 'AZUL') ? null : $request->input('contenido.dni_firma.dnie_version'),
+                'firma_sihce'     => ($tipoDniFisico === 'AZUL') ? null : $request->input('contenido.dni_firma.firma_sihce'),
+                'observaciones'   => $request->input('contenido.dni_firma.observaciones') // Captura de nuevas obs
+            ];
 
-            // --- 3. GUARDAR EN mon_detalle_modulos (CON EL JSON ACTUALIZADO) ---
+            $docData = [
+                'firma_dj'               => $request->input('contenido.documentacion.firma_dj'),
+                'firma_confidencialidad' => $request->input('contenido.documentacion.firma_confidencialidad')
+            ];
+
+            // --- 4. CONSOLIDAR EL JSON ---
+            $datosForm['equipos_data'] = $equiposForm;
+            $datosForm['fecha_registro'] = $fecha_monitoreo;
+            $datosForm['dni_firma'] = $dniData;
+            $datosForm['documentacion'] = $docData;
+
+            // --- 3. GUARDAR EN mon_detalle_modulos ---
             $nombreFull = mb_strtoupper(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? ''), 'UTF-8');
             
             DB::table('mon_detalle_modulos')->updateOrInsert(
@@ -95,14 +118,16 @@ class CredController extends Controller
                     'personal_dni'    => $personal['dni'] ?? null,
                     'personal_turno'  => mb_strtoupper($personal['turno'] ?? 'N/A', 'UTF-8'),
                     'personal_roles'  => mb_strtoupper($personal['rol'] ?? 'RESPONSABLE', 'UTF-8'),
-                    'contenido'       => json_encode($datosForm), // Aquí se guarda la lista nueva sin los eliminados
+                    'contenido'       => json_encode($datosForm),
                     'foto_1'          => $foto1,
                     'foto_2'          => $foto2,
+                    'fecha_registro'  => $fecha_monitoreo,
                     'updated_at'      => now()
                 ]
             );
 
-            // --- 4. GUARDAR PROFESIONALES ---
+            // --- 4. GUARDAR EN TABLA MAESTRA DE PROFESIONALES (mon_profesionales) ---
+            // Solo si el DNI no está vacío para evitar el error Column not found o Integrity constraint
             if (!empty($personal['dni'])) {
                 DB::table('mon_profesionales')->updateOrInsert(
                     ['doc' => $personal['dni']], 
@@ -110,28 +135,28 @@ class CredController extends Controller
                         'nombres'          => mb_strtoupper($personal['nombre'] ?? 'SIN NOMBRE', 'UTF-8'),
                         'apellido_paterno' => mb_strtoupper($personal['apellido_paterno'] ?? '', 'UTF-8'),
                         'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
-                        'email'            => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
-                        'telefono'         => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'email' => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
+                        'telefono' => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
                         'updated_at'       => now(),
                         'created_at'       => now()
                     ]
                 );
             }
-
-            // --- 5. ACTUALIZAR TABLA ANTIGUA ---
+            // --- 4. GUARDAR EN TABLA mon_monitoreo_modulos (Respaldo) ---
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],
                 ['contenido' => $datosForm]
             );
 
-            // --- 6. SINCRONIZAR TABLA EquipoComputo ---
-            // Borramos todo lo anterior para este acta y módulo
+            // --- 5. SINCRONIZAR EQUIPOS EN TABLA INDEPENDIENTE ---
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
 
             if (!empty($equiposForm)) {
                 foreach ($equiposForm as $eq) {
                     if (!empty($eq['descripcion'])) {
-                        // Mapeo de 'propiedad' a 'propio' (ajustado a tu componente)
+                        
+                        // EL SECRETO: Tu componente usa 'propiedad', pero tu tabla usa 'propio'.
+                        // Mapeamos el dato del formulario al nombre de tu columna en DB.
                         $valorCapturado = $eq['propiedad'] ?? ($eq['propio'] ?? 'ESTABLECIMIENTO');
 
                         EquipoComputo::create([
@@ -140,34 +165,21 @@ class CredController extends Controller
                             'descripcion'   => mb_strtoupper($eq['descripcion'], 'UTF-8'),
                             'cantidad'      => $eq['cantidad'] ?? 1,
                             'estado'        => mb_strtoupper($eq['estado'] ?? 'BUENO', 'UTF-8'),
-                            'propio'        => trim(strtoupper($valorCapturado)),
+                            'propio'        => trim(strtoupper($valorCapturado)), 
                             'nro_serie'     => !empty($eq['nro_serie']) ? mb_strtoupper($eq['nro_serie'], 'UTF-8') : null,
-                            'observaciones' => !empty($eq['observaciones']) ? mb_strtoupper($eq['observaciones'], 'UTF-8') : null,
+                            'observacion' => !empty($eq['observacion']) ? mb_strtoupper($eq['observacion'], 'UTF-8') : null,
                         ]);
                     }
                 }
             }
 
-                // 2. CAPTURA DE CAMPOS NUEVOS (Los que están fuera de 'contenido' en el Blade)
-            // Los insertamos manualmente en el array para que viajen al JSON
-            $datosForm['dni_firma'] = [
-                'tipo_dni'            => $request->input('tipo_dni'),
-                'version_dnie'        => $request->input('version_dnie'),
-                'firma_digital_sihce' => $request->input('firma_digital_sihce')
-            ];
-
-            $datosForm['documentacion'] = [
-                'declaracion_jurada'          => $request->input('declaracion_jurada'),
-                'compromiso_confidencialidad' => $request->input('compromiso_confidencialidad')
-            ];
-
             DB::commit();
-            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Datos actualizados correctamente.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('success', 'Módulo Cred guardado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error Store: " . $e->getMessage());
-            return back()->with('error', 'Error al guardar: ' . $e->getMessage())->withInput();
+            Log::error("Error Cred Store: " . $e->getMessage());
+            return back()->with('error', 'Error al guardar Cred: ' . $e->getMessage())->withInput();
         }
     }
 }

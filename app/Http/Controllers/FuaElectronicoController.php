@@ -53,13 +53,61 @@ class FuaElectronicoController extends Controller
             DB::beginTransaction();
 
             $modulo = 'fua_electronico';
+            // ---------------------------------------------------------
+            // 1. OBTENER Y NORMALIZAR DATOS (TODO A MAYÚSCULAS)
+            // ---------------------------------------------------------
             $datos = $request->input('contenido', []);
 
+            // Usamos array_walk_recursive para recorrer todo el árbol JSON (incluyendo hijos)
+            array_walk_recursive($datos, function (&$value, $key) {
+                // Solo procesamos cadenas de texto
+                if (is_string($value)) {
+                    // EXCEPCIÓN A: El campo 'email' se queda tal cual (o lo forzamos a minúsculas luego)
+                    if ($key === 'email') {
+                        return; 
+                    }
+                    
+                    // EXCEPCIÓN B: Rutas de imágenes (detectamos por extensión o carpeta)
+                    // Esto protege 'foto_evidencia' si viniera como texto, aunque se procesa aparte
+                    if (str_contains($value, 'evidencias_monitoreo/') || preg_match('/\.(jpg|jpeg|png)$/i', $value)) {
+                        return;
+                    }
+
+                    // TODO LO DEMÁS -> A MAYÚSCULAS
+                    $value = mb_strtoupper(trim($value), 'UTF-8');
+                }
+            });
+
+            // ---------------------------------------------------------
+            // 2. APLICAR REGLAS DE NEGOCIO (LIMPIEZA DE NULOS)
+            // ---------------------------------------------------------
+            
+            // REGLA A: Si NO utiliza SIHCE -> Limpiar campos administrativos y soporte
+            if (($datos['utiliza_sihce'] ?? '') === 'NO') {
+                $datos['firmo_dj']               = null;
+                $datos['firmo_confidencialidad'] = null;
+                $datos['recibio_capacitacion']   = null;
+                $datos['inst_capacitacion']      = null;
+                $datos['comunica_a']             = null;
+                $datos['medio_soporte']          = null;
+            }
+
+            // REGLA B: Si el Doc NO es DNI -> Limpiar campos de DNIe físico
+            // Nota: Como ya corrimos el paso 1, comparamos con 'DNI' en mayúscula
+            $tipoDoc = $datos['profesional']['tipo_doc'] ?? '';
+            if ($tipoDoc !== 'DNI') {
+                $datos['tipo_dni_fisico']  = null;
+                $datos['dnie_version']     = null;
+                $datos['dnie_firma_sihce'] = null;
+                $datos['dni_observacion']  = null;
+            }
+
+            // REGLA C: Si NO recibió capacitación -> Limpiar institución
             if (isset($datos['recibio_capacitacion']) && $datos['recibio_capacitacion'] === 'NO') {
                 $datos['inst_capacitacion'] = null;
             }
 
-            // LÓGICA DE LIMPIEZA DE DATOS (DNI AZUL vs DNI ELECTRÓNICO)
+            // REGLA D:LÓGICA DE LIMPIEZA DE DATOS (DNI AZUL vs DNI ELECTRÓNICO)
             $tipoDni = $datos['tipo_dni_fisico'] ?? null;
 
             if ($tipoDni === 'AZUL') {

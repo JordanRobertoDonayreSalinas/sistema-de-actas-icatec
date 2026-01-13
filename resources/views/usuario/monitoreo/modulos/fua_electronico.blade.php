@@ -32,41 +32,27 @@
             @csrf
 
             {{-- SECCIÓN 1: SISTEMA FUA --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 mb-8">
+            <div class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 mb-8">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">1</div>
-                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Sistema FUA Electronico</h3>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">1</div>
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Detalles</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {{-- 1. FECHA (Izquierda) --}}
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuenta con módulo FUA del SIHCE?</label>
-                        <div class="flex gap-8">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="radio" name="contenido[tiene_sistema_fua]" value="SI" {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'SI' ? 'checked' : '' }} class="w-5 h-5">
-                                <span class="text-sm font-bold">SÍ</span>
-                            </label>
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="radio" name="contenido[tiene_sistema_fua]" value="NO" {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'NO' ? 'checked' : '' }} class="w-5 h-5">
-                                <span class="text-sm font-bold">NO</span>
-                            </label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Fecha de Monitoreo</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i data-lucide="calendar" class="h-5 w-5 text-indigo-500"></i>
+                            </div>
+                            <input type="date" 
+                                   name="contenido[fecha_monitoreo_fua]" 
+                                   value="{{ $detalle->contenido['fecha_monitoreo_fua'] ?? date('Y-m-d') }}"
+                                   class="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-black text-slate-600 outline-none focus:border-indigo-500 transition-all uppercase cursor-pointer">
                         </div>
                     </div>
+                    {{-- 2. TURNO (Derecha - Ahora al lado de la fecha) --}}
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuántas personas digitan?</label>
-                        <input type="number" 
-                        name="contenido[n_digitadores]" 
-                        min="0"
-                        onkeydown="return 
-                        event.keyCode !== 69 && event.keyCode !== 189"
-                        oninput="this.value = Math.abs(this.value)"
-                        value="{{ $detalle->contenido['n_digitadores'] ?? '' }}" 
-                        class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" 
-                        placeholder="Ejemplo: 5"
-                        />
-                        
-                    </div>
-                    {{-- TURNO (MAÑANA / TARDE) --}}
-                    <div class="md:col-span-2">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Turno</label>
                         <div class="flex gap-4">
                             {{-- OPCIÓN MAÑANA --}}
@@ -96,18 +82,72 @@
                             </label>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuenta con módulo FUA del SIHCE?</label>
+                        <div class="flex gap-8">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="contenido[tiene_sistema_fua]" value="SI" {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'SI' ? 'checked' : '' }} class="w-5 h-5">
+                                <span class="text-sm font-bold">SÍ</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="contenido[tiene_sistema_fua]" value="NO" {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'NO' ? 'checked' : '' }} class="w-5 h-5">
+                                <span class="text-sm font-bold">NO</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuántas personas digitan?</label>
+                        <input type="number" 
+                        name="contenido[n_digitadores]" 
+                        min="0"
+                        onkeydown="return 
+                        event.keyCode !== 69 && event.keyCode !== 189"
+                        oninput="this.value = Math.abs(this.value)"
+                        value="{{ $detalle->contenido['n_digitadores'] ?? '' }}" 
+                        class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none" 
+                        placeholder="Ejemplo: 5"
+                        />
+                        
+                    </div>
                 </div>
             </div>
 
             {{-- SECCIÓN 2: PROFESIONAL --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">2</div>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">2</div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Datos del Profesional</h3>
                 </div>
                 <x-busqueda-profesional prefix="profesional" :detalle="$detalle" />
+                {{-- [NUEVO] PREGUNTA: ¿UTILIZA SIHCE? --}}
+                <div class="mt-8 mb-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿El profesional utiliza SIHCE?</label>
+                    <div class="flex gap-4">
+                        {{-- SI --}}
+                        <label class="flex-1 relative cursor-pointer group">
+                            <input type="radio" name="contenido[utiliza_sihce]" value="SI" 
+                                {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'SI' ? 'checked' : '' }} 
+                                onchange="toggleSihce('SI')"
+                                class="peer sr-only">
+                            <div class="p-4 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 peer-checked:shadow-sm hover:border-indigo-200">
+                                <span class="text-xs font-black uppercase tracking-wider">SÍ</span>
+                            </div>
+                        </label>
+                        
+                        {{-- NO --}}
+                        <label class="flex-1 relative cursor-pointer group">
+                            <input type="radio" name="contenido[utiliza_sihce]" value="NO" 
+                                {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'checked' : '' }} 
+                                onchange="toggleSihce('NO')"
+                                class="peer sr-only">
+                            <div class="p-4 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-slate-400 peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:shadow-sm hover:border-slate-300">
+                                <span class="text-xs font-black uppercase tracking-wider">NO</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
                 {{-- NUEVA SECCIÓN: DOCUMENTACIÓN ADMINISTRATIVA --}}
-                <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 mb-8">
+                <div id="bloque_doc_administrativa" class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 mb-8 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }} animate-fade-in-down">
                     <div class="flex items-center gap-4 mb-8">
                         {{-- Icono representativo --}}
                         <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">
@@ -175,10 +215,10 @@
             </div>
 
             {{-- SECCIÓN 3: DATOS DEL DNI Y FIRMA DIGITAL --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 mb-8">
+            <div id="seccion_dni_firma" class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 mb-8 {{ ($detalle->contenido['profesional']['tipo_doc'] ?? 'DNI') !== 'DNI' ? 'hidden' : '' }} seccion-numerada">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">3</div>
-                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Tipo de DNI y Firma Digital</h3>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">3</div>
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">DETALLE DE DNI Y FIRMA DIGITAL</h3>
                 </div>
                 
                 {{-- SELECCIÓN DEL TIPO DE DOCUMENTO --}}
@@ -277,9 +317,9 @@
             </div>
 
             {{-- SECCIÓN 4: DETALLES DE CAPACITACIÓN --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div id="seccion_capacitacion" class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">4</div>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">4</div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Detalles de Capacitación</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
@@ -299,7 +339,7 @@
                     <div id="section_inst_capacitacion" class="{{ ($detalle->contenido['recibio_capacitacion'] ?? '') === 'NO' ? 'hidden' : '' }}">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿De parte de quién?</label>
                         <select name="contenido[inst_capacitacion]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all">
-                            @foreach(['---','MINSA','DIRESA','UNIDAD EJECUTORA'] as $op)
+                            @foreach(['MINSA','DIRESA','UNIDAD EJECUTORA'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['inst_capacitacion'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
                         </select>
@@ -308,9 +348,9 @@
             </div>
 
             {{-- SECCIÓN 5: CARACTERÍSTICAS DEL SOFTWARE --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">5</div>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">5</div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Software y Flujo de Atención</h3>
                 </div>
                 
@@ -360,9 +400,9 @@
             </div>
 
             {{-- SECCIÓN 6: INTEROPERABILIDAD Y TRAMAS --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">6</div>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">6</div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Envío de Información (Tramas)</h3>
                 </div>
                 
@@ -395,9 +435,9 @@
             </div>
 
             {{-- SECCIÓN 7: RECURSOS CRÍTICOS (Checkboxes mejorados) --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">7</div>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">7</div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Recursos Específicos Disponibles</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -420,19 +460,19 @@
             </div>
 
             {{-- SECCIÓN 8: EQUIPAMIENTO DEL ÁREA --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">8</div>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">8</div>
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Equipamiento del Área</h3>
                 </div>
                 <x-tabla-equipos :equipos="$equipos" modulo="fua_electronico" />
             </div>
 
             {{-- SECCIÓN 9: SOPORTE TÉCNICO --}}
-            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+            <div id="seccion_soporte" class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }} seccion-numerada">
                 <div class="flex items-center gap-4 mb-8">
-                    <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">9</div>
-                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Soporte Técnico</h3>
+                    <div class="badge-numero h-12 w-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner">9</div>
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Soporte</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div>
@@ -446,7 +486,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Qué medio utiliza?</label>
                         <div class="flex gap-8 mt-3">
-                            @foreach(['WHATSAPP' => 'whatsapp', 'TELEFONO' => 'telefono', 'EMAIL' => 'email'] as $label => $key)
+                            @foreach(['CELULAR' => 'celular', 'EMAIL' => 'email', 'WHATSAPP' => 'whatsapp'] as $label => $key)
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="radio" name="contenido[medio_soporte]" value="{{$label}}" {{ ($detalle->contenido['medio_soporte'] ?? '') == $label ? 'checked' : '' }} class="w-5 h-5">
                                     <span class="text-sm font-bold">{{$label}}</span>
@@ -543,7 +583,113 @@
 </div>
 
 <script>
-    // Función mejorada para ocultar y LIMPIAR campos
+    document.addEventListener('DOMContentLoaded', () => {
+        // ============================================================
+        // 1. INICIALIZACIONES BÁSICAS
+        // ============================================================
+        toggleDniFields(true); // Lógica interna del DNIe
+
+        // Verificar estado inicial de SIHCE
+        const estadoSihce = document.querySelector('input[name="contenido[utiliza_sihce]"]:checked')?.value;
+        if (estadoSihce === 'NO') toggleSihce('NO');
+
+
+        // ============================================================
+        // 2. LÓGICA ROBUSTA PARA DETECTAR CAMBIO DE TIPO DE DOC
+        // ============================================================
+        
+        // Buscamos el campo por ID o por atributo name (cubrimos ambas posibilidades)
+        const inputTipoDoc = document.getElementById('profesional_tipo_doc') || 
+                             document.querySelector('[name="contenido[profesional][tipo_doc]"]') ||
+                             document.querySelector('select[name*="tipo_doc"]');
+                             
+        const sectionDni = document.getElementById('seccion_dni_firma');
+
+        function checkTipoDoc() {
+            if (!inputTipoDoc || !sectionDni) return;
+
+            // Obtenemos el valor actual en mayúsculas para evitar errores
+            const valor = inputTipoDoc.value.toUpperCase().trim();
+
+            // REGLA: Solo mostramos si es "DNI". Ocultamos para C.E., PASAPORTE, etc.
+            if (valor === 'DNI') {
+                sectionDni.classList.remove('hidden');
+            } else {
+                sectionDni.classList.add('hidden');
+            }
+            // Recalcular números tras mostrar/ocultar
+            actualizarCorrelativo();
+        }
+
+        if (inputTipoDoc) {
+            // A. Ejecutar inmediatamente al cargar
+            checkTipoDoc();
+
+            // B. Escuchar cambios manuales (si el usuario cambia el select)
+            inputTipoDoc.addEventListener('change', checkTipoDoc);
+
+            // C. Escuchar cambios automáticos (Intervalo de seguridad)
+            // Revisamos cada 1 segundo si el valor cambió (ideal para cuando "Validar Doc" rellena los datos)
+            setInterval(checkTipoDoc, 1000); 
+            
+        } else {
+            console.warn("⚠️ ALERTA: No se encontró el campo 'Tipo de Documento'. Revise si el ID es 'profesional_tipo_doc'.");
+        }
+        // Recalcular números tras mostrar/ocultar
+        actualizarCorrelativo();
+    });
+
+    function toggleSihce(valor) {
+        const bloqueDoc = document.getElementById('bloque_doc_administrativa');
+        const bloqueSoporte = document.getElementById('seccion_soporte');
+        const bloqueCapacitacion = document.getElementById('seccion_capacitacion');
+        
+        if (valor === 'SI') {
+            if(bloqueDoc) bloqueDoc.classList.remove('hidden');
+            if(bloqueCapacitacion) {
+                bloqueCapacitacion.classList.remove('hidden');
+                // [NUEVO] Si el select aparece vacío, forzamos que seleccione "---"
+                const selectCapacitacion = bloqueCapacitacion.querySelector('select[name="contenido[inst_capacitacion]"]');
+                if (selectCapacitacion && !selectCapacitacion.value) {
+                    selectCapacitacion.value = 'MINSA';
+                }
+            }
+            if(bloqueSoporte) {
+                bloqueSoporte.classList.remove('hidden');
+                // [NUEVO] Si el select aparece vacío, forzamos que seleccione "---"
+                const selectSoporte = bloqueSoporte.querySelector('select[name="contenido[comunica_a]"]');
+                if (selectSoporte && !selectSoporte.value) {
+                    selectSoporte.value = 'MINSA';
+                }
+            }
+        } else {
+            if(bloqueDoc) {
+                bloqueDoc.classList.add('hidden');
+                // Limpiar radios internos para que se guarden como NULL
+                bloqueDoc.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+            }
+            if(bloqueCapacitacion) {
+                bloqueCapacitacion.classList.add('hidden');
+                // Limpiamos radios y selects internos
+                bloqueCapacitacion.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+                bloqueCapacitacion.querySelectorAll('select').forEach(s => s.value = '');
+                // Opcional: Ocultar también el sub-bloque de institución por si acaso
+                const subBloqueInst = document.getElementById('section_inst_capacitacion');
+                if(subBloqueInst) subBloqueInst.classList.add('hidden'); 
+            }
+            if(bloqueSoporte) {
+                bloqueSoporte.classList.add('hidden');
+                // Limpiar selects/radios internos de soporte
+                bloqueSoporte.querySelectorAll('input, select').forEach(el => {
+                    if(el.type === 'radio' || el.type === 'checkbox') el.checked = false;
+                    else el.value = '';
+                });
+            }
+        }
+        // Recalcular números tras mostrar/ocultar
+        actualizarCorrelativo();
+    }
+
     function toggleDniFields(isInitialLoad = false) {
         // Obtenemos el valor seleccionado (puede ser "DNI ELECTRONICO" o "DNI AZUL")
         const tipoDni = document.querySelector('input[name="contenido[tipo_dni_fisico]"]:checked')?.value;
@@ -579,9 +725,6 @@
             blockDnie.classList.add('hidden');
         }
     }
-
-    // Ejecutar al cargar: pasamos 'true' para que NO borre los datos que vienen de la BD
-    document.addEventListener('DOMContentLoaded', () => toggleDniFields(true));
 
     function toggleInstCapacitacion(value) {
         const section = document.getElementById('section_inst_capacitacion');
@@ -636,6 +779,25 @@
             if(savedBlock) savedBlock.style.display = 'block';
         }
     }
+
+    // FUNCIÓN MAESTRA PARA RENUMERAR SECCIONES
+    function actualizarCorrelativo() {
+        // 1. Buscamos todas las secciones que marcamos en el HTML
+        const secciones = document.querySelectorAll('.seccion-numerada');
+        let contador = 1;
+
+        secciones.forEach(seccion => {
+            // 2. Si la sección NO está oculta, le asignamos el número actual
+            if (!seccion.classList.contains('hidden')) {
+                const badge = seccion.querySelector('.badge-numero');
+                if (badge) {
+                    badge.textContent = contador; // Ponemos el número (1, 2, 3...)
+                    contador++; // Aumentamos para la siguiente
+                }
+            }
+        });
+    }
+    
     document.getElementById('form-fua-electronico').onsubmit = function() {
         const btn = document.getElementById('btn-submit-action');
         const icon = document.getElementById('icon-save-loader');

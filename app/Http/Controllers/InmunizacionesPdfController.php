@@ -89,18 +89,20 @@ class InmunizacionesPdfController extends Controller
         $size = 8;
         $color = array(0.58, 0.64, 0.72); 
 
-        // 4. Escribir Paginación (Izquierda) -> "Página 1 / 2"
-        // {PAGE_NUM} y {PAGE_COUNT} son variables mágicas que DomPDF reemplaza
-        $canvas->page_text(42, $h - 40, "Página {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
+        // A. TEXTO DEL SISTEMA (IZQUIERDA)
+        // Coordenada X = 42 (Margen izquierdo fijo)
+        $textLeft = "SISTEMA DE ACTAS"; 
+        $canvas->page_text(42, $h - 40, $textLeft, $font, $size, $color);
 
-        // 5. Escribir Fecha del Sistema (Derecha)
-        $fechaBd = \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y');
-        //$textRight = "Generado por Sistema de Monitoreo | Fecha: " . date('d/m/Y H:i:s');
-        $textRight = "Generado por Sistema de Monitoreo | Fecha: " . $fechaBd;
+        // B. PAGINACIÓN (DERECHA)
+        // Calculamos el ancho aproximado de "PAG. 00 / 00" para alinearlo bien a la derecha
+        $textPag = "PAG. {PAGE_NUM} / {PAGE_COUNT}";
+        $widthPag = $fontMetrics->getTextWidth("PAG. 00 / 00", $font, $size); 
+        
+        // Coordenada X = AnchoTotal - Margen(42) - AnchoTexto
+        $canvas->page_text($w - 42 - $widthPag, $h - 40, $textPag, $font, $size, $color);
 
-        // Calculamos el ancho del texto para alinearlo a la derecha perfectamente
-        $textWidth = $fontMetrics->getTextWidth($textRight, $font, $size);
-        $canvas->page_text($w - 42 - $textWidth, $h - 40, $textRight, $font, $size, $color);
+        // -----------------------------------------------------------
         
         // 6. Dibujar línea divisoria superior
         $canvas->page_script('
