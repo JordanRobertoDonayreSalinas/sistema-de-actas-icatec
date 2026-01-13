@@ -30,8 +30,7 @@ class CitaController extends Controller
      */
     public function create(Request $request, $idActa)
     {
-        // ... (Tu lógica anterior de las fotos sigue igual) ...
-        // 1. Procesar Fotos
+        // 1. Procesar Fotos (Tu lógica original)
         $rutasFotos = [];
         if ($request->has('rutas_servidor') && !empty($request->rutas_servidor)) {
             $rutasFotos = json_decode($request->rutas_servidor, true) ?? [];
@@ -44,57 +43,70 @@ class CitaController extends Controller
         }
         $rutasFotos = array_slice($rutasFotos, 0, 2);
 
-        // 2. Extraer Inputs
+        // 2. Extraer Inputs (Usaremos $input para todo)
         $input = $request->input('contenido');
 
         // =========================================================================
-        // PASO 0: LOGICA DE GUARDADO AUTOMÁTICO DE PROFESIONAL (NUEVO)
+        // PASO UNIFICADO: LOGICA DE PROFESIONAL (CREAR O ACTUALIZAR)
         // =========================================================================
         $dni = $input['personal_dni'] ?? null;
-        $nombreCompleto = $input['personal_nombre'] ?? null;
-        $tipoDoc = $input['personal_tipo_doc'] ?? 'DNI';
 
-        if ($dni && $nombreCompleto) {
-            // Buscamos si ya existe un profesional con ese documento
-            $profesional = Profesional::where('doc', $dni)->first();
+        if ($dni) {
+            // 1. Buscar o Instanciar
+            $profesional = \App\Models\Profesional::firstOrNew(['doc' => $dni]);
 
-            if (!$profesional) {
-                // Si NO existe, intentamos desglosar el nombre completo
-                // Asumimos formato simple: "ApellidoPaterno ApellidoMaterno Nombres"
-                // Esta es una aproximación básica, el usuario podría editarlo después si es necesario.
-                $partes = explode(' ', $nombreCompleto);
-                $paterno = array_shift($partes) ?? ''; // Primer elemento
-                $materno = array_shift($partes) ?? ''; // Segundo elemento
-                $nombres = implode(' ', $partes);      // El resto
+            // 2. Actualizar datos de contacto y tipo de documento siempre
+            $profesional->tipo_doc = $input['personal_tipo_doc'] ?? 'DNI';
 
-                // Si solo pusieron un nombre y un apellido, ajustamos para que no quede vacío
-                if (empty($nombres)) {
-                    $nombres = $materno;
-                    $materno = '';
-                }
-                if (empty($nombres)) { // Caso extremo solo 1 palabra
-                    $nombres = $paterno;
-                    $paterno = '';
-                }
-
-                Profesional::create([
-                    'tipo_doc'         => $tipoDoc,
-                    'doc'              => $dni,
-                    'nombres'          => strtoupper($nombres),
-                    'apellido_paterno' => strtoupper($paterno),
-                    'apellido_materno' => strtoupper($materno),
-                    // Puedes agregar campos por defecto si tu tabla los requiere
-                    'especialidad'     => null,
-                    'condicion'        => null,
-                ]);
+            // Solo actualizamos si el input tiene valor, para no borrar datos existentes con null
+            if (!empty($input['personal_correo'])) {
+                $profesional->email = $input['personal_correo'];
             }
+
+            if (!empty($input['personal_celular'])) {
+                $profesional->telefono = $input['personal_celular'];
+            }
+
+            // 3. Actualizar Nombres (Separación Inteligente)
+            if (!empty($input['personal_nombre'])) {
+                $nombreCompleto = mb_strtoupper(trim($input['personal_nombre']), 'UTF-8');
+
+                // Solo procesamos si el nombre cambió o es un registro nuevo
+                $nombreActual = trim(($profesional->apellido_paterno ?? '') . ' ' . ($profesional->apellido_materno ?? '') . ' ' . ($profesional->nombres ?? ''));
+
+                if ($nombreCompleto !== $nombreActual) {
+                    $partes = explode(' ', $nombreCompleto);
+                    $num = count($partes);
+
+                    if ($num >= 4) {
+                        // Caso: PEREZ LOPEZ JUAN CARLOS (4 o más)
+                        $profesional->apellido_paterno = array_shift($partes); // PEREZ
+                        $profesional->apellido_materno = array_shift($partes); // LOPEZ
+                        $profesional->nombres          = implode(' ', $partes); // JUAN CARLOS
+                    } elseif ($num == 3) {
+                        // Caso: PEREZ LOPEZ JUAN
+                        $profesional->apellido_paterno = $partes[0];
+                        $profesional->apellido_materno = $partes[1];
+                        $profesional->nombres          = $partes[2];
+                    } elseif ($num == 2) {
+                        // Caso: PEREZ JUAN (Asumimos Paterno y Nombre)
+                        $profesional->apellido_paterno = $partes[0];
+                        $profesional->apellido_materno = '';
+                        $profesional->nombres          = $partes[1];
+                    } else {
+                        // Caso raro: JUAN
+                        $profesional->nombres = $nombreCompleto;
+                    }
+                }
+            }
+
+            // 4. GUARDAR CAMBIOS EN LA TABLA mon_profesionales
+            $profesional->save();
         }
 
-
         // =========================================================================
-        // PASO 1: Guardamos todos los datos en una variable ($datosCita)
+        // PASO 1: Preparamos los datos para guardar en el módulo
         // =========================================================================
-
         $datosCita = [
             // Personal
             'personal_nombre' => $input['personal_nombre'] ?? null,
@@ -102,15 +114,20 @@ class CitaController extends Controller
             'personal_turno'  => $input['personal_turno'] ?? null,
             'personal_roles'  => $input['personal_rol'] ?? [],
 
-            'firma_dj' => $input['firma_dj'] ?? null,
+            'personal_correo'   => $input['personal_correo'] ?? null,
+            'personal_celular'  => $input['personal_celular'] ?? null,
+            'personal_cargo'    => $input['personal_cargo'] ?? null,
+            'personal_tipo_doc' => $input['personal_tipo_doc'],
+
+            'utiliza_sihce'          => $input['utiliza_sihce'] ?? 'NO',
+            'firma_dj'               => $input['firma_dj'] ?? null,
             'firma_confidencialidad' => $input['firma_confidencialidad'] ?? null,
-            'tipo_dni_fisico' => $input['tipo_dni_fisico'] ?? null,
-            'dnie_version' => $input['dnie_version'] ?? null,
-            'firma_sihce' => $input['firma_sihce'] ?? null,
+            'tipo_dni_fisico'        => $input['tipo_dni_fisico'] ?? null,
+            'dnie_version'           => $input['dnie_version'] ?? null,
+            'firma_sihce'            => $input['firma_sihce'] ?? null,
 
             'capacitacion_recibida'      => $input['capacitacion'] ?? null,
             'capacitacion_entes'         => $input['capacitacion_ente'] ?? null,
-            'capacitacion_otros_detalle' => $input['capacitacion_otros_detalle'] ?? null,
 
             // Logística
             'insumos_disponibles'   => $input['insumos'] ?? [],
@@ -131,42 +148,40 @@ class CitaController extends Controller
 
             // Evidencias
             'fotos_evidencia' => $rutasFotos,
-            'firma_grafica'   => $request->input('firma_grafica_data'),
         ];
 
-
         // =========================================================================
-        // PASO 2: Usamos esa variable para guardar en tu tabla principal
+        // PASO 2: Guardar en ModuloCita (Tabla principal)
         // =========================================================================
-        ModuloCita::updateOrCreate(
+        \App\Models\ModuloCita::updateOrCreate(
             ['monitoreo_id' => $idActa],
-            $datosCita // <--- Aquí pasamos la variable creada arriba
+            $datosCita
         );
 
-
         // =========================================================================
-        // PASO 3: Usamos la misma variable, la convertimos a JSON y la guardamos
+        // PASO 3: Guardar en MonitoreoModulos (JSON)
         // =========================================================================
-        MonitoreoModulos::updateOrCreate(
+        \App\Models\MonitoreoModulos::updateOrCreate(
             [
                 'cabecera_monitoreo_id' => $idActa,
                 'modulo_nombre'         => 'citas'
             ],
             [
-                // Aquí está el cambio que pediste: Guardar el JSON completo en vez de "FINALIZADO"
                 'contenido' => $datosCita,
-
                 'pdf_firmado_path' => null
             ]
         );
 
-        // ... (El resto de tu código de equipos e insert normalizado sigue igual) ...
-        $datosEquipos = $request->input('contenido.equipos', []);
-        EquipoComputo::where('cabecera_monitoreo_id', $request->id)->where('modulo', 'citas')->delete();
+        // =========================================================================
+        // PASO 4: Guardar Equipos
+        // =========================================================================
+        $datosEquipos = $input['equipos'] ?? [];
+        // Ojo: verifica si $request->id es correcto, usualmente sería $idActa si esa es la FK
+        \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $idActa)->where('modulo', 'citas')->delete();
 
         foreach ($datosEquipos as $item) {
-            EquipoComputo::create([
-                'cabecera_monitoreo_id' => $request->id,
+            \App\Models\EquipoComputo::create([
+                'cabecera_monitoreo_id' => $idActa,
                 'modulo'      => 'citas',
                 'descripcion' => $item['nombre'] ?? 'Desconocido',
                 'cantidad'    => 1,
@@ -178,16 +193,14 @@ class CitaController extends Controller
         }
 
         // =========================================================================
-        // PASO 4: NUEVO - Guardar en mon_respuesta_entrevistado
+        // PASO 5: Guardar en RespuestaEntrevistado
         // =========================================================================
-        RespuestaEntrevistado::updateOrCreate(
+        \App\Models\RespuestaEntrevistado::updateOrCreate(
             [
-                // Buscamos por monitoreo y modulo para no duplicar filas si editan
                 'cabecera_monitoreo_id' => $idActa,
                 'modulo'                => 'citas'
             ],
             [
-                // Mapeo exacto que solicitaste:
                 'doc_profesional'       => $datosCita['personal_dni'],
                 'recibio_capacitacion'  => $datosCita['capacitacion_recibida'],
                 'inst_que_lo_capacito'  => $datosCita['capacitacion_entes'],
@@ -197,7 +210,7 @@ class CitaController extends Controller
         );
 
         return redirect()->route('usuario.monitoreo.modulos', $idActa)
-            ->with('success', 'Módulo de Citas finalizado y guardado correctamente.');
+            ->with('success', 'Módulo de Citas finalizado y profesional actualizado correctamente.');
     }
 
     /**
@@ -241,21 +254,18 @@ class CitaController extends Controller
     }
 
 
-    // IMPRIMIR PDF
     public function generar($idActa)
     {
-        // 1. Aumentar el tiempo límite por si acaso (opcional, pero recomendado)
+        // 1. Configuración inicial
         set_time_limit(120);
 
         $acta = CabeceraMonitoreo::findOrFail($idActa);
         $registro = ModuloCita::where('monitoreo_id', $idActa)->firstOrFail();
 
-        // 2. CONVERTIR FOTOS A BASE64 (Para evitar el bloqueo de imágenes)
+        // 2. Lógica de Imágenes a Base64
         $fotosBase64 = [];
         if (!empty($registro->fotos_evidencia)) {
             foreach ($registro->fotos_evidencia as $url) {
-                // Convertimos la URL pública a una ruta de archivo en tu disco duro
-                // Ejemplo: http://127.0.0.1:8000/storage/fotos/img.png -> C:\...\public\storage\fotos\img.png
                 $rutaRelativa = str_replace(url('/'), '', $url);
                 $path = public_path($rutaRelativa);
 
@@ -267,11 +277,9 @@ class CitaController extends Controller
                 }
             }
         }
-
-        // Sobrescribimos la variable para la vista (ahora son códigos largos, no links)
         $registro->fotos_evidencia = $fotosBase64;
 
-        // 3. HACER LO MISMO CON LA FIRMA (Si existe)
+        // 3. Lógica de Firma a Base64
         if ($registro->firma_grafica && str_contains($registro->firma_grafica, 'http')) {
             $rutaRelativa = str_replace(url('/'), '', $registro->firma_grafica);
             $path = public_path($rutaRelativa);
@@ -282,12 +290,47 @@ class CitaController extends Controller
             }
         }
 
-        // 4. Generar PDF (Ya no necesitas isRemoteEnabled porque las imágenes van incrustadas)
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.citas', compact('acta', 'registro'));
+        $profesional = \App\Models\Profesional::where('doc', $registro->personal_dni)->first();
+
+        // ---------------------------------------------------------
+        // 4. GENERACIÓN DEL PDF (CORREGIDO)
+        // ---------------------------------------------------------
+
+        // A. Cargamos la vista
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.citas', compact('acta', 'registro', 'profesional'));
+
+        // B. Configuramos papel
+        $pdf->setPaper('A4', 'portrait');
+
+        // C. Renderizamos en memoria
+        $pdf->render();
+
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->getCanvas();
+
+        // Configuración de fuente
+        $fontMetrics = $dom_pdf->getFontMetrics();
+        $font = $fontMetrics->get_font("Helvetica", "bold");
+
+        // --- CAMBIOS DE AJUSTE FINO ---
+        $size = 8; // Igualamos a 8pt del CSS para que se vean idénticos
+        $color = [0.392, 0.455, 0.545];
+
+        $w = $canvas->get_width();
+        $h = $canvas->get_height();
+
+        // Coordenadas:
+        $x = $w - 75;
+
+        // AQUÍ ESTÁ EL TRUCO VERTICAL:
+        // Antes tenías ($h - 43). Al poner ($h - 49), "restamos más",
+        // lo que hace que el texto SUBA unos milímetros en la hoja.
+        $y = $h - 49;
+
+        $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
         return $pdf->stream('reporte_citas.pdf');
     }
-
 
     public function buscarProfesional(Request $request)
     {

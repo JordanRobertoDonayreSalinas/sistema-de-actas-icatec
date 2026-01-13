@@ -1,427 +1,345 @@
-<!DOCTYPE html>
-<html lang="es">
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>REPORTE DE MONITOREO - CITAS - ACTA {{ $acta->id }}</title>
+        <style>
+            /* --- CONFIGURACIÓN DE PÁGINA --- */
+            @page { 
+                /* Márgenes: Arriba, Derecha, Abajo, Izquierda */
+                margin: 1.2cm 1.5cm 2cm 1.5cm; 
+            }
 
-<head>
-  <meta charset="UTF-8">
-  <title>Reporte de Monitoreo - Citas</title>
-  <style>
-    body {
-      font-family: 'Helvetica', Arial, sans-serif;
-      font-size: 11px;
-      color: #333;
-      line-height: 1.4;
-      margin: 20px 30px;
-    }
+            /* --- ESTILOS GLOBALES --- */
+            body { 
+                font-family: 'Helvetica', sans-serif; 
+                font-size: 10px; 
+                color: #1e293b; 
+                line-height: 1.4; 
+                text-transform: uppercase; 
+            }
+            
+            /* --- CABECERA --- */
+            .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
+            .header h1 { margin: 0; font-size: 15px; color: #4f46e5; }
+            .header-sub { font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px; }
 
-    /* CABECERA PRINCIPAL */
-    .header {
-      text-align: center;
-      border-bottom: 2px solid #2563eb;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
+            /* --- SECCIONES --- */
+            .section-title { background-color: #f1f5f9; padding: 6px 10px; font-weight: bold; border-left: 4px solid #4f46e5; margin-top: 15px; margin-bottom: 5px; font-size: 10px; }
+            
+            /* --- TABLAS --- */
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px; }
+            th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; word-wrap: break-word; }
+            th { background-color: #f8fafc; color: #475569; font-size: 8.5px; }
+            
+            .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%; color: #475569; }
+            .text-center { text-align: center; }
+            .text-left { text-align: left; }
+            
+            /* --- ESTADOS --- */
+            .status-ok { color: #16a34a; font-weight: bold; }
+            .status-warn { color: #d97706; font-weight: bold; }
+            .status-err { color: #dc2626; font-weight: bold; }
 
-    .header h1 {
-      margin: 0;
-      font-size: 16px;
-      text-transform: uppercase;
-      color: #1e293b;
-    }
+            /* --- EVIDENCIA FOTOGRÁFICA --- */
+            .no-evidence-box { border: 2px dashed #cbd5e1; border-radius: 15px; padding: 20px; text-align: center; color: #64748b; font-style: italic; background-color: #f8fafc; margin-top: 10px; }
+            
+            /* --- FIRMA --- */
+            .firma-section { margin-top: 30px; page-break-inside: avoid; }
+            .firma-container { width: 50%; margin: 0 auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 14px; padding: 15px; }
+            .firma-linea { border-bottom: 1px solid #000; height: 80px; margin-bottom: 10px; width: 80%; margin-left: 10%; }
+            .firma-nombre { font-weight: bold; font-size: 11px; }
+            .firma-cargo { font-size: 9px; color: #64748b; margin-top: 4px; }
 
-    .header p {
-      margin: 3px 0;
-      font-size: 10px;
-      color: #64748b;
-    }
+            /* --- PIE DE PÁGINA (ESTRUCTURA VISUAL) --- */
+           .footer-frame {
+    position: fixed;
+    bottom: -1.2cm; 
+    left: 0; 
+    right: 0;
+    height: 1cm;
+    border-top: 1px solid #94a3b8; 
+    
+    /* --- AJUSTES DE ALINEACIÓN --- */
+    padding-top: 5px;      /* Reducimos un poco el espacio superior */
+    font-size: 8pt;        /* BAJAMOS A 8 PUNTOS para que sea más fino */
+    font-family: 'Helvetica', sans-serif;
+    color: #64748b;
+    font-weight: bold;
+}
+            /* El texto "SISTEMA DE ACTAS" se alinea a la izquierda por defecto */
+            
+        </style>
+    </head>
+    <body>
+        <div class="footer-frame">
+            SISTEMA DE ACTAS
+        </div>
 
-    /* ESTILOS DE SECCIÓN */
-    .section {
-      margin-bottom: 20px;
-      width: 100%;
-    }
+        <div class="header">
+            <h1>MÓDULO 02: CITAS</h1>
+            <div class="header-sub">
+                ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+                ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? '-' }} - {{ $acta->establecimiento->nombre ?? 'NO ESPECIFICADO' }} |
+                FECHA: {{ \Carbon\Carbon::parse($registro->updated_at)->format('d/m/Y') }}
+            </div>
+        </div>
 
-    .section-title {
-      background-color: #f1f5f9;
-      color: #0f172a;
-      padding: 6px 10px;
-      font-weight: bold;
-      font-size: 12px;
-      border-left: 5px solid #2563eb;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
+   <div class="section-title">1. DATOS DEL PROFESIONAL</div>
+        <table>
+            <tr>
+                <td class="bg-label">APELLIDOS Y NOMBRES</td>
+                <td class="uppercase">{{ $registro->personal_nombre ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">TIPO DOC</td>
+                {{-- Lee directo del registro guardado, no del modelo externo --}}
+                <td>{{ $registro->personal_tipo_doc ?? 'DNI' }}</td> 
+            </tr>
+            <tr>
+                <td class="bg-label">DOCUMENTO</td>
+                <td>{{ $registro->personal_dni ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">CARGO</td>
+                <td class="uppercase">{{ $registro->personal_cargo ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">CORREO ELECTRÓNICO</td>
+                {{-- CAMBIO CLAVE AQUÍ: Usar $registro->personal_correo --}}
+                <td>{{ $registro->personal_correo ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">CELULAR</td>
+                {{-- CAMBIO CLAVE AQUÍ: Usar $registro->personal_celular --}}
+                <td>{{ $registro->personal_celular ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">ROLES ASIGNADOS</td>
+                {{-- Asegura decodificar si está guardado como JSON --}}
+                <td>
+                    @if(is_array($registro->personal_roles))
+                        {{ implode(', ', $registro->personal_roles) }}
+                    @elseif(is_string($registro->personal_roles))
+                         {{-- Intenta limpiar si viene como string ["ROL"] --}}
+                        {{ str_replace(['[', ']', '"'], '', $registro->personal_roles) }}
+                    @else
+                        NINGUNO
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <td class="bg-label">TURNO</td>
+                <td>{{ $registro->personal_turno ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿UTILIZA SIHCE?</td> 
+                <td>{{ $registro->utiliza_sihce ?? 'NO' }}</td>
+            </tr>
+            {{-- Solo mostrar si SIHCE es SI, o mostrar siempre --}}
+            <tr>
+                <td class="bg-label">¿FIRMÓ DECLARACIÓN JURADA?</td>
+                <td>{{ $registro->firma_dj ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿FIRMÓ COMPROMISO DE CONFIDENCIALIDAD?</td>
+                <td>{{ $registro->firma_confidencialidad ?? '-' }}</td>
+            </tr>
+        </table>
 
-    /* TABLAS GENERALES */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 5px;
-    }
+        <div class="section-title">2. DETALLE DE DNI Y FIRMA DIGITAL</div>
+        <table>
+            <tr>
+                <td class="bg-label">TIPO DE DNI</td>
+                <td>{{ $registro->tipo_dni_fisico ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">VERSIÓN DNIe:</td>
+                <td>{{ $registro->dnie_version ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿FIRMA DIGITALMENTE EN SIHCE?</td>
+                <td>{{ $registro->firma_sihce ?? '-' }}</td>
+            </tr>
+        </table>
 
-    th,
-    td {
-      border: 1px solid #cbd5e1;
-      padding: 6px 8px;
-      text-align: left;
-      vertical-align: middle;
-    }
+        <div class="section-title">3. DETALLES DE CAPACITACIÓN</div>
+        <table>
+            <tr>
+                <td class="bg-label">¿RECIBIÓ CAPACITACIÓN?</td>
+                <td>{{ $registro->capacitacion_recibida ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿DE PARTE DE QUIÉN?</td>
+                <td>{{ $registro->capacitacion_entes ?? '-' }}</td>
+            </tr>
+        </table>
 
-    th {
-      background-color: #e2e8f0;
-      font-weight: bold;
-      font-size: 10px;
-      text-transform: uppercase;
-      color: #334155;
-    }
+        <div class="section-title">4. MATERIALES</div>
+        <table>
+            <tr>
+                <td class="bg-label">AL INICIAR SUS LABORES CUENTA CON:</td>
+                <td>{{ !empty($registro->insumos_disponibles) ? implode(', ', $registro->insumos_disponibles) : 'NINGUNO' }}</td>
+            </tr>
+        </table>
 
-    .text-center {
-      text-align: center;
-    }
+        <div class="section-title">5. EQUIPAMIENTO</div>
+        <table>
+            <thead>
+                <tr>
+                    <th width="25%">DESCRIPCIÓN</th>
+                    <th width="10%">CANTIDAD</th>
+                    <th width="15%">ESTADO</th>
+                    <th width="15%">PROPIEDAD</th>
+                    <th width="15%">N.SERIE/C.PAT</th>
+                    <th width="20%">OBSERVACIÓN</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($registro->equipos_listado ?? [] as $eq)
+                <tr>
+                    <td>{{ $eq['nombre'] ?? '-' }}</td>
+                    <td>{{ 1 }}</td>
+                    <td class="text-left">
+                        @php
+                            $est = strtoupper($eq['estado'] ?? '');
+                            $colores = [
+                                'OPERATIVO' => 'status-ok',
+                                'BUENO'     => 'status-ok',
+                                'REGULAR'   => 'status-warn'
+                            ];
+                            $clase = $colores[$est] ?? 'status-err';
+                        @endphp
+                        <span class="{{ $clase }}">{{ $est ?: '-' }}</span>
+                    </td>
+                    <td>{{ $eq['propiedad'] ?? '-' }}</td>
+                    <td>{{ $eq['serie'] ?? 'S/N' }}</td>
+                    <td>{{ $eq['observaciones'] ?? '-' }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="6" class="text-center">NO SE REGISTRARON EQUIPOS.</td></tr> @endforelse
+            </tbody>
+        </table>
 
-    .text-right {
-      text-align: right;
-    }
+        <table>
+            <tr>
+                <td class="bg-label">OBSERVACIONES ADICIONALES:</td> <td>{{ $registro->equipos_observaciones ?? '-' }}</td>
+            </tr>
+        </table>
 
-    /* DATA GRID (Para datos clave valor) */
-    .data-grid {
-      width: 100%;
-      margin-bottom: 10px;
-    }
+        <div class="section-title">6. GESTIÓN DE CITAS Y CALIDAD DE ATENCIÓN</div>
+        <table>
+            <tr>
+                <td class="bg-label">N° VENTANILLAS</td>
+                <td>{{ $registro->nro_ventanillas ?? '0' }}</td>
+            </tr>
+        </table>
+        
+        <table style="margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th>SERVICIO</th>
+                    <th width="20%" class="text-center">CITAS OTORGADAS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($registro->produccion_listado ?? [] as $prod)
+                <tr>
+                    <td>{{ $prod['nombre'] ?? '-' }}</td>
+                    <td class="text-center"><strong>{{ $prod['cantidad'] ?? 0 }}</strong></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-    .data-grid td {
-      border: none;
-      border-bottom: 1px solid #f1f5f9;
-      padding: 5px 0;
-    }
+        <div style="margin-top: 5px; font-weight: bold;">CON EL SISTEMA SIHCE:</div>
+        <table>
+            <tr>
+                <td class="bg-label">¿DISMINUYE EL TIEMPO DE ESPERA DE ATENCIÓN?</td>
+                <td>{{ $registro->calidad_tiempo_espera ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿EL PACIENTE SE ENCUENTRA SATISFECHO?</td>
+                <td>{{ $registro->calidad_paciente_satisfecho ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿SE UTILIZAN LOS REPORTES DEL SISTEMA?</td>
+                <td>{{ $registro->calidad_usa_reportes ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿CON QUIÉN LOS SOCIALIZA?</td>
+                <td>{{ $registro->calidad_socializa_con ?? '-' }}</td>
+            </tr>
+        </table>
 
-    .label {
-      font-weight: bold;
-      color: #475569;
-      width: 140px;
-      display: inline-block;
-    }
+        <div class="section-title">7. SOPORTE</div>
+        <table>
+            <tr>
+                <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
+                <td>{{ $registro->dificultad_comunica_a ?? '0' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">MEDIO QUE UTILIZA</td>
+                <td>{{ $registro->dificultad_medio_uso ?? '0' }}</td>
+            </tr>
+        </table>
 
-    .value {
-      color: #000;
-      font-weight: normal;
-    }
+        <div class="section-title">8. EVIDENCIA FOTOGRÁFICA</div>
 
-    /* ESTADO BADGES (Texto coloreado) */
-    .status-ok {
-      color: #166534;
-      font-weight: bold;
-    }
+        @php
+            $fotos = $registro->fotos_evidencia ?? [];
+            $cantidad = count($fotos);
+        @endphp
 
-    /* Verde */
-    .status-warn {
-      color: #ca8a04;
-      font-weight: bold;
-    }
+        @if($cantidad > 0)
+            
+            @if($cantidad == 1)
+                <div style="width: 100%; text-align: center; margin-top: 15px;">
+                    <div style="display: inline-block; border: 1px solid #e2e8f0; padding: 5px; background: #fff;">
+                        <img src="{{ $fotos[0] }}" style="max-width: 90%; height: 220px; object-fit: contain;">
+                    </div>
+                </div>
 
-    /* Amarillo oscuro */
-    .status-err {
-      color: #991b1b;
-      font-weight: bold;
-    }
-
-    /* Rojo */
-
-    /* ALERTAS / NOTAS */
-    .alert-box {
-      background-color: #fffbeb;
-      border: 1px solid #fcd34d;
-      color: #92400e;
-      padding: 8px;
-      font-size: 10px;
-      border-radius: 4px;
-      margin-top: 5px;
-    }
-
-    /* FOTOS */
-    .photos-container {
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    .photo-frame {
-      display: inline-block;
-      width: 45%;
-      margin: 0 5px;
-      border: 1px solid #e2e8f0;
-      padding: 4px;
-      background: #fff;
-    }
-
-    .photo-img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-    }
-
-    /* FIRMA */
-    .firma-section {
-      margin-top: 40px;
-      text-align: center;
-      page-break-inside: avoid;
-    }
-
-    .firma-img {
-      height: 70px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
-    }
-
-    .linea-firma {
-      border-top: 1px solid #000;
-      width: 250px;
-      margin: 5px auto;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="header">
-    <h1>Acta de Monitoreo - Citas (Ventanilla y Caja)</h1>
-    <p>
-      <strong>Establecimiento:</strong> {{ $acta->establecimiento->nombre ?? 'No especificado' }} &nbsp;|&nbsp;
-      {{-- CAMBIO REALIZADO AQUÍ: Se usa el campo 'fecha' formateado --}}
-      <strong>Fecha de Monitoreo:</strong> {{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }} &nbsp;|&nbsp;
-      <strong>ID:</strong> {{ $acta->id }}
-    </p>
-  </div>
-
-  <div class="section">
-    <div class="section-title">1. Datos del Responsable</div>
-    <table class="data-grid">
-      {{-- FILA 1: Nombre y DNI --}}
-      <tr>
-        <td width="60%">
-          <span class="label">Responsable:</span>
-          <span class="value">{{ $registro->personal_nombre ?? '-' }}</span>
-        </td>
-        <td width="40%">
-          <span class="label">DNI / Documento:</span>
-          <span class="value">{{ $registro->personal_dni ?? '-' }}</span>
-        </td>
-      </tr>
-
-      {{-- FILA 2: Roles y Turno --}}
-      <tr>
-        <td>
-          <span class="label">Roles Asignados:</span>
-          <span
-            class="value">{{ !empty($registro->personal_roles) ? implode(', ', $registro->personal_roles) : 'Ninguno' }}</span>
-        </td>
-        <td>
-          <span class="label">Turno:</span>
-          <span class="value">{{ $registro->personal_turno ?? '-' }}</span>
-        </td>
-      </tr>
-
-      {{-- FILA 3: Capacitación --}}
-      <tr>
-        <td colspan="2">
-          <span class="label">Capacitación:</span>
-          <span class="value">
-            {{ $registro->capacitacion_recibida ?? 'NO' }}
-            @if ($registro->capacitacion_entes)
-              (Entidad:
-              {{ is_array($registro->capacitacion_entes) ? implode(', ', $registro->capacitacion_entes) : $registro->capacitacion_entes }})
+            @else
+                <table style="width: 100%; border: none; margin-top: 10px;">
+                    <tr>
+                        @foreach($fotos as $index => $fotoUrl)
+                            @if($index > 0 && $index % 2 == 0) 
+                                </tr><tr> 
+                            @endif
+                            
+                            <td style="border: none; padding: 5px; text-align: center; width: 50%;">
+                                <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff;">
+                                    <img src="{{ $fotoUrl }}" style="max-width: 100%; height: 160px; object-fit: contain;">
+                                </div>
+                            </td>
+                        @endforeach
+                        
+                        @if($cantidad % 2 != 0)
+                            <td style="border: none;"></td>
+                        @endif
+                    </tr>
+                </table>
             @endif
-          </span>
-        </td>
-      </tr>
 
-      {{-- NUEVA FILA 4: Documentación Administrativa --}}
-      <tr>
-        <td>
-          <span class="label">Declaración Jurada:</span>
-          <span class="value" style="font-weight: bold;">{{ $registro->firma_dj ?? 'NO' }}</span>
-        </td>
-        <td>
-          <span class="label">Confidencialidad:</span>
-          <span class="value" style="font-weight: bold;">{{ $registro->firma_confidencialidad ?? 'NO' }}</span>
-        </td>
-      </tr>
+        @else
+            <div class="no-evidence-box">NO SE ADJUNTÓ EVIDENCIA FOTOGRÁFICA.</div>
+        @endif
 
-      {{-- NUEVA FILA 5: Tipo de DNI y Detalles --}}
-      <tr>
-        <td>
-          <span class="label">Tipo DNI Físico:</span>
-          <span class="value">{{ $registro->tipo_dni_fisico ?? '-' }}</span>
-        </td>
-        <td>
-          @if (($registro->tipo_dni_fisico ?? '') == 'ELECTRONICO')
-            <span class="label">Detalle DNIe:</span>
-            <span class="value">
-              Versión {{ $registro->dnie_version ?? '-' }} | Firma SIHCE: {{ $registro->firma_sihce ?? 'NO' }}
-            </span>
-          @endif
-        </td>
-      </tr>
+        <div class="firma-section">
+            <div class="section-title">9. FIRMAS DE CONFORMIDAD</div>
+            <br>
+            <div class="firma-container">
+                <div class="firma-linea">
+                    @if($registro->firma_grafica)
+                        <img src="{{ $registro->firma_grafica }}" style="height: 70px; margin-top: -40px;">
+                    @endif
+                </div>
+                <div class="firma-nombre">{{ $registro->personal_nombre ?? '___________________' }}</div>
+                <div class="firma-cargo">{{ $profesional->tipo_doc ?? '________' }}: {{ $registro->personal_dni ?? '________' }}</div>
+                <div class="firma-cargo">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
+            </div>
+        </div>
 
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">2. Equipamiento e Insumos</div>
-
-    <div style="margin-bottom: 8px; font-size: 10px;">
-      <strong>Insumos Disponibles:</strong>
-      <span style="color: #444;">
-        {{ !empty($registro->insumos_disponibles) ? implode(', ', $registro->insumos_disponibles) : 'Ninguno registrado' }}
-      </span>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th width="35%">Descripción del Equipo</th>
-          <th width="15%">Serie/Cod.</th>
-          <th width="15%">Propiedad</th>
-          <th width="15%" class="text-center">Estado</th>
-          <th width="20%">Observaciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($registro->equipos_listado ?? [] as $eq)
-          <tr>
-            <td>{{ $eq['nombre'] ?? '-' }}</td>
-            <td style="font-family: monospace; font-size: 10px;">{{ $eq['serie'] ?? '-' }}</td>
-            <td>{{ $eq['propiedad'] ?? '-' }}</td>
-            <td class="text-center">
-              @php
-                $est = $eq['estado'] ?? '-';
-                $clase = match (strtoupper($est)) {
-                    'OPERATIVO', 'BUENO' => 'status-ok',
-                    'REGULAR' => 'status-warn',
-                    default => 'status-err',
-                };
-              @endphp
-              <span class="{{ $clase }}">{{ $est }}</span>
-            </td>
-            <td>{{ $eq['observaciones'] ?? '' }}</td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="5" class="text-center" style="padding: 10px; color: #777;">
-              No se registraron equipos.
-            </td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-
-    @if ($registro->equipos_observaciones)
-      <div class="alert-box" style="background: #f8fafc; border-color: #cbd5e1; color: #334155;">
-        <strong>Observaciones Generales de Logística:</strong> {{ $registro->equipos_observaciones }}
-      </div>
-    @endif
-  </div>
-
-  <div class="section">
-    <div class="section-title">3. Gestión y Calidad</div>
-
-    <div style="margin-bottom: 10px;">
-      <span class="label">Nro. Ventanillas:</span>
-      <span class="value" style="font-size: 12px; font-weight: bold;">{{ $registro->nro_ventanillas }}</span>
-    </div>
-
-    <h4 style="margin: 5px 0; font-size: 10px; color: #555; border-bottom: 1px solid #ccc;">Producción de Citas</h4>
-    <table>
-      <thead>
-        <tr>
-          <th>Servicio / Área</th>
-          <th width="100" class="text-center">Total Citas</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($registro->produccion_listado ?? [] as $prod)
-          <tr>
-            <td>{{ $prod['nombre'] ?? '-' }}</td>
-            <td class="text-center"><strong>{{ $prod['cantidad'] ?? 0 }}</strong></td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="2" class="text-center">Sin información</td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-
-    <h4 style="margin: 15px 0 5px 0; font-size: 10px; color: #555; border-bottom: 1px solid #ccc;">Indicadores de
-      Calidad</h4>
-    <table>
-      <thead>
-        <tr>
-          <th>Pregunta / Indicador</th>
-          <th width="100" class="text-center">Respuesta</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>¿Disminuye el tiempo de espera?</td>
-          <td class="text-center">{{ $registro->calidad_tiempo_espera ?? '-' }}</td>
-        </tr>
-        <tr>
-          <td>¿El paciente se muestra satisfecho?</td>
-          <td class="text-center">{{ $registro->calidad_paciente_satisfecho ?? '-' }}</td>
-        </tr>
-        <tr>
-          <td>
-            ¿Utiliza reportes del sistema?
-            @if ($registro->calidad_socializa_con)
-              <div style="font-size: 9px; color: #666; margin-top: 2px;">(Socializa con:
-                {{ $registro->calidad_socializa_con }})</div>
-            @endif
-          </td>
-          <td class="text-center">{{ $registro->calidad_usa_reportes ?? '-' }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    @if ($registro->dificultad_comunica_a)
-      <div class="alert-box">
-        <strong>REPORTE DE DIFICULTADES:</strong><br>
-        Se comunica con <u>{{ $registro->dificultad_comunica_a }}</u> a través del medio:
-        <u>{{ $registro->dificultad_medio_uso ?? 'No especificado' }}</u>.
-      </div>
-    @endif
-  </div>
-
-  <div class="section">
-    <div class="section-title">4. Evidencias Fotográficas</div>
-
-    @if (!empty($registro->fotos_evidencia))
-      <div class="photos-container">
-        @foreach ($registro->fotos_evidencia as $fotoUrl)
-          <div class="photo-frame">
-            <img src="{{ $fotoUrl }}" class="photo-img">
-          </div>
-        @endforeach
-      </div>
-    @else
-      <div style="text-align: center; padding: 20px; border: 1px dashed #ccc; color: #999;">
-        No se adjuntaron fotografías para este reporte.
-      </div>
-    @endif
-  </div>
-
-  <div class="firma-section">
-    @if ($registro->firma_grafica)
-      <img src="{{ $registro->firma_grafica }}" class="firma-img">
-    @else
-      <div style="height: 60px;"></div>
-    @endif
-
-    <div class="linea-firma"></div>
-
-    <p style="margin: 0; font-weight: bold;">{{ $registro->personal_nombre ?? 'NOMBRE DEL RESPONSABLE' }}</p>
-    <p style="margin: 2px 0; font-size: 10px; color: #666;">Firma de Conformidad</p>
-  </div>
-
-</body>
-
-</html>
+    </body>
+    </html>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
 use App\Models\EquipoComputo; // Asegúrate de importar este modelo
+use App\Models\ModuloParto;
 use App\Models\ModuloPrenatal;
 use App\Models\MonitoreoModulos;
 use App\Models\Profesional; // Si usas búsqueda, impórtalo
@@ -29,102 +30,102 @@ class PrenatalController extends Controller
     public function create(Request $request, $idActa)
     {
         try {
-            // 1. Procesar Fotos (Lógica mantenida y optimizada)
+            // 1. Procesar Fotos (Tu lógica original)
             $rutasFotos = [];
-
-            // Recuperar fotos antiguas si existen (del input hidden)
             if ($request->has('rutas_servidor') && !empty($request->rutas_servidor)) {
                 $rutasFotos = json_decode($request->rutas_servidor, true) ?? [];
             }
-
-            // Guardar nuevas fotos
             if ($request->hasFile('fotos')) {
                 foreach ($request->file('fotos') as $foto) {
                     $path = $foto->store('evidencias_prenatal', 'public');
                     $rutasFotos[] = asset('storage/' . $path);
                 }
             }
-
-            // Limitar a 2 fotos máximo (opcional, como en Citas)
             $rutasFotos = array_slice($rutasFotos, 0, 2);
 
             // 2. Extraer Inputs
             $input = $request->input('contenido');
 
             // =========================================================================
-            // PASO 0: LOGICA DE GUARDADO AUTOMÁTICO DE PROFESIONAL (NUEVO)
+            // PASO 0: LOGICA UNIFICADA DE PROFESIONAL (BUSCAR, CREAR O ACTUALIZAR)
             // =========================================================================
             $dni = $input['personal_dni'] ?? null;
-            $nombreCompleto = $input['personal_nombre'] ?? null;
-            $tipoDoc = $input['personal_tipo_doc'] ?? 'DNI';
 
-            if ($dni && $nombreCompleto) {
-                // Buscamos si ya existe un profesional con ese documento
-                $profesional = Profesional::where('doc', $dni)->first();
+            if ($dni) {
+                // A. Busca o crea una instancia vacía
+                $profesional = \App\Models\Profesional::firstOrNew(['doc' => $dni]);
 
-                if (!$profesional) {
-                    // Si NO existe, intentamos desglosar el nombre completo
-                    // Asumimos formato simple: "ApellidoPaterno ApellidoMaterno Nombres"
-                    // Esta es una aproximación básica, el usuario podría editarlo después si es necesario.
-                    $partes = explode(' ', $nombreCompleto);
-                    $paterno = array_shift($partes) ?? ''; // Primer elemento
-                    $materno = array_shift($partes) ?? ''; // Segundo elemento
-                    $nombres = implode(' ', $partes);      // El resto
+                // B. Asignar datos obligatorios
+                $profesional->tipo_doc = $input['personal_tipo_doc'] ?? 'DNI';
 
-                    // Si solo pusieron un nombre y un apellido, ajustamos para que no quede vacío
-                    if (empty($nombres)) {
-                        $nombres = $materno;
-                        $materno = '';
-                    }
-                    if (empty($nombres)) { // Caso extremo solo 1 palabra
-                        $nombres = $paterno;
-                        $paterno = '';
-                    }
-
-                    Profesional::create([
-                        'tipo_doc'         => $tipoDoc,
-                        'doc'              => $dni,
-                        'nombres'          => strtoupper($nombres),
-                        'apellido_paterno' => strtoupper($paterno),
-                        'apellido_materno' => strtoupper($materno),
-                        // Puedes agregar campos por defecto si tu tabla los requiere
-                        'especialidad'     => null,
-                        'condicion'        => null,
-                    ]);
+                // C. Actualizar contacto si vienen datos
+                if (!empty($input['personal_correo'])) {
+                    $profesional->email = $input['personal_correo'];
                 }
+                if (!empty($input['personal_celular'])) {
+                    $profesional->telefono = $input['personal_celular'];
+                }
+
+                // D. Lógica inteligente para Nombres (Solo si se envió nombre)
+                if (!empty($input['personal_nombre'])) {
+                    $nombreCompleto = mb_strtoupper(trim($input['personal_nombre']), 'UTF-8');
+
+                    // Separamos en partes
+                    $partes = explode(' ', $nombreCompleto);
+                    $num = count($partes);
+
+                    if ($num >= 3) {
+                        // Asume: PATERNO MATERNO NOMBRES
+                        $profesional->apellido_paterno = array_shift($partes);
+                        $profesional->apellido_materno = array_shift($partes);
+                        $profesional->nombres          = implode(' ', $partes);
+                    } elseif ($num == 2) {
+                        // Asume: PATERNO NOMBRES
+                        $profesional->apellido_paterno = $partes[0];
+                        $profesional->apellido_materno = '';
+                        $profesional->nombres          = $partes[1];
+                    } elseif ($num == 1) {
+                        $profesional->nombres          = $partes[0];
+                    }
+                }
+
+                // E. Guardar cambios en tabla maestra (mon_profesionales)
+                $profesional->save();
             }
 
-
-
             // =========================================================================
-            // PASO 1: Guardamos todos los datos en una variable maestra ($datosPrenatal)
+            // PASO 1: Preparar datos para el Módulo
             // =========================================================================
             $datosPrenatal = [
                 // Datos Generales
                 'nombre_consultorio'    => $input['nombre_consultorio'] ?? null,
 
-                // Personal
+                // Personal (Incluyendo los nuevos campos)
                 'personal_tipo_doc'     => $input['personal_tipo_doc'] ?? null,
                 'personal_dni'          => $input['personal_dni'] ?? null,
                 'personal_especialidad' => $input['personal_especialidad'] ?? null,
                 'personal_nombre'       => $input['personal_nombre'] ?? null,
+                'personal_correo'       => $input['personal_correo'] ?? null,  // NUEVO
+                'personal_celular'      => $input['personal_celular'] ?? null, // NUEVO
 
-                'firma_dj' => $input['firma_dj'] ?? null,
+                // Seguridad y SIHCE
+                'utiliza_sihce'          => $input['utiliza_sihce'] ?? 'NO', // NUEVO
+                'firma_dj'               => $input['firma_dj'] ?? null,
                 'firma_confidencialidad' => $input['firma_confidencialidad'] ?? null,
-                'tipo_dni_fisico' => $input['tipo_dni_fisico'] ?? null,
-                'dnie_version' => $input['dnie_version'] ?? null,
-                'firma_sihce' => $input['firma_sihce'] ?? null,
+                'tipo_dni_fisico'        => $input['tipo_dni_fisico'] ?? null,
+                'dnie_version'           => $input['dnie_version'] ?? null,
+                'firma_sihce'            => $input['firma_sihce'] ?? null,
 
                 // Capacitación
                 'capacitacion_recibida' => $input['capacitacion'] ?? null,
-                'capacitacion_entes'    => $input['capacitacion_ente'] ?? null, // Ahora es string (radio)
-                'capacitacion_otros_detalle' => $input['capacitacion_otros_detalle'] ?? null,
+                'capacitacion_entes'    => $input['capacitacion_ente'] ?? null,
+                // 'capacitacion_otros_detalle' => Eliminado según tu migración
 
                 // Materiales e Insumos
                 'insumos_disponibles'   => $input['insumos'] ?? [],
-                'materiales_otros'      => $input['materiales_otros'] ?? null,
+                // 'materiales_otros'   => Eliminado según tu migración
 
-                // Equipos (Guardamos el array puro para el JSON)
+                // Equipos
                 'equipos_listado'       => array_values($input['equipos'] ?? []),
                 'equipos_observaciones' => $input['equipos_observaciones'] ?? null,
 
@@ -140,52 +141,48 @@ class PrenatalController extends Controller
 
                 // Evidencias
                 'fotos_evidencia'       => $rutasFotos,
-                // Nota: Ya no usamos firma gráfica en el step 5, pero si envias algo vacío no pasa nada
-                'firma_grafica'         => $request->input('firma_grafica_data'),
+                // 'firma_grafica'      => Eliminado según tu migración
             ];
 
             // =========================================================================
-            // PASO 2: Guardamos en la tabla principal (ModuloPrenatal)
+            // PASO 2: Guardar en ModuloPrenatal (Tabla Específica)
             // =========================================================================
-            ModuloPrenatal::updateOrCreate(
+            \App\Models\ModuloPrenatal::updateOrCreate(
                 ['monitoreo_id' => $idActa],
-                $datosPrenatal // Pasamos el array maestro
+                $datosPrenatal // Pasamos el array con los datos limpios
             );
 
             // =========================================================================
-            // PASO 3: Guardamos el JSON completo en MonitoreoModulos
+            // PASO 3: Guardar JSON en MonitoreoModulos (Tabla General)
             // =========================================================================
-            MonitoreoModulos::updateOrCreate(
+            \App\Models\MonitoreoModulos::updateOrCreate(
                 [
                     'cabecera_monitoreo_id' => $idActa,
                     'modulo_nombre'         => 'atencion_prenatal'
                 ],
                 [
-                    'contenido'        => $datosPrenatal, // Aquí se guarda el JSON completo
+                    'contenido'        => $datosPrenatal,
                     'pdf_firmado_path' => null
                 ]
             );
 
             // =========================================================================
-            // PASO 4: Lógica de Equipos (Borrar e Insertar)
+            // PASO 4: Lógica de Equipos
             // =========================================================================
-            $datosEquipos = $request->input('contenido.equipos', []);
-
-            // Borramos los equipos previos de este módulo y acta
-            EquipoComputo::where('cabecera_monitoreo_id', $idActa)
+            $datosEquipos = $input['equipos'] ?? [];
+            \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $idActa)
                 ->where('modulo', 'atencion_prenatal')
                 ->delete();
 
-            // Insertamos los nuevos
             foreach ($datosEquipos as $item) {
-                EquipoComputo::create([
+                \App\Models\EquipoComputo::create([
                     'cabecera_monitoreo_id' => $idActa,
                     'modulo'      => 'atencion_prenatal',
                     'descripcion' => $item['nombre'] ?? 'Desconocido',
-                    'cantidad'    => 1, // Por defecto 1 según tu lógica de tabla
+                    'cantidad'    => 1,
                     'estado'      => $item['estado'] ?? 'Regular',
-                    'nro_serie'   => $item['serie'] ?? null,      // Capturado del input nuevo
-                    'propio'      => $item['propiedad'] ?? null,  // ESTABLECIMIENTO, PROPIO, etc.
+                    'nro_serie'   => $item['serie'] ?? null,
+                    'propio'      => $item['propiedad'] ?? null,
                     'observacion' => $item['observaciones'] ?? null,
                 ]);
             }
@@ -193,7 +190,7 @@ class PrenatalController extends Controller
             // =========================================================================
             // PASO 5: Guardar en RespuestaEntrevistado
             // =========================================================================
-            RespuestaEntrevistado::updateOrCreate(
+            \App\Models\RespuestaEntrevistado::updateOrCreate(
                 [
                     'cabecera_monitoreo_id' => $idActa,
                     'modulo'                => 'atencion_prenatal'
@@ -201,19 +198,17 @@ class PrenatalController extends Controller
                 [
                     'doc_profesional'       => $datosPrenatal['personal_dni'],
                     'recibio_capacitacion'  => $datosPrenatal['capacitacion_recibida'],
-                    // Si es radio button, se guarda directo. Si fuese array, usar json_encode.
                     'inst_que_lo_capacito'  => $datosPrenatal['capacitacion_entes'],
-
-                    // Prenatal no tiene sección de "Dificultades" en el blade actual,
-                    // así que enviamos null o lo omitimos si la tabla lo permite.
                     'inst_a_quien_comunica' => $datosPrenatal['dificultad_comunica_a'],
                     'medio_que_utiliza'     => $datosPrenatal['dificultad_medio_uso'],
                 ]
             );
 
             return redirect()->route('usuario.monitoreo.modulos', $idActa)
-                ->with('success', 'Atención Prenatal guardada con éxito.');
+                ->with('success', 'Atención Prenatal guardada y profesional actualizado.');
         } catch (\Exception $e) {
+            // Loguear error para depuración real
+            \Illuminate\Support\Facades\Log::error("Error Prenatal: " . $e->getMessage());
             return dd("Error al guardar: " . $e->getMessage());
         }
     }
@@ -280,29 +275,30 @@ class PrenatalController extends Controller
 
     public function generar($idActa)
     {
-        set_time_limit(120); // Aumentar tiempo límite por si acaso
+        // 1. Configuración inicial
+        set_time_limit(120);
 
         $acta = CabeceraMonitoreo::findOrFail($idActa);
-        $registro = ModuloPrenatal::where('monitoreo_id', $idActa)->firstOrFail();
+        $registro = ModuloParto::where('monitoreo_id', $idActa)->firstOrFail();
 
-        // Convertir fotos a Base64 para el PDF
+        // 2. Lógica de Imágenes a Base64
+        $fotosBase64 = [];
         if (!empty($registro->fotos_evidencia)) {
-            $base64 = [];
             foreach ($registro->fotos_evidencia as $url) {
-                // Limpieza de URL para obtener path local
                 $rutaRelativa = str_replace(url('/'), '', $url);
                 $path = public_path($rutaRelativa);
 
                 if (file_exists($path)) {
                     $type = pathinfo($path, PATHINFO_EXTENSION);
                     $data = file_get_contents($path);
-                    $base64[] = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    $fotosBase64[] = $base64;
                 }
             }
-            $registro->fotos_evidencia = $base64;
         }
+        $registro->fotos_evidencia = $fotosBase64;
 
-        // Convertir firma a Base64 si existe
+        // 3. Lógica de Firma a Base64
         if ($registro->firma_grafica && str_contains($registro->firma_grafica, 'http')) {
             $rutaRelativa = str_replace(url('/'), '', $registro->firma_grafica);
             $path = public_path($rutaRelativa);
@@ -313,7 +309,32 @@ class PrenatalController extends Controller
             }
         }
 
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.prenatal', compact('acta', 'registro'));
-        return $pdf->stream('Prenatal_' . $idActa . '.pdf');
+        // 4. GENERACIÓN DEL PDF CON NUMERACIÓN
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.parto', compact('acta', 'registro'));
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->render();
+
+        // --- LÓGICA DE CANVAS PARA PIE DE PÁGINA ---
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->getCanvas();
+
+        // Configuración de fuente
+        $fontMetrics = $dom_pdf->getFontMetrics();
+        $font = $fontMetrics->get_font("Helvetica", "bold");
+
+        // Ajustes finos (Idénticos a Citas)
+        $size = 8;
+        $color = [0.392, 0.455, 0.545]; // Color gris azulado (#64748b)
+
+        $w = $canvas->get_width();
+        $h = $canvas->get_height();
+
+        // Coordenadas
+        $x = $w - 75;
+        $y = $h - 49;
+
+        $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
+
+        return $pdf->stream('Parto_' . $idActa . '.pdf');
     }
 }
