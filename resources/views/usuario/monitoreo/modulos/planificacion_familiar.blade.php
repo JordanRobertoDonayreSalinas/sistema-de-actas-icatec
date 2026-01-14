@@ -84,6 +84,9 @@
                             Módulo 11
                         </span>
                         <h3 class="text-3xl font-black uppercase italic tracking-tight mt-2">Planificación Familiar</h3>
+                        <p class="text-indigo-300 text-[11px] font-bold mt-1">
+                            FECHA REGISTRO: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'PENDIENTE' }}
+                        </p>
                     </div>
                     
                     <div class="flex items-center gap-4 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-lg">
@@ -94,17 +97,19 @@
                             <label for="fecha_monitoreo" class="text-[9px] font-black text-indigo-300 uppercase tracking-widest leading-none mb-1">
                                 Fecha del Monitoreo
                             </label>
-                            <input type="date" 
+                            <input 
+                                type="date" 
                                 name="fecha_monitoreo" 
                                 id="fecha_monitoreo"
-                                value="{{ old('fecha_monitoreo', $acta->fecha) }}"
+                                form="form-planificacion-familiar-store"
+                                value="{{ old('fecha_monitoreo', \Carbon\Carbon::parse($fechaParaVista)->format('Y-m-d')) }}"
                                 class="bg-transparent text-white border-none p-0 focus:ring-0 font-bold text-lg cursor-pointer [color-scheme:dark]">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <form action="{{ route('usuario.monitoreo.planificacion-familiar.store', $acta->id) }}" method="POST" enctype="multipart/form-data" class="p-8 md:p-12 space-y-12">
+            <form id="form-planificacion-familiar-store" action="{{ route('usuario.monitoreo.planificacion-familiar.store', $acta->id) }}" method="POST" enctype="multipart/form-data" class="p-8 md:p-12 space-y-12">
                 @csrf
                 {{-- Persistencia de Fotos con IDs para Alpine --}}
                 <input type="hidden" name="foto_1_actual" id="foto_1_actual" value="{{ $detalle->foto_1 ?? '' }}">

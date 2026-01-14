@@ -16,8 +16,9 @@ class GestionAdministrativaPdfController extends Controller
      */
     public function generar($id)
     {
-        // 1. Cargar el acta optimizando la relación del establecimiento (solo id y nombre)
-        $acta = CabeceraMonitoreo::with('establecimiento:id,nombre')->findOrFail($id);
+        // 1. Cargar el acta optimizando la relación del establecimiento
+        // CORRECCIÓN: Se agrega 'codigo' para que se muestre en el encabezado del PDF
+        $acta = CabeceraMonitoreo::with('establecimiento:id,nombre,codigo')->findOrFail($id);
 
         // 2. Cargar el detalle guardado para el Módulo 01 (JSON con Turno, DNI, Capacitación, etc.)
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
@@ -40,7 +41,6 @@ class GestionAdministrativaPdfController extends Controller
         ];
 
         // 5. Cargar la vista técnica del PDF. 
-        // CORRECCIÓN: Se agrega '_pdf' al nombre de la vista para coincidir con el archivo en disco.
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.gestion_administrativa_pdf', compact(
             'acta', 
             'detalle', 
@@ -48,7 +48,10 @@ class GestionAdministrativaPdfController extends Controller
             'monitor'
         ));
 
-        // 6. Configuración de formato A4 vertical y generación del flujo de datos
+        // 6. Configuración del PDF
+        // CORRECCIÓN: Habilitar PHP para permitir el script de contador de páginas (PAG X/Y)
+        $pdf->setOption('isPhpEnabled', true);
+
         return $pdf->setPaper('a4', 'portrait')
                    ->stream("Acta_M01_ID" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
     }

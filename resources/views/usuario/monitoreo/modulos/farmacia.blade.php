@@ -109,17 +109,19 @@
                             <label for="fecha_monitoreo" class="text-[9px] font-black text-indigo-300 uppercase tracking-widest leading-none mb-1">
                                 Fecha del Monitoreo
                             </label>
-                            <input type="date" 
+                            <input 
+                                type="date" 
                                 name="fecha_monitoreo" 
                                 id="fecha_monitoreo"
-                                value="{{ old('fecha_monitoreo', $acta->fecha) }}"
+                                form="form-farmacia-store"
+                                value="{{ old('fecha_monitoreo', \Carbon\Carbon::parse($fechaParaVista)->format('Y-m-d')) }}"
                                 class="bg-transparent text-white border-none p-0 focus:ring-0 font-bold text-lg cursor-pointer [color-scheme:dark]">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <form action="{{ route('usuario.monitoreo.farmacia.store', $acta->id) }}" method="POST" enctype="multipart/form-data" class="p-8 md:p-12 space-y-12">
+            <form id="form-farmacia-store" action="{{ route('usuario.monitoreo.farmacia.store', $acta->id) }}" method="POST" enctype="multipart/form-data" class="p-8 md:p-12 space-y-12">
                 @csrf
                 {{-- Inputs ocultos de fotos con IDs para Alpine --}}
                 <input type="hidden" name="foto_1_actual" id="foto_1_actual" value="{{ $detalle->foto_1 ?? '' }}">
