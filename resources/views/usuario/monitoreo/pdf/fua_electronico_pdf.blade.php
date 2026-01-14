@@ -73,14 +73,6 @@
         $rawTipoDoc = $detalle->contenido['profesional']['tipo_doc'] ?? '---';
         $rawNumDoc  = $detalle->contenido['profesional']['doc'] ?? '---';
         
-        // Lógica de recorte para C.E.
-        $docFinal = $rawNumDoc; 
-        if (in_array(strtoupper($rawTipoDoc), ['CE', 'C.E.', 'C.E'])) {
-            if (strlen($rawNumDoc) > 2) {
-                $docFinal = substr($rawNumDoc, 2); 
-            }
-        }
-
         // Nombre Completo
         $pNom = $detalle->contenido['profesional']['nombres'] ?? '';
         $pPat = $detalle->contenido['profesional']['apellido_paterno'] ?? '';

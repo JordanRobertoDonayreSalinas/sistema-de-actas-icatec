@@ -85,13 +85,6 @@
         // B. Aplicar lógica de recorte para C.E. (Quitar los 2 primeros caracteres)
         $docFinal = $rawNumDoc; // Valor por defecto
         
-        if (in_array(strtoupper($rawTipoDoc), ['CE', 'C.E.', 'C.E'])) {
-            // Solo recortamos si tiene longitud suficiente
-            if (strlen($rawNumDoc) > 2) {
-                $docFinal = substr($rawNumDoc, 2); 
-            }
-        }
-
         // C. Preparar Nombre Completo (También lo reutilizaremos)
         $pNom = $detalle->contenido['profesional']['nombres'] ?? '';
         $pPat = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
