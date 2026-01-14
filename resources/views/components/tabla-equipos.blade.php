@@ -125,7 +125,18 @@
 
 {{-- DATALIST --}}
 <datalist id="list_equipos_master">
-    <option value="CPU"><option value="IMPRESORA"><option value="LAPTOP"><option value="LECTOR DE DNIe"><option value="MONITOR"><option value="MOUSE"><option value="SCANNER"><option value="TABLET"><option value="TECLADO"><option value="TICKETERA">
+    <option value="ALL-IN-ONE">
+    <option value="CPU">
+        <option value="IMPRESORA">
+            <option value="LAPTOP">
+                <option value="LECTOR DE DNIe">
+                    <option value="MONITOR">
+                        <option value="MOUSE">
+                            <option value="SCANNER">
+                                <option value="TABLET">
+                                    <option value="TECLADO">
+                                        <option value="TICKETERA">
+                                            
 </datalist>
 
 {{-- MODAL SCANNER --}}
