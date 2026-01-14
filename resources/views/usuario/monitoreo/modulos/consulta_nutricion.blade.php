@@ -345,7 +345,7 @@
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Materiales</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    @foreach(['Historia Clínica' => 'historia_clinica', 'FUA' => 'fua', 'Receta' => 'receta', 'Orden de Laboratorio' => 'orden_laboratorio', 'Hoja de Referencia' => 'hoja_referencia', 'Otros' => 'otros'] as $label => $key)
+                    @foreach(['Historia Clínica' => 'historia_clinica', 'FUA' => 'fua', 'Plan Nutricional' => 'plan_nutricional', 'Orden de Laboratorio' => 'orden_laboratorio', 'Hoja de Referencia' => 'hoja_referencia', 'Otros' => 'otros'] as $label => $key)
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" name="contenido[materiales][{{$key}}]" value="1" {{ (isset($detalle->contenido['materiales'][$key]) && $detalle->contenido['materiales'][$key]) ? 'checked' : '' }} class="w-5 h-5 rounded border-slate-300">
                             <span class="text-sm font-bold text-slate-700">{{ $label }}</span>
@@ -381,7 +381,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Qué medio utiliza?</label>
                         <div class="flex gap-8 mt-3">
-                            @foreach(['CELULAR' => 'celular', 'EMAIL' => 'email', 'WHATSAPP' => 'whatsapp'] as $label => $key)
+                            @foreach(['CELULAR' => 'celular', 'CORREO' => 'correo', 'WHATSAPP' => 'whatsapp', 'OTROS' => 'otros'] as $label => $key)
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="radio" name="contenido[medio_soporte]" value="{{$label}}" {{ ($detalle->contenido['medio_soporte'] ?? '') == $label ? 'checked' : '' }} class="w-5 h-5">
                                     <span class="text-sm font-bold">{{$label}}</span>

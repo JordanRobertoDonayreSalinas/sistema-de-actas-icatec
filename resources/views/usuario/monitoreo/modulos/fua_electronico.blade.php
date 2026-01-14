@@ -478,7 +478,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿A quién le comunica?</label>
                         <select name="contenido[comunica_a]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none">
-                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTRO'] as $op)
+                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTROS'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['comunica_a'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
                         </select>
@@ -486,7 +486,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Qué medio utiliza?</label>
                         <div class="flex gap-8 mt-3">
-                            @foreach(['CELULAR' => 'celular', 'EMAIL' => 'email', 'WHATSAPP' => 'whatsapp'] as $label => $key)
+                            @foreach(['CELULAR' => 'celular', 'CORREO' => 'correo', 'WHATSAPP' => 'whatsapp', 'OTROS' => 'otros'] as $label => $key)
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="radio" name="contenido[medio_soporte]" value="{{$label}}" {{ ($detalle->contenido['medio_soporte'] ?? '') == $label ? 'checked' : '' }} class="w-5 h-5">
                                     <span class="text-sm font-bold">{{$label}}</span>

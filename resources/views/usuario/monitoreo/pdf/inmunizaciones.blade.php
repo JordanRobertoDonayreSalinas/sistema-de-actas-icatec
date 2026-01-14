@@ -134,7 +134,43 @@
         </tr>
         <tr>
             <td class="bg-label">Horario de Atención</td>
-            <td class="uppercase">{{ $detalle->contenido['horario_atencion'] ?? '---' }}</td>
+            <td class="uppercase">
+                @php
+                    $horarios = $detalle->contenido['horarios'] ?? null;
+                    $textoAntiguo = $detalle->contenido['horario_atencion'] ?? null;
+                    $seMostroInformacion = false; // Bandera de control
+                @endphp
+
+                {{-- CASO 1: Intentamos mostrar el formato NUEVO (Array) --}}
+                @if(is_array($horarios) && count($horarios) > 0)
+                    @foreach($horarios as $h)
+                        {{-- Solo imprimimos si realmente marcaron días en esa fila --}}
+                        @if(!empty($h['dias']) && is_array($h['dias']))
+                            <div style="margin-bottom: 4px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 2px;">
+                                <span style="font-weight: bold; color: #4f46e5;">
+                                    {{ implode(', ', $h['dias']) }}
+                                </span>
+                                <br>
+                                <span style="font-size: 9px; color: #64748b;">
+                                    {{ $h['inicio'] ?? '--:--' }} - {{ $h['fin'] ?? '--:--' }}
+                                </span>
+                            </div>
+                            @php $seMostroInformacion = true; @endphp
+                        @endif
+                    @endforeach
+                @endif
+
+                {{-- CASO 2: Si no hubo datos nuevos, intentamos mostrar el texto ANTIGUO --}}
+                @if(!$seMostroInformacion && !empty($textoAntiguo))
+                    {{ $textoAntiguo }}
+                    @php $seMostroInformacion = true; @endphp
+                @endif
+
+                {{-- CASO 3: Si no hay nada de nada, mostramos los guiones por defecto --}}
+                @if(!$seMostroInformacion)
+                    ---
+                @endif
+            </td>
         </tr>
         <tr>
             <td class="bg-label">¿Es un consultorio compartido?</td>

@@ -389,7 +389,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Qué medio utiliza?</label>
                         <div class="flex gap-8 mt-3">
-                            @foreach(['CELULAR' => 'celular', 'EMAIL' => 'email', 'WHATSAPP' => 'whatsapp'] as $label => $key)
+                            @foreach(['CELULAR' => 'celular', 'CORREO' => 'correo', 'WHATSAPP' => 'whatsapp', 'OTROS' => 'otros'] as $label => $key)
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="radio" name="contenido[medio_soporte]" value="{{$label}}" {{ ($detalle->contenido['medio_soporte'] ?? '') == $label ? 'checked' : '' }} class="w-5 h-5">
                                     <span class="text-sm font-bold">{{$label}}</span>
