@@ -14,6 +14,7 @@ class ModuloParto extends Model
 
     // 2. Columnas que permites guardar (Asignación masiva)
     protected $fillable = [
+        'fecha_registro',
         'monitoreo_id',
         'nombre_consultorio',
         'personal_tipo_doc',

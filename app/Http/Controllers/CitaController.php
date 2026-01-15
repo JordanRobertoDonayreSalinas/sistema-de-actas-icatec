@@ -109,6 +109,7 @@ class CitaController extends Controller
         // =========================================================================
         $datosCita = [
             // Personal
+            'fecha_registro' => $input['fecha_registro'] ?? $registro->fecha_registro ?? date('Y-m-d'),
             'personal_nombre' => $input['personal_nombre'] ?? null,
             'personal_dni'    => $input['personal_dni'] ?? null,
             'personal_turno'  => $input['personal_turno'] ?? null,

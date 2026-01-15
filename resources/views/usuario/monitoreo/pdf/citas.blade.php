@@ -1,76 +1,180 @@
     <!DOCTYPE html>
     <html lang="es">
+
     <head>
         <meta charset="UTF-8">
         <title>REPORTE DE MONITOREO - CITAS - ACTA {{ $acta->id }}</title>
         <style>
             /* --- CONFIGURACIÓN DE PÁGINA --- */
-            @page { 
+            @page {
                 /* Márgenes: Arriba, Derecha, Abajo, Izquierda */
-                margin: 1.2cm 1.5cm 2cm 1.5cm; 
+                margin: 1.2cm 1.5cm 2cm 1.5cm;
             }
 
             /* --- ESTILOS GLOBALES --- */
-            body { 
-                font-family: 'Helvetica', sans-serif; 
-                font-size: 10px; 
-                color: #1e293b; 
-                line-height: 1.4; 
-                text-transform: uppercase; 
+            body {
+                font-family: 'Helvetica', sans-serif;
+                font-size: 10px;
+                color: #1e293b;
+                line-height: 1.4;
+                text-transform: uppercase;
             }
-            
+
             /* --- CABECERA --- */
-            .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
-            .header h1 { margin: 0; font-size: 15px; color: #4f46e5; }
-            .header-sub { font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px; }
+            .header {
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #4f46e5;
+                padding-bottom: 10px;
+            }
+
+            .header h1 {
+                margin: 0;
+                font-size: 15px;
+                color: #4f46e5;
+            }
+
+            .header-sub {
+                font-weight: bold;
+                color: #64748b;
+                font-size: 10px;
+                margin-top: 5px;
+            }
 
             /* --- SECCIONES --- */
-            .section-title { background-color: #f1f5f9; padding: 6px 10px; font-weight: bold; border-left: 4px solid #4f46e5; margin-top: 15px; margin-bottom: 5px; font-size: 10px; }
-            
+            .section-title {
+                background-color: #f1f5f9;
+                padding: 6px 10px;
+                font-weight: bold;
+                border-left: 4px solid #4f46e5;
+                margin-top: 15px;
+                margin-bottom: 5px;
+                font-size: 10px;
+            }
+
             /* --- TABLAS --- */
-            table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px; }
-            th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; word-wrap: break-word; }
-            th { background-color: #f8fafc; color: #475569; font-size: 8.5px; }
-            
-            .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%; color: #475569; }
-            .text-center { text-align: center; }
-            .text-left { text-align: left; }
-            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+                margin-bottom: 5px;
+            }
+
+            th,
+            td {
+                border: 1px solid #e2e8f0;
+                padding: 6px 8px;
+                text-align: left;
+                vertical-align: middle;
+                word-wrap: break-word;
+            }
+
+            th {
+                background-color: #f8fafc;
+                color: #475569;
+                font-size: 8.5px;
+            }
+
+            .bg-label {
+                background-color: #f8fafc;
+                font-weight: bold;
+                width: 30%;
+                color: #475569;
+            }
+
+            .text-center {
+                text-align: center;
+            }
+
+            .text-left {
+                text-align: left;
+            }
+
             /* --- ESTADOS --- */
-            .status-ok { color: #16a34a; font-weight: bold; }
-            .status-warn { color: #d97706; font-weight: bold; }
-            .status-err { color: #dc2626; font-weight: bold; }
+            .status-ok {
+                color: #16a34a;
+                font-weight: bold;
+            }
+
+            .status-warn {
+                color: #d97706;
+                font-weight: bold;
+            }
+
+            .status-err {
+                color: #dc2626;
+                font-weight: bold;
+            }
 
             /* --- EVIDENCIA FOTOGRÁFICA --- */
-            .no-evidence-box { border: 2px dashed #cbd5e1; border-radius: 15px; padding: 20px; text-align: center; color: #64748b; font-style: italic; background-color: #f8fafc; margin-top: 10px; }
-            
+            .no-evidence-box {
+                border: 2px dashed #cbd5e1;
+                border-radius: 15px;
+                padding: 20px;
+                text-align: center;
+                color: #64748b;
+                font-style: italic;
+                background-color: #f8fafc;
+                margin-top: 10px;
+            }
+
             /* --- FIRMA --- */
-            .firma-section { margin-top: 30px; page-break-inside: avoid; }
-            .firma-container { width: 50%; margin: 0 auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 14px; padding: 15px; }
-            .firma-linea { border-bottom: 1px solid #000; height: 80px; margin-bottom: 10px; width: 80%; margin-left: 10%; }
-            .firma-nombre { font-weight: bold; font-size: 11px; }
-            .firma-cargo { font-size: 9px; color: #64748b; margin-top: 4px; }
+            .firma-section {
+                margin-top: 30px;
+                page-break-inside: avoid;
+            }
+
+            .firma-container {
+                width: 50%;
+                margin: 0 auto;
+                text-align: center;
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                padding: 15px;
+            }
+
+            .firma-linea {
+                border-bottom: 1px solid #000;
+                height: 80px;
+                margin-bottom: 10px;
+                width: 80%;
+                margin-left: 10%;
+            }
+
+            .firma-nombre {
+                font-weight: bold;
+                font-size: 11px;
+            }
+
+            .firma-cargo {
+                font-size: 9px;
+                color: #64748b;
+                margin-top: 4px;
+            }
 
             /* --- PIE DE PÁGINA (ESTRUCTURA VISUAL) --- */
-           .footer-frame {
-    position: fixed;
-    bottom: -1.2cm; 
-    left: 0; 
-    right: 0;
-    height: 1cm;
-    border-top: 1px solid #94a3b8; 
-    
-    /* --- AJUSTES DE ALINEACIÓN --- */
-    padding-top: 5px;      /* Reducimos un poco el espacio superior */
-    font-size: 8pt;        /* BAJAMOS A 8 PUNTOS para que sea más fino */
-    font-family: 'Helvetica', sans-serif;
-    color: #64748b;
-    font-weight: bold;
-}
+            .footer-frame {
+                position: fixed;
+                bottom: -1.2cm;
+                left: 0;
+                right: 0;
+                height: 1cm;
+                border-top: 1px solid #94a3b8;
+
+                /* --- AJUSTES DE ALINEACIÓN --- */
+                padding-top: 5px;
+                /* Reducimos un poco el espacio superior */
+                font-size: 8pt;
+                /* BAJAMOS A 8 PUNTOS para que sea más fino */
+                font-family: 'Helvetica', sans-serif;
+                color: #64748b;
+                font-weight: bold;
+            }
+
             /* El texto "SISTEMA DE ACTAS" se alinea a la izquierda por defecto */
-            
         </style>
     </head>
+
     <body>
         <div class="footer-frame">
             SISTEMA DE ACTAS
@@ -79,13 +183,14 @@
         <div class="header">
             <h1>MÓDULO 02: CITAS</h1>
             <div class="header-sub">
-                ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
-                ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? '-' }} - {{ $acta->establecimiento->nombre ?? 'NO ESPECIFICADO' }} |
-                FECHA: {{ \Carbon\Carbon::parse($registro->updated_at)->format('d/m/Y') }}
+                ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} |
+                ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? '-' }} -
+                {{ $acta->establecimiento->nombre ?? 'NO ESPECIFICADO' }} |
+                FECHA: {{ \Carbon\Carbon::parse($registro->fecha_registro)->format('d/m/Y') }}
             </div>
         </div>
 
-   <div class="section-title">1. DATOS DEL PROFESIONAL</div>
+        <div class="section-title">1. DATOS DEL PROFESIONAL</div>
         <table>
             <tr>
                 <td class="bg-label">APELLIDOS Y NOMBRES</td>
@@ -94,7 +199,7 @@
             <tr>
                 <td class="bg-label">TIPO DOC</td>
                 {{-- Lee directo del registro guardado, no del modelo externo --}}
-                <td>{{ $registro->personal_tipo_doc ?? 'DNI' }}</td> 
+                <td>{{ $registro->personal_tipo_doc ?? 'DNI' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">DOCUMENTO</td>
@@ -118,10 +223,10 @@
                 <td class="bg-label">ROLES ASIGNADOS</td>
                 {{-- Asegura decodificar si está guardado como JSON --}}
                 <td>
-                    @if(is_array($registro->personal_roles))
+                    @if (is_array($registro->personal_roles))
                         {{ implode(', ', $registro->personal_roles) }}
                     @elseif(is_string($registro->personal_roles))
-                         {{-- Intenta limpiar si viene como string ["ROL"] --}}
+                        {{-- Intenta limpiar si viene como string ["ROL"] --}}
                         {{ str_replace(['[', ']', '"'], '', $registro->personal_roles) }}
                     @else
                         NINGUNO
@@ -133,7 +238,7 @@
                 <td>{{ $registro->personal_turno ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="bg-label">¿UTILIZA SIHCE?</td> 
+                <td class="bg-label">¿UTILIZA SIHCE?</td>
                 <td>{{ $registro->utiliza_sihce ?? 'NO' }}</td>
             </tr>
             {{-- Solo mostrar si SIHCE es SI, o mostrar siempre --}}
@@ -179,7 +284,8 @@
         <table>
             <tr>
                 <td class="bg-label">AL INICIAR SUS LABORES CUENTA CON:</td>
-                <td>{{ !empty($registro->insumos_disponibles) ? implode(', ', $registro->insumos_disponibles) : 'NINGUNO' }}</td>
+                <td>{{ !empty($registro->insumos_disponibles) ? implode(', ', $registro->insumos_disponibles) : 'NINGUNO' }}
+                </td>
             </tr>
         </table>
 
@@ -197,33 +303,37 @@
             </thead>
             <tbody>
                 @forelse($registro->equipos_listado ?? [] as $eq)
-                <tr>
-                    <td>{{ $eq['nombre'] ?? '-' }}</td>
-                    <td>{{ 1 }}</td>
-                    <td class="text-left">
-                        @php
-                            $est = strtoupper($eq['estado'] ?? '');
-                            $colores = [
-                                'OPERATIVO' => 'status-ok',
-                                'BUENO'     => 'status-ok',
-                                'REGULAR'   => 'status-warn'
-                            ];
-                            $clase = $colores[$est] ?? 'status-err';
-                        @endphp
-                        <span class="{{ $clase }}">{{ $est ?: '-' }}</span>
-                    </td>
-                    <td>{{ $eq['propiedad'] ?? '-' }}</td>
-                    <td>{{ $eq['serie'] ?? 'S/N' }}</td>
-                    <td>{{ $eq['observaciones'] ?? '-' }}</td>
-                </tr>
+                    <tr>
+                        <td>{{ $eq['nombre'] ?? '-' }}</td>
+                        <td>{{ 1 }}</td>
+                        <td class="text-left">
+                            @php
+                                $est = strtoupper($eq['estado'] ?? '');
+                                $colores = [
+                                    'OPERATIVO' => 'status-ok',
+                                    'BUENO' => 'status-ok',
+                                    'REGULAR' => 'status-warn',
+                                ];
+                                $clase = $colores[$est] ?? 'status-err';
+                            @endphp
+                            <span class="{{ $clase }}">{{ $est ?: '-' }}</span>
+                        </td>
+                        <td>{{ $eq['propiedad'] ?? '-' }}</td>
+                        <td>{{ $eq['serie'] ?? 'S/N' }}</td>
+                        <td>{{ $eq['observaciones'] ?? '-' }}</td>
+                    </tr>
                 @empty
-                <tr><td colspan="6" class="text-center">NO SE REGISTRARON EQUIPOS.</td></tr> @endforelse
+                    <tr>
+                        <td colspan="6" class="text-center">NO SE REGISTRARON EQUIPOS.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
 
         <table>
             <tr>
-                <td class="bg-label">OBSERVACIONES ADICIONALES:</td> <td>{{ $registro->equipos_observaciones ?? '-' }}</td>
+                <td class="bg-label">OBSERVACIONES ADICIONALES:</td>
+                <td>{{ $registro->equipos_observaciones ?? '-' }}</td>
             </tr>
         </table>
 
@@ -234,7 +344,7 @@
                 <td>{{ $registro->nro_ventanillas ?? '0' }}</td>
             </tr>
         </table>
-        
+
         <table style="margin-top: 10px;">
             <thead>
                 <tr>
@@ -243,11 +353,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($registro->produccion_listado ?? [] as $prod)
-                <tr>
-                    <td>{{ $prod['nombre'] ?? '-' }}</td>
-                    <td class="text-center"><strong>{{ $prod['cantidad'] ?? 0 }}</strong></td>
-                </tr>
+                @foreach ($registro->produccion_listado ?? [] as $prod)
+                    <tr>
+                        <td>{{ $prod['nombre'] ?? '-' }}</td>
+                        <td class="text-center"><strong>{{ $prod['cantidad'] ?? 0 }}</strong></td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
@@ -291,39 +401,38 @@
             $cantidad = count($fotos);
         @endphp
 
-        @if($cantidad > 0)
-            
-            @if($cantidad == 1)
+        @if ($cantidad > 0)
+
+            @if ($cantidad == 1)
                 <div style="width: 100%; text-align: center; margin-top: 15px;">
                     <div style="display: inline-block; border: 1px solid #e2e8f0; padding: 5px; background: #fff;">
                         <img src="{{ $fotos[0] }}" style="max-width: 90%; height: 220px; object-fit: contain;">
                     </div>
                 </div>
-
             @else
                 <table style="width: 100%; border: none; margin-top: 10px;">
                     <tr>
-                        @foreach($fotos as $index => $fotoUrl)
-                            @if($index > 0 && $index % 2 == 0) 
-                                </tr><tr> 
-                            @endif
-                            
-                            <td style="border: none; padding: 5px; text-align: center; width: 50%;">
-                                <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff;">
-                                    <img src="{{ $fotoUrl }}" style="max-width: 100%; height: 160px; object-fit: contain;">
-                                </div>
-                            </td>
-                        @endforeach
-                        
-                        @if($cantidad % 2 != 0)
-                            <td style="border: none;"></td>
-                        @endif
+                        @foreach ($fotos as $index => $fotoUrl)
+                            @if ($index > 0 && $index % 2 == 0)
                     </tr>
-                </table>
+                    <tr>
             @endif
 
-        @else
-            <div class="no-evidence-box">NO SE ADJUNTÓ EVIDENCIA FOTOGRÁFICA.</div>
+            <td style="border: none; padding: 5px; text-align: center; width: 50%;">
+                <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff;">
+                    <img src="{{ $fotoUrl }}" style="max-width: 100%; height: 160px; object-fit: contain;">
+                </div>
+            </td>
+        @endforeach
+
+        @if ($cantidad % 2 != 0)
+            <td style="border: none;"></td>
+        @endif
+        </tr>
+        </table>
+        @endif
+    @else
+        <div class="no-evidence-box">NO SE ADJUNTÓ EVIDENCIA FOTOGRÁFICA.</div>
         @endif
 
         <div class="firma-section">
@@ -331,15 +440,17 @@
             <br>
             <div class="firma-container">
                 <div class="firma-linea">
-                    @if($registro->firma_grafica)
+                    @if ($registro->firma_grafica)
                         <img src="{{ $registro->firma_grafica }}" style="height: 70px; margin-top: -40px;">
                     @endif
                 </div>
                 <div class="firma-nombre">{{ $registro->personal_nombre ?? '___________________' }}</div>
-                <div class="firma-cargo">{{ $profesional->tipo_doc ?? '________' }}: {{ $registro->personal_dni ?? '________' }}</div>
+                <div class="firma-cargo">{{ $profesional->tipo_doc ?? '________' }}:
+                    {{ $registro->personal_dni ?? '________' }}</div>
                 <div class="firma-cargo">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
             </div>
         </div>
 
     </body>
+
     </html>

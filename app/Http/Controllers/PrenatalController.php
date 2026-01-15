@@ -98,6 +98,7 @@ class PrenatalController extends Controller
             // =========================================================================
             $datosPrenatal = [
                 // Datos Generales
+                'fecha_registro' => $input['fecha_registro'] ?? $registro->fecha_registro ?? date('Y-m-d'),
                 'nombre_consultorio'    => $input['nombre_consultorio'] ?? null,
 
                 // Personal (Incluyendo los nuevos campos)

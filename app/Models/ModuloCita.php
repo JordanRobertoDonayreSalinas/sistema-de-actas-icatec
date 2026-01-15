@@ -12,6 +12,7 @@ class ModuloCita extends Model
     protected $table = 'mon_modulo_citas';
 
     protected $fillable = [
+        'fecha_registro',
         'monitoreo_id',
         'personal_nombre',
         'personal_dni',
