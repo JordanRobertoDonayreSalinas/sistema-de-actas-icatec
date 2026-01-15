@@ -86,11 +86,17 @@
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Cuenta con módulo FUA del SIHCE?</label>
                         <div class="flex gap-8">
                             <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="radio" name="contenido[tiene_sistema_fua]" value="SI" {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'SI' ? 'checked' : '' }} class="w-5 h-5">
+                                <input type="radio" name="contenido[tiene_sistema_fua]" value="SI" 
+                                    {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'SI' ? 'checked' : '' }} 
+                                    onchange="toggleFuaSystem('SI')"
+                                    class="w-5 h-5">
                                 <span class="text-sm font-bold">SÍ</span>
                             </label>
                             <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="radio" name="contenido[tiene_sistema_fua]" value="NO" {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'NO' ? 'checked' : '' }} class="w-5 h-5">
+                                <input type="radio" name="contenido[tiene_sistema_fua]" value="NO" 
+                                    {{ ($detalle->contenido['tiene_sistema_fua'] ?? '') == 'NO' ? 'checked' : '' }} 
+                                    onchange="toggleFuaSystem('NO')"
+                                    class="w-5 h-5">
                                 <span class="text-sm font-bold">NO</span>
                             </label>
                         </div>
@@ -119,11 +125,11 @@
                     <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Datos del Profesional</h3>
                 </div>
                 <x-busqueda-profesional prefix="profesional" :detalle="$detalle" />
-                {{-- [NUEVO] PREGUNTA: ¿UTILIZA SIHCE? --}}
-                <div class="mt-8 mb-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                {{-- [MODIFICADO] Agregamos ID para poder ocultarlo --}}
+                <div id="bloque_pregunta_sihce" class="mt-8 mb-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿El profesional utiliza SIHCE?</label>
                     <div class="flex gap-4">
-                        {{-- SI --}}
+                        {{-- (El contenido interno de los radios sigue igual) --}}
                         <label class="flex-1 relative cursor-pointer group">
                             <input type="radio" name="contenido[utiliza_sihce]" value="SI" 
                                 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'SI' ? 'checked' : '' }} 
@@ -134,7 +140,6 @@
                             </div>
                         </label>
                         
-                        {{-- NO --}}
                         <label class="flex-1 relative cursor-pointer group">
                             <input type="radio" name="contenido[utiliza_sihce]" value="NO" 
                                 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'checked' : '' }} 
@@ -478,7 +483,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿A quién le comunica?</label>
                         <select name="contenido[comunica_a]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none">
-                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTRO'] as $op)
+                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTROS'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['comunica_a'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
                         </select>
@@ -486,7 +491,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Qué medio utiliza?</label>
                         <div class="flex gap-8 mt-3">
-                            @foreach(['CELULAR' => 'celular', 'EMAIL' => 'email', 'WHATSAPP' => 'whatsapp'] as $label => $key)
+                            @foreach(['CELULAR' => 'celular', 'CORREO' => 'correo', 'WHATSAPP' => 'whatsapp', 'OTROS' => 'otros'] as $label => $key)
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="radio" name="contenido[medio_soporte]" value="{{$label}}" {{ ($detalle->contenido['medio_soporte'] ?? '') == $label ? 'checked' : '' }} class="w-5 h-5">
                                     <span class="text-sm font-bold">{{$label}}</span>
@@ -593,6 +598,12 @@
         const estadoSihce = document.querySelector('input[name="contenido[utiliza_sihce]"]:checked')?.value;
         if (estadoSihce === 'NO') toggleSihce('NO');
 
+        // 3. [NUEVO] Inicializar lógica del SISTEMA FUA
+        // Verificamos qué está marcado al cargar para ocultar/mostrar la pregunta de SIHCE
+        const estadoFua = document.querySelector('input[name="contenido[tiene_sistema_fua]"]:checked')?.value;
+        if (estadoFua) {
+            toggleFuaSystem(estadoFua);
+        }
 
         // ============================================================
         // 2. LÓGICA ROBUSTA PARA DETECTAR CAMBIO DE TIPO DE DOC
@@ -638,6 +649,38 @@
         // Recalcular números tras mostrar/ocultar
         actualizarCorrelativo();
     });
+
+    // Controla todo según si tiene sistema FUA
+    function toggleFuaSystem(valor) {
+        const bloquePreguntaSihce = document.getElementById('bloque_pregunta_sihce');
+        
+        if (valor === 'NO') {
+            // A. Ocultar la pregunta "¿Utiliza SIHCE?"
+            if (bloquePreguntaSihce) bloquePreguntaSihce.classList.add('hidden');
+            
+            // B. Limpiar la respuesta de esa pregunta (opcional, para que no guarde "SI" oculto)
+            const radios = document.querySelectorAll('input[name="contenido[utiliza_sihce]"]');
+            radios.forEach(r => r.checked = false);
+
+            // C. OCULTAR EN CASCADA: Doc Admin, Capacitación y Soporte
+            // Llamamos a toggleSihce('NO') para que haga el trabajo sucio
+            toggleSihce('NO');
+
+        } else {
+            // A. Mostrar la pregunta "¿Utiliza SIHCE?"
+            if (bloquePreguntaSihce) bloquePreguntaSihce.classList.remove('hidden');
+            
+            // B. Restaurar visibilidad de las otras secciones según lo que esté marcado en SIHCE
+            const estadoSihce = document.querySelector('input[name="contenido[utiliza_sihce]"]:checked')?.value;
+            if (estadoSihce === 'SI') {
+                toggleSihce('SI');
+            } else {
+                // Si no ha marcado nada o es NO, mantenemos oculto lo de abajo
+                toggleSihce('NO');
+            }
+        }
+        actualizarCorrelativo();
+    }
 
     function toggleSihce(valor) {
         const bloqueDoc = document.getElementById('bloque_doc_administrativa');

@@ -39,7 +39,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     
-                    {{-- 1. FECHA DE MONITOREO [NUEVO] --}}
+                    {{-- 1. FECHA DE MONITOREO --}}
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Fecha de Monitoreo</label>
                         <div class="relative">
@@ -53,44 +53,83 @@
                         </div>
                     </div>
 
-                    {{-- 2. HORARIO DE ATENCIÓN --}}
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Horario de Atención</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <i data-lucide="clock" class="h-5 w-5 text-indigo-500"></i>
-                            </div>
-                            <input type="text" 
-                                   name="contenido[horario_atencion]" 
-                                   value="{{ $detalle->contenido['horario_atencion'] ?? '' }}" 
-                                   class="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase placeholder:text-slate-300" 
-                                   placeholder="EJ: LUNES A VIERNES 8:00-20:00" />
-                        </div>
-                    </div>
-
-                    {{-- 3. CANTIDAD DE CONSULTORIOS --}}
+                    {{-- 2. CANTIDAD DE CONSULTORIOS (Movido aquí para llenar el espacio) --}}
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Cantidad de Consultorios</label>
                         <input type="number" 
                                name="contenido[numero_consultorio]" 
-                               min="0"
+                               min="1"
                                onkeydown="return event.keyCode !== 69 && event.keyCode !== 189"
                                oninput="this.value = Math.abs(this.value)"
-                               value="{{ $detalle->contenido['numero_consultorio'] ?? 0 }}" 
+                               value="{{ $detalle->contenido['numero_consultorio'] ?? 1 }}" 
                                class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none text-center" />
                     </div>
 
-                    {{-- 4. DENOMINACIÓN --}}
-                    <div>
+                    {{-- 3. DENOMINACIÓN (Ancho completo para nombres largos) --}}
+                    <div class="md:col-span-2">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Denominación del Consultorio</label>
-                        <input type="text" 
-                               name="contenido[denominacion_consultorio]" 
-                               value="{{ $detalle->contenido['denominacion_consultorio'] ?? '' }}" 
-                               class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase" 
-                               placeholder="EJ: INMUNIZACIONES - NIÑO" />
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i data-lucide="tag" class="h-5 w-5 text-indigo-500"></i>
+                            </div>
+                            <input type="text" 
+                                   name="contenido[denominacion_consultorio]" 
+                                   value="{{ $detalle->contenido['denominacion_consultorio'] ?? '' }}" 
+                                   class="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase" 
+                                   placeholder="EJ: INMUNIZACIONES - NIÑO" />
+                        </div>
                     </div>
 
-                    {{-- 5. CONSULTORIO COMPARTIDO (Ocupa 2 columnas para mejor visualización) --}}
+                    {{-- 4. HORARIOS DE ATENCIÓN --}}
+                    <div class="md:col-span-2 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
+                            Horario de Atención (Detallado)
+                        </label>
+                        
+                        <div class="space-y-6">
+                            @php
+                                $diasSemana = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'];
+                                $filas = [
+                                    ['label' => 'HORARIO PRINCIPAL (Lun-Vie)', 'index' => 0],
+                                    ['label' => 'HORARIO ADICIONAL (Sáb/Dom/Otros)', 'index' => 1]
+                                ];
+                            @endphp
+
+                            @foreach($filas as $fila)
+                                @php
+                                    $i = $fila['index'];
+                                    $diasSeleccionados = $detalle->contenido['horarios'][$i]['dias'] ?? [];
+                                    $hInicio = $detalle->contenido['horarios'][$i]['inicio'] ?? '';
+                                    $hFin = $detalle->contenido['horarios'][$i]['fin'] ?? '';
+                                @endphp
+
+                                <div class="bg-white p-4 rounded-2xl border border-slate-200 relative">
+                                    <span class="absolute -top-2.5 left-4 bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border border-indigo-100">
+                                        {{ $fila['label'] }}
+                                    </span>
+                                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-2">
+                                        {{-- Selector Días --}}
+                                        <div class="flex flex-wrap gap-1.5 items-center">
+                                            @foreach($diasSemana as $dia)
+                                                <label class="cursor-pointer group">
+                                                    <input type="checkbox" name="contenido[horarios][{{$i}}][dias][]" value="{{ $dia }}" class="peer sr-only" {{ in_array($dia, $diasSeleccionados) ? 'checked' : '' }}>
+                                                    <div class="px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-400 text-[9px] font-black transition-all peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-sm group-hover:border-indigo-300">{{ $dia }}</div>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                        {{-- Selector Horas --}}
+                                        <div class="flex items-center gap-2 border-l-2 border-slate-100 pl-0 xl:pl-4">
+                                            <div class="relative w-full"><input type="time" name="contenido[horarios][{{$i}}][inicio]" value="{{ $hInicio }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs text-slate-600 outline-none focus:border-indigo-500 text-center"></div>
+                                            <span class="text-slate-300 font-black">-</span>
+                                            <div class="relative w-full"><input type="time" name="contenido[horarios][{{$i}}][fin]" value="{{ $hFin }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs text-slate-600 outline-none focus:border-indigo-500 text-center"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- 5. CONSULTORIO COMPARTIDO --}}
                     <div class="md:col-span-2 border-t-2 border-slate-50 pt-6 mt-2">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Es un consultorio compartido?</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -112,8 +151,6 @@
                                     </div>
                                 </label>
                             </div>
-
-                            {{-- CAMPO CONDICIONAL --}}
                             <div id="div_con_quien" class="{{ ($detalle->contenido['es_compartido'] ?? '') == 'SI' ? '' : 'hidden' }} animate-fade-in-down">
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -396,7 +433,11 @@
                     </div>
                     <div id="section_socializa_reportes" class="{{ ($detalle->contenido['utiliza_reportes'] ?? '') === 'NO' ? 'hidden' : '' }}">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Si es "SÍ" con quién lo socializa</label>
-                        <input type="text" name="contenido[socializa_reportes]" value="{{ $detalle->contenido['socializa_reportes'] ?? '' }}" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none uppercase" placeholder="Ej: Jefe de establecimiento, equipo de salud, etc." />
+                        <select name="contenido[socializa_reportes]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none">
+                            @foreach(['PERSONAL DEL SERVICIO','JEFE DE ESTABLECIMIENTO','ESTADISTICO','UNIDAD EJECUTORA','DIRESA','OTROS'] as $op)
+                                <option value="{{$op}}" {{ ($detalle->contenido['socializa_reportes'] ?? '---') == $op ? 'selected' : '' }}>{{$op}}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>
@@ -411,7 +452,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿A quién le comunica?</label>
                         <select name="contenido[comunica_a]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none">
-                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTRO'] as $op)
+                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTROS'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['comunica_a'] ?? '---') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
                         </select>
@@ -419,7 +460,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Qué medio utiliza?</label>
                         <div class="flex gap-8 mt-3">
-                            @foreach(['CELULAR' => 'celular', 'EMAIL' => 'email', 'WHATSAPP' => 'whatsapp'] as $label => $key)
+                            @foreach(['CELULAR' => 'celular', 'CORREO' => 'correo', 'WHATSAPP' => 'whatsapp', 'OTROS' => 'otros'] as $label => $key)
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="radio" name="contenido[medio_soporte]" value="{{$label}}" {{ ($detalle->contenido['medio_soporte'] ?? '') == $label ? 'checked' : '' }} class="w-5 h-5">
                                     <span class="text-sm font-bold">{{$label}}</span>

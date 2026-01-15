@@ -81,6 +81,17 @@ class FuaElectronicoController extends Controller
             // ---------------------------------------------------------
             // 2. APLICAR REGLAS DE NEGOCIO (LIMPIEZA DE NULOS)
             // ---------------------------------------------------------
+            if (($datos['tiene_sistema_fua'] ?? '') === 'NO') {
+                $datos['utiliza_sihce']          = null;
+                
+                // Limpiamos los dependientes
+                $datos['firmo_dj']               = null;
+                $datos['firmo_confidencialidad'] = null;
+                $datos['recibio_capacitacion']   = null;
+                $datos['inst_capacitacion']      = null;
+                $datos['comunica_a']             = null;
+                $datos['medio_soporte']          = null;
+            }
             
             // REGLA A: Si NO utiliza SIHCE -> Limpiar campos administrativos y soporte
             if (($datos['utiliza_sihce'] ?? '') === 'NO') {

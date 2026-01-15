@@ -85,14 +85,7 @@
         
         // B. Aplicar lógica de recorte para C.E. (Quitar los 2 primeros caracteres)
         $docFinal = $rawNumDoc; // Valor por defecto
-        
-        if (in_array(strtoupper($rawTipoDoc), ['CE', 'C.E.', 'C.E'])) {
-            // Solo recortamos si tiene longitud suficiente
-            if (strlen($rawNumDoc) > 2) {
-                $docFinal = substr($rawNumDoc, 2); 
-            }
-        }
-
+               
         // C. Preparar Nombre Completo (También lo reutilizaremos)
         $pNom = $detalle->contenido['profesional']['nombres'] ?? '';
         $pPat = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
@@ -168,8 +161,8 @@
             <td class="uppercase">{{ $detalle->contenido['utiliza_sihce'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Cargo</td>
-            <td class="uppercase">MEDICO</td>
+            <td class="bg-label">Profesion</td>
+            <td class="uppercase">{{ $detalle->contenido['profesional']['profesion'] ?? '---' }}</td>
         </tr>
         {{-- DOC ADMIN: Se muestra si SIHCE NO es 'NO' (o sea SI o vacío) --}}
         @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
