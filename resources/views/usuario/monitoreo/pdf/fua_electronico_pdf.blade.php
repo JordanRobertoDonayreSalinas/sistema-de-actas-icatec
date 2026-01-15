@@ -73,6 +73,9 @@
         $rawTipoDoc = $detalle->contenido['profesional']['tipo_doc'] ?? '---';
         $rawNumDoc  = $detalle->contenido['profesional']['doc'] ?? '---';
         
+        // B. Aplicar lógica de recorte para C.E. (Quitar los 2 primeros caracteres)
+        $docFinal = $rawNumDoc; // Valor por defecto
+
         // Nombre Completo
         $pNom = $detalle->contenido['profesional']['nombres'] ?? '';
         $pPat = $detalle->contenido['profesional']['apellido_paterno'] ?? '';
@@ -82,6 +85,11 @@
         if(empty($profNombreCompleto)) {
             $profNombreCompleto = $detalle->contenido['profesional']['apellidos_nombres'] ?? '---';
         }
+
+        // 2. Variable maestra para control de visibilidad
+        // Si tiene_sistema_fua es 'NO', ocultamos varias secciones
+        $tieneFua = $detalle->contenido['tiene_sistema_fua'] ?? '---';
+        $utilizaSihce = $detalle->contenido['utiliza_sihce'] ?? '---';
     @endphp
 
     {{-- ENCABEZADO --}}
@@ -108,7 +116,7 @@
     <table>
         <tr>
             <td class="bg-label">¿Cuenta con módulo FUA del SIHCE?</td>
-            <td class="uppercase">{{ $detalle->contenido['tiene_sistema_fua'] ?? '---' }}</td>
+            <td class="uppercase">{{ $tieneFua }}</td>
         </tr>
         <tr>
             <td class="bg-label">Nro. Personas que Digitan</td>
@@ -143,16 +151,18 @@
           <td class="bg-label">Celular</td>
             <td>{{ $detalle->contenido['profesional']['telefono'] ?? '---' }}</td>
         </tr>
+        @if($tieneFua != 'NO')
         <tr>
             <td class="bg-label">¿Utiliza SIHCE?</td>
-            <td class="uppercase">{{ $detalle->contenido['utiliza_sihce'] ?? '---' }}</td>
+            <td class="uppercase">{{ $utilizaSihce }}</td>
         </tr>
+        @endif
         <tr>
-            <td class="bg-label">Cargo</td>
-            <td class="uppercase">USUARIO DEL MODULO</td>
+            <td class="bg-label">Profesion</td>
+            <td class="uppercase">{{ $detalle->contenido['profesional']['profesion'] ?? '---' }}</td>
         </tr>
         {{-- DOC ADMIN: Condicional --}}
-        @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
+        @if($tieneFua != 'NO' && $utilizaSihce != 'NO')
         <tr>
             <td class="bg-label">¿Firmó Declaración Jurada?</td>
             <td class="uppercase">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
@@ -190,7 +200,7 @@
     @endif
 
     {{-- SECCIÓN 4: CAPACITACIÓN (CONDICIONAL SIHCE) --}}
-    @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
+    @if($tieneFua != 'NO' && $utilizaSihce != 'NO')
     <div class="section-title">{{ $n++ }}. Detalles de Capacitación</div>
     <table>
         <tr>
@@ -334,7 +344,7 @@
     @endif
 
     {{-- SECCIÓN 9: SOPORTE (CONDICIONAL SIHCE) --}}
-    @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
+    @if($tieneFua != 'NO' && $utilizaSihce != 'NO')
     <div class="section-title">{{ $n++ }}. Soporte</div>
     <table>
         <tr>

@@ -158,8 +158,8 @@
             <td class="uppercase">{{ $detalle->contenido['utiliza_sihce'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Cargo</td>
-            <td class="uppercase">NUTRICIONISTA</td>
+            <td class="bg-label">Profesion</td>
+            <td class="uppercase">{{ $detalle->contenido['profesional']['profesion'] ?? '---' }}</td>
         </tr>
         {{-- DOC ADMIN: Se muestra si SIHCE NO es 'NO' (o sea SI o vacío) --}}
         @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')
