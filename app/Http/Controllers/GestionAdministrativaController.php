@@ -28,6 +28,7 @@ class GestionAdministrativaController extends Controller
                 'nombres'          => $profesional->nombres,
                 'email'            => $profesional->email,
                 'telefono'         => $profesional->telefono,
+                'cargo'            => $profesional->cargo, // Retorna el cargo para el formulario
             ]);
         }
         return response()->json(['exists' => false]);
@@ -46,7 +47,7 @@ class GestionAdministrativaController extends Controller
             ->where('modulo', $modulo)
             ->get();
 
-        // Lógica de "Guía Histórica": Si no hay equipos, buscar en la última acta del mismo establecimiento
+        // Lógica de "Guía Histórica": Si no hay equipos, buscar en la última acta
         if ($equipos->isEmpty()) {
             $ultimaActaId = CabeceraMonitoreo::where('establecimiento_id', $acta->establecimiento_id)
                 ->where('id', '<', $id) 
@@ -72,9 +73,10 @@ class GestionAdministrativaController extends Controller
      */
     public function store(Request $request, $id)
     {
+        // Validación ajustada para UNA sola imagen
         $request->validate([
-            'contenido.fecha' => 'required|date', // Validar la fecha
-            'foto_evidencia'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'contenido.fecha' => 'required|date',
+            'foto_evidencia'  => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
         ]);
 
         try {
@@ -85,6 +87,7 @@ class GestionAdministrativaController extends Controller
             // 1. Sincronizar Datos del Profesional Responsable (RRHH)
             if (isset($datos['rrhh']) && !empty($datos['rrhh']['doc'])) {
                 $info = $datos['rrhh'];
+                
                 Profesional::updateOrCreate(
                     ['doc' => trim($info['doc'])],
                     [
@@ -94,12 +97,12 @@ class GestionAdministrativaController extends Controller
                         'nombres'          => mb_strtoupper(trim($info['nombres'] ?? ''), 'UTF-8'),
                         'email'            => isset($info['email']) ? strtolower(trim($info['email'])) : null,
                         'telefono'         => $info['telefono'] ?? null,
+                        'cargo'            => isset($info['cargo']) ? mb_strtoupper(trim($info['cargo']), 'UTF-8') : null,
                     ]
                 );
             }
 
             // 2. Sincronizar Inventario de Equipos de Cómputo
-            // Primero borramos los anteriores para insertar los nuevos (Estrategia de reemplazo completo)
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
             
             if ($request->has('equipos') && is_array($request->equipos)) {
@@ -109,19 +112,17 @@ class GestionAdministrativaController extends Controller
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $modulo,
                             'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
-                            'cantidad'    => 1, // Por defecto 1 según tu lógica visual
+                            'cantidad'    => 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
                             'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? '', 'UTF-8'),
                             'propio'      => mb_strtoupper($eq['propio'] ?? 'PERSONAL', 'UTF-8'),
-                            
-                            // *** AQUÍ ESTABA EL ERROR: FALTABA ESTA LÍNEA ***
                             'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
                         ]);
                     }
                 }
             }
 
-            // 3. Sincronizar Tabla de Respuestas Maestras (Si la usas para reportes globales)
+            // 3. Sincronizar Tabla de Respuestas Maestras
             DB::table('mon_respuesta_entrevistado')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo' => $modulo],
                 [
@@ -134,20 +135,30 @@ class GestionAdministrativaController extends Controller
                 ]
             );
 
-            // 4. Gestión de Evidencia Fotográfica
+            // 4. Gestión de Evidencia Fotográfica (UNA SOLA FOTO)
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo_nombre', $modulo)
                                 ->first();
 
             if ($request->hasFile('foto_evidencia')) {
-                // Borrar foto anterior si existe y subir nueva
-                if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
-                    Storage::disk('public')->delete($registroPrevio->contenido['foto_evidencia']);
+                // Si existe una foto anterior, la borramos para no acumular basura
+                if ($registroPrevio && !empty($registroPrevio->contenido['foto_evidencia'])) {
+                    // Verificamos que sea string (ruta) y que exista el archivo
+                    $oldPath = $registroPrevio->contenido['foto_evidencia'];
+                    if (is_string($oldPath) && Storage::disk('public')->exists($oldPath)) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
                 }
+                
+                // Guardar la nueva foto
                 $datos['foto_evidencia'] = $request->file('foto_evidencia')->store('evidencias_monitoreo', 'public');
-            } elseif ($registroPrevio) {
-                // Mantener la foto existente si no se sube una nueva
-                $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'] ?? null;
+
+            } elseif ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+                // Si no se subió nueva foto, mantenemos la ruta anterior
+                $datos['foto_evidencia'] = $registroPrevio->contenido['foto_evidencia'];
+            } else {
+                // Si no hay foto nueva ni anterior
+                $datos['foto_evidencia'] = null;
             }
 
             // 5. Guardar el JSON consolidado en la tabla de módulos

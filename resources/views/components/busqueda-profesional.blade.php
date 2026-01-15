@@ -105,7 +105,49 @@
                     <input type="text" name="contenido[{{$prefix}}][telefono]" id="tel_{{$prefix}}" 
                            value="{{ $detalle->contenido[$prefix]['telefono'] ?? '' }}" 
                            class="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-700 text-sm shadow-sm">
-                    <i data-lucide="smartphone" class="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-200 group-focus-within/input:text-indigo-400 transition-colors"></i>
+                    <i data-lucide="smartphone" class="absolute left-5 top-1/2 -translate-x-1/2 w-4 h-4 text-slate-200 group-focus-within/input:text-indigo-400 transition-colors"></i>
+                </div>
+            </div>
+
+            {{-- CARGO / PROFESIÓN --}}
+            <div class="md:col-span-8">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Profesión</label>
+                
+                {{-- INPUT HIDDEN QUE GUARDA EL VALOR FINAL --}}
+                <input type="hidden" name="contenido[{{$prefix}}][cargo]" id="cargo_final_{{$prefix}}" 
+                       value="{{ $detalle->contenido[$prefix]['cargo'] ?? '' }}">
+
+                <div class="flex gap-2">
+                    {{-- SELECT DE CARGOS --}}
+                    <div class="relative w-full">
+                        @php 
+                            $cargos = [
+                                'MEDICO', 'ODONTOLOGO(A)', 'ENFERMERO(A)', 'TECNICO(A) ENFERMERIA', 
+                                'TECNICO(A) LABORATORIO', 'BIOLOGO(A)', 'QUIMICO FARMACEUTICO(A)', 
+                                'NUTRICIONISTA', 'PSICOLOGO(A)', 'OBSTETRA', 'OTROS'
+                            ]; 
+                            $valorActual = $detalle->contenido[$prefix]['cargo'] ?? '';
+                            // Si el valor actual no está en la lista estándar y no está vacío, asumimos que es "OTROS"
+                            $seleccion = in_array($valorActual, $cargos) ? $valorActual : ($valorActual ? 'OTROS' : '');
+                        @endphp
+
+                        <select id="cargo_select_{{$prefix}}" onchange="syncCargo('{{$prefix}}')" 
+                                class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-600 text-sm cursor-pointer appearance-none shadow-sm uppercase">
+                            <option value="">-- SELECCIONE --</option>
+                            @foreach($cargos as $cargo)
+                                <option value="{{$cargo}}" {{ $seleccion == $cargo ? 'selected' : '' }}>{{$cargo}}</option>
+                            @endforeach
+                        </select>
+                        <i data-lucide="briefcase" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none"></i>
+                    </div>
+
+                    {{-- INPUT MANUAL (Se muestra si selecciona OTROS) --}}
+                    <div id="div_cargo_manual_{{$prefix}}" class="{{ $seleccion == 'OTROS' ? '' : 'hidden' }} w-full relative animate-fade-in-right">
+                        <input type="text" id="cargo_manual_{{$prefix}}" oninput="syncCargo('{{$prefix}}')" 
+                               value="{{ $seleccion == 'OTROS' ? $valorActual : '' }}" 
+                               placeholder="DIGITE LA PROFESION" 
+                               class="w-full px-5 py-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl focus:border-indigo-500 transition-all outline-none font-black text-indigo-600 uppercase text-sm shadow-sm">
+                    </div>
                 </div>
             </div>
 
@@ -115,6 +157,28 @@
 
 @once
 <script>
+    /**
+     * Sincroniza el valor del Select y el Input Manual hacia el Input Hidden final
+     */
+    function syncCargo(prefix) {
+        const select = document.getElementById('cargo_select_' + prefix);
+        const manualDiv = document.getElementById('div_cargo_manual_' + prefix);
+        const manualInput = document.getElementById('cargo_manual_' + prefix);
+        const finalInput = document.getElementById('cargo_final_' + prefix);
+
+        if (select.value === 'OTROS') {
+            manualDiv.classList.remove('hidden');
+            manualDiv.classList.add('flex');
+            // El valor final es lo que escriba en el input manual
+            finalInput.value = manualInput.value.trim().toUpperCase();
+        } else {
+            manualDiv.classList.add('hidden');
+            manualDiv.classList.remove('flex');
+            // El valor final es la opción del select
+            finalInput.value = select.value;
+        }
+    }
+
     /**
      * Actualiza la interfaz visual según el estado del profesional
      */
@@ -149,7 +213,7 @@
     }
 
     /**
-     * Busca profesional en la DB y rellena campos
+     * Busca profesional en la DB y rellena campos, incluyendo la lógica del cargo
      */
     function buscarMaster(prefix) {
         const docInput = document.getElementById('doc_' + prefix);
@@ -169,7 +233,7 @@
             .then(res => res.json())
             .then(data => {
                 if(data.exists) {
-                    // MODO ACTUALIZACIÓN: Cargamos datos y avisamos que puede editar
+                    // MODO ACTUALIZACIÓN
                     updateIdentityUI(prefix, 'success');
                     document.getElementById('nombres_' + prefix).value = data.nombres;
                     document.getElementById('paterno_' + prefix).value = data.apellido_paterno;
@@ -177,6 +241,35 @@
                     document.getElementById('email_' + prefix).value = data.email || '';
                     document.getElementById('tel_' + prefix).value = data.telefono || '';
                     document.getElementById('tipo_' + prefix).value = data.tipo_doc;
+
+                    // --- Lógica para poblar el Cargo/Profesión ---
+                    const cargoDb = (data.cargo || '').toUpperCase();
+                    const select = document.getElementById('cargo_select_' + prefix);
+                    const manualInput = document.getElementById('cargo_manual_' + prefix);
+                    
+                    // Verificar si el cargo de la BD existe en las opciones del select
+                    let existsInSelect = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === cargoDb) {
+                            existsInSelect = true;
+                            break;
+                        }
+                    }
+
+                    if (existsInSelect) {
+                        select.value = cargoDb;
+                        manualInput.value = ''; 
+                    } else if (cargoDb !== '') {
+                        // Si tiene cargo pero no está en la lista, es "OTROS"
+                        select.value = 'OTROS';
+                        manualInput.value = cargoDb;
+                    } else {
+                        // Si no tiene cargo
+                        select.value = '';
+                        manualInput.value = '';
+                    }
+                    // Ejecutar sincronización para ocultar/mostrar input manual
+                    syncCargo(prefix);
 
                     const Toast = Swal.mixin({
                         toast: true,
@@ -187,7 +280,7 @@
                     });
                     Toast.fire({
                         icon: 'success',
-                        title: 'Profesional encontrado. Si cambia algún dato, se actualizará en el sistema.'
+                        title: 'Profesional encontrado. Datos cargados.'
                     });
 
                 } else {
@@ -204,7 +297,6 @@
                         customClass: { popup: 'rounded-[2rem]' }
                     }).then(r => { 
                         if(!r.isConfirmed) {
-                            // Si cancela, limpiamos para no dejar datos inconsistentes
                             nuevoProfesional(prefix);
                         } else {
                             document.getElementById('nombres_' + prefix).focus();
@@ -223,12 +315,16 @@
      */
     function nuevoProfesional(prefix) {
         updateIdentityUI(prefix, 'new');
-        const fields = ['nombres_', 'paterno_', 'materno_', 'email_', 'tel_'];
+        const fields = ['nombres_', 'paterno_', 'materno_', 'email_', 'tel_', 'cargo_manual_'];
         fields.forEach(f => {
             const input = document.getElementById(f + prefix);
             if(input) input.value = '';
         });
         document.getElementById('tipo_' + prefix).value = 'DNI';
+        document.getElementById('cargo_select_' + prefix).value = '';
+        
+        syncCargo(prefix); // Actualizar estado del cargo
+        
         document.getElementById('doc_' + prefix).focus();
     }
 </script>
@@ -239,5 +335,11 @@
         50% { transform: translateY(-5px); }
     }
     .animate-bounce-short { animation: bounce-short 0.5s ease-in-out 2; }
+    
+    @keyframes fade-in-right {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .animate-fade-in-right { animation: fade-in-right 0.3s ease-out forwards; }
 </style>
 @endonce

@@ -16,7 +16,7 @@ class Profesional extends Model
 
     /**
      * Los atributos que se pueden asignar masivamente.
-     * Al usar updateOrCreate en el controlador, todos estos deben estar aquí.
+     * Se agregó 'cargo' para permitir su registro.
      */
     protected $fillable = [
         'tipo_doc',
@@ -26,11 +26,11 @@ class Profesional extends Model
         'nombres',
         'email',
         'telefono',
+        'cargo', // <--- CAMPO NUEVO AGREGADO
     ];
 
     /**
      * Indica si el modelo debe tener marcas de tiempo (created_at, updated_at).
-     * Ahora que ejecutaste la migración, esto DEBE ser true.
      */
     public $timestamps = true;
 
@@ -77,5 +77,13 @@ class Profesional extends Model
     public function setEmailAttribute($value)
     {
         $this->attributes['email'] = !empty($value) ? strtolower(trim($value)) : null;
+    }
+
+    /**
+     * [NUEVO] Convierte el Cargo a mayúsculas y limpia espacios.
+     */
+    public function setCargoAttribute($value)
+    {
+        $this->attributes['cargo'] = !empty($value) ? mb_strtoupper(trim($value), 'UTF-8') : null;
     }
 }

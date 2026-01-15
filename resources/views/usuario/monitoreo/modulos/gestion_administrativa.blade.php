@@ -43,8 +43,7 @@
                         <input type="date" name="contenido[fecha]" value="{{ $detalle->contenido['fecha'] ?? date('Y-m-d') }}" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-indigo-500 transition-all">
                     </div>
                     <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Turno</label>
-                        <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
+                    <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
                     </div>
                 </div>
             </div>
@@ -94,7 +93,7 @@
             <div id="section_dni_detalle" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 hidden">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">3</span>
-                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DETALLE DE DNI Y FIRMA DIGITAL</h3>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">TIPO DE DNI Y FIRMA DIGITAL</h3>
                 </div>
                 
                 {{-- SELECCIÓN DE TIPO DE DOCUMENTO (TARJETAS) --}}
@@ -133,7 +132,7 @@
                 <div id="bloque_opciones_dni" class="bg-slate-50 rounded-2xl p-6 border border-slate-200 {{ empty($detalle->contenido['tipo_dni']) ? 'hidden' : '' }}">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         
-                        {{-- COLUMNA IZQ: VERSIÓN (Solo para electrónico) --}}
+                        {{-- COLUMNA IZQ: VERSIÓN --}}
                         <div id="bloque_version_dnie" class="{{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
                             <label class="block text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-2">Versión del DNIe</label>
                             <select name="contenido[version_dnie]" class="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500 text-indigo-700">
@@ -144,7 +143,7 @@
                             </select>
                         </div>
 
-                        {{-- COLUMNA DER: FIRMA DIGITAL (Radio Buttons) --}}
+                        {{-- COLUMNA DER: FIRMA DIGITAL --}}
                         <div id="bloque_firma_digital" class="{{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
                             <label class="block text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-3">¿Firma Digitalmente en SIHCE?</label>
                             <div class="flex items-center gap-6">
@@ -205,7 +204,7 @@
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
-                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">EQUIPOS DE COMPUTO</h3>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DEL CONSULTORIO</h3>
                 </div>
                 <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
             </div>
@@ -228,7 +227,7 @@
                     <div>
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Medio que utiliza:</label>
                         <select name="contenido[medio_que_utiliza]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
-                            @foreach(['TELEFONO','EMAIL','WHATSAPP','OTROS'] as $me)
+                            @foreach(['CELULAR','EMAIL','WHATSAPP','OTROS'] as $me)
                                 <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
                             @endforeach
                         </select>
@@ -263,19 +262,33 @@
                             <span class="bg-red-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">10</span>
                             <h3 class="text-white font-black text-lg uppercase tracking-tight">EVIDENCIA FOTOGRÁFICA</h3>
                         </div>
-                        @if(isset($detalle->contenido['foto_evidencia']))
+                        
+                        {{-- BLOQUE CORREGIDO PARA EVITAR EL ERROR 'ARRAY TO STRING' --}}
+                        @php
+                            $fotoEvidencia = $detalle->contenido['foto_evidencia'] ?? null;
+                            // Si por error viene un array (de pruebas anteriores), tomamos el primero
+                            if(is_array($fotoEvidencia)) {
+                                $fotoEvidencia = $fotoEvidencia[0] ?? null;
+                            }
+                        @endphp
+
+                        @if($fotoEvidencia)
                             <div class="mb-4 relative group w-full">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
                                 <div class="rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg h-32 w-32 bg-black/50">
-                                    <img src="{{ asset('storage/' . $detalle->contenido['foto_evidencia']) }}" class="w-full h-full object-cover">
+                                    <img src="{{ asset('storage/' . $fotoEvidencia) }}" class="w-full h-full object-cover">
                                 </div>
                             </div>
                         @endif
+                        
                         <div class="relative group">
+                            {{-- Input simple (sin multiple) --}}
                             <input type="file" name="foto_evidencia" id="foto_evidencia" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
                             <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner h-48 border-spacing-4">
                                 <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-indigo-400 mb-2"></i>
-                                <span id="file-name-display" class="text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">{{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}</span>
+                                <span id="file-name-display" class="text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">
+                                    {{ $fotoEvidencia ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}
+                                </span>
                                 <img id="img-preview" src="#" class="hidden mt-2 w-20 h-20 object-cover rounded-lg border-2 border-indigo-500">
                             </div>
                         </div>
@@ -283,7 +296,7 @@
                 </div>
             </div> {{-- FIN DEL CONTENEDOR OSCURO --}}
 
-            {{-- 11.- FIRMA (BOTÓN NUEVO DISEÑO - AHORA FUERA DEL CUADRO OSCURO) --}}
+            {{-- 11.- FIRMA (BOTÓN NUEVO DISEÑO FUERA DEL BOX NEGRO) --}}
             <div class="pt-10 pb-5 mt-6">
                 <button type="submit" id="btn-submit-action" 
                         class="w-full group bg-indigo-600 text-white p-8 rounded-[3rem] font-black shadow-2xl shadow-indigo-200 flex items-center justify-between hover:bg-indigo-700 transition-all duration-500 active:scale-[0.98] cursor-pointer">
@@ -301,6 +314,7 @@
                     </div>
                 </button>
             </div>
+
         </form>
     </div>
 </div>
