@@ -159,7 +159,7 @@
         @endif
         <tr>
             <td class="bg-label">Profesion</td>
-            <td class="uppercase">{{ $detalle->contenido['profesional']['profesion'] ?? '---' }}</td>
+            <td class="uppercase">{{ $detalle->contenido['profesional']['cargo'] ?? '---' }}</td>
         </tr>
         {{-- DOC ADMIN: Condicional --}}
         @if($tieneFua != 'NO' && $utilizaSihce != 'NO')
