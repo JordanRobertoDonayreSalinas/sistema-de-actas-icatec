@@ -142,6 +142,12 @@ class PlanificacionController extends Controller
 
             // 6. GUARDAR EN TABLA PROFESIONALES
             if (!empty($personal['dni'])) {
+
+                $profesionFinal = $personal['profesion'] ?? null;
+                // Si seleccionó OTROS, usamos el valor del campo de texto
+                if ($profesionFinal === 'OTROS' && !empty($personal['profesion_otro'])) {
+                    $profesionFinal = $personal['profesion_otro'];
+                }
                 DB::table('mon_profesionales')->updateOrInsert(
                     ['doc' => $personal['dni']], 
                     [
@@ -150,6 +156,7 @@ class PlanificacionController extends Controller
                         'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
                         'email'            => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
                         'telefono'         => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'profesion'        => mb_strtoupper($profesionFinal, 'UTF-8'),
                         'updated_at'       => now()
                     ]
                 );

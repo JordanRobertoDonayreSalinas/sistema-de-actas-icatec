@@ -143,7 +143,7 @@
     </div>
 
     <div class="header">
-        <h1>Módulo 08: Control de Crecimiento y Desarrollo (CRED)</h1>
+        <h1>Módulo 08: Crecimiento y Desarrollo (CRED)</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px;">
             ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
         </div>
@@ -151,7 +151,7 @@
     <div class="section-header">Datos del Profesional</div>
     <table class="table-data">
         <tr>
-            <th width="35%">Nombres y Apellidos:</th>
+            <th width="35%">Apellidos y nombres:</th>
             <td class="uppercase">{{ $detalle->personal_nombre ?? 'N/A' }}</td>
         </tr>
         
@@ -176,8 +176,19 @@
         </tr>
         
         <tr>
-            <th>Cargo:</th>
-            <td class="uppercase">{{ $detalle->personal_roles ?? 'N/A' }}</td>
+            <th>Profesión:</th>
+            <td>
+                @php
+                    $profesion = $datos['personal']['profesion'] ?? 'N/A';
+                    $especifique = $datos['personal']['profesion_otro'] ?? '';
+                    
+                    // Si la profesión es 'OTROS' y hay algo escrito en especifique, mostrar eso.
+                    if ($profesion === 'OTROS' && !empty($especifique)) {
+                        $profesion = $especifique;
+                    }
+                @endphp
+                {{ mb_strtoupper($profesion, 'UTF-8') }}
+            </td>
         </tr>
 
         <tr>
@@ -291,21 +302,23 @@
         </tr>
     </table>
 
-    <div class="section-header">Soporte</div>
-    <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;" >
-        <tr>
-            <th style="width: 25%; text-align: left; background-color: #f8fafc;">Ante dificultades se comunica con:</th>
-            <td style="width: 25%; text-align: left;" class="uppercase">
-                {{ $datos['soporte']['comunica'] ?? '' }}
-            </td>
+    @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
+        <div class="section-header">Soporte</div>
+        <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;" >
+            <tr>
+                <th style="width: 25%; text-align: left; background-color: #f8fafc;">Ante dificultades se comunica con:</th>
+                <td style="width: 25%; text-align: left;" class="uppercase">
+                    {{ $datos['soporte']['comunica'] ?? '' }}
+                </td>
 
-            <th style="width: 20%; text-align: left; background-color: #f8fafc;">Medio que utiliza:</th>
-            <td style="width: 30%; text-align: left;" class="uppercase">
-                {{ $datos['soporte']['medio'] ?? '' }}
-            </td>
-        </tr>
-    </table>
-
+                <th style="width: 20%; text-align: left; background-color: #f8fafc;">Medio que utiliza:</th>
+                <td style="width: 30%; text-align: left;" class="uppercase">
+                    {{ $datos['soporte']['medio'] ?? '' }}
+                </td>
+            </tr>
+        </table>
+    @endif
+    
     <div class="section-header">Comentarios</div>
     
     <div style="
@@ -350,38 +363,38 @@
         @endif
     </div>
 
-    <div class="section-header">Firma del Responsable</div>
+    <div class="section-header">Firma</div>
 
-<div style="margin-top: 80px;"> {{-- Espacio de 3-4 líneas adicionales --}}
-    <table style="width: 100%; border: none;">
-        <tr>
-            <td style="width: 20%; border: none;"></td>
-            
-            <td style="width: 60%; border: 1px solid #1e293b; padding: 30px 20px; text-align: center; border-radius: 15px; background-color: #f8fafc;">
-                
-                {{-- Espacio para la firma física --}}
-                <div style="height: 70px;"></div>
+        <div style="margin-top: 80px;"> {{-- Espacio de 3-4 líneas adicionales --}}
+            <table style="width: 100%; border: none;">
+                <tr>
+                    <td style="width: 20%; border: none;"></td>
+                    
+                    <td style="width: 60%; border: 1px solid #1e293b; padding: 30px 20px; text-align: center; border-radius: 15px; background-color: #f8fafc;">
+                        
+                        {{-- Espacio para la firma física --}}
+                        <div style="height: 70px;"></div>
 
-                {{-- Línea de firma --}}
-                <div style="width: 80%; border-top: 1.0pt solid #000000; margin: 0 auto 10px auto;"></div>
+                        {{-- Línea de firma --}}
+                        <div style="width: 80%; border-top: 1.0pt solid #000000; margin: 0 auto 10px auto;"></div>
 
-                {{-- Datos del Responsable --}}
-                <div style="text-transform: uppercase; font-size: 11px; color: #000; margin-top: 5px; line-height: 1.2;">
-                    {{ $detalle->personal_nombre ?? 'SIN NOMBRE REGISTRADO' }}
-                </div>
-                
-                <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
-                    DNI: {{ $detalle->personal_dni ?? '________' }} <br>
-                </div> 
-                <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
-                     {{' FIRMA DEL PROFESIONAL ENTREVISTADO ' }} <br>
-                </div> 
-            </td>
+                        {{-- Datos del Responsable --}}
+                        <div style="text-transform: uppercase; font-size: 11px; color: #000; margin-top: 5px; line-height: 1.2;">
+                            {{ $detalle->personal_nombre ?? 'SIN NOMBRE REGISTRADO' }}
+                        </div>
+                        
+                        <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
+                            DNI: {{ $detalle->personal_dni ?? '________' }} <br>
+                        </div> 
+                        <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
+                            {{' FIRMA DEL PROFESIONAL ENTREVISTADO ' }} <br>
+                        </div> 
+                    </td>
 
-            <td style="width: 20%; border: none;"></td>
-        </tr>
-    </table>
-</div>
+                    <td style="width: 20%; border: none;"></td>
+                </tr>
+            </table>
+        </div>
 
 <script type="text/php">
     if (isset($pdf)) {

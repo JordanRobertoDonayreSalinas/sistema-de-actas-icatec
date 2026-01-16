@@ -2,53 +2,106 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte Planificación Familiar - {{ $acta->establecimiento->nombre }}</title>
+    <title>Reporte Planificación Familiar - Acta {{ $acta->id }}</title>
     <style>
         @page { margin: 1.5cm; }
-        * { box-sizing: border-box; }
-        body { font-family: 'Helvetica', sans-serif; font-size: 10px; line-height: 1.4; color: #1e293b; }
-        
-        .header { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            border-bottom: 2px solid #4f46e5; 
-            padding-bottom: 10px; 
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
+            color: #1e293b;
+            line-height: 1.4;
+            counter-reset: section-counter;
         }
-        .header h1 { font-size: 16px; margin: 0; text-transform: uppercase; color: #4f46e5; }
-        .header p { margin: 2px 0; font-weight: bold; color: #64748b; }
-        
-        .section-header { 
-            background: #f1f5f9; 
-            padding: 6px 10px; 
-            margin-top: 15px; 
-            border-left: 4px solid #4f46e5; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            font-size: 10px; 
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 10px;
         }
-        
+        .header h1 {
+            margin: 0;
+            font-size: 16px;
+            text-transform: uppercase;
+            color: #4f46e5;
+        }
+        .header p {
+            margin: 2px 0;
+            font-weight: bold;
+            color: #64748b;
+        }
+        .section-header {
+            background-color: #f1f5f9;
+            padding: 6px 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-left: 4px solid #4f46e5;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        .section-header:before {
+            /* Incrementamos el contador cada vez que aparece una clase section-header */
+            counter-increment: section-counter;
+            /* Mostramos el número seguido de un punto y un espacio */
+            content: counter(section-counter) ". ";
+        }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
-        .table-data, .table-data th, .table-data td { border: 0.5px solid #cbd5e1; }
-        th { background: #f8fafc; padding: 6px; text-align: left; font-size: 9px; color: #475569; text-transform: uppercase; }
-        td { padding: 6px; vertical-align: top; }
-        
-        .text-center { text-align: center; }
-        .uppercase { text-transform: uppercase; }
-        .font-bold { font-weight: bold; }
-
-        .photo-table { width: 100%; border: none !important; margin-top: 10px; border-collapse: separate; border-spacing: 10px; }
-        .photo-table td { border: none !important; text-align: center; vertical-align: top; }
-        .img-box { 
-            width: 100%; 
-            height: 180px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 12px; 
-            background-color: #f8fafc; 
-            overflow: hidden;
-            display: block;
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 5px;
+            text-align: left;
+            font-size: 9px;
         }
-        .img-box img { width: 100%; height: 180px; object-fit: cover; }
-        .photo-label { margin-top: 5px; font-size: 8px; font-weight: bold; color: #475569; text-transform: uppercase; }
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .text-center { text-align: center; }
+        /* --- CSS CORREGIDO PARA EL FOOTER --- */
+        .footer {
+            position: fixed;
+            bottom: -1cm;
+            left: 0px;
+            right: 0px;
+            width: 100%;
+            height: 30px;
+            border-top: 0.5pt solid #e2e8f0;
+        }
+
+        .tab-footer {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+        }
+
+        .tab-footer td {
+            border: none !important;
+            padding: 5px 0;
+            font-size: 9px;
+            color: #94a3b8;
+            vertical-align: middle; /* Cambiado a middle para mejor alineación */
+        }
+
+        .col-izquierda { text-align: left; width: 50%; }
+        .col-derecha { text-align: right; width: 50%; }
+        .photo-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .photo-frame {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            display: inline-block;
+            background: #fff;
+            margin: 10px;
+            vertical-align: top;
+        }
+        .photo {
+            max-width: 300px;
+            max-height: 250px;
+            object-fit: contain;
+        }
         /* Contenedor principal de la sección de fotos */
         .photo-section {
             width: 100%;
@@ -72,47 +125,7 @@
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             background-color: #f8fafc;
-        }
-        .signature-card { 
-            border: 1px solid #1e293b !important; 
-            background-color: #f8fafc !important; 
-            border-radius: 15px !important; 
-            padding: 25px; 
-        }
-        .footer {
-            position: fixed;
-            bottom: -1cm;
-            left: 0px;
-            right: 0px;
-            width: 100%;
-            height: 30px;
-            border-top: 0.5pt solid #e2e8f0;
-        }
-
-        /* Esta tabla fuerza la posición IZQUIERDA | DERECHA */
-        .tab-footer {
-            width: 100%;
-            border-collapse: collapse;
-            border: none;
-        }
-
-        .tab-footer td {
-            border: none !important; /* Quitamos bordes heredados */
-            padding: 5px 0;
-            font-size: 9px;
-            color: #94a3b8;
-            vertical-align: top;
-        }
-        .col-izquierda {
-            text-align: left;
-            width: 50%;
-        }
-
-        .col-derecha {
-            text-align: right;
-            width: 50%;
-        }
-        .signature-line { border-top: 1px solid #000000; width: 80%; margin: 0 auto 10px auto; height: 1px; }
+        } 
     </style>
 </head>
 <body>
@@ -132,11 +145,12 @@
         <h1>Módulo 11: Planificación Familiar</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px;">
             ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
+        </div>
     </div>
     <div class="section-header">Datos del Profesional</div>
     <table class="table-data">
         <tr>
-            <th width="35%">Nombres y Apellidos:</th>
+            <th width="35%">Apellidos y nombres:</th>
             <td class="uppercase">{{ $detalle->personal_nombre ?? 'N/A' }}</td>
         </tr>
         
@@ -161,8 +175,19 @@
         </tr>
         
         <tr>
-            <th>Cargo:</th>
-            <td class="uppercase">{{ $detalle->personal_roles ?? 'N/A' }}</td>
+            <th>Profesión:</th>
+            <td>
+                @php
+                    $profesion = $datos['personal']['profesion'] ?? 'N/A';
+                    $especifique = $datos['personal']['profesion_otro'] ?? '';
+                    
+                    // Si la profesión es 'OTROS' y hay algo escrito en especifique, mostrar eso.
+                    if ($profesion === 'OTROS' && !empty($especifique)) {
+                        $profesion = $especifique;
+                    }
+                @endphp
+                {{ mb_strtoupper($profesion, 'UTF-8') }}
+            </td>
         </tr>
 
         <tr>
@@ -266,7 +291,7 @@
         </tbody>
     </table>
 
-        <div class="section-header">04. Procesos HIS y Tiempos</div>
+        <div class="section-header">Procesos HIS y Tiempos</div>
         <table class="table-data">
             <tr>
                 <th width="35%">Tiempo Promedio Atención (min):</th>
@@ -302,20 +327,22 @@
             </tbody>
         </table>
 
+        @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
         <div class="section-header">Soporte</div>
-    <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;" >
-        <tr>
-            <th style="width: 25%; text-align: left; background-color: #f8fafc;">Ante dificultades se comunica con:</th>
-            <td style="width: 25%; text-align: left;" class="uppercase">
-                {{ $datos['soporte']['comunica'] ?? '' }}
-            </td>
+        <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;" >
+            <tr>
+                <th style="width: 25%; text-align: left; background-color: #f8fafc;">Ante dificultades se comunica con:</th>
+                <td style="width: 25%; text-align: left;" class="uppercase">
+                    {{ $datos['soporte']['comunica'] ?? '' }}
+                </td>
 
-            <th style="width: 20%; text-align: left; background-color: #f8fafc;">Medio que utiliza:</th>
-            <td style="width: 30%; text-align: left;" class="uppercase">
-                {{ $datos['soporte']['medio'] ?? '' }}
-            </td>
-        </tr>
-    </table>
+                <th style="width: 20%; text-align: left; background-color: #f8fafc;">Medio que utiliza:</th>
+                <td style="width: 30%; text-align: left;" class="uppercase">
+                    {{ $datos['soporte']['medio'] ?? '' }}
+                </td>
+            </tr>
+        </table>
+        @endif
 
     <div class="section-header">Comentarios</div>
     
@@ -361,38 +388,38 @@
         @endif
     </div>
 
-    <div class="section-header">Firma del Responsable</div>
+    <div class="section-header">Firma</div>
 
-<div style="margin-top: 80px;"> {{-- Espacio de 3-4 líneas adicionales --}}
-    <table style="width: 100%; border: none;">
-        <tr>
-            <td style="width: 20%; border: none;"></td>
-            
-            <td style="width: 60%; border: 1px solid #1e293b; padding: 30px 20px; text-align: center; border-radius: 15px; background-color: #f8fafc;">
-                
-                {{-- Espacio para la firma física --}}
-                <div style="height: 70px;"></div>
+        <div style="margin-top: 80px;"> {{-- Espacio de 3-4 líneas adicionales --}}
+            <table style="width: 100%; border: none;">
+                <tr>
+                    <td style="width: 20%; border: none;"></td>
+                    
+                    <td style="width: 60%; border: 1px solid #1e293b; padding: 30px 20px; text-align: center; border-radius: 15px; background-color: #f8fafc;">
+                        
+                        {{-- Espacio para la firma física --}}
+                        <div style="height: 70px;"></div>
 
-                {{-- Línea de firma --}}
-                <div style="width: 80%; border-top: 1.0pt solid #000000; margin: 0 auto 10px auto;"></div>
+                        {{-- Línea de firma --}}
+                        <div style="width: 80%; border-top: 1.0pt solid #000000; margin: 0 auto 10px auto;"></div>
 
-                {{-- Datos del Responsable --}}
-                <div style="text-transform: uppercase; font-size: 11px; color: #000; margin-top: 5px; line-height: 1.2;">
-                    {{ $detalle->personal_nombre ?? 'SIN NOMBRE REGISTRADO' }}
-                </div>
-                
-                <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
-                    DNI: {{ $detalle->personal_dni ?? '________' }} <br>
-                </div> 
-                <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
-                     {{' FIRMA DEL PROFESIONAL ENTREVISTADO ' }} <br>
-                </div> 
-            </td>
+                        {{-- Datos del Responsable --}}
+                        <div style="text-transform: uppercase; font-size: 11px; color: #000; margin-top: 5px; line-height: 1.2;">
+                            {{ $detalle->personal_nombre ?? 'SIN NOMBRE REGISTRADO' }}
+                        </div>
+                        
+                        <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
+                            DNI: {{ $detalle->personal_dni ?? '________' }} <br>
+                        </div> 
+                        <div style="font-size: 10px; color: #334155; margin-top: 6px; line-height: 1.4;">
+                            {{' FIRMA DEL PROFESIONAL ENTREVISTADO ' }} <br>
+                        </div> 
+                    </td>
 
-            <td style="width: 20%; border: none;"></td>
-        </tr>
-    </table>
-</div>
+                    <td style="width: 20%; border: none;"></td>
+                </tr>
+            </table>
+        </div>
 
 <script type="text/php">
     if (isset($pdf)) {
