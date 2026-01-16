@@ -41,9 +41,17 @@ class OdontologiaController extends Controller
                             ->where('modulo_id', self::MODULO_ID)->first();
         $dbDni = ComDni::where('acta_id', $id)
                     ->where('modulo_id', self::MODULO_ID)->first();
+        
+        // --- Obtener fecha de actualización ---
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', 'triaje')
+                            ->first();
+        
+        // Si existe, tomamos la fecha, si no, now
+        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : now();
 
         // Enviamos la nueva variable a la vista
-        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni'));
+        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
     }
 
     // 2. BUSCADOR (Sin cambios)
@@ -115,10 +123,10 @@ class OdontologiaController extends Controller
                         'modulo'                => self::MODULO_ID, 
                         'descripcion'           => $item['descripcion'],
                         'cantidad'              => '1', 
-                        'estado'                => $item['estado'],
-                        'nro_serie'             => $item['codigo'] ?? null, 
-                        'propio'                => $item['propiedad'],
-                        'observacion'           => $item['observacion'] ?? ''
+                        'estado'                => $item['estado'] ?? 'OPERATIVO',
+                        'nro_serie'             => $item['codigo'] ? str($item['codigo'])->upper() : null,
+                        'propio'                => $item['propiedad'] ?? 'COMPARTIDO',
+                        'observacion'           => $item['observacion'] ? str($item['observacion'])->upper() : null,
                     ]);
                 }
             }

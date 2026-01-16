@@ -66,8 +66,8 @@ class OdontologiaPdfController extends Controller
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.odontologia_pdf', compact(
             'acta', 
             'dbCapacitacion', 
-            'dbInicioLabores', // <--- Pasamos variable
-            'dbDni',           // <--- Pasamos variable
+            'dbInicioLabores',
+            'dbDni',
             'dbInventario', 
             'dbDificultad', 
             'dbFotos'

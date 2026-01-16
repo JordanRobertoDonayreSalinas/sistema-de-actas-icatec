@@ -18,8 +18,9 @@ class ComDificultad extends Model
         'acta_id',
         'modulo_id',
         'profesional_id',
-        'insti_comunica', // En la vista es 'institucion'
-        'medio_comunica', // En la vista es 'medio'
+        'insti_comunica', 
+        'medio_comunica', 
+        'comentarios'
     ];
 
     public function acta()

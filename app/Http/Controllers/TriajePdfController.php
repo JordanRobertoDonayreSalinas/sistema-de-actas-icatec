@@ -6,12 +6,12 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CabeceraMonitoreo;
 use App\Models\ComCapacitacion;
-//use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
 use App\Models\EquipoComputo;
 use App\Models\ComDocuAsisten; 
 use App\Models\MonitoreoModulos;
+use App\Models\ComDni;
 
 class TriajePdfController extends Controller
 {
@@ -53,6 +53,9 @@ class TriajePdfController extends Controller
                             ->where('modulo_id', 'triaje')
                             ->first();
 
+        $dbDni = ComDni::where('acta_id', $id)
+                            ->where('modulo_id', 'triaje')->first();
+        
         // Fotos
         $dbFotos = ComFotos::where('acta_id', $id)
                         ->where('modulo_id', 'triaje')
@@ -66,6 +69,7 @@ class TriajePdfController extends Controller
             'dbInventario', 
             'dbDificultad', 
             'dbInicioLabores',
+            'dbDni',
             'dbFotos'
         ));
 
