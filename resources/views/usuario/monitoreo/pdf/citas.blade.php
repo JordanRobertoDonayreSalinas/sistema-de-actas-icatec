@@ -199,7 +199,7 @@
             <tr>
                 <td class="bg-label">TIPO DOC</td>
                 {{-- Lee directo del registro guardado, no del modelo externo --}}
-                <td>{{ $registro->personal_tipo_doc ?? 'DNI' }}</td>
+                <td>{{ $profesional->tipo_doc ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">DOCUMENTO</td>
@@ -221,16 +221,21 @@
             </tr>
             <tr>
                 <td class="bg-label">ROLES ASIGNADOS</td>
-                {{-- Asegura decodificar si está guardado como JSON --}}
                 <td>
-                    @if (is_array($registro->personal_roles))
-                        {{ implode(', ', $registro->personal_roles) }}
-                    @elseif(is_string($registro->personal_roles))
-                        {{-- Intenta limpiar si viene como string ["ROL"] --}}
-                        {{ str_replace(['[', ']', '"'], '', $registro->personal_roles) }}
-                    @else
-                        NINGUNO
-                    @endif
+                    @php
+                        $roles = $registro->personal_roles;
+                        // Limpiamos si viene como string sucio "[]" o es null
+                        if ($roles === '[]' || empty($roles)) {
+                            echo 'NINGUNO';
+                        } elseif (is_array($roles)) {
+                            // Si es un array real (gracias a $casts)
+                            echo empty($roles) ? 'NINGUNO' : implode(', ', $roles);
+                        } else {
+                            // Si es string con contenido '["ADMIN"]'
+                            $limpio = str_replace(['[', ']', '"'], '', $roles);
+                            echo empty(trim($limpio)) ? 'NINGUNO' : $limpio;
+                        }
+                    @endphp
                 </td>
             </tr>
             <tr>
@@ -239,34 +244,43 @@
             </tr>
             <tr>
                 <td class="bg-label">¿UTILIZA SIHCE?</td>
+                {{-- Mostramos el valor, por defecto NO si está vacío --}}
                 <td>{{ $registro->utiliza_sihce ?? 'NO' }}</td>
             </tr>
-            {{-- Solo mostrar si SIHCE es SI, o mostrar siempre --}}
-            <tr>
-                <td class="bg-label">¿FIRMÓ DECLARACIÓN JURADA?</td>
-                <td>{{ $registro->firma_dj ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">¿FIRMÓ COMPROMISO DE CONFIDENCIALIDAD?</td>
-                <td>{{ $registro->firma_confidencialidad ?? '-' }}</td>
-            </tr>
+
+            {{-- CONDICIÓN: Solo mostrar las siguientes filas si utiliza_sihce es 'SI' --}}
+            @if (($registro->utiliza_sihce ?? '') == 'SI')
+                <tr>
+                    <td class="bg-label">¿FIRMÓ DECLARACIÓN JURADA?</td>
+                    <td>{{ $registro->firma_dj ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="bg-label">¿FIRMÓ COMPROMISO DE CONFIDENCIALIDAD?</td>
+                    <td>{{ $registro->firma_confidencialidad ?? '-' }}</td>
+                </tr>
+            @endif
         </table>
 
-        <div class="section-title">2. DETALLE DE DNI Y FIRMA DIGITAL</div>
-        <table>
-            <tr>
-                <td class="bg-label">TIPO DE DNI</td>
-                <td>{{ $registro->tipo_dni_fisico ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">VERSIÓN DNIe:</td>
-                <td>{{ $registro->dnie_version ?? 'N/A' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">¿FIRMA DIGITALMENTE EN SIHCE?</td>
-                <td>{{ $registro->firma_sihce ?? '-' }}</td>
-            </tr>
-        </table>
+        @if (($profesional->tipo_doc ?? '') != 'CE')
+            <div class="section-title">2. DETALLE DE DNI Y FIRMA DIGITAL</div>
+            <table>
+                <tr>
+                    <td class="bg-label">TIPO DE DNI</td>
+                    <td>{{ $registro->tipo_dni_fisico ?? '-' }}</td>
+                </tr>
+                {{-- CONDICIÓN: Ocultar si es DNI AZUL (Mostrar solo si es diferente a AZUL) --}}
+                @if (($registro->tipo_dni_fisico ?? '') != 'AZUL')
+                    <tr>
+                        <td class="bg-label">VERSIÓN DNIe:</td>
+                        <td>{{ $registro->dnie_version ?? '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-label">¿FIRMA DIGITALMENTE EN SIHCE?</td>
+                        <td>{{ $registro->firma_sihce ?? '-' }}</td>
+                    </tr>
+                @endif
+            </table>
+        @endif
 
         <div class="section-title">3. DETALLES DE CAPACITACIÓN</div>
         <table>
@@ -274,10 +288,12 @@
                 <td class="bg-label">¿RECIBIÓ CAPACITACIÓN?</td>
                 <td>{{ $registro->capacitacion_recibida ?? '-' }}</td>
             </tr>
-            <tr>
-                <td class="bg-label">¿DE PARTE DE QUIÉN?</td>
-                <td>{{ $registro->capacitacion_entes ?? '-' }}</td>
-            </tr>
+            @if (($registro->capacitacion_recibida ?? '') != 'NO')
+                <tr>
+                    <td class="bg-label">¿DE PARTE DE QUIÉN?</td>
+                    <td>{{ $registro->capacitacion_entes ?? '-' }}</td>
+                </tr>
+            @endif
         </table>
 
         <div class="section-title">4. MATERIALES</div>
@@ -362,37 +378,39 @@
             </tbody>
         </table>
 
-        <div style="margin-top: 5px; font-weight: bold;">CON EL SISTEMA SIHCE:</div>
-        <table>
-            <tr>
-                <td class="bg-label">¿DISMINUYE EL TIEMPO DE ESPERA DE ATENCIÓN?</td>
-                <td>{{ $registro->calidad_tiempo_espera ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">¿EL PACIENTE SE ENCUENTRA SATISFECHO?</td>
-                <td>{{ $registro->calidad_paciente_satisfecho ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">¿SE UTILIZAN LOS REPORTES DEL SISTEMA?</td>
-                <td>{{ $registro->calidad_usa_reportes ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">¿CON QUIÉN LOS SOCIALIZA?</td>
-                <td>{{ $registro->calidad_socializa_con ?? '-' }}</td>
-            </tr>
-        </table>
+        @if (($registro->utiliza_sihce ?? '') == 'SI')
+            <div style="margin-top: 5px; font-weight: bold;">CON EL SISTEMA SIHCE:</div>
+            <table>
+                <tr>
+                    <td class="bg-label">¿DISMINUYE EL TIEMPO DE ESPERA DE ATENCIÓN?</td>
+                    <td>{{ $registro->calidad_tiempo_espera ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="bg-label">¿EL PACIENTE SE ENCUENTRA SATISFECHO?</td>
+                    <td>{{ $registro->calidad_paciente_satisfecho ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="bg-label">¿SE UTILIZAN LOS REPORTES DEL SISTEMA?</td>
+                    <td>{{ $registro->calidad_usa_reportes ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="bg-label">¿CON QUIÉN LOS SOCIALIZA?</td>
+                    <td>{{ $registro->calidad_socializa_con ?? '-' }}</td>
+                </tr>
+            </table>
 
-        <div class="section-title">7. SOPORTE</div>
-        <table>
-            <tr>
-                <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
-                <td>{{ $registro->dificultad_comunica_a ?? '0' }}</td>
-            </tr>
-            <tr>
-                <td class="bg-label">MEDIO QUE UTILIZA</td>
-                <td>{{ $registro->dificultad_medio_uso ?? '0' }}</td>
-            </tr>
-        </table>
+            <div class="section-title">7. SOPORTE</div>
+            <table>
+                <tr>
+                    <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
+                    <td>{{ $registro->dificultad_comunica_a ?? '0' }}</td>
+                </tr>
+                <tr>
+                    <td class="bg-label">MEDIO QUE UTILIZA</td>
+                    <td>{{ $registro->dificultad_medio_uso ?? '0' }}</td>
+                </tr>
+            </table>
+        @endif
 
         <div class="section-title">8. EVIDENCIA FOTOGRÁFICA</div>
 

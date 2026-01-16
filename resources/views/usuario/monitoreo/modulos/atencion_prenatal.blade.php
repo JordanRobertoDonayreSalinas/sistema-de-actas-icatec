@@ -167,7 +167,7 @@
                     <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta:
                         #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
-                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">03. Atención Pre Natal</h2>
+                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">10. Atención Pre Natal</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">
                     <i data-lucide="hospital" class="inline-block w-4 h-4 mr-1 text-indigo-500"></i>
                     {{ $acta->establecimiento->nombre }}
@@ -809,7 +809,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div id="bloque-reportes-sistema" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <label class="input-label mb-4 border-b pb-2">Reportes del Sistema</label>
                         <div class="flex justify-between items-center mb-4">
                             <span class="text-xs font-bold text-slate-600 uppercase">¿Utiliza Reportes?</span>
@@ -865,7 +865,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden md:col-span-2">
+                    <div id="bloque-dificultades"
+                        class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden md:col-span-2">
                         <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
                             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Reporte de Dificultades
                             </h3>
@@ -1141,9 +1142,24 @@
         window.toggleReportesPrenatal = (s) => document.getElementById('div-reportes-prenatal-detalle').classList.toggle(
             'hidden', !s);
         window.toggleSihce = (s) => {
-            const bloque = document.getElementById('bloque-seguridad-sihce');
-            if (s) bloque.classList.remove('hidden');
-            else bloque.classList.add('hidden');
+            // 1. Bloque de Seguridad (Declaración Jurada y Confidencialidad)
+            const bloqueSeguridad = document.getElementById('bloque-seguridad-sihce');
+
+            // 2. Bloques de Gestión (Reportes y Dificultades)
+            const bloqueReportes = document.getElementById('bloque-reportes-sistema');
+            const bloqueDificultades = document.getElementById('bloque-dificultades');
+
+            if (s) {
+                // SI USA SIHCE: Mostrar todo
+                if (bloqueSeguridad) bloqueSeguridad.classList.remove('hidden');
+                if (bloqueReportes) bloqueReportes.classList.remove('hidden');
+                if (bloqueDificultades) bloqueDificultades.classList.remove('hidden');
+            } else {
+                // NO USA SIHCE: Ocultar todo
+                if (bloqueSeguridad) bloqueSeguridad.classList.add('hidden');
+                if (bloqueReportes) bloqueReportes.classList.add('hidden');
+                if (bloqueDificultades) bloqueDificultades.classList.add('hidden');
+            }
         }
         window.switchTab = (t) => {
             document.getElementById('panel-local').style.display = t == 'local' ? 'block' : 'none';

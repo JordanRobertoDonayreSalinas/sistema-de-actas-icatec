@@ -1,63 +1,173 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>REPORTE PRENATAL - ACTA {{ $acta->id }}</title>
     <style>
         /* --- CONFIGURACIÓN DE PÁGINA --- */
-        @page { 
-            margin: 1.2cm 1.5cm 2cm 1.5cm; 
+        @page {
+            margin: 1.2cm 1.5cm 2cm 1.5cm;
         }
 
         /* --- ESTILOS GLOBALES (Idénticos a Citas) --- */
-        body { 
-            font-family: 'Helvetica', sans-serif; 
-            font-size: 10px; 
-            color: #1e293b; 
-            line-height: 1.4; 
-            text-transform: uppercase; 
+        body {
+            font-family: 'Helvetica', sans-serif;
+            font-size: 10px;
+            color: #1e293b;
+            line-height: 1.4;
+            text-transform: uppercase;
         }
-        
+
         /* --- CABECERA --- */
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 15px; color: #4f46e5; }
-        .header-sub { font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px; }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 15px;
+            color: #4f46e5;
+        }
+
+        .header-sub {
+            font-weight: bold;
+            color: #64748b;
+            font-size: 10px;
+            margin-top: 5px;
+        }
 
         /* --- SECCIONES --- */
-        .section-title { background-color: #f1f5f9; padding: 6px 10px; font-weight: bold; border-left: 4px solid #4f46e5; margin-top: 15px; margin-bottom: 5px; font-size: 10px; }
-        
+        .section-title {
+            background-color: #f1f5f9;
+            padding: 6px 10px;
+            font-weight: bold;
+            border-left: 4px solid #4f46e5;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 10px;
+        }
+
         /* --- TABLAS --- */
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px; }
-        th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; word-wrap: break-word; }
-        th { background-color: #f8fafc; color: #475569; font-size: 8.5px; }
-        
-        .bg-label { background-color: #f8fafc; font-weight: bold; width: 35%; color: #475569; }
-        .text-center { text-align: center; }
-        .text-left { text-align: left; }
-        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-bottom: 5px;
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-size: 8.5px;
+        }
+
+        .bg-label {
+            background-color: #f8fafc;
+            font-weight: bold;
+            width: 35%;
+            color: #475569;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
         /* --- ESTADOS --- */
-        .status-ok { color: #16a34a; font-weight: bold; }
-        .status-warn { color: #d97706; font-weight: bold; }
-        .status-err { color: #dc2626; font-weight: bold; }
+        .status-ok {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .status-warn {
+            color: #d97706;
+            font-weight: bold;
+        }
+
+        .status-err {
+            color: #dc2626;
+            font-weight: bold;
+        }
 
         /* --- EVIDENCIA --- */
-        .no-evidence-box { border: 2px dashed #cbd5e1; border-radius: 15px; padding: 20px; text-align: center; color: #64748b; font-style: italic; background-color: #f8fafc; margin-top: 10px; }
-        
+        .no-evidence-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+            background-color: #f8fafc;
+            margin-top: 10px;
+        }
+
         /* --- FIRMA --- */
-        .firma-section { margin-top: 30px; page-break-inside: avoid; }
-        .firma-container { width: 50%; margin: 0 auto; text-align: center; border: 1px solid #e2e8f0; border-radius: 14px; padding: 15px; }
-        .firma-linea { border-bottom: 1px solid #000; height: 80px; margin-bottom: 10px; width: 80%; margin-left: 10%; }
-        .firma-nombre { font-weight: bold; font-size: 11px; }
-        .firma-cargo { font-size: 9px; color: #64748b; margin-top: 4px; }
+        .firma-section {
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+
+        .firma-container {
+            width: 50%;
+            margin: 0 auto;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 15px;
+        }
+
+        .firma-linea {
+            border-bottom: 1px solid #000;
+            height: 80px;
+            margin-bottom: 10px;
+            width: 80%;
+            margin-left: 10%;
+        }
+
+        .firma-nombre {
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .firma-cargo {
+            font-size: 9px;
+            color: #64748b;
+            margin-top: 4px;
+        }
 
         /* --- PIE DE PÁGINA --- */
         .footer-frame {
-            position: fixed; bottom: -1.2cm; left: 0; right: 0; height: 1cm;
-            border-top: 1px solid #94a3b8; padding-top: 5px; font-size: 8pt; 
-            font-family: 'Helvetica', sans-serif; color: #64748b; font-weight: bold;
+            position: fixed;
+            bottom: -1.2cm;
+            left: 0;
+            right: 0;
+            height: 1cm;
+            border-top: 1px solid #94a3b8;
+            padding-top: 5px;
+            font-size: 8pt;
+            font-family: 'Helvetica', sans-serif;
+            color: #64748b;
+            font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <div class="footer-frame">
         SISTEMA DE ACTAS
@@ -66,15 +176,16 @@
     <div class="header">
         <h1>MÓDULO 03: ATENCIÓN PRE NATAL</h1>
         <div class="header-sub">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
-            ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? '-' }} - {{ $acta->establecimiento->nombre ?? 'NO ESPECIFICADO' }} |
-            FECHA: {{ \Carbon\Carbon::parse($registro->updated_at)->format('d/m/Y') }}
+            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} |
+            ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? '-' }} -
+            {{ $acta->establecimiento->nombre ?? 'NO ESPECIFICADO' }} |
+            FECHA: {{ \Carbon\Carbon::parse($registro->fecha_registro)->format('d/m/Y') }}
         </div>
     </div>
 
     <div class="section-title">1. DETALLES DEL CONSULTORIO</div>
     <table>
-      <tr>
+        <tr>
             <td class="bg-label">NRO. CONSULTORIOS</td>
             <td>{{ $registro->nro_consultorios ?? '0' }}</td>
         </tr>
@@ -114,44 +225,45 @@
         <tr>
             <td class="bg-label">¿UTILIZA SIHCE?</td>
             <td>
-                @if(($registro->utiliza_sihce ?? 'NO') == 'SI')
+                @if (($registro->utiliza_sihce ?? 'NO') == 'SI')
                     <span class="status-ok">SÍ UTILIZA</span>
                 @else
                     <span class="status-err">NO UTILIZA</span>
                 @endif
             </td>
         </tr>
-        @if(($registro->utiliza_sihce ?? 'NO') == 'SI')
-        <tr>
-            <td class="bg-label">¿FIRMÓ DECLARACIÓN JURADA?</td>
-            <td>{{ $registro->firma_dj ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="bg-label">¿FIRMÓ CONFIDENCIALIDAD?</td>
-            <td>{{ $registro->firma_confidencialidad ?? '-' }}</td>
-        </tr>
+        @if (($registro->utiliza_sihce ?? 'NO') == 'SI')
+            <tr>
+                <td class="bg-label">¿FIRMÓ DECLARACIÓN JURADA?</td>
+                <td>{{ $registro->firma_dj ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">¿FIRMÓ CONFIDENCIALIDAD?</td>
+                <td>{{ $registro->firma_confidencialidad ?? '-' }}</td>
+            </tr>
         @endif
     </table>
 
     {{-- SECCIÓN 2: DOCUMENTACIÓN Y ACCESOS --}}
-    <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
-    <table>
-        @if(($registro->personal_tipo_doc ?? '') == 'DNI' || ($registro->personal_tipo_doc ?? '') == 'DNIe')
-        <tr>
-            <td class="bg-label">TIPO DNI FÍSICO</td>
-            <td>{{ $registro->tipo_dni_fisico ?? '-' }}</td>
-        </tr>
-        @if(($registro->tipo_dni_fisico ?? '') == 'ELECTRONICO')
-        <tr>
-            <td class="bg-label">DETALLE DNI ELECTRÓNICO</td>
-            <td>
-                VERSIÓN: <b>{{ $registro->dnie_version ?? '-' }}</b> | 
-                FIRMA EN SIHCE: <b>{{ $registro->firma_sihce ?? '-' }}</b>
-            </td>
-        </tr>
-        @endif
-        @endif
-    </table>
+    @if (($registro->personal_tipo_doc ?? '') == 'DNI' || ($registro->personal_tipo_doc ?? '') == 'DNIe')
+        <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
+        <table>
+
+            <tr>
+                <td class="bg-label">TIPO DNI FÍSICO</td>
+                <td>{{ $registro->tipo_dni_fisico ?? '-' }}</td>
+            </tr>
+            @if (($registro->tipo_dni_fisico ?? '') == 'ELECTRONICO')
+                <tr>
+                    <td class="bg-label">DETALLE DNI ELECTRÓNICO</td>
+                    <td>
+                        VERSIÓN: <b>{{ $registro->dnie_version ?? '-' }}</b> |
+                        FIRMA EN SIHCE: <b>{{ $registro->firma_sihce ?? '-' }}</b>
+                    </td>
+                </tr>
+            @endif
+        </table>
+    @endif
 
     {{-- SECCIÓN 3: CAPACITACIÓN --}}
     <div class="section-title">4. DETALLES DE CAPACITACION</div>
@@ -159,17 +271,19 @@
         <tr>
             <td class="bg-label">¿RECIBIÓ CAPACITACIÓN?</td>
             <td>
-                @if(($registro->capacitacion_recibida ?? '') == 'SI')
+                @if (($registro->capacitacion_recibida ?? '') == 'SI')
                     <span class="status-ok">SÍ</span>
                 @else
                     <span class="status-warn">{{ $registro->capacitacion_recibida ?? '-' }}</span>
                 @endif
             </td>
         </tr>
-        <tr>
-            <td class="bg-label">ENTIDAD CAPACITADORA</td>
-            <td>{{ $registro->capacitacion_entes ?? '-' }}</td>
-        </tr>
+        @if (($registro->capacitacion_recibida ?? '') == 'SI')
+            <tr>
+                <td class="bg-label">ENTIDAD CAPACITADORA</td>
+                <td>{{ $registro->capacitacion_entes ?? '-' }}</td>
+            </tr>
+        @endif
     </table>
 
     {{-- SECCIÓN 4: MATERIALES --}}
@@ -178,7 +292,7 @@
         <tr>
             <td class="bg-label">AL INICIAR LABORES CUENTA CON:</td>
             <td>
-                @if(!empty($registro->insumos_disponibles))
+                @if (!empty($registro->insumos_disponibles))
                     {{ implode(', ', $registro->insumos_disponibles) }}
                 @else
                     <span class="status-err">NO SE REGISTRARON INSUMOS</span>
@@ -202,32 +316,39 @@
         </thead>
         <tbody>
             @forelse($registro->equipos_listado ?? [] as $eq)
-            <tr>
-                <td>{{ $eq['nombre'] ?? '-' }}</td>
-                <td class="text-center">{{ 1 }}</td>
-                <td class="text-center">
-                    @php
-                        $est = strtoupper($eq['estado'] ?? '');
-                        $clase = ($est == 'OPERATIVO' || $est == 'BUENO') ? 'status-ok' : (($est == 'REGULAR') ? 'status-warn' : 'status-err');
-                    @endphp
-                    <span class="{{ $clase }}">{{ $est ?: '-' }}</span>
-                </td>
-                <td class="text-center">{{ $eq['propiedad'] ?? '-' }}</td>
-                <td>{{ $eq['serie'] ?? '-' }}</td>
-                <td>{{ $eq['observaciones'] ?? '' }}</td>
-            </tr>
+                <tr>
+                    <td>{{ $eq['nombre'] ?? '-' }}</td>
+                    <td class="text-center">{{ 1 }}</td>
+                    <td class="text-center">
+                        @php
+                            $est = strtoupper($eq['estado'] ?? '');
+                            $clase =
+                                $est == 'OPERATIVO' || $est == 'BUENO'
+                                    ? 'status-ok'
+                                    : ($est == 'REGULAR'
+                                        ? 'status-warn'
+                                        : 'status-err');
+                        @endphp
+                        <span class="{{ $clase }}">{{ $est ?: '-' }}</span>
+                    </td>
+                    <td class="text-center">{{ $eq['propiedad'] ?? '-' }}</td>
+                    <td>{{ $eq['serie'] ?? '-' }}</td>
+                    <td>{{ $eq['observaciones'] ?? '' }}</td>
+                </tr>
             @empty
-            <tr><td colspan="6" class="text-center">NO SE REGISTRARON EQUIPOS.</td></tr>
+                <tr>
+                    <td colspan="6" class="text-center">NO SE REGISTRARON EQUIPOS.</td>
+                </tr>
             @endforelse
         </tbody>
     </table>
-    @if($registro->equipos_observaciones)
-    <table>
-        <tr>
-            <td class="bg-label">OBSERVACIONES ADICIONALES</td>
-            <td>{{ $registro->equipos_observaciones }}</td>
-        </tr>
-    </table>
+    @if ($registro->equipos_observaciones)
+        <table>
+            <tr>
+                <td class="bg-label">OBSERVACIONES ADICIONALES</td>
+                <td>{{ $registro->equipos_observaciones }}</td>
+            </tr>
+        </table>
     @endif
 
     {{-- SECCIÓN 6: DATOS DE GESTIÓN --}}
@@ -240,36 +361,40 @@
         <tr>
             <td class="bg-label">¿REALIZA DESCARGA HISMINSA?</td>
             <td>
-                @if(($registro->gestion_hisminsa ?? '') == 'SI')
+                @if (($registro->gestion_hisminsa ?? '') == 'SI')
                     <span class="status-ok">SÍ</span>
                 @else
                     <span class="status-err">NO</span>
                 @endif
             </td>
         </tr>
-        <tr>
-            <td class="bg-label">¿UTILIZA REPORTES?</td>
-            <td>
-                {{ $registro->gestion_reportes ?? '-' }}
-                @if(($registro->gestion_reportes ?? '') == 'SI')
+        @if (($registro->gestion_reportes ?? '') == 'SI')
+            <tr>
+                <td class="bg-label">¿UTILIZA REPORTES?</td>
+                <td>
+                    {{ $registro->gestion_reportes ?? '-' }}
+
                     (Socializa con: {{ $registro->gestion_reportes_socializa ?? '-' }})
-                @endif
-            </td>
-        </tr>
+
+                </td>
+            </tr>
+        @endif
     </table>
 
     {{-- SECCIÓN 7: SOPORTE Y DIFICULTADES --}}
-    <div class="section-title">8. SOPORTE</div>
-    <table>
-        <tr>
-            <td class="bg-label">ANTE DIFICULTADES COMUNICA A:</td>
-            <td>{{ $registro->dificultad_comunica_a ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="bg-label">MEDIO DE COMUNICACIÓN:</td>
-            <td>{{ $registro->dificultad_medio_uso ?? '-' }}</td>
-        </tr>
-    </table>
+    @if (($registro->utiliza_sihce ?? '') == 'SI')
+        <div class="section-title">8. SOPORTE</div>
+        <table>
+            <tr>
+                <td class="bg-label">ANTE DIFICULTADES COMUNICA A:</td>
+                <td>{{ $registro->dificultad_comunica_a ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="bg-label">MEDIO DE COMUNICACIÓN:</td>
+                <td>{{ $registro->dificultad_medio_uso ?? '-' }}</td>
+            </tr>
+        </table>
+    @endif
 
     {{-- SECCIÓN 8: EVIDENCIA --}}
     <div class="section-title">9. EVIDENCIA FOTOGRÁFICA</div>
@@ -278,8 +403,8 @@
         $cantidad = count($fotos);
     @endphp
 
-    @if($cantidad > 0)
-        @if($cantidad == 1)
+    @if ($cantidad > 0)
+        @if ($cantidad == 1)
             <div style="width: 100%; text-align: center; margin-top: 15px;">
                 <div style="display: inline-block; border: 1px solid #e2e8f0; padding: 5px; background: #fff;">
                     <img src="{{ $fotos[0] }}" style="max-width: 90%; height: 220px; object-fit: contain;">
@@ -288,10 +413,11 @@
         @else
             <table style="width: 100%; border: none; margin-top: 10px;">
                 <tr>
-                    @foreach($fotos as $index => $fotoUrl)
+                    @foreach ($fotos as $index => $fotoUrl)
                         <td style="border: none; padding: 5px; text-align: center; width: 50%;">
                             <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff;">
-                                <img src="{{ $fotoUrl }}" style="max-width: 100%; height: 160px; object-fit: contain;">
+                                <img src="{{ $fotoUrl }}"
+                                    style="max-width: 100%; height: 160px; object-fit: contain;">
                             </div>
                         </td>
                     @endforeach
@@ -308,7 +434,7 @@
         <br>
         <div class="firma-container">
             <div class="firma-linea">
-                @if($registro->firma_grafica)
+                @if ($registro->firma_grafica)
                     <img src="{{ $registro->firma_grafica }}" style="height: 70px; margin-top: -40px;">
                 @endif
             </div>
@@ -322,4 +448,5 @@
     </div>
 
 </body>
+
 </html>

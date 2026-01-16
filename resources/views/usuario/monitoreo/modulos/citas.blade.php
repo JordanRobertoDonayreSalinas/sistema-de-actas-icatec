@@ -419,7 +419,7 @@
                             $esOtro = !empty($valorActual) && !in_array($valorActual, $cargos);
                         @endphp
 
-                        <label class="input-label text-indigo-700">Cargo</label>
+                        <label class="input-label text-indigo-700">Profesión</label>
 
                         <div class="relative mb-2">
                             <span
@@ -987,7 +987,8 @@
                         </button>
                     </div>
 
-                    <div class="space-y-8">
+                    <div id="bloque-calidad-dificultades"
+                        class="space-y-8 {{ ($registro->utiliza_sihce ?? '') == 'SI' ? '' : 'hidden' }}">
                         <div>
                             <label class="input-label border-b border-slate-100 pb-2 mb-4 block">Evaluación de
                                 Calidad</label>
@@ -1458,9 +1459,25 @@
             if (div) show ? div.classList.remove('hidden') : div.classList.add('hidden');
         }
         window.toggleSihce = function(show) {
-            const bloque = document.getElementById('bloque-seguridad-sihce');
-            if (show) bloque.classList.remove('hidden');
-            else bloque.classList.add('hidden');
+            // 1. Bloque de Declaración Jurada y Confidencialidad (Ya existía)
+            const bloqueSeguridad = document.getElementById('bloque-seguridad-sihce');
+
+            // 2. Nuevo bloque de Calidad y Dificultades
+            const bloqueCalidad = document.getElementById('bloque-calidad-dificultades');
+
+            if (show) {
+                // Si es SI: Mostrar ambos
+                if (bloqueSeguridad) bloqueSeguridad.classList.remove('hidden');
+                if (bloqueCalidad) bloqueCalidad.classList.remove('hidden');
+            } else {
+                // Si es NO: Ocultar ambos
+                if (bloqueSeguridad) bloqueSeguridad.classList.add('hidden');
+                if (bloqueCalidad) bloqueCalidad.classList.add('hidden');
+
+                // Opcional: Limpiar los radios de calidad si quieres que se reseteen al ocultar
+                // const radios = bloqueCalidad.querySelectorAll('input[type="radio"]');
+                // radios.forEach(r => r.checked = false);
+            }
         }
 
         // --- TABLAS DINÁMICAS ---

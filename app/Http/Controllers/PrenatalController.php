@@ -280,7 +280,7 @@ class PrenatalController extends Controller
         set_time_limit(120);
 
         $acta = CabeceraMonitoreo::findOrFail($idActa);
-        $registro = ModuloParto::where('monitoreo_id', $idActa)->firstOrFail();
+        $registro = ModuloPrenatal::where('monitoreo_id', $idActa)->firstOrFail();
 
         // 2. Lógica de Imágenes a Base64
         $fotosBase64 = [];
@@ -311,7 +311,7 @@ class PrenatalController extends Controller
         }
 
         // 4. GENERACIÓN DEL PDF CON NUMERACIÓN
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.parto', compact('acta', 'registro'));
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.prenatal', compact('acta', 'registro'));
         $pdf->setPaper('A4', 'portrait');
         $pdf->render();
 
@@ -330,12 +330,12 @@ class PrenatalController extends Controller
         $w = $canvas->get_width();
         $h = $canvas->get_height();
 
-        // Coordenadas
+        // Coordenadas ajustadas para que no choque con el borde
         $x = $w - 75;
-        $y = $h - 49;
+        $y = $h - 49; // Altura ajustada para subir el texto
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('Parto_' . $idActa . '.pdf');
+        return $pdf->stream('Prenatal_' . $idActa . '.pdf');
     }
 }
