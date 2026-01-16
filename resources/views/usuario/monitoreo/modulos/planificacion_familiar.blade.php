@@ -4,6 +4,16 @@
 
 @push('styles')
     <style>
+        /* Inicializa el contador en el formulario */
+        #form-planificacion-familiar-store {
+            counter-reset: section-counter;
+        }
+
+        /* Selecciona los contenedores de las secciones (el div que tiene el número) */
+        .section-number::before {
+            counter-increment: section-counter; /* Aumenta el número */
+            content: counter(section-counter, decimal-leading-zero); /* Muestra 01, 02, etc. */
+        }
         [x-cloak] { display: none !important; }
         .input-standard { 
             width: 100%; 
@@ -50,7 +60,9 @@
 <div class="py-10 bg-slate-50 min-h-screen" 
      x-data="{ 
         openModal: false, 
+        utilizaSihce: '{{ $detalle->contenido['personal']['utiliza_sihce'] ?? 'NO' }}',
         docNuevo: '',
+        profesion: '{{ $detalle->contenido['personal']['profesion'] ?? '' }}', 
         images: {
             img1: '{{ !empty($detalle->foto_1) ? asset('storage/'.$detalle->foto_1) : null }}',
             img2: '{{ !empty($detalle->foto_2) ? asset('storage/'.$detalle->foto_2) : null }}'
@@ -115,140 +127,171 @@
                 <input type="hidden" name="foto_1_actual" id="foto_1_actual" value="{{ $detalle->foto_1 ?? '' }}">
                 <input type="hidden" name="foto_2_actual" id="foto_2_actual" value="{{ $detalle->foto_2 ?? '' }}">
 
-                {{-- 01. PERSONAL --}}
+                                {{-- 01. RESPONSABLE DE ATENCIÓN --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">01</span>
-                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Responsable de Atención</h4>
+                        <div class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number">
+                            
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Responsable de Atención</h4>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Datos del personal y nivel de capacitación</p>
+                        </div>
                     </div>
 
-                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8">
-                        {{-- Fila 1: Documento y Nombres --}}
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                            <div class="md:col-span-3 space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Tipo de Doc.</label>
-                                <select name="contenido[personal][tipo_doc]" id="tipo_doc" class="input-standard">
-                                    <option value="DNI" {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'DNI' ? 'selected' : '' }}>DNI</option>
-                                    <option value="C.E." {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'C.E.' ? 'selected' : '' }}>C.E.</option>
-                                </select>
+                    {{-- CONTENEDOR PRINCIPAL --}}
+                    <div class="p-4 md:p-8 rounded-[2.5rem] border border-slate-100 bg-slate-50/50 space-y-8">
+                        
+                        {{-- TARJETA BLANCA PARA DATOS PERSONALES --}}
+                        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-8">
+                            
+                            {{-- FILA 1: DOCUMENTO Y NOMBRES --}}
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+                                <div class="md:col-span-3 space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Tipo de Doc.</label>
+                                    <select name="contenido[personal][tipo_doc]" class="input-standard w-full">
+                                        <option value="DNI" {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'DNI' ? 'selected' : '' }}>DNI</option>
+                                        <option value="C.E." {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'C.E.' ? 'selected' : '' }}>C.E.</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-3 space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center justify-between">
+                                        Nro. Documento <span id="loading_profesional" class="hidden"><span class="spinner border-indigo-500"></span></span>
+                                    </label>
+                                    <input type="text" name="contenido[personal][dni]" id="doc" maxlength="12" value="{{ $detalle->contenido['personal']['dni'] ?? '' }}" class="input-standard w-full font-mono tracking-wider">
+                                </div>
+                                <div class="md:col-span-6 space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nombres Completos</label>
+                                    <input type="text" name="contenido[personal][nombre]" id="nombres" value="{{ $detalle->contenido['personal']['nombre'] ?? '' }}" class="input-standard w-full uppercase font-semibold">
+                                </div>
                             </div>
-                            <div class="md:col-span-3 space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center justify-between">
-                                    DNI / Carnet <span id="loading_profesional" class="hidden"><span class="spinner"></span></span>
-                                </label>
-                                <input type="text" name="contenido[personal][dni]" id="doc" maxlength="12" value="{{ $detalle->contenido['personal']['dni'] ?? '' }}" class="input-standard shadow-sm">
+
+                            {{-- FILA 2: APELLIDOS --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Apellido Paterno</label>
+                                    <input type="text" name="contenido[personal][apellido_paterno]" id="apellido_paterno" value="{{ $detalle->contenido['personal']['apellido_paterno'] ?? '' }}" class="input-standard w-full uppercase font-semibold">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Apellido Materno</label>
+                                    <input type="text" name="contenido[personal][apellido_materno]" id="apellido_materno" value="{{ $detalle->contenido['personal']['apellido_materno'] ?? '' }}" class="input-standard w-full uppercase font-semibold">
+                                </div>
                             </div>
-                            <div class="md:col-span-6 space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nombres Completos</label>
-                                <input type="text" name="contenido[personal][nombre]" id="nombres" value="{{ $detalle->contenido['personal']['nombre'] ?? '' }}" class="input-standard uppercase">
+
+                            {{-- FILA 3: CONTACTO Y PROFESIÓN --}}
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-end" x-data="{ profesion: '{{ $detalle->contenido['personal']['profesion'] ?? '' }}' }">
+                                <div class="md:col-span-2 space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Celular</label>
+                                    <input type="text" name="contenido[personal][contacto]" value="{{ $detalle->contenido['personal']['contacto'] ?? '' }}" class="input-standard w-full font-mono">
+                                </div>
+                                <div class="md:col-span-3 space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Correo Electrónico</label>
+                                    <input type="email" name="contenido[personal][email]" value="{{ $detalle->contenido['personal']['email'] ?? '' }}" class="input-standard w-full">
+                                </div>
+                                <div class="md:col-span-2 space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 text-center block">Turno</label>
+                                    <select name="contenido[personal][turno]" class="input-standard w-full text-center uppercase font-bold text-indigo-600">
+                                        <option value="">-- SELEC. --</option>
+                                        <option value="MAÑANA" {{ ($detalle->contenido['personal']['turno'] ?? '') == 'MAÑANA' ? 'selected' : '' }}>MAÑANA</option>
+                                        <option value="TARDE" {{ ($detalle->contenido['personal']['turno'] ?? '') == 'TARDE' ? 'selected' : '' }}>TARDE</option>
+                                    </select>
+                                </div>
+                                {{-- Profesión con ancho dinámico --}}
+                                <div :class="profesion === 'OTROS' ? 'md:col-span-2' : 'md:col-span-5'" class="space-y-2 transition-all duration-300">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Profesión</label>
+                                    <select name="contenido[personal][profesion]" x-model="profesion" class="input-standard w-full uppercase font-semibold">
+                                        <option value="">-- SELECCIONE --</option>
+                                        @foreach(['MEDICO', 'ODONTOLOGO(A)', 'ENFERMERO(A)', 'TECNICO ENFERMERIA', 'TECNICO LABORATORIO', 'BIOLOGO(A)', 'QUIMICO FARMACEUTICO(A)', 'NUTRICIONISTA', 'PSICOLOGO(A)', 'OBSTETRA'] as $p)
+                                            <option value="{{ $p }}">{{ $p }}</option>
+                                        @endforeach
+                                        <option value="OTROS">OTROS</option>
+                                    </select>
+                                </div>
+                                {{-- Campo Especifique aparece a la derecha --}}
+                                <div class="md:col-span-3 space-y-2" x-show="profesion === 'OTROS'" x-cloak x-transition>
+                                    <label class="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-2 italic">¿Cuál?</label>
+                                    <input type="text" name="contenido[personal][profesion_otro]" value="{{ $detalle->contenido['personal']['profesion_otro'] ?? '' }}" class="input-standard w-full border-indigo-200 bg-indigo-50/30 uppercase" placeholder="Digitar profesión...">
+                                </div>
                             </div>
                         </div>
 
-                        {{-- Fila 2: Apellidos --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Apellido Paterno</label>
-                                <input type="text" name="contenido[personal][apellido_paterno]" id="apellido_paterno" value="{{ $detalle->contenido['personal']['apellido_paterno'] ?? '' }}" class="input-standard uppercase">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Apellido Materno</label>
-                                <input type="text" name="contenido[personal][apellido_materno]" id="apellido_materno" value="{{ $detalle->contenido['personal']['apellido_materno'] ?? '' }}" class="input-standard uppercase">
-                            </div>
-                        </div>
-
-                        {{-- Fila 3: Contacto y Turno --}}
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div class="md:col-span-1 space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Celular</label>
-                                <input type="text" name="contenido[personal][contacto]" id="telefono" value="{{ $detalle->contenido['personal']['contacto'] ?? '' }}" class="input-standard">
-                            </div>
-                            <div class="md:col-span-2 space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Correo</label>
-                                <input type="email" name="contenido[personal][email]" id="email" value="{{ $detalle->contenido['personal']['email'] ?? '' }}" class="input-standard">
-                            </div>
-                            <div class="md:col-span-1 space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 text-center block">Turno</label>
-                                <input type="text" name="contenido[personal][turno]" value="{{ $detalle->contenido['personal']['turno'] ?? '' }}" class="input-standard text-center uppercase" placeholder="Mañana / Tarde">
-                            </div>
-                        </div>
-
-                        {{-- SUB-SECCIÓN: USO DE SISTEMA Y CAPACITACIÓN EN UNA SOLA FILA --}}
-                        <div class="mt-10 pt-8 border-t border-slate-100">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                        {{-- SUB-SECCIÓN: USO DE SISTEMA Y CAPACITACIÓN --}}
+                        <div class="mt-10 pt-8 border-t border-slate-200/60" x-data="{ 
+                            recibio: '{{ $detalle->contenido['capacitacion']['recibio'] ?? 'NO' }}' 
+                        }">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                                 
-                                {{-- 1. PREGUNTA: USO DE SIHCE --}}
-                                <div class="space-y-4">
-                                    <label class="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                                        <i data-lucide="monitor" class="w-4 h-4"></i>
-                                        ¿Utiliza el sistema SIHCE?
+                                {{-- 1. USO DE SIHCE (Ocupa 3 columnas) --}}
+                                <div class="md:col-span-3 space-y-4">
+                                    <label class="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 ml-2">
+                                        <i data-lucide="monitor" class="w-4 h-4"></i> ¿Utiliza SIHCE?
                                     </label>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label class="relative cursor-pointer group">
-                                            <input type="radio" name="contenido[personal][utiliza_sihce]" value="SI" 
-                                                {{ ($detalle->contenido['personal']['utiliza_sihce'] ?? '') == 'SI' ? 'checked' : '' }} 
-                                                class="peer sr-only">
-                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-slate-50/50 text-center transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 hover:border-slate-200">
-                                                <span class="text-xs font-bold uppercase">SÍ</span>
+                                            <input type="radio" name="contenido[personal][utiliza_sihce]" value="SI" x-model="utilizaSihce" class="peer sr-only">
+                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 shadow-sm">
+                                                <span class="text-xs font-black uppercase">SÍ</span>
                                             </div>
                                         </label>
                                         <label class="relative cursor-pointer group">
-                                            <input type="radio" name="contenido[personal][utiliza_sihce]" value="NO" 
-                                                {{ ($detalle->contenido['personal']['utiliza_sihce'] ?? '') == 'NO' ? 'checked' : '' }} 
-                                                class="peer sr-only">
-                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-slate-50/50 text-center transition-all peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 hover:border-slate-200">
+                                            <input type="radio" name="contenido[personal][utiliza_sihce]" value="NO" x-model="utilizaSihce" class="peer sr-only">
+                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 shadow-sm">
+                                                <span class="text-xs font-black uppercase">NO</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {{-- 2. CAPACITACIÓN (Ancho dinámico) --}}
+                                <div :class="recibio === 'SI' ? 'md:col-span-3' : 'md:col-span-4'" class="space-y-4 transition-all duration-500">
+                                    <label class="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 ml-2">
+                                        <i data-lucide="graduation-cap" class="w-4 h-4"></i> ¿capacitación?
+                                    </label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label class="relative cursor-pointer group">
+                                            <input type="radio" name="contenido[capacitacion][recibio]" value="SI" x-model="recibio" class="peer sr-only">
+                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 shadow-sm">
+                                                <span class="text-xs font-black uppercase">SÍ</span>
+                                            </div>
+                                        </label>
+                                        <label class="relative cursor-pointer group">
+                                            <input type="radio" name="contenido[capacitacion][recibio]" value="NO" x-model="recibio" class="peer sr-only">
+                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-rose-600 peer-checked:bg-rose-50 peer-checked:text-rose-700 shadow-sm">
                                                 <span class="text-xs font-bold uppercase">NO</span>
                                             </div>
                                         </label>
                                     </div>
                                 </div>
 
-                                {{-- 2. PREGUNTA: CAPACITACIÓN --}}
-                                <div class="space-y-4">
-                                    <label class="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                                        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
-                                        ¿Recibió capacitación?
-                                    </label>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <label class="relative cursor-pointer group">
-                                            <input type="radio" name="contenido[capacitacion][recibio]" value="SI" 
-                                                {{ ($detalle->contenido['capacitacion']['recibio'] ?? '') == 'SI' ? 'checked' : '' }} 
-                                                class="peer sr-only radio-capacitacion">
-                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-slate-50/50 text-center transition-all peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 hover:border-slate-200">
-                                                <span class="text-xs font-bold uppercase">SÍ</span>
-                                            </div>
-                                        </label>
-                                        <label class="relative cursor-pointer group">
-                                            <input type="radio" name="contenido[capacitacion][recibio]" value="NO" 
-                                                {{ ($detalle->contenido['capacitacion']['recibio'] ?? '') == 'NO' ? 'checked' : '' }} 
-                                                class="peer sr-only radio-capacitacion">
-                                            <div class="py-3 rounded-2xl border-2 border-slate-100 bg-slate-50/50 text-center transition-all peer-checked:border-slate-400 peer-checked:bg-slate-100 peer-checked:text-slate-600 hover:border-slate-200">
-                                                <span class="text-xs font-bold uppercase">NO</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {{-- 3. ENTIDAD QUE CAPACITÓ (Condicional) --}}
-                                <div id="seccion_capacitacion_entes" class="space-y-4 transition-all duration-300 {{ ($detalle->contenido['capacitacion']['recibio'] ?? '') != 'SI' ? 'hidden' : '' }}">
-                                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <i data-lucide="building-2" class="w-4 h-4 text-indigo-400"></i>
-                                        Entidad que capacitó
+                                {{-- 3. ENTIDAD (Aparece a la derecha en la misma fila) --}}
+                                <div class="md:col-span-6 space-y-4" 
+                                    x-show="recibio === 'SI'" 
+                                    x-cloak 
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100">
+                                    
+                                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-2">
+                                        <i data-lucide="building-2" class="w-4 h-4 text-indigo-400"></i> Entidad que capacitó
                                     </label>
                                     <div class="flex flex-wrap gap-2">
                                         @php $entes_guardados = (array)($detalle->contenido['capacitacion']['ente'] ?? []); @endphp
-                                        @foreach(['MINSA', 'DIRESA', 'UE'] as $ente)
-                                        <label class="relative cursor-pointer group">
-                                            <input type="checkbox" name="contenido[capacitacion][ente][]" value="{{ $ente }}" 
-                                                {{ in_array($ente, $entes_guardados) ? 'checked' : '' }} 
-                                                class="peer sr-only">
-                                            <div class="px-4 py-2 rounded-xl border-2 border-slate-100 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-600 peer-checked:text-white group-hover:border-indigo-200">
-                                                <span class="text-[10px] font-black tracking-widest">{{ $ente }}</span>
-                                            </div>
-                                        </label>
+                                        @foreach(['MINSA', 'DIRESA', 'UNIDAD EJECUTORA'] as $val => $label)
+                                            @php 
+                                                $realVal = is_numeric($val) ? $label : $val; 
+                                                $visibleLabel = is_numeric($val) ? $label : $label;
+                                            @endphp
+                                            <label class="relative cursor-pointer group">
+                                                <input type="radio" name="contenido[capacitacion][ente][]" value="{{ $realVal }}" 
+                                                    {{ in_array($realVal, $entes_guardados) ? 'checked' : '' }} 
+                                                    class="peer sr-only">
+                                                <div class="px-4 py-3 min-w-[80px] text-center rounded-2xl border-2 border-slate-100 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-600 peer-checked:text-white shadow-sm hover:border-indigo-200">
+                                                    <span class="text-[10px] font-black tracking-widest">{{ $visibleLabel }}</span>
+                                                </div>
+                                            </label>
                                         @endforeach
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -299,7 +342,7 @@
                 {{-- SECCIÓN 02: TIPO DE DNI Y FIRMA DIGITAL --}}
                 <div class="mt-6 border-t border-slate-100 pt-6" x-data="{ tipoDni: '{{ $detalle->contenido['dni_firma']['tipo_dni_fisico'] ?? ($registro->tipo_dni_fisico ?? 'AZUL') }}' }">
                     <div class="flex items-center gap-4 mb-6">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">02</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
                         <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Tipo de DNI y Firma Digital</h4>
                     </div>
 
@@ -345,7 +388,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-black text-slate-800 text-sm uppercase">DNI AZUL</h4>
-                                                <span class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Tradicional</span>
+                                                <span class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Sin chip</span>
                                             </div>
                                             <div class="ml-auto hidden peer-checked:block text-sky-600">
                                                 <i data-lucide="check-circle-2" class="w-6 h-6 fill-sky-600 text-white"></i>
@@ -412,8 +455,8 @@
                 {{-- 03. EQUIPOS --}}
                 <div class="space-y-8 mt-12">
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">03</span>
-                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Insumos y Equipamiento</h4>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
+                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Equipos de Cómputo</h4>
                     </div>
 
                     {{-- CONTENEDOR CON BORDE Y SOMBRA (Igual a Secciones 01 y 02) --}}
@@ -445,7 +488,7 @@
                 {{-- 04. PROCESOS Y CALIDAD --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">04</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
                         <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Procesos HIS y Tiempos</h4>
                     </div>
 
@@ -535,9 +578,12 @@
                 </div>
 
                 {{-- 05. SOPORTE --}}
-                <div class="space-y-6">
+                <div class="space-y-6" 
+                x-show="utilizaSihce === 'SI'"
+                x-cloak 
+                x-transition.duration.400ms>
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">05</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
                         <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Dificultades y Soporte</h4>
                     </div>
 
@@ -549,7 +595,7 @@
                                 ¿A quién comunica dificultades?
                             </label>
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                @foreach(['MINSA', 'DIRESA', 'UE', 'JEFE DE EESS', 'OTROS'] as $com)
+                                @foreach(['MINSA', 'DIRESA', 'UNIDAD EJECUTORA', 'JEFE DE EESS', 'OTROS'] as $com)
                                 <label class="relative cursor-pointer group">
                                     <input type="radio" name="contenido[soporte][comunica]" value="{{$com}}" 
                                         {{ ($detalle->contenido['soporte']['comunica'] ?? '') == $com ? 'checked' : '' }} 
@@ -570,22 +616,28 @@
                                 <i data-lucide="message-circle" class="w-4 h-4"></i>
                                 ¿Qué medio utiliza?
                             </label>
-                            <div class="grid grid-cols-3 gap-4">
-                                @foreach(['WhatsApp', 'Teléfono', 'Email'] as $medio)
-                                @php
-                                    $icon = ['WhatsApp' => 'message-square', 'Teléfono' => 'phone', 'Email' => 'mail'][$medio];
-                                @endphp
-                                <label class="relative cursor-pointer group">
-                                    <input type="radio" name="contenido[soporte][medio]" value="{{$medio}}" 
-                                        {{ ($detalle->contenido['soporte']['medio'] ?? '') == $medio ? 'checked' : '' }} 
-                                        class="peer sr-only">
-                                    <div class="flex flex-col items-center gap-2 p-4 rounded-3xl border-2 border-slate-100 bg-slate-50/50 transition-all
-                                        peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700
-                                        group-hover:border-slate-300">
-                                        <i data-lucide="{{ $icon }}" class="w-5 h-5"></i>
-                                        <span class="text-[10px] font-black uppercase">{{ $medio }}</span>
-                                    </div>
-                                </label>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"> 
+                                @foreach(['WhatsApp', 'Celular', 'Correo', 'Otros'] as $medio)
+                                    @php
+                                        $icon = [
+                                            'WhatsApp' => 'message-square',
+                                            'Celular'  => 'phone',
+                                            'Correo'   => 'mail',
+                                            'Otros'    => 'more-horizontal'
+                                        ][$medio];
+                                    @endphp
+                                    <label class="relative cursor-pointer group">
+                                        <input type="radio" name="contenido[soporte][medio]" value="{{$medio}}" 
+                                            {{ ($detalle->contenido['soporte']['medio'] ?? '') == $medio ? 'checked' : '' }} 
+                                            class="peer sr-only">
+                                        <div class="flex flex-col items-center gap-2 p-4 rounded-3xl border-2 border-slate-100 bg-slate-50/50 transition-all
+                                            peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700
+                                            group-hover:border-slate-300">
+                                            <i data-lucide="{{ $icon }}" class="w-5 h-5"></i>
+                                            <span class="text-[10px] font-black uppercase">{{ $medio }}</span>
+                                        </div>
+                                    </label>
                                 @endforeach
                             </div>
                         </div>
@@ -595,7 +647,7 @@
                 {{-- 06. COMENTARIOS Y OBSERVACIONES GENERALES --}}
                 <div class="space-y-6">
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">06</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
                         <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest">Observaciones y/o Comentarios</h4>
                     </div>
                     <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-4">
@@ -614,7 +666,7 @@
                 {{-- 07. EVIDENCIAS --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200">07</span>
+                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
                         <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Evidencias Fotográficas</h4>
                     </div>
 

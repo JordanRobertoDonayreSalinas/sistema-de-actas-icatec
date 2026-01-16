@@ -64,6 +64,7 @@ class CredController extends Controller
 
             $acta = CabeceraMonitoreo::findOrFail($id);
 
+            
             // 1. CAPTURAR LA FECHA
             $fecha_monitoreo = $request->input('fecha_monitoreo') ?? ($acta->fecha ?? now()->format('Y-m-d'));
             $acta->fecha = $fecha_monitoreo;
@@ -129,14 +130,21 @@ class CredController extends Controller
             // --- 4. GUARDAR EN TABLA MAESTRA DE PROFESIONALES (mon_profesionales) ---
             // Solo si el DNI no está vacío para evitar el error Column not found o Integrity constraint
             if (!empty($personal['dni'])) {
+
+                $profesionFinal = $personal['profesion'] ?? null;
+                // Si seleccionó OTROS, usamos el valor del campo de texto
+                if ($profesionFinal === 'OTROS' && !empty($personal['profesion_otro'])) {
+                    $profesionFinal = $personal['profesion_otro'];
+                }
                 DB::table('mon_profesionales')->updateOrInsert(
                     ['doc' => $personal['dni']], 
                     [
                         'nombres'          => mb_strtoupper($personal['nombre'] ?? 'SIN NOMBRE', 'UTF-8'),
                         'apellido_paterno' => mb_strtoupper($personal['apellido_paterno'] ?? '', 'UTF-8'),
                         'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
-                        'email' => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
-                        'telefono' => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'email'            => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
+                        'telefono'         => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
+                        'profesion'        => mb_strtoupper($profesionFinal, 'UTF-8'),
                         'updated_at'       => now(),
                         'created_at'       => now()
                     ]
