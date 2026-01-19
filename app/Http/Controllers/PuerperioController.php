@@ -46,6 +46,7 @@ class PuerperioController extends Controller
                     ['doc' => trim($datos['responsable']['doc'])],
                     [
                         'tipo_doc'         => $datos['responsable']['tipo_doc'] ?? 'DNI',
+                        // Se fuerza mayúscula en nombres y apellidos
                         'apellido_paterno' => mb_strtoupper(trim($datos['responsable']['apellido_paterno'] ?? ''), 'UTF-8'),
                         'apellido_materno' => mb_strtoupper(trim($datos['responsable']['apellido_materno'] ?? ''), 'UTF-8'),
                         'nombres'          => mb_strtoupper(trim($datos['responsable']['nombres'] ?? ''), 'UTF-8'),
@@ -53,25 +54,36 @@ class PuerperioController extends Controller
                 );
             }
 
-            // 2. Guardar Equipos (Corregido para manejar VARCHAR en 'propio')
+            // 2. Guardar Equipos
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $this->modulo)->delete();
+            
             if ($request->has('equipos')) {
                 foreach ($request->equipos as $eq) {
                     if (!empty($eq['descripcion'])) {
-                        // Validamos el valor de propiedad según las nuevas categorías
-                        $valorPropio = mb_strtoupper($eq['propio'] ?? 'PERSONAL', 'UTF-8');
-                        if (!in_array($valorPropio, ['ESTABLECIMIENTO', 'SERVICIO', 'PERSONAL'])) {
-                            $valorPropio = 'PERSONAL';
+                        
+                        // Validar propiedad del equipo (Lista Blanca)
+                        $valorPropio = mb_strtoupper(trim($eq['propio'] ?? 'PERSONAL'), 'UTF-8');
+                        $valoresPermitidos = ['PERSONAL', 'ESTABLECIMIENTO', 'SERVICIO', 'COMPARTIDO', 'EXCLUSIVO'];
+
+                        if (!in_array($valorPropio, $valoresPermitidos)) {
+                            $valorPropio = 'PERSONAL'; 
                         }
 
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $this->modulo,
+                            // Descripción en Mayúscula
                             'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
                             'cantidad'    => 1,
                             'estado'      => $eq['estado'] ?? 'BUENO',
+                            // Serie en Mayúscula
                             'nro_serie'   => mb_strtoupper($eq['nro_serie'] ?? 'S/N', 'UTF-8'),
-                            'propio'      => $valorPropio, // Ahora guarda el texto directamente
+                            'propio'      => $valorPropio,
+                            
+                            // --- CAMBIO AQUÍ: OBSERVACIÓN EN MAYÚSCULA ---
+                            'observacion' => isset($eq['observacion']) 
+                                ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') 
+                                : null,
                         ]);
                     }
                 }

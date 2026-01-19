@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>REPORTE MÓDULO 13 - ATENCIÓN DEL PUERPERIO</title>
+    <title>REPORTE MÓDULO 13 - PUERPERIO</title>
     <style>
         /* Configuración de Página */
         @page { margin: 0.8cm 0.8cm 2cm 0.8cm; }
@@ -100,7 +100,7 @@
 
     {{-- ENCABEZADO --}}
     <div class="main-header">
-        <h1 class="module-title">MÓDULO 13: ATENCIÓN DEL PUERPERIO</h1>
+        <h1 class="module-title">MÓDULO 13: PUERPERIO</h1>
         <p class="acta-info">
             ACTA Nº {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre }} | 
