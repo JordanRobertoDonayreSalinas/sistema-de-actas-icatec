@@ -17,6 +17,16 @@
                         <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
                     <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Triaje</h2>
+
+                    {{-- NUEVO: FECHA DE ACTUALIZACIÓN --}}
+                    @if($fechaValidacion)
+                        <div class="flex items-center gap-2 mt-2 text-slate-400 animate-pulse">
+                            <i data-lucide="clock" class="w-3 h-3"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-widest">
+                                Guardado: {{ \Carbon\Carbon::parse($fechaValidacion)->format('d/m/Y - h:i A') }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
             </div>
             
@@ -28,9 +38,64 @@
         {{-- FORMULARIO ÚNICO --}}
         <form @submit.prevent="guardarTodo" class="space-y-8">
 
-            {{-- 1. DATOS DEL PROFESIONAL --}}
+            {{-- 1. SECCIÓN INICIO LABORES --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
-                {{-- Decoración --}}
+                <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
+                
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                        <i data-lucide="clipboard-list" class="text-white w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Inicio Labores</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configuración Inicial</p>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    {{-- Grid: Cantidad y Nombre de Consultorio --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {{-- Cantidad Consultorios --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cantidad de Consultorios</label>
+                            <div class="relative">
+                                <input type="number" 
+                                       min="0" 
+                                       x-model="form.inicio_labores.consultorios" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        {{-- Nombre del Consultorio --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombre del Consultorio</label>
+                            <div class="relative">
+                                <input type="text" 
+                                       placeholder="Ej: Consultorio 01"
+                                       x-model="form.inicio_labores.nombre_consultorio" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase">
+                            </div>
+                        </div>
+
+                        {{-- Turno --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Turno</label>
+                            <div class="relative">
+                                <select x-model="form.inicio_labores.turno" 
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase cursor-pointer">
+                                    <option value="" disabled>Seleccione...</option>
+                                    <option value="MAÑANA">MAÑANA</option>
+                                    <option value="TARDE">TARDE</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {{-- 2. SECCION DATOS DEL PROFESIONAL --}}
+            <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-60 pointer-events-none"></div>
                 <div class="relative z-10">
                     <div class="flex items-center gap-4 mb-8">
@@ -44,7 +109,6 @@
                     </div>
 
                     <div class="space-y-6">
-                        {{-- Buscador DNI --}}
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4">
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tipo Doc.</label>
@@ -66,7 +130,6 @@
                             </div>
                         </div>
 
-                        {{-- Datos Personales --}}
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Apellido Paterno</label>
@@ -81,7 +144,7 @@
                                 <input type="text" x-model="form.profesional.nombres" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase">
                             </div>
                         </div>
-                         {{-- Contacto --}}
+                         
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Email</label>
@@ -96,7 +159,7 @@
                 </div>
             </div>
 
-            {{-- 2. CAPACITACIÓN --}}
+            {{-- 3. SECCION: CAPACITACIÓN --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
                 <div class="relative z-10">
@@ -134,7 +197,6 @@
                         </div>
                     </div>
                     
-                    {{-- NUEVOS CAMPOS: Declaración y Confidencialidad --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
                         <div>
                             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Firmó Declaración Jurada?</label>
@@ -166,8 +228,7 @@
                 </div>
             </div>
 
-
-            {{-- 3. INVENTARIO DE EQUIPAMIENTO --}}
+            {{-- 4. SECCION: INVENTARIO DE EQUIPAMIENTO --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
                 <div class="flex items-center gap-4 mb-8">
@@ -241,13 +302,29 @@
                                             <option value="INOPERATIVO">INOPERATIVO</option>
                                         </select>
                                     </td>
+
                                     <td class="py-3 px-2 align-middle">
-                                        <div class="relative">
-                                            <input type="text" x-model="item.codigo" placeholder="---" 
-                                                   class="w-full bg-white border border-slate-200 rounded-lg py-2 pl-7 pr-2 text-[10px] font-bold uppercase focus:ring-indigo-500">
-                                            <i data-lucide="scan-barcode" class="absolute left-2 top-2.5 w-3.5 h-3.5 text-slate-400"></i>
+                                        <div class="flex items-center group/input">
+                                            {{-- Selector Tipo (NS/CB) --}}
+                                            <div class="relative">
+                                                <select x-model="item.tipo_codigo" 
+                                                        class="appearance-none bg-slate-100 border border-slate-200 border-r-0 rounded-l-lg py-2 pl-3 pr-6 text-[10px] font-black text-slate-600 uppercase focus:ring-0 focus:border-indigo-500 cursor-pointer hover:bg-slate-200 transition-colors w-[60px]">
+                                                    <option value="NS">NS</option>
+                                                    <option value="CB">CB</option>
+                                                </select>
+                                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-slate-500">
+                                                <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                                                </div>
+                                            </div>
+
+                                            {{-- Input Manual --}}
+                                            <div class="relative flex-1">
+                                                <input type="text" x-model="item.codigo" placeholder="---" 
+                                                    class="w-full bg-white border border-slate-200 rounded-r-lg py-2 px-3 text-[10px] font-bold uppercase focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 relative">
+                                            </div>
                                         </div>
                                     </td>
+
                                     <td class="py-3 px-2 align-middle">
                                         <input type="text" x-model="item.observacion" placeholder="Sin obs."
                                                class="w-full bg-white border border-slate-200 rounded-lg p-2 text-[10px] font-medium uppercase focus:ring-indigo-500">
@@ -262,11 +339,10 @@
                         </tbody>
                     </table>
                 </div>
-                {{-- AQUÍ SE ELIMINÓ EL DIV DE COMENTARIOS GENERALES --}}
             </div>
-            
 
-            {{-- 4. DIFICULTADES CON EL SISTEMA --}}
+                        
+            {{-- 5. SECCION: DIFICULTADES CON EL SISTEMA --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
                 <div class="flex items-center gap-4 mb-6">
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
@@ -284,7 +360,6 @@
                             <option value="DIRESA">DIRESA</option>
                             <option value="UNIDAD EJECUTORA">UNIDAD EJECUTORA</option>
                         </select>
-                        
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Medio de comunicación</label>
@@ -298,66 +373,80 @@
                 </div>
             </div>
 
-            {{--  SECCIÓN INICIO LABORES --}}
+            {{-- 6. SECCIÓN DNI --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
                 
                 <div class="flex items-center gap-4 mb-8">
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                        <i data-lucide="clipboard-list" class="text-white w-6 h-6"></i>
+                        <i data-lucide="id-card" class="text-white w-6 h-6"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Inicio Labores</h3>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configuración Inicial</p>
+                        <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Sección DNI</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configuración de Identidad Digital</p>
                     </div>
                 </div>
 
                 <div class="space-y-8">
-                    {{-- Grid: Cantidad y Nombre de Consultorio --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        {{-- Cantidad Consultorios --}}
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cantidad de Consultorios</label>
-                            <div class="relative">
-                                <input type="number" 
-                                       min="0" 
-                                       x-model="form.inicio_labores.consultorios" 
-                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500">
-                            </div>
+                    
+                    {{-- 1. TIPO DE DNI --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Tipo de DNI</label>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <label class="cursor-pointer flex-1 relative">
+                                <input type="radio" value="DNI_ELECTRONICO" x-model="form.seccion_dni.tipo_dni" class="peer sr-only">
+                                <div class="text-center py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-white">DNI Electrónico</div>
+                            </label>
+                            <label class="cursor-pointer flex-1 relative">
+                                <input type="radio" value="DNI_AZUL" x-model="form.seccion_dni.tipo_dni" class="peer sr-only">
+                                <div class="text-center py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-white">DNI Azul</div>
+                            </label>
                         </div>
-
-                        {{-- Nombre del Consultorio (NUEVO) --}}
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nombre del Consultorio</label>
-                            <div class="relative">
-                                <input type="text" 
-                                       placeholder="Ej: Consultorio 01"
-                                       x-model="form.inicio_labores.nombre_consultorio" 
-                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase">
-                            </div>
-                        </div>
-
-                        {{-- NUEVO CAMPO: TURNO --}}
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Turno</label>
-                            <div class="relative">
-                                <select x-model="form.inicio_labores.turno" 
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-4 font-bold text-sm focus:ring-indigo-500 uppercase cursor-pointer">
-                                    <option value="" disabled>Seleccione...</option>
-                                    <option value="MAÑANA">MAÑANA</option>
-                                    <option value="TARDE">TARDE</option>
-                                </select>
-                            </div>
-                        </div>
-
                     </div>
 
-                    
+                    {{-- 2. BLOQUE CONDICIONAL: VERSIÓN + FIRMA --}}
+                    <div x-show="form.seccion_dni.tipo_dni === 'DNI_ELECTRONICO'" 
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="bg-slate-50/50 border border-slate-100 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        
+                        {{-- Versión DNIe --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Versión DNIe</label>
+                            <select x-model="form.seccion_dni.version_dnie" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase text-sm focus:ring-indigo-500">
+                                <option value="" selected disabled>Seleccione Versión...</option>
+                                <option value="v1">Versión 1.0</option>
+                                <option value="v2">Versión 2.0</option>
+                                <option value="v3">Versión 3.0</option>
+                            </select>
+                        </div>
+
+                        {{-- Firma SIHCE --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿Realiza firma electrónica en SIHCE?</label>
+                            <div class="flex gap-4">
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" value="SI" x-model="form.seccion_dni.firma_sihce" class="peer sr-only">
+                                    <div class="text-center py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500">SÍ</div>
+                                </label>
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" value="NO" x-model="form.seccion_dni.firma_sihce" class="peer sr-only">
+                                    <div class="text-center py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-300">NO</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 3. COMENTARIOS --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Comentarios / Observaciones</label>
+                        <textarea x-model="form.seccion_dni.comentarios" rows="2" placeholder="Ingrese observaciones generales del acta" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium text-sm focus:ring-indigo-500"></textarea>
+                    </div>
                 </div>
             </div>
 
-            {{-- 5. EVIDENCIA FOTOGRÁFICA --}}
+            {{-- 7. EVIDENCIA FOTOGRÁFICA --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
                 <div class="flex items-center gap-4 mb-6">
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
@@ -374,7 +463,6 @@
                     <p class="text-xs text-slate-400 mt-1">PNG, JPG o JPEG (Máx. 5MB)</p>
                 </div>
                 
-                {{-- LISTA DE ARCHIVOS NUEVOS --}}
                 <div class="mt-4 space-y-2" x-show="files.length > 0">
                     <template x-for="(file, i) in files" :key="i">
                         <div class="flex items-center justify-between bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
@@ -386,7 +474,6 @@
                     </template>
                 </div>
 
-                {{-- GALERÍA DE FOTOS GUARDADAS --}}
                 <div class="mt-6 border-t border-slate-100 pt-6" x-show="oldFiles.length > 0">
                     <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Galería Guardada</h4>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -422,61 +509,78 @@
 
 <script>
     function triajeForm() {
-        // 1. RECEPCIÓN DE DATOS DESDE EL CONTROLADOR
-        const dbCapacitacion = @json($dbCapacitacion ?? null);
-        const dbInventario   = @json($dbInventario ?? []);
-        const dbDificultad   = @json($dbDificultad ?? null);
-        const dbFotos        = @json($dbFotos ?? []);
-        // NUEVO: Recibir datos de inicio labores
+        // --- DATOS BD ---
+        const dbCapacitacion  = @json($dbCapacitacion ?? null);
+        const dbInventario    = @json($dbInventario ?? []);
+        const dbDificultad    = @json($dbDificultad ?? null);
+        const dbFotos         = @json($dbFotos ?? []);
         const dbInicioLabores = @json($dbInicioLabores ?? null);
+        const dbDni           = @json($dbDni ?? null); // <--- NUEVO: Inyectar datos DNI
 
-        // --- Inicializaciones ---
-        
-        // A. Profesional
-        let initProfesional = {
-            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: ''
-        };
-        // B. Capacitación
+        // --- 1. Inicialización ---
+        let initProfesional = { tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', telefono: '' };
         let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: '' };
 
-        // Mapeo si existen datos previos de Capacitación/Profesional
         if (dbCapacitacion) {
             initCapacitacion.recibieron_cap = dbCapacitacion.recibieron_cap || '';
             initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
             initCapacitacion.decl_jurada = dbCapacitacion.decl_jurada || ''; 
             initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
+            
             if (dbCapacitacion.profesional) {
                 initProfesional = { ...dbCapacitacion.profesional };
             }
         }
 
-        // C. NUEVO: Inicio Labores (Aquí conectamos los campos nuevos)
+        // --- 2. Inventario (Separación NS/CB) ---
+        let initInventario = [];
+        if (dbInventario && dbInventario.length > 0) {
+            initInventario = dbInventario.map(item => {
+                let fullCode = item.nro_serie || '';
+                let tipoDetectado = 'NS'; 
+                let codigoLimpio = fullCode;
+
+                if (fullCode.includes(' ')) {
+                    let partes = fullCode.split(' ');
+                    if (partes.length > 0 && (partes[0] === 'NS' || partes[0] === 'CB')) {
+                        tipoDetectado = partes[0];
+                        codigoLimpio = fullCode.substring(3); 
+                    }
+                }
+                return {
+                    id: Date.now() + Math.random(),
+                    descripcion: item.descripcion,
+                    propiedad: item.propio,
+                    estado: item.estado,
+                    tipo_codigo: tipoDetectado, 
+                    codigo: codigoLimpio,
+                    observacion: item.observacion
+                };
+            });
+        }
+
+        // --- 3. Dificultades ---
+        let initDificultades = { institucion: '', medio: '' };
+        if (dbDificultad) {
+            initDificultades.institucion = dbDificultad.insti_comunica || '';
+            initDificultades.medio = dbDificultad.medio_comunica || '';
+        }
+
+        // --- 4. Inicio Labores ---
         let initInicioLabores = { consultorios: '', nombre_consultorio: '', turno: '' };
-        
         if (dbInicioLabores) {
             initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
             initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
             initInicioLabores.turno = dbInicioLabores.turno || '';
         }
 
-        // D. Inventario
-        let initInventario = [];
-        if (dbInventario && dbInventario.length > 0) {
-            initInventario = dbInventario.map(item => ({
-                id: Date.now() + Math.random(),
-                descripcion: item.descripcion,
-                propiedad: item.propio,
-                estado: item.estado,
-                codigo: item.nro_serie || '',
-                observacion: item.observacion
-            }));
-        }
-
-        // E. Dificultades
-        let initDificultades = { institucion: '', medio: '' };
-        if (dbDificultad) {
-            initDificultades.institucion = dbDificultad.insti_comunica || '';
-            initDificultades.medio = dbDificultad.medio_comunica || '';
+        // --- 5. Sección DNI (NUEVO LÓGICA) ---
+        let initDni = { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' };
+        if (dbDni) {
+            initDni.tipo_dni = dbDni.tip_dni || ''; // Verifica si tu BD usa 'tip_dni'
+            initDni.version_dnie = dbDni.version_dni || '';
+            initDni.firma_sihce = dbDni.firma_sihce || '';
+            initDni.comentarios = dbDni.comentarios || '';
         }
 
         return {
@@ -485,62 +589,65 @@
             msgProfesional: '',
             files: [],      
             oldFiles: dbFotos, 
-            listaOpciones: ['CPU', 'IMPRESORA', 'LAPTOP', 'LECTOR DE DNIe', 'MONITOR', 'MOUSE', 'SCANNER', 'TABLET', 'TECLADO', 'TICKETERA'],
+            listaOpciones: ['MONITOR', 'CPU', 'TECLADO', 'MOUSE', 'IMPRESORA', 'LECTORA DE DNIe', 'TICKETERA'],
             itemSeleccionado: '',
 
             form: {
                 profesional: initProfesional,
                 capacitacion: initCapacitacion,
-                // NUEVO: Agregamos el objeto al formulario principal
-                inicio_labores: initInicioLabores, 
                 inventario: initInventario,
                 dificultades: initDificultades,
+                inicio_labores: initInicioLabores,
+                seccion_dni: initDni // <--- IMPORTANTE: Agregado al form
             },
 
-            // --- MANEJO DE ARCHIVOS ---
+            // Funciones estándar (se mantienen igual)
             handleFiles(event) {
-                const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
-                if (newFiles.length < event.target.files.length) alert("Solo imágenes permitidas.");
+                const newFiles = Array.from(event.target.files).filter(file => {
+                    return file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
+                });
                 this.files = [...this.files, ...newFiles];
                 event.target.value = '';
             },
+
             removeFile(index) { this.files.splice(index, 1); },
 
-            // --- Inventario ---
             agregarItem() {
                 if (!this.itemSeleccionado) return;
                 this.form.inventario.push({
                     id: Date.now(),
                     descripcion: this.itemSeleccionado,
                     propiedad: 'ESTABLECIMIENTO',
-                    estado: 'BUENO',
-                    codigo: '',
+                    estado: 'OPERATIVO', 
+                    tipo_codigo: 'NS', 
+                    codigo: '', 
                     observacion: ''
                 });
                 this.itemSeleccionado = '';
             },
+
             eliminarItem(index) { this.form.inventario.splice(index, 1); },
 
-            // --- Buscador ---
             async buscarProfesional() {
                 let doc = this.form.profesional.doc;
                 if (!doc || doc.length < 8) return;
                 this.buscando = true;
                 this.msgProfesional = "Buscando...";
                 try {
-                    let r = await fetch(`/usuario/monitoreo/modulo/triaje/buscar-profesional/${doc}`);
-                    let d = await r.json();
-                    if (d.success) {
-                        this.form.profesional = { ...this.form.profesional, ...d.data };
+                    let response = await fetch(`/usuario/monitoreo/modulo/triaje/buscar-profesional/${doc}`);
+                    let data = await response.json();
+                    if (data.success) {
+                        this.form.profesional = { ...this.form.profesional, ...data.data };
                         this.msgProfesional = "Encontrado.";
                     } else {
-                        this.limpiarDatos();
+                        this.limpiarDatosPersonales();
                         this.msgProfesional = "No encontrado.";
                     }
-                } catch (e) { this.msgProfesional = "Error."; } 
+                } catch (error) { this.msgProfesional = "Error."; } 
                 finally { this.buscando = false; }
             },
-            limpiarDatos() {
+
+            limpiarDatosPersonales() {
                 this.form.profesional.nombres = '';
                 this.form.profesional.apellido_paterno = '';
                 this.form.profesional.apellido_materno = '';
@@ -548,36 +655,54 @@
                 this.form.profesional.telefono = '';
             },
 
-            // --- Eliminar Foto ---
             eliminarFotoGuardada(id, index) {
+                if(!confirm('¿Estás seguro de eliminar esta foto?')) return;
                 fetch(`/usuario/monitoreo/modulo/triaje/foto/${id}`, {
                     method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-                }).then(r=>r.json()).then(d=>{
-                    if(d.success) this.oldFiles.splice(index, 1);
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' }
+                }).then(r => r.json()).then(d => {
+                    if (d.success) this.oldFiles.splice(index, 1);
                     else alert('Error: ' + d.message);
                 });
             },
 
-            // --- Guardar ---
             guardarTodo() {
                 this.saving = true;
-                let fd = new FormData();
-                fd.append('data', JSON.stringify(this.form)); // Aquí ya va incluido inicio_labores
-                this.files.forEach(f => fd.append('fotos[]', f));
+                let formToSend = JSON.parse(JSON.stringify(this.form));
+
+                // Unir códigos Inventario
+                formToSend.inventario = formToSend.inventario.map(item => {
+                    let tipo = item.tipo_codigo || 'NS';
+                    let valor = item.codigo || '';
+                    item.codigo = (tipo + ' ' + valor).trim(); 
+                    return item;
+                });
+
+                let formData = new FormData();
+                formData.append('data', JSON.stringify(formToSend));
+                this.files.forEach(file => { formData.append('fotos[]', file); });
 
                 fetch("{{ route('usuario.monitoreo.triaje.store', $acta->id) }}", {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: fd
-                }).then(r=>r.json()).then(d=>{
-                    if(d.success) window.location.href = d.redirect || window.location.reload();
-                    else { alert('Error: ' + JSON.stringify(d.message)); this.saving=false; }
-                }).catch(e=>{ alert('Error técnico.'); console.error(e); this.saving=false; });
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.redirect ? window.location.href = data.redirect : window.location.reload();
+                    } else {
+                        this.saving = false;
+                        alert('Error: ' + JSON.stringify(data.message));
+                    }
+                })
+                .catch(error => {
+                    this.saving = false;
+                    alert('Error técnico.');
+                    console.error(error);
+                });
             }
         }
     }
 </script>
-
-
 @endsection

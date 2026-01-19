@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\CabeceraMonitoreo;
 use App\Models\Profesional;
 use App\Models\ComCapacitacion;
-//use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
 use App\Models\ComDocuAsisten;
+use App\Models\ComDni;
 
 use App\Models\MonitoreoModulos;
 use App\Models\EquipoComputo;
@@ -23,21 +23,32 @@ class TriajeController extends Controller
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
         
         $dbCapacitacion = ComCapacitacion::with('profesional')
-                ->where('acta_id', $id)->where('modulo_id', 'triaje')->first();
+                        ->where('acta_id', $id)->where('modulo_id', 'triaje')->first();
 
         $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo', 'triaje')->get();
+                        ->where('modulo', 'triaje')->get();
         
         $dbDificultad = ComDificultad::where('acta_id', $id)
-                    ->where('modulo_id', 'triaje')->first();
+                        ->where('modulo_id', 'triaje')->first();
 
         $dbFotos = ComFotos::where('acta_id', $id)
-                ->where('modulo_id', 'triaje')->get();
+                        ->where('modulo_id', 'triaje')->get();
         
         $dbInicioLabores = ComDocuAsisten::where('acta_id', $id)
-                            ->where('modulo_id', 'triaje')->first();
+                        ->where('modulo_id', 'triaje')->first();
+        
+        $dbDni = ComDni::where('acta_id', $id)
+                        ->where('modulo_id', 'triaje')->first();
 
-        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores'));
+        // --- Obtener fecha de actualización ---
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', 'triaje')
+                            ->first();
+        
+        // Si existe, tomamos la fecha, si no, now
+        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : now();
+
+        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
     }
 
     // 2. BUSCADOR (Sin cambios)
@@ -98,7 +109,7 @@ class TriajeController extends Controller
                 );
             }
 
-            // 3. INVENTARIO (Tabla SQL - CRUCIAL para que ConsolidadoPdfController línea 25 funcione)
+            // 3. INVENTARIO (Tabla SQL)
             EquipoComputo::where('cabecera_monitoreo_id', $id)
                             ->where('modulo', 'triaje') 
                             ->delete();
@@ -111,10 +122,10 @@ class TriajeController extends Controller
                         'modulo'                => 'triaje', 
                         'descripcion'           => $item['descripcion'] ?? 'SIN DESCRIPCION',
                         'cantidad'              => 1, 
-                        'estado'                => $item['estado'] ?? 'REGULAR',
-                        'nro_serie'             => $item['codigo'] ?? null, 
-                        'propio'                => $item['propiedad'] ?? 'ESTABLECIMIENTO',
-                        'observacion'           => $item['observacion'] ?? ''
+                        'estado'                => $item['estado'] ?? 'OPERATIVO',
+                        'nro_serie'             => $item['codigo'] ? str($item['codigo'])->upper() : null, // Aquí se guarda ya concatenado "NS 123"
+                        'propio'                => $item['propiedad'] ?? 'COMPARTIDO',
+                        'observacion'           => $item['observacion'] ? str($item['observacion'])->upper() : null,
                     ]);
                 }
             }
@@ -130,15 +141,18 @@ class TriajeController extends Controller
                 ]
             );
 
-            // 5. INICIO LABORES / TABLAS AUXILIARES
+            // 5. INICIO LABORES (Tabla SQL)
             $datosInicio = $data['inicio_labores'] ?? [];
             ComDocuAsisten::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => 'triaje'],
                 [
                     'profesional_id'    => $profesional->id,
+                    // Usamos ?? null para evitar el error "cannot be null" si falta el dato
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
                     'turno'             => $datosInicio['turno'] ?? null,
+                    
+                    // Estos campos no existen en el form de Triaje, enviamos null o defaults
                     'fua'               => null,
                     'referencia'        => null,
                     'receta'            => null,
@@ -146,33 +160,51 @@ class TriajeController extends Controller
                 ]
             );
 
-            // =========================================================
-            // B. PREPARACIÓN DEL JSON PARA EL PDF (TRANSFORMACIÓN)
-            // =========================================================
+            // 6. SECCIÓN DNI (Tabla SQL - CORREGIDO)
+            $datosDni = $data['seccion_dni'] ?? [];     
+            $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO';
             
-            // AQUÍ ESTÁ LA CLAVE: "Aplanamos" los datos para que tengan la misma estructura 
-            // que 'ConsultaMedicina' y el PDF los reconozca automáticamente.
+            // Usamos 'triaje' en lugar de self::MODULO_ID si no está definido
+            ComDni::updateOrCreate(
+                ['acta_id' => $id, 'modulo_id' => 'triaje'],
+                [
+                    'profesional_id' => $profesional->id,
+                    'tip_dni'        => $datosDni['tipo_dni'] ?? null,
+                    'version_dni'    => $esElectronico ? ($datosDni['version_dnie'] ?? null) : null,
+                    'firma_sihce'    => $esElectronico ? ($datosDni['firma_sihce'] ?? null) : null,
+                    'comentarios'    => str($datosDni['comentarios'])->upper() ?? null,
+                ]
+            );
+
+            // =========================================================
+            // B. PREPARACIÓN DEL JSON PARA EL PDF (SNAPSHOT COMPLETO)
+            // =========================================================
 
             $contenidoParaPDF = [
-                'profesional'            => $data['profesional'], // Mantenemos objeto profesional
+                'profesional'            => $data['profesional'], 
 
-                // Mapeo de Inicio de Labores
+                // Inicio Labores
+                'inicio_labores'         => $datosInicio, // Guardamos el objeto completo también por si acaso
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
                 'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
                 
-                // Mapeamos Capacitación (Sacamos los datos del array anidado al nivel raíz)
+                // Capacitación
                 'recibio_capacitacion'   => $datosCapacitacion['recibieron_cap'] ?? 'NO',
                 'inst_capacitacion'      => ($datosCapacitacion['recibieron_cap'] ?? 'NO') === 'SI' ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
                 'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
                 'firmo_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
                 
-                // Mapeamos Dificultades/Comunicación
+                // Dificultades
                 'comunica_a'             => $datosDificultad['institucion'] ?? null,
                 'medio_soporte'          => $datosDificultad['medio'] ?? null,
                 
-                // Campos extra que Medicina usa y Triaje podría necesitar vacíos para no romper la vista
-                'num_consultorios'       => '1', // Opcional, según lógica
+                // --- AGREGADO: INVENTARIO (Snapshot para el PDF/Vista) ---
+                'inventario'             => $listaInventario,
+
+                // --- AGREGADO: SECCIÓN DNI (Snapshot) ---
+                'seccion_dni'            => $datosDni,
+                
                 'comentarios'            => null
             ];
 
@@ -181,26 +213,20 @@ class TriajeController extends Controller
             // =========================================================
             
             $rutasFotos = [];
-            // 1. Recuperar fotos existentes si no se han borrado
+            // Recuperar fotos previas del JSON
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo_nombre', 'triaje')->first();
             
-            // Intentamos recuperar fotos del JSON anterior si existen
             if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                 $prev = $registroPrevio->contenido['foto_evidencia'];
                 $rutasFotos = is_array($prev) ? $prev : [$prev];
             }
             
-            // Si el frontend envía 'foto_evidencia' (array de strings) con las fotos que deben quedar
-            // usamos eso para filtrar. (Opcional, depende de tu frontend).
-            // Por ahora asumimos que agregamos las nuevas:
-
-            // 2. Guardar nuevas fotos
+            // Guardar nuevas fotos
             if ($request->hasFile('fotos')) {
                 foreach ($request->file('fotos') as $foto) {
                     $path = $foto->store('evidencia_fotos', 'public');
                     
-                    // Tabla auxiliar
                     ComFotos::create([
                         'acta_id'        => $id,
                         'modulo_id'      => 'triaje',
@@ -212,11 +238,10 @@ class TriajeController extends Controller
                 }
             }
             
-            // Agregamos las fotos al JSON estandarizado
             $contenidoParaPDF['foto_evidencia'] = $rutasFotos;
 
             // =========================================================
-            // D. GUARDAR JSON FINAL EN MONITOREO_MODULOS
+            // D. GUARDAR JSON FINAL
             // =========================================================
 
             MonitoreoModulos::updateOrCreate(
@@ -225,7 +250,7 @@ class TriajeController extends Controller
                     'modulo_nombre'         => 'triaje'
                 ],
                 [
-                    'contenido' => $contenidoParaPDF, // Ahora guardamos el array transformado
+                    'contenido' => $contenidoParaPDF, 
                     'pdf_firmado_path' => null
                 ]
             );

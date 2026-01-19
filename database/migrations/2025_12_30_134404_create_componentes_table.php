@@ -27,22 +27,22 @@ return new class extends Migration
         });
 
         // 3. Componente Equipamiento
-        Schema::create('com_equipamiento', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('acta_id')->constrained('mon_cabecera_monitoreo')->onDelete('cascade');
-            $table->string('modulo_id')->index();
+        // Schema::create('com_equipamiento', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignId('acta_id')->constrained('mon_cabecera_monitoreo')->onDelete('cascade');
+        //     $table->string('modulo_id')->index();
             
-            $table->foreignId('profesional_id')->constrained('mon_profesionales');
+        //     $table->foreignId('profesional_id')->constrained('mon_profesionales');
 
-            $table->string('descripcion'); // Opciones: MONITOR, CPU, TECLADO, MOUSE, IMPRESORA, TICKETERA, LECTORA DE DNIe
-            $table->string('cantidad'); // Opciones: siempre sera 1
-            $table->string('propiedad'); // Opciones: ESTABLECIMIENTO, PERSONAL 
-            $table->string('estado'); // opciones: BUENO, REGULAR, MALO
-            $table->string('cod_barras');
-            $table->string('observaciones');
-            $table->text('comentarios')->nullable();
-            $table->timestamps();
-        });
+        //     $table->string('descripcion'); // Opciones: MONITOR, CPU, TECLADO, MOUSE, IMPRESORA, TICKETERA, LECTORA DE DNIe
+        //     $table->string('cantidad'); // Opciones: siempre sera 1
+        //     $table->string('propiedad'); // Opciones: ESTABLECIMIENTO, PERSONAL 
+        //     $table->string('estado'); // opciones: BUENO, REGULAR, MALO
+        //     $table->string('cod_barras');
+        //     $table->string('observaciones');
+        //     $table->text('comentarios')->nullable();
+        //     $table->timestamps();
+        // });
 
         // 4. Componente Dificultad
         Schema::create('com_dificultad', function (Blueprint $table) {
@@ -54,6 +54,7 @@ return new class extends Migration
 
             $table->string('insti_comunica')->nullable(); // Opciones: MINSA, DIRESA, UUEE
             $table->string('medio_comunica')->nullable(); // Opciones: WHATSAPP, ANYDESK, CELULAR
+            $table->text('comentarios')->nullable();
             $table->timestamps();
         });
 
