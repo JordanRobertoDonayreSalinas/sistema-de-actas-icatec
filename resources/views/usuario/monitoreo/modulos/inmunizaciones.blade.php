@@ -151,15 +151,25 @@
                                     </div>
                                 </label>
                             </div>
+                            {{-- CAMPO SELECT (Antes era Input Text) --}}
                             <div id="div_con_quien" class="{{ ($detalle->contenido['es_compartido'] ?? '') == 'SI' ? '' : 'hidden' }} animate-fade-in-down">
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i data-lucide="users" class="h-4 w-4 text-indigo-400"></i>
                                     </div>
-                                    <input type="text" id="input_con_quien" name="contenido[con_quien_comparte]" 
-                                        value="{{ $detalle->contenido['con_quien_comparte'] ?? '' }}"
-                                        class="w-full pl-10 pr-6 py-4 bg-indigo-50/30 border-2 border-indigo-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 text-slate-600 uppercase transition-all placeholder:text-indigo-200/70"
-                                        placeholder="¿CON QUIÉN COMPARTE?">
+                                    <select id="input_con_quien" name="contenido[con_quien_comparte]" 
+                                            class="w-full pl-10 pr-6 py-4 bg-indigo-50/30 border-2 border-indigo-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 text-slate-600 uppercase transition-all cursor-pointer appearance-none">
+                                        <option value="">-- SELECCIONE SERVICIO --</option>
+                                        @foreach(['CRED', 'MEDICINA', 'OBSTETRICIA', 'NUTRICION', 'ODONTOLOGIA', 'PSICOLOGIA', 'OTROS'] as $opcion)
+                                            <option value="{{ $opcion }}" {{ ($detalle->contenido['con_quien_comparte'] ?? '') == $opcion ? 'selected' : '' }}>
+                                                {{ $opcion }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    {{-- Flechita personalizada para el select --}}
+                                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                        <i data-lucide="chevron-down" class="h-4 w-4 text-indigo-400"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
