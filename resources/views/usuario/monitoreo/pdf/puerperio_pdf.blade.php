@@ -4,339 +4,265 @@
     <meta charset="UTF-8">
     <title>REPORTE MÓDULO 13 - PUERPERIO</title>
     <style>
-        /* Configuración de Página */
-        @page { margin: 0.8cm 0.8cm 2cm 0.8cm; }
-        body { font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: #333; line-height: 1.4; }
+        /* MÁRGENES: 2.5cm abajo para reservar espacio al pie de página del Controlador */
+        @page { margin: 1.2cm 1.5cm 2.5cm 1.5cm; }
+        body { font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
         
-        /* Estilos Generales */
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .text-uppercase { text-transform: uppercase; }
-        .font-bold { font-weight: bold; }
-        
-        /* --- ENCABEZADO (Estilo Azul - Igual a Gestión Administrativa) --- */
-        .main-header { 
-            text-align: center; 
-            margin-bottom: 20px; 
-        }
-        .module-title { 
-            font-size: 16px; 
-            font-weight: bold; 
-            color: #4f46e5; /* Azul Índigo */
-            text-transform: uppercase; 
-            margin: 0 0 5px 0;
-        }
-        .acta-info { 
-            font-size: 10px; 
-            color: #64748b; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            margin: 0;
-        }
-        .header-bar { 
-            margin-top: 10px;
-            border-bottom: 3px solid #4f46e5; /* Línea Azul */
-            width: 100%;
-        }
+        /* ENCABEZADO */
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 16px; text-transform: uppercase; color: #4f46e5; font-weight: bold; }
+        .acta-info { font-size: 10px; color: #64748b; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
 
-        /* Tablas */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; table-layout: fixed; }
-        
-        /* Cabeceras de Sección (Estilo Barra Gris con Borde Azul) */
-        .section-header { 
+        /* TÍTULOS DE SECCIÓN */
+        .section-title { 
             background-color: #f1f5f9; 
-            color: #1e293b;
-            padding: 8px 10px; 
+            padding: 6px 10px; 
             font-weight: bold; 
             text-transform: uppercase; 
-            font-size: 11px; 
-            text-align: left;
-            border: 1px solid #e2e8f0;
-            border-left: 4px solid #4f46e5; /* Detalle Azul */
+            border-left: 4px solid #4f46e5; 
+            margin-top: 15px; 
+            margin-bottom: 5px; 
+            font-size: 10px; 
+            color: #1e293b;
         }
 
-        /* Celdas */
-        th.table-head { background-color: #f8fafc; color: #475569; font-size: 9px; text-transform: uppercase; padding: 6px; border: 1px solid #e2e8f0; font-weight: bold; }
-        td { padding: 6px 8px; border: 1px solid #e2e8f0; text-align: left; vertical-align: middle; word-wrap: break-word; }
+        /* TABLAS */
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px; }
+        th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; word-wrap: break-word; }
+        th { background-color: #f8fafc; color: #475569; font-size: 8.5px; text-transform: uppercase; }
         
-        /* Columnas de Etiqueta vs Dato */
-        .label-col { background-color: #ffffff; color: #64748b; width: 35%; font-weight: bold; font-size: 9px; text-transform: uppercase; }
-        .data-col { background-color: #ffffff; color: #0f172a; width: 65%; font-weight: bold; font-size: 9px; text-transform: uppercase; }
+        /* COLUMNA ETIQUETA */
+        .bg-label { background-color: #f8fafc; font-weight: bold; width: 35%; text-transform: uppercase; color: #334155; font-size: 9px; }
+        .uppercase { text-transform: uppercase; }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: bold; }
 
-        /* Evidencia */
-        .evidence-box { text-align: center; padding: 10px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #fafafa; }
-        .evidence-img { max-height: 250px; max-width: 100%; border-radius: 2px; }
-        
-        /* Caja de Firma */
-        .signature-section { margin-top: 30px; page-break-inside: avoid; }
-        .signature-box { 
-            width: 300px; 
-            margin: 0 auto; 
-            text-align: center; 
-            border: 1px solid #333; 
-            border-radius: 10px;    
-            padding: 30px 20px 10px 20px;
-            background-color: #fff;
+        /* EVIDENCIA */
+        .foto-container { 
+            margin: 15px auto; padding: 10px; border: 1px solid #e2e8f0; 
+            background-color: #ffffff; text-align: center; display: table; width: auto; 
         }
-        .signature-line { border-top: 1px solid #000; margin: 10px 15px 5px 15px; }
-        .signature-name { font-weight: bold; font-size: 9px; text-transform: uppercase; }
-        .signature-role { font-size: 8px; color: #64748b; text-transform: uppercase; }
+        .foto { display: block; margin: 0 auto; max-width: 100%; max-height: 250px; width: auto; height: auto; object-fit: contain; }
+        .no-evidence { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; text-align: center; color: #64748b; font-style: italic; background-color: #f8fafc; margin: 10px 0; }
 
-        /* Pie de Página */
-        .footer-line { 
-            position: fixed; 
-            bottom: 35px; 
-            left: 0; 
-            right: 0; 
-            height: 1px; 
-            background-color: #cbd5e1; 
-        }
+        /* FIRMA */
+        .firma-section { margin-top: 20px; page-break-inside: avoid; }
+        .firma-container { width: 50%; display: table; table-layout: fixed; margin: 0 25%; }
+        .firma-box { display: table-cell; width: 50%; text-align: center; padding: 0 20px; border: 1px solid #e2e8f0; border-radius: 10px; }
+        .firma-linea { border-bottom: 1px solid #000; height: 80px; margin-bottom: 5px; }
+        .firma-nombre { font-weight: bold; font-size: 10px; text-transform: uppercase; }
+        .firma-label { font-size: 9px; color: #64748b; margin-top: 2px; }
     </style>
 </head>
 <body>
 
-    {{-- LÍNEA DECORATIVA DEL PIE DE PÁGINA --}}
-    <div class="footer-line"></div>
-
     {{-- ENCABEZADO --}}
-    <div class="main-header">
-        <h1 class="module-title">MÓDULO 13: PUERPERIO</h1>
-        <p class="acta-info">
-            ACTA Nº {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
-            ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre }} | 
+    <div class="header">
+        <h1>MÓDULO 13: PUERPERIO</h1>
+        <div class="acta-info">
+            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
             FECHA: {{ isset($detalle->contenido['fecha']) ? date('d/m/Y', strtotime($detalle->contenido['fecha'])) : date('d/m/Y') }}
-        </p>
-        <div class="header-bar"></div>
+        </div>
     </div>
 
-    {{-- 1. DETALLES DEL CONSULTORIO --}}
+    {{-- 1. DATOS GENERALES --}}
+    <div class="section-title">1. DETALLES DEL CONSULTORIO</div>
     <table>
-        <thead><tr><th colspan="2" class="section-header">1. DETALLES DEL CONSULTORIO</th></tr></thead>
         <tbody>
             <tr>
-                <td class="label-col">Turno</td>
-                <td class="data-col">{{ $detalle->contenido['turno'] ?? '---' }}</td>
+                <td class="bg-label">Turno</td>
+                <td class="uppercase">{{ $detalle->contenido['turno'] ?? '---' }}</td>
+            </tr>
+            {{-- CAMPOS AGREGADOS AQUÍ --}}
+            <tr>
+                <td class="bg-label">Nro. de Consultorios</td>
+                <td class="uppercase">{{ $detalle->contenido['num_ambientes'] ?? '---' }}</td>
             </tr>
             <tr>
-                <td class="label-col">Nro. de Consultorios</td>
-                <td class="data-col">{{ $detalle->contenido['num_consultorios'] ?? '---' }}</td>
-            </tr>
-            <tr>
-                <td class="label-col">Denominación</td>
-                <td class="data-col">{{ $detalle->contenido['denominacion_consultorio'] ?? '---' }}</td>
+                <td class="bg-label">Consultorio Entrevistado</td>
+                <td class="uppercase">{{ $detalle->contenido['denominacion_ambiente'] ?? '---' }}</td>
             </tr>
         </tbody>
     </table>
 
     {{-- 2. DATOS DEL PROFESIONAL --}}
+    <div class="section-title">2. DATOS DEL PROFESIONAL</div>
     <table>
-        <thead><tr><th colspan="2" class="section-header">2. DATOS DEL PROFESIONAL</th></tr></thead>
         <tbody>
             <tr>
-                <td class="label-col">Apellidos y Nombres</td>
-                <td class="data-col">
+                <td class="bg-label">Apellidos y Nombres</td>
+                <td class="uppercase">
                     {{ $detalle->contenido['rrhh']['apellido_paterno'] ?? '' }} 
                     {{ $detalle->contenido['rrhh']['apellido_materno'] ?? '' }} 
                     {{ $detalle->contenido['rrhh']['nombres'] ?? '' }}
                 </td>
             </tr>
             <tr>
-                <td class="label-col">{{ $detalle->contenido['rrhh']['tipo_doc'] ?? 'DOCUMENTO DE IDENTIDAD' }}</td>
-                <td class="data-col">{{ $detalle->contenido['rrhh']['doc'] ?? '---' }}</td>
+                <td class="bg-label">{{ $detalle->contenido['rrhh']['tipo_doc'] ?? 'DOCUMENTO DE IDENTIDAD' }}</td>
+                <td>{{ $detalle->contenido['rrhh']['doc'] ?? '---' }}</td>
             </tr>
             <tr>
-                <td class="label-col">PROFESION</td>
-                <td class="data-col">
-                    {{ $detalle->contenido['rrhh']['cargo'] ?? '---' }}
-                </td>
+                <td class="bg-label">Profesión</td>
+                <td class="uppercase">{{ $detalle->contenido['rrhh']['cargo'] ?? '---' }}</td>
             </tr>
             <tr>
-                <td class="label-col">¿Utiliza SIHCE?</td>
-                <td class="data-col">{{ $detalle->contenido['cuenta_sihce'] ?? '---' }}</td>
+                <td class="bg-label">¿Utiliza SIHCE?</td>
+                <td class="uppercase">{{ $detalle->contenido['cuenta_sihce'] ?? '---' }}</td>
             </tr>
             
             @if(($detalle->contenido['cuenta_sihce'] ?? '') == 'SI')
             <tr>
-                <td class="label-col">¿Firmó Declaración Jurada?</td>
-                <td class="data-col">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
+                <td class="bg-label">¿Firmó Declaración Jurada?</td>
+                <td class="uppercase">{{ $detalle->contenido['firmo_dj'] ?? '---' }}</td>
             </tr>
             <tr>
-                <td class="label-col">¿Firmó Confidencialidad?</td>
-                <td class="data-col">{{ $detalle->contenido['firmo_confidencialidad'] ?? '---' }}</td>
+                <td class="bg-label">¿Firmó Confidencialidad?</td>
+                <td class="uppercase">{{ $detalle->contenido['firmo_confidencialidad'] ?? '---' }}</td>
             </tr>
             @else
             <tr>
-                <td class="label-col">Documentación SIHCE</td>
-                <td class="data-col" style="color: #94a3b8;">NO APLICA (NO UTILIZA SIHCE)</td>
+                <td class="bg-label">Documentación SIHCE</td>
+                <td style="color: #64748b;">NO APLICA (NO UTILIZA SIHCE)</td>
             </tr>
             @endif
         </tbody>
     </table>
 
-    {{-- 3. TIPO DE DNI Y FIRMA DIGITAL --}}
+    {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
     @if(isset($detalle->contenido['tipo_dni']) && $detalle->contenido['tipo_dni'] != '')
+    <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
     <table>
-        <thead><tr><th colspan="2" class="section-header">3. TIPO DE DNI Y FIRMA DIGITAL</th></tr></thead>
         <tbody>
             <tr>
-                <td class="label-col">Tipo de DNI</td>
-                <td class="data-col">{{ $detalle->contenido['tipo_dni'] ?? '---' }}</td>
+                <td class="bg-label">Tipo de DNI</td>
+                <td class="uppercase">{{ $detalle->contenido['tipo_dni'] ?? '---' }}</td>
             </tr>
             @if(($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO')
             <tr>
-                <td class="label-col">Versión DNIe</td>
-                <td class="data-col">{{ $detalle->contenido['version_dnie'] ?? '---' }}</td>
+                <td class="bg-label">Versión DNIe</td>
+                <td class="uppercase">{{ $detalle->contenido['version_dnie'] ?? '---' }}</td>
             </tr>
             <tr>
-                <td class="label-col">¿Firma Digitalmente en SIHCE?</td>
-                <td class="data-col">{{ $detalle->contenido['firma_digital_sihce'] ?? '---' }}</td>
+                <td class="bg-label">¿Firma Digitalmente en SIHCE?</td>
+                <td class="uppercase">{{ $detalle->contenido['firma_digital_sihce'] ?? '---' }}</td>
             </tr>
             @endif
             <tr>
-                <td class="label-col">Observaciones</td>
-                <td class="data-col">{{ $detalle->contenido['observaciones_dni'] ?? 'Sin observaciones' }}</td>
+                <td class="bg-label">Observaciones</td>
+                <td class="uppercase">{{ $detalle->contenido['observaciones_dni'] ?? 'Sin observaciones' }}</td>
             </tr>
         </tbody>
     </table>
     @endif
 
-    {{-- 4. ACCESO Y CAPACITACIÓN --}}
+    {{-- 4. DETALLES DE CAPACITACIÓN --}}
+    <div class="section-title">4. DETALLES DE CAPACITACIÓN</div>
     <table>
-        <thead><tr><th colspan="2" class="section-header">4. ACCESO Y CAPACITACIÓN</th></tr></thead>
         <tbody>
             <tr>
-                <td class="label-col">¿Cuenta con Usuario y Acceso?</td>
-                <td class="data-col">{{ $detalle->contenido['acceso_sistema'] ?? '---' }}</td>
-            </tr>
-            <tr>
-                <td class="label-col">¿Recibió Capacitación?</td>
-                <td class="data-col">{{ $detalle->contenido['recibio_capacitacion'] ?? '---' }}</td>
+                <td class="bg-label">¿Recibió Capacitación?</td>
+                <td class="uppercase">{{ $detalle->contenido['recibio_capacitacion'] ?? '---' }}</td>
             </tr>
             @if(($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI')
             <tr>
-                <td class="label-col">Entidad Capacitadora</td>
-                <td class="data-col">{{ $detalle->contenido['inst_que_lo_capacito'] ?? '---' }}</td>
+                <td class="bg-label">Entidad Capacitadora</td>
+                <td class="uppercase">{{ $detalle->contenido['inst_que_lo_capacito'] ?? '---' }}</td>
             </tr>
             @endif
         </tbody>
     </table>
 
-    {{-- 5. EQUIPAMIENTO REGISTRADO --}}
-    <div style="margin-bottom: 15px;">
-        <div class="section-header" style="margin-bottom: 5px;">5. EQUIPAMIENTO REGISTRADO</div>
+    {{-- 5. EQUIPOS DE COMPUTO --}}
+    <div class="section-title">5. EQUIPAMIENTO DEL CONSULTORIO</div>
+    @if($equipos->count() > 0)
         <table>
             <thead>
                 <tr>
-                    <th class="table-head" style="width: 25%;">DESCRIPCIÓN</th>
-                    <th class="table-head" style="width: 7%; text-align: center;">CANT.</th>
-                    <th class="table-head" style="width: 12%;">ESTADO</th>
-                    <th class="table-head" style="width: 12%;">PROPIEDAD</th>
-                    <th class="table-head" style="width: 16%;">N. SERIE / CP</th>
-                    <th class="table-head" style="width: 28%;">OBSERVACIÓN</th>
+                    <th width="25%">DESCRIPCIÓN</th>
+                    <th width="10%" class="text-center">CANT.</th>
+                    <th width="15%" class="text-center">ESTADO</th>
+                    <th width="15%" class="text-center">PROPIEDAD</th>
+                    <th width="15%" class="text-center">N. SERIE</th>
+                    <th width="20%">OBSERVACIÓN</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($equipos as $equipo)
+                @foreach($equipos as $eq)
                 <tr>
-                    <td style="font-size: 9px;">{{ $equipo->descripcion }}</td>
-                    <td class="text-center" style="font-weight: bold;">{{ $equipo->cantidad ?? 1 }}</td>
-                    <td class="text-center" style="font-size: 9px;">{{ $equipo->estado }}</td>
-                    <td class="text-center" style="font-size: 9px;">{{ $equipo->propio }}</td>
-                    <td class="text-center" style="font-size: 9px;">{{ $equipo->nro_serie ?? '---' }}</td>
-                    <td style="font-size: 9px;">{{ $equipo->observacion ?? '-' }}</td>
+                    <td class="uppercase">{{ $eq->descripcion }}</td>
+                    <td class="text-center font-bold">{{ $eq->cantidad }}</td>
+                    <td class="text-center uppercase">{{ $eq->estado }}</td>
+                    <td class="text-center uppercase">{{ $eq->propio }}</td>
+                    <td class="text-center uppercase">{{ $eq->nro_serie ?? '---' }}</td>
+                    <td class="uppercase">{{ $eq->observacion ?? '-' }}</td>
                 </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="text-center" style="color: #94a3b8; padding: 15px;">No se registraron equipos.</td>
-                </tr>
-                @endforelse
+                @endforeach
             </tbody>
         </table>
-    </div>
+    @else
+        <div style="color: #94a3b8; font-style: italic; padding: 10px; border: 1px solid #e2e8f0;">SIN EQUIPAMIENTO REGISTRADO</div>
+    @endif
 
-    {{-- 6. SOPORTE Y COMUNICACIÓN --}}
+    {{-- 6. SOPORTE --}}
+    <div class="section-title">6. COMUNICACIÓN</div>
     <table>
-        <thead><tr><th colspan="2" class="section-header">6. SOPORTE Y COMUNICACIÓN</th></tr></thead>
         <tbody>
             <tr>
-                <td class="label-col">Ante dificultades comunica a</td>
-                <td class="data-col">{{ $detalle->contenido['inst_a_quien_comunica'] ?? '---' }}</td>
+                <td class="bg-label">Ante dificultades comunica a</td>
+                <td class="uppercase">{{ $detalle->contenido['inst_a_quien_comunica'] ?? '---' }}</td>
             </tr>
             <tr>
-                <td class="label-col">Medio utilizado</td>
-                <td class="data-col">{{ $detalle->contenido['medio_que_utiliza'] ?? '---' }}</td>
+                <td class="bg-label">Medio utilizado</td>
+                <td class="uppercase">{{ $detalle->contenido['medio_que_utiliza'] ?? '---' }}</td>
             </tr>
         </tbody>
     </table>
 
     {{-- 7. COMENTARIOS --}}
-    <table>
-        <thead><tr><th class="section-header">7. COMENTARIOS</th></tr></thead>
-        <tbody>
-            <tr>
-                <td class="data-col" style="width: 100%; font-weight: normal; padding: 10px;">
-                    {{ $detalle->contenido['comentarios'] ?? 'Sin comentarios registrados.' }}
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    {{-- 8. EVIDENCIA FOTOGRÁFICA (UNA SOLA FOTO) --}}
-    <div style="page-break-inside: avoid;">
-        <div class="section-header" style="margin-bottom: 5px;">8. EVIDENCIA FOTOGRÁFICA</div>
-        
-        @php
-            $fotoPath = $detalle->contenido['foto_evidencia'] ?? null;
-            // Si por error antiguo es un array, tomar el primero
-            if(is_array($fotoPath)) $fotoPath = $fotoPath[0] ?? null;
-        @endphp
-
-        @if($fotoPath && file_exists(public_path('storage/' . $fotoPath)))
-            <div class="evidence-box">
-                <img src="{{ public_path('storage/' . $fotoPath) }}" class="evidence-img">
-            </div>
-        @else
-            <div class="evidence-box" style="color: #94a3b8;">No se adjuntó evidencia fotográfica.</div>
-        @endif
+    <div class="section-title">7. COMENTARIOS</div>
+    <div style="border: 1px solid #e2e8f0; padding: 10px; min-height: 40px; text-transform: uppercase; font-size: 10px;">
+        {{ $detalle->contenido['comentarios'] ?? 'SIN COMENTARIOS REGISTRADOS.' }}
     </div>
 
+    {{-- 8. EVIDENCIA FOTOGRÁFICA --}}
+    <div class="section-title">8. EVIDENCIA FOTOGRÁFICA</div>
+    @php
+        $fotoPath = $detalle->contenido['foto_evidencia'] ?? null;
+        if(is_array($fotoPath)) $fotoPath = $fotoPath[0] ?? null;
+    @endphp
+
+    @if($fotoPath && file_exists(public_path('storage/' . $fotoPath)))
+        <div class="foto-container">
+            <img src="{{ public_path('storage/' . $fotoPath) }}" class="foto">
+        </div>
+    @else
+        <div class="no-evidence">
+            No se adjuntó evidencia fotográfica.
+        </div>
+    @endif
+
     {{-- 9. FIRMA --}}
-    <div class="signature-section">
-        <div class="section-header" style="margin-bottom: 40px;">9. FIRMA DE CONFORMIDAD</div>
-        
-        <div class="signature-box">
-            <div style="height: 30px;"></div> 
-            <div class="signature-line"></div>
-            <div class="signature-name">
-                
-                {{ $detalle->contenido['rrhh']['apellido_paterno'] ?? '' }} 
-                {{ $detalle->contenido['rrhh']['apellido_materno'] ?? '' }}
-                {{ $detalle->contenido['rrhh']['nombres'] ?? '' }} 
-            </div>
-            <div class="signature-role">
-                {{ $detalle->contenido['rrhh']['cargo'] ?? 'PROFESIONAL DE SALUD' }}
-            </div>
-            <div class="signature-role">
-                {{ $detalle->contenido['rrhh']['tipo_doc'] ?? 'DNI' }}: {{ $detalle->contenido['rrhh']['doc'] ?? '________' }}
+    <div class="firma-section">
+        <div class="section-title">9. FIRMA</div>
+        <div class="firma-container">
+            <div class="firma-box">
+                <div class="firma-linea"></div>
+                <div class="firma-nombre">
+                    
+                    {{ $detalle->contenido['rrhh']['apellido_paterno'] ?? '' }} 
+                    {{ $detalle->contenido['rrhh']['apellido_materno'] ?? '' }}
+                    {{ $detalle->contenido['rrhh']['nombres'] ?? '' }} 
+                </div>
+                <div class="firma-label">
+                    FIRMA DEL PROFESIONAL ENTREVISTADO
+                </div>
+                <div class="firma-label">
+                    {{ $detalle->contenido['rrhh']['tipo_doc'] ?? 'DNI' }}: {{ $detalle->contenido['rrhh']['doc'] ?? '________' }}
+                </div>
             </div>
         </div>
     </div>
-
-    {{-- SCRIPT PARA PIE DE PÁGINA --}}
-    <script type="text/php">
-        if (isset($pdf)) {
-            $font = $fontMetrics->get_font("Helvetica", "bold");
-            $size = 8;
-            $color = array(0.2, 0.2, 0.2);
-            $y = $pdf->get_height() - 28;
-
-            $textLeft = "SISTEMA DE ACTAS - DIRESA ICA";
-            $pdf->page_text(30, $y, $textLeft, $font, $size, $color);
-
-            $textRight = "PÁGINA {PAGE_NUM} DE {PAGE_COUNT}";
-            $pdf->page_text($pdf->get_width() - 80, $y, $textRight, $font, $size, $color);
-        }
-    </script>
 
 </body>
 </html>

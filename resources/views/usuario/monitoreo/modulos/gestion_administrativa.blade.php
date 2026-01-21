@@ -93,7 +93,7 @@
             <div id="section_dni_detalle" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 hidden">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">3</span>
-                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">TIPO DE DNI Y FIRMA DIGITAL</h3>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DETALLE DE DNI Y FIRMA DIGITAL</h3>
                 </div>
                 
                 {{-- SELECCIÓN DE TIPO DE DOCUMENTO (TARJETAS) --}}
@@ -204,7 +204,7 @@
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
-                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DEL CONSULTORIO</h3>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">EQUIPOS DE COMPUTO</h3>
                 </div>
                 <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
             </div>
@@ -213,7 +213,7 @@
             <div id="section_soporte" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
-                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">SOPORTE TÉCNICO</h3>
+                    <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>

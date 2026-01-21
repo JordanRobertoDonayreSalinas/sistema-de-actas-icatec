@@ -34,7 +34,7 @@
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">1</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DEL MONITOREO</h3>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS GENERALES</h3>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -46,7 +46,7 @@
                     
                     {{-- TURNO --}}
                     <div>
-                 <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
+                    <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
                     </div>
                 </div>
             </div>
@@ -55,7 +55,7 @@
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">PROFESIONAL DE LABORATORIO</h3>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL</h3>
                 </div>
 
                 {{-- BUSQUEDA DE PROFESIONAL (COMPONENTE) --}}
@@ -95,7 +95,8 @@
             </div>
 
             {{-- 3.- TIPO DE DNI Y FIRMA DIGITAL --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+            {{-- ID AGREGADO PARA OCULTAR SECCIÓN SI NO ES DNI --}}
+            <div id="seccion_detalle_dni" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 transition-all duration-300">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">3</span>
                     <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">TIPO DE DNI Y FIRMA DIGITAL</h3>
@@ -126,7 +127,7 @@
                             </div>
                             <div>
                                 <h4 class="text-sm font-black text-slate-800 uppercase">DNI AZUL</h4>
-                                <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded uppercase">Tradicional</span>
+                                <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded uppercase">Sin Chip</span>
                             </div>
                         </div>
                     </div>
@@ -147,7 +148,7 @@
                             </select>
                         </div>
 
-                        {{-- Firma Digital (BLOQUE AGREGADO) --}}
+                        {{-- Firma Digital --}}
                         <div id="bloque_firma_digital" class="{{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
                             <label class="block text-teal-600 text-[10px] font-black uppercase tracking-widest mb-3">¿Firma Digitalmente en SIHCE?</label>
                             <div class="flex items-center gap-6">
@@ -181,11 +182,11 @@
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DE CAPACITACIÓN</h3>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">ACCESO Y CAPACITACIÓN</h3>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
+
 
                     {{-- CAPACITACIÓN --}}
                     <div>
@@ -213,7 +214,7 @@
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DE LABORATORIO</h3>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPOS DE COMPUTO</h3>
                 </div>
                 <x-tabla-equipos :equipos="$equipos" modulo="laboratorio" />
             </div>
@@ -222,11 +223,11 @@
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">6</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">COMUNICACIÓN</h3>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Comunica dificultades a:</label>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">ANTE DIFICULTADES SE COMUNICA CON:</label>
                         <select name="contenido[inst_a_quien_comunica]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
                             @foreach(['DIRESA','UNIDAD EJECUTORA','JEFE DE ESTABLECIMIENTO','MINSA','OTROS'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
@@ -234,7 +235,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Medio utilizado:</label>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">MEDIO QUE UTILIZA:</label>
                         <select name="contenido[medio_que_utiliza]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
                             @foreach(['CELULAR','EMAIL','WHATSAPP','OTROS'] as $me)
                                 <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
@@ -244,19 +245,43 @@
                 </div>
             </div>
 
-            {{-- 7.- COMENTARIOS y 8.- EVIDENCIA --}}
+            {{-- 7.- PROCESOS Y CALIDAD --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">PROCESOS Y CALIDAD</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Cuenta con Manual de Procedimientos?</label>
+                        <select name="contenido[cuenta_manual_procedimientos]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer focus:border-teal-500">
+                            <option value="SI" {{ ($detalle->contenido['cuenta_manual_procedimientos'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['cuenta_manual_procedimientos'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Realiza Control Interno?</label>
+                        <select name="contenido[realiza_control_interno]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer focus:border-teal-500">
+                            <option value="SI" {{ ($detalle->contenido['realiza_control_interno'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['realiza_control_interno'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 8.- COMENTARIOS y 9.- EVIDENCIA --}}
             <div class="bg-slate-900 rounded-[3rem] p-10 shadow-2xl text-white">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     <div>
                         <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
+                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
                             <h3 class="text-white font-black text-lg uppercase tracking-tight">COMENTARIOS</h3>
                         </div>
                         <textarea name="contenido[comentarios]" rows="6" class="w-full bg-white/10 border-2 border-white/20 rounded-2xl p-4 text-white font-bold outline-none focus:border-teal-500 transition-all uppercase placeholder-white/30">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
                     </div>
                     <div>
                         <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
+                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">9</span>
                             <h3 class="text-white font-black text-lg uppercase tracking-tight">EVIDENCIA FOTOGRÁFICA</h3>
                         </div>
                         @if(isset($detalle->contenido['foto_evidencia']))
@@ -305,7 +330,6 @@
 <script>
     // --- LÓGICA DE NEGOCIO ---
 
-    // 1. Mostrar/Ocultar campos dependiendo de SIHCE
     function toggleSihceAndDocs(val) {
         const divDj = document.getElementById('div_firmo_dj');
         const divConf = document.getElementById('div_firmo_confidencialidad');
@@ -323,7 +347,18 @@
         }
     }
 
-    // 2. Lógica para DNI (Tarjetas)
+    // --- NUEVA LÓGICA: OCULTAR SECCIÓN DNI SI NO ES DNI ---
+    function toggleSeccionDni(tipoDoc) {
+        const seccion = document.getElementById('seccion_detalle_dni');
+        if (!seccion) return;
+
+        if (tipoDoc === 'DNI') {
+            seccion.classList.remove('hidden');
+        } else {
+            seccion.classList.add('hidden');
+        }
+    }
+
     function selectDniType(tipo) {
         const input = document.getElementById('tipo_dni_input');
         const cardElectronico = document.getElementById('card_electronico');
@@ -357,7 +392,6 @@
         val === 'SI' ? wrapper.classList.remove('hidden') : wrapper.classList.add('hidden');
     }
 
-    // Inicialización del DNI si ya tiene valor
     function checkNationality(tipoDoc) {
         const dniInput = document.getElementById('tipo_dni_input');
         if (dniInput && dniInput.value) {
@@ -384,6 +418,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Inicializaciones básicas
         const selectCapacitacion = document.getElementById('recibio_capacitacion');
         if (selectCapacitacion) toggleEntidadCapacitadora(selectCapacitacion.value);
 
@@ -392,6 +427,18 @@
 
         const dniVal = document.getElementById('tipo_dni_input').value;
         if(dniVal) selectDniType(dniVal);
+        
+        // --- DETECTAR CAMBIO EN TIPO DOCUMENTO ---
+        // Nombre generado por el componente x-busqueda-profesional
+        const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]');
+        if (selectTipoDoc) {
+            // Ejecutar al cargar la página
+            toggleSeccionDni(selectTipoDoc.value);
+            // Escuchar cambios
+            selectTipoDoc.addEventListener('change', function() {
+                toggleSeccionDni(this.value);
+            });
+        }
         
         if (typeof lucide !== 'undefined') lucide.createIcons();
     });
