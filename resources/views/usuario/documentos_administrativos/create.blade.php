@@ -66,22 +66,18 @@
                 </div>
             </div>
 
-            {{-- SECCIÓN 2: PROFESIONAL (Consumiendo tu componente) --}}
+            {{-- SECCIÓN 2: PROFESIONAL (Componente Corregido y sin Cargo redundante) --}}
             <div class="p-6 bg-indigo-50/50 rounded-[2rem] border border-indigo-100 mb-6">
                 <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1 block mb-4">Datos del Profesional Solicitante</label>
                 
-                {{-- Reutilización de tu componente de búsqueda --}}
-                @include('components.busqueda-profesional')
+                {{-- CORRECCIÓN: Uso de componente con variables obligatorias para evitar el error --}}
+                @php $emptyDetalle = (object)['contenido' => []]; @endphp
+                <x-busqueda-profesional prefix="solicitante" :detalle="$emptyDetalle" />
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cargo / Rol Específico</label>
-                        <input type="text" name="cargo_rol" required class="w-full rounded-xl border-slate-200 text-sm font-bold uppercase py-3" placeholder="Ej: MEDICO ASISTENCIAL">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo Institucional / Personal</label>
-                        <input type="email" name="correo_electronico" required class="w-full rounded-xl border-slate-200 text-sm font-bold py-3" placeholder="ejemplo@minsa.gob.pe">
-                    </div>
+                {{-- CORRECCIÓN: Se eliminó el input de Cargo/Rol. Solo queda el correo. --}}
+                <div class="mt-6">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo Institucional / Personal</label>
+                    <input type="email" name="correo_electronico" required class="w-full rounded-xl border-slate-200 text-sm font-bold py-3" placeholder="ejemplo@minsa.gob.pe">
                 </div>
             </div>
 
@@ -117,7 +113,7 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script>
     $(function() {
-        // Implementación del Autocomplete (Lógica exacta de tu Acta de Asistencia)
+        // Implementación del Autocomplete (Mismo que en Asistencia Técnica)
         $("#establecimiento").autocomplete({
             minLength: 1,
             delay: 200,

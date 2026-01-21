@@ -51,7 +51,7 @@
                     <i data-lucide="filter" class="w-4 h-4"></i> Filtros
                 </button>
                 <a href="{{ route('usuario.documentos.create') }}" class="px-6 py-3 rounded-2xl bg-white text-indigo-700 shadow-lg hover:bg-indigo-50 transition-all font-bold text-sm flex items-center gap-2">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Generar Nuevo
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Agregar Nuevo
                 </a>
             </div>
         </div>
