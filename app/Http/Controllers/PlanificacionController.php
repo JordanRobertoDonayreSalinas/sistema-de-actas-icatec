@@ -113,7 +113,7 @@ class PlanificacionController extends Controller
             $jsonFinal = json_encode($datosForm);
 
             // 4. GUARDAR EN mon_detalle_modulos (TABLA NUEVA)
-            $nombreFull = mb_strtoupper(($personal['nombre'] ?? '').' '.($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? ''), 'UTF-8');
+            $nombreFull = mb_strtoupper(($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? '').' '.($personal['nombre'] ?? ''), 'UTF-8');
             
             DB::table('mon_detalle_modulos')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],

@@ -172,6 +172,11 @@
                                         Nro. Documento <span id="loading_profesional" class="hidden"><span class="spinner border-indigo-500"></span></span>
                                     </label>
                                     <input type="text" name="contenido[personal][dni]" id="doc" maxlength="12" value="{{ $detalle->contenido['personal']['dni'] ?? '' }}" class="input-standard w-full font-mono tracking-wider">
+                                    <button type="button" id="btn-validar-doc" 
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-2xl transition-all flex items-center justify-center group shadow-lg shadow-indigo-100">
+                                        <i data-lucide="search" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+                                        <span class="ml-2 text-[10px] font-black uppercase">Validar</span>
+                                    </button>
                                 </div>
                                 <div class="md:col-span-6 space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nombres Completos</label>
@@ -753,9 +758,11 @@
             });
         });
 
-        // 2. Búsqueda y Limpieza de Profesional
+        // Búsqueda de profesional
         const inputDoc = document.getElementById('doc');
+        const btnValidar = document.getElementById('btn-validar-doc');
         const loader = document.getElementById('loading_profesional');
+        const tipoDocSelect = document.getElementById('tipo_doc');
         const limpiarInputs = () => {
             ['nombres', 'apellido_paterno', 'apellido_materno', 'telefono', 'email'].forEach(id => {
                 const el = document.getElementById(id);
@@ -763,29 +770,56 @@
             });
         };
 
-        if (inputDoc) {
-            inputDoc.addEventListener('input', function() {
-                const docValue = this.value.trim();
-                const tipo = document.getElementById('tipo_doc').value;
-                if ((tipo === 'DNI' && docValue.length === 8) || (tipo !== 'DNI' && docValue.length >= 6)) {
-                    loader.classList.remove('hidden');
-                    fetch(`{{ url('usuario/monitoreo/profesional/buscar') }}/${docValue}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            loader.classList.add('hidden');
-                            if (data.exists) {
-                                document.getElementById('nombres').value = data.nombres || '';
-                                document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
-                                document.getElementById('apellido_materno').value = data.apellido_materno || '';
-                                if(document.getElementById('telefono')) document.getElementById('telefono').value = data.telefono || '';
-                                if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
-                            } else {
-                                limpiarInputs();
-                                window.dispatchEvent(new CustomEvent('abrir-modal-nuevo', { detail: { doc: docValue } }));
-                            }
-                        })
-                        .catch(() => loader.classList.add('hidden'));
+        if (btnValidar) {
+            btnValidar.addEventListener('click', function() {
+                const docValue = inputDoc.value.trim();
+                const tipo = tipoDocSelect.value;
+
+                // Validaciones básicas antes de consultar
+                if (docValue === '') {
+                    alert('Por favor, ingrese un número de documento.');
+                    return;
                 }
+
+                if (tipo === 'DNI' && docValue.length !== 8) {
+                    alert('El DNI debe tener 8 dígitos.');
+                    return;
+                }
+
+                // Mostrar loader y deshabilitar botón temporalmente
+                loader.classList.remove('hidden');
+                btnValidar.disabled = true;
+                btnValidar.classList.add('opacity-50');
+
+                fetch(`{{ url('usuario/monitoreo/profesional/buscar') }}/${docValue}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        loader.classList.add('hidden');
+                        btnValidar.disabled = false;
+                        btnValidar.classList.remove('opacity-50');
+
+                        if (data.exists) {
+                            // Autocompletar campos
+                            document.getElementById('nombres').value = data.nombres || '';
+                            document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
+                            document.getElementById('apellido_materno').value = data.apellido_materno || '';
+                            if(document.getElementById('telefono')) document.getElementById('telefono').value = data.telefono || '';
+                            if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
+                        }else {
+                            // Limpiar y mostrar modal de nuevo profesional
+                            limpiarInputs();
+                            window.dispatchEvent(new CustomEvent('abrir-modal-nuevo', { 
+                                detail: { doc: docValue } 
+                            }));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        loader.classList.add('hidden');
+                        btnValidar.disabled = false;
+                        btnValidar.classList.remove('opacity-50');
+                        alert('Ocurrió un error al consultar el documento.');
+                    });
             });
         }
     });
