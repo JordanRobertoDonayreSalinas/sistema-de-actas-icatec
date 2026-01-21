@@ -187,9 +187,8 @@
             cursor: crosshair;
         }
 
-        /* Clase para separar las secciones ahora que están en vertical */
         .section-container {
-            display: block;
+            /* IMPORTANTE: Eliminé 'display: block' para que funcione el toggle hidden */
             animation: fadeIn 0.4s ease;
         }
 
@@ -213,7 +212,6 @@
 
         {{-- HEADER NAVEGACION --}}
         <div class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            {{-- LADO IZQUIERDO: TÍTULO E INFO --}}
             <div>
                 <div class="flex items-center gap-3 mb-1">
                     <span
@@ -224,6 +222,7 @@
                         ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}
                     </span>
                 </div>
+                {{-- Mantenemos el "02. Citas" porque es el nombre del Módulo, no una sección del form --}}
                 <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">02. Citas</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">
                     <i data-lucide="hospital" class="inline-block w-4 h-4 mr-1 text-indigo-500"></i>
@@ -231,11 +230,7 @@
                 </p>
             </div>
 
-            {{-- LADO DERECHO: FECHA Y BOTÓN VOLVER --}}
             <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-
-                {{-- CAMPO DE FECHA --}}
-                {{-- Input de Fecha en tu Header --}}
                 <div class="relative w-full sm:w-auto">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i data-lucide="calendar" class="w-4 h-4 text-indigo-500"></i>
@@ -245,7 +240,6 @@
                         class="w-full sm:w-40 pl-10 pr-3 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-bold text-xs focus:border-indigo-500 focus:ring-0 uppercase shadow-sm transition-all cursor-pointer">
                 </div>
 
-                {{-- BOTÓN VOLVER --}}
                 <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}"
                     class="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm w-full sm:w-auto">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Panel
@@ -259,7 +253,7 @@
             @csrf
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 1: DATOS DEL PROFESIONAL                                       --}}
+            {{-- SECCIÓN: DATOS DEL PROFESIONAL                                         --}}
             {{-- ======================================================================== --}}
             <div class="form-card section-container">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
@@ -288,31 +282,22 @@
                     {{-- 2. Número de Documento --}}
                     <div class="md:col-span-3">
                         <label class="input-label">Nro. Documento</label>
-
-                        {{-- Contenedor Flex para alinear Input + Botón --}}
                         <div class="flex items-center gap-2">
-
                             <div class="relative w-full">
                                 <input type="text" name="contenido[personal_dni]" id="personal_dni" maxlength="15"
                                     class="input-blue font-bold w-full" placeholder="Ingrese documento..."
-                                    value="{{ $registro->personal_dni ?? '' }}" {{-- Mantenemos Enter para buscar, pero prevenimos envío del form --}}
+                                    value="{{ $registro->personal_dni ?? '' }}"
                                     onkeydown="if(event.key === 'Enter'){event.preventDefault(); }">
-
-                                {{-- Loader dentro del input --}}
                                 <div id="loading-doc" class="hidden absolute right-3 top-2.5">
                                     <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-indigo-600"></i>
                                 </div>
                             </div>
-
-                            {{-- BOTÓN DE BÚSQUEDA --}}
                             <button type="button" onclick="buscarPorDoc()"
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-lg shadow-sm transition-colors flex-shrink-0"
                                 title="Buscar Profesional">
-                                {{-- Icono de Lupa --}}
                                 <i data-lucide="search" class="w-5 h-5"></i>
                             </button>
                         </div>
-
                         <p id="msg-doc" class="text-[10px] text-red-500 mt-1 hidden"></p>
                     </div>
 
@@ -370,7 +355,6 @@
 
                 {{-- FILA 3: Correo, Celular y Cargo --}}
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
-                    {{-- Correo --}}
                     <div class="md:col-span-4">
                         <label class="input-label">Correo Electrónico</label>
                         <div class="relative">
@@ -384,7 +368,6 @@
                         </div>
                     </div>
 
-                    {{-- Celular --}}
                     <div class="md:col-span-4">
                         <label class="input-label">Celular</label>
                         <div class="relative">
@@ -398,9 +381,7 @@
                         </div>
                     </div>
 
-                    {{-- Cargo --}}
                     <div class="md:col-span-4">
-                        {{-- Definimos las opciones y verificamos el valor actual --}}
                         @php
                             $cargos = [
                                 'MEDICO',
@@ -415,22 +396,18 @@
                                 'OBSTETRA',
                             ];
                             $valorActual = $registro->personal_cargo ?? '';
-                            // Si tiene valor y NO está en la lista, es "OTROS"
                             $esOtro = !empty($valorActual) && !in_array($valorActual, $cargos);
                         @endphp
-
                         <label class="input-label text-indigo-700">Profesión</label>
-
                         <div class="relative mb-2">
                             <span
                                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigo-500">
                                 <i data-lucide="briefcase" class="w-5 h-5"></i>
                             </span>
-                            {{-- El SELECT maneja el input principal por defecto --}}
                             <select id="select_cargo" onchange="toggleCargoManual(this)" name="contenido[personal_cargo]"
                                 class="input-blue font-regular border-indigo-200 focus:border-indigo-500 text-indigo-700 w-full rounded-md h-10 pl-10 pr-4 appearance-none"
-                                style="padding-left: 2.8rem;>
-            <option value="">Seleccione...</option>
+                                style="padding-left: 2.8rem;">
+                                <option value="">Seleccione...</option>
                                 @foreach ($cargos as $cargo)
                                     <option value="{{ $cargo }}" {{ $valorActual == $cargo ? 'selected' : '' }}>
                                         {{ $cargo }}
@@ -438,122 +415,62 @@
                                 @endforeach
                                 <option value="OTROS" {{ $esOtro ? 'selected' : '' }}>OTROS</option>
                             </select>
-                            <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                <svg class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
                         </div>
-
                         <div id="div_cargo_manual" class="{{ $esOtro ? '' : 'hidden' }}">
                             <div class="relative">
                                 <span
                                     class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigo-500">
                                     <i data-lucide="edit-3" class="w-5 h-5"></i>
                                 </span>
-                                {{-- Este input está deshabilitado si no es "OTROS" para que no se envíe --}}
                                 <input type="text" id="input_cargo_manual" name="contenido[personal_cargo]"
                                     class="input-blue font-regular border-indigo-200 focus:border-indigo-500 text-indigo-700 w-full pl-10 rounded-md"
                                     style="padding-left: 2.8rem;" placeholder="Especifique el cargo aquí..."
                                     value="{{ $esOtro ? $valorActual : '' }}" {{ $esOtro ? '' : 'disabled' }}>
                             </div>
                         </div>
-                    </div>
-
-                    <script>
-                        function toggleCargoManual(selectElement) {
-                            const divManual = document.getElementById('div_cargo_manual');
-                            const inputManual = document.getElementById('input_cargo_manual');
-
-                            if (selectElement.value === 'OTROS') {
-                                // Mostrar input manual
-                                divManual.classList.remove('hidden');
-                                inputManual.disabled = false; // Habilitar para envío
-                                inputManual.focus();
-
-                                // Deshabilitar el nombre del select para que el valor enviado sea el del input manual
-                                selectElement.removeAttribute('name');
-                            } else {
-                                // Ocultar input manual
-                                divManual.classList.add('hidden');
-                                inputManual.disabled = true; // Deshabilitar para que no se envíe
-                                inputManual.value = ''; // Limpiar
-
-                                // Reactivar el nombre del select para enviar la opción seleccionada
-                                selectElement.setAttribute('name', 'contenido[personal_cargo]');
+                        <script>
+                            function toggleCargoManual(selectElement) {
+                                const divManual = document.getElementById('div_cargo_manual');
+                                const inputManual = document.getElementById('input_cargo_manual');
+                                if (selectElement.value === 'OTROS') {
+                                    divManual.classList.remove('hidden');
+                                    inputManual.disabled = false;
+                                    inputManual.focus();
+                                    selectElement.removeAttribute('name');
+                                } else {
+                                    divManual.classList.add('hidden');
+                                    inputManual.disabled = true;
+                                    inputManual.value = '';
+                                    selectElement.setAttribute('name', 'contenido[personal_cargo]');
+                                }
                             }
-                        }
-                    </script>
-                </div>
-
-                {{-- SECCIÓN CAPACITACIÓN --}}
-                <div class="md:col-span-12 bg-slate-50 p-4 rounded-lg border border-slate-100 mt-4">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <p class="text-sm font-bold text-slate-700">¿El personal recibió capacitación?</p>
-                        </div>
-                        <div class="toggle-group">
-                            <label>
-                                <input type="radio" name="contenido[capacitacion]" value="SI" class="toggle-radio"
-                                    onchange="toggleCapacitacion(true)"
-                                    {{ ($registro->capacitacion_recibida ?? '') == 'SI' ? 'checked' : '' }}>
-                                <span class="toggle-btn"><i data-lucide="check" class="w-4 h-4"></i> SÍ</span>
-                            </label>
-                            <label>
-                                <input type="radio" name="contenido[capacitacion]" value="NO" class="toggle-radio"
-                                    onchange="toggleCapacitacion(false)"
-                                    {{ ($registro->capacitacion_recibida ?? '') == 'NO' ? 'checked' : '' }}>
-                                <span class="toggle-btn"><i data-lucide="x" class="w-4 h-4"></i> NO</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    @php
-                        $rawEnte = $registro->capacitacion_entes ?? '';
-                        $valorGuardado = is_array($rawEnte) ? $rawEnte[0] ?? '' : $rawEnte;
-                    @endphp
-
-                    <div id="div-capacitacion-detalles"
-                        class="{{ ($registro->capacitacion_recibida ?? '') == 'SI' ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-200">
-                        <p class="input-label mb-2">Entidad que capacitó (Seleccione una):</p>
-                        <div class="flex flex-wrap gap-4">
-                            @foreach (['MINSA', 'DIRESA', 'UNIDAD EJECUTORA', 'OTROS'] as $ente)
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="contenido[capacitacion_ente]"
-                                        value="{{ $ente }}" class="text-indigo-600 focus:ring-0"
-                                        {{ $valorGuardado == $ente ? 'checked' : '' }}>
-                                    <span class="text-xs font-bold text-slate-600">{{ $ente }}</span>
-                                </label>
-                            @endforeach
-                        </div>
+                        </script>
                     </div>
                 </div>
             </div>
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 2: DOCUMENTACIÓN ADMINISTRATIVA                                  --}}
+            {{-- SECCIÓN CONDICIONAL: USO DE SIHCE Y DOCUMENTACIÓN                      --}}
             {{-- ======================================================================== --}}
             <div class="form-card section-container mt-6">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
                     <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                        <i data-lucide="file-signature" class="w-6 h-6"></i>
+                        <i data-lucide="monitor-check" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Documentación Administrativa</h3>
+                    <h3 class="text-lg font-bold text-slate-800">Uso de Sistema SIHCE</h3>
                 </div>
 
-                {{-- 1. PREGUNTA MAESTRA: ¿Utiliza SIHCE? --}}
+                {{-- PREGUNTA MAESTRA: ¿Utiliza SIHCE? --}}
                 <div class="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100 mb-6">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                         <div class="flex items-center gap-3">
                             <div class="bg-indigo-100 p-2 rounded-full text-indigo-600">
-                                <i data-lucide="monitor-check" class="w-5 h-5"></i>
+                                <i data-lucide="mouse-pointer-2" class="w-5 h-5"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-slate-800 text-sm">¿El profesional utiliza SIHCE?</h4>
-                                <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">Habilita opciones de
-                                    seguridad informática</p>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">Habilita opciones de Gestión
+                                    y Calidad</p>
                             </div>
                         </div>
 
@@ -574,7 +491,7 @@
                     </div>
                 </div>
 
-                {{-- 2. BLOQUE CONDICIONAL (Declaración Jurada y Confidencialidad) --}}
+                {{-- BLOQUE CONDICIONAL (Declaración Jurada y Confidencialidad) --}}
                 <div id="bloque-seguridad-sihce"
                     class="{{ ($registro->utiliza_sihce ?? '') == 'SI' ? '' : 'hidden' }} animate-fadeIn">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -626,13 +543,15 @@
                 </div>
             </div>
 
-            {{-- SECCIÓN: TIPO DE DNI Y FIRMA (CON ID AGREGADO) --}}
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN: TIPO DE DNI Y FIRMA                                           --}}
+            {{-- ======================================================================== --}}
             <div id="seccion-tipo-dni" class="form-card section-container mt-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-                        <h3 class="flex items-center justify-center font-bold w-5 h-5">3</h3>
+                        <i data-lucide="credit-card" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-700 uppercase">Tipo de DNI y Firma Digital</h3>
+                    <h3 class="text-xl font-bold text-slate-800">Tipo de DNI y Firma Digital</h3>
                 </div>
 
                 <p class="input-label mb-3 text-xs uppercase text-slate-400">Seleccione el tipo de documento físico</p>
@@ -645,7 +564,7 @@
                         <div
                             class="p-5 rounded-xl border-2 transition-all duration-200 border-slate-200 bg-white hover:border-indigo-300 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/30">
                             <div class="flex items-center gap-4">
-                                <div class="bg-indigo-100 p-2.5 rounded-full text-indigo-600"><i data-lucide="credit-card"
+                                <div class="bg-indigo-100 p-2.5 rounded-full text-indigo-600"><i data-lucide="cpu"
                                         class="w-6 h-6"></i></div>
                                 <div>
                                     <h4 class="font-bold text-slate-800">DNI ELECTRÓNICO</h4><span
@@ -679,7 +598,6 @@
                     </label>
                 </div>
 
-                {{-- Opciones DNIe (Container Oculto) --}}
                 <div id="dnie-options-container"
                     class="hidden bg-indigo-50/50 p-6 rounded-xl border border-indigo-100 animate-fadeIn">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -722,17 +640,71 @@
             </div>
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 2: LOGÍSTICA (EQUIPAMIENTO)                                    --}}
+            {{-- SECCIÓN: CAPACITACIÓN                                                  --}}
             {{-- ======================================================================== --}}
-            <div class="form-card section-container">
+            <div class="form-card section-container mt-6">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
-                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                        <i data-lucide="package" class="w-6 h-6"></i>
+                    <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-slate-800">Equipamiento e Insumos</h2>
+                    <h2 class="text-xl font-bold text-slate-800">Detalles de Capacitación</h2>
                 </div>
 
-                <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 mb-8">
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-bold text-slate-700">¿El personal recibió capacitación?</p>
+                        </div>
+                        <div class="toggle-group">
+                            <label>
+                                <input type="radio" name="contenido[capacitacion]" value="SI" class="toggle-radio"
+                                    onchange="toggleCapacitacion(true)"
+                                    {{ ($registro->capacitacion_recibida ?? '') == 'SI' ? 'checked' : '' }}>
+                                <span class="toggle-btn"><i data-lucide="check" class="w-4 h-4"></i> SÍ</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="contenido[capacitacion]" value="NO" class="toggle-radio"
+                                    onchange="toggleCapacitacion(false)"
+                                    {{ ($registro->capacitacion_recibida ?? '') == 'NO' ? 'checked' : '' }}>
+                                <span class="toggle-btn"><i data-lucide="x" class="w-4 h-4"></i> NO</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    @php
+                        $rawEnte = $registro->capacitacion_entes ?? '';
+                        $valorGuardado = is_array($rawEnte) ? $rawEnte[0] ?? '' : $rawEnte;
+                    @endphp
+
+                    <div id="div-capacitacion-detalles"
+                        class="{{ ($registro->capacitacion_recibida ?? '') == 'SI' ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-200">
+                        <p class="input-label mb-2">Entidad que capacitó (Seleccione una):</p>
+                        <div class="flex flex-wrap gap-4">
+                            @foreach (['MINSA', 'DIRESA', 'UNIDAD EJECUTORA', 'OTROS'] as $ente)
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="contenido[capacitacion_ente]"
+                                        value="{{ $ente }}" class="text-indigo-600 focus:ring-0"
+                                        {{ $valorGuardado == $ente ? 'checked' : '' }}>
+                                    <span class="text-xs font-bold text-slate-600">{{ $ente }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN: MATERIALES                                                    --}}
+            {{-- ======================================================================== --}}
+            <div class="form-card section-container mt-6">
+                <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div class="p-2 bg-teal-50 text-teal-600 rounded-lg">
+                        <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">Materiales</h2>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
                     <div class="flex items-center gap-2 mb-4">
                         <h3 class="input-label mb-0 text-slate-600">Al iniciar sus labores diarias cuenta con:</h3>
                     </div>
@@ -749,11 +721,23 @@
                         @endforeach
                     </div>
                 </div>
+            </div>
 
-                <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN: EQUIPAMIENTO                                                  --}}
+            {{-- ======================================================================== --}}
+            <div class="form-card section-container mt-6">
+                <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                        <i data-lucide="monitor" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">Equipamiento</h2>
+                </div>
+
+                <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden mb-4">
                     <div
                         class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex flex-wrap gap-3 justify-between items-center">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalle de Equipos</h3>
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Listado de Equipos</h3>
                         <div class="flex items-center gap-2">
                             <select id="select-equipo-agregar"
                                 class="text-xs border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 py-1.5 pl-2 pr-8">
@@ -791,10 +775,8 @@
                                             class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300"
                                             placeholder="Nombre">
                                     </td>
-
                                     <td class="p-2 align-middle">
                                         @php
-                                            // Separar el valor guardado (ej: "S:12345") para mostrarlo correctamente
                                             $fullSerie = $item['serie'] ?? '';
                                             $prefix = 'S';
                                             $valor = $fullSerie;
@@ -811,7 +793,6 @@
                                             <input type="hidden" class="input-serie-final"
                                                 name="contenido[equipos][{{ $idx }}][serie]"
                                                 value="{{ $fullSerie }}">
-
                                             <div class="bg-slate-50 border-r border-slate-200">
                                                 <select onchange="actualizarSerieConcatenada(this)"
                                                     class="select-prefix h-7 bg-transparent border-none text-[10px] font-bold text-slate-700 focus:ring-0 cursor-pointer pl-2 pr-6 py-0">
@@ -821,12 +802,10 @@
                                                     </option>
                                                 </select>
                                             </div>
-
                                             <input type="text" id="serie-input-{{ $idx }}"
                                                 value="{{ $valor }}" oninput="actualizarSerieConcatenada(this)"
                                                 class="input-valor w-full border-none bg-transparent text-[11px] font-mono uppercase text-slate-600 focus:ring-0 px-2 py-1 placeholder-slate-300"
                                                 placeholder="DIGITE...">
-
                                             <button type="button"
                                                 onclick="iniciarEscaneo('serie-input-{{ $idx }}')"
                                                 class="pr-2 pl-1 text-slate-400 hover:text-indigo-600 cursor-pointer transition-colors">
@@ -834,7 +813,6 @@
                                             </button>
                                         </div>
                                     </td>
-
                                     <td class="p-2 align-middle">
                                         <select name="contenido[equipos][{{ $idx }}][propiedad]"
                                             class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
@@ -849,7 +827,6 @@
                                             </option>
                                         </select>
                                     </td>
-
                                     <td class="p-2 align-middle">
                                         <select name="contenido[equipos][{{ $idx }}][estado]"
                                             class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
@@ -864,7 +841,6 @@
                                                 Inoperativo</option>
                                         </select>
                                     </td>
-
                                     <td class="p-2 align-middle">
                                         <input type="text"
                                             name="contenido[equipos][{{ $idx }}][observaciones]"
@@ -872,7 +848,6 @@
                                             class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1"
                                             placeholder="Observaciones...">
                                     </td>
-
                                     <td class="p-2 text-center align-middle">
                                         <button type="button" onclick="this.closest('tr').remove()"
                                             class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
@@ -895,7 +870,7 @@
                 </div>
             </div>
 
-            {{-- Modal del Escáner (Mantenido igual) --}}
+            {{-- Modal del Escáner --}}
             <div id="scanner-modal"
                 class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 transition-all">
                 <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl">
@@ -912,18 +887,21 @@
                 </div>
             </div>
 
-            {{-- ===============================================f========================= --}}
-            {{-- SECCIÓN 3: GESTIÓN Y CALIDAD                                           --}}
-            {{-- ======================================================================== --}}
-            <div class="form-card section-container">
+            {{-- ========================================================================================= --}}
+            {{-- SECCIÓN: GESTIÓN DE CITAS Y CALIDAD                                                    --}}
+            {{-- ESTE BLOQUE COMPLETO SE OCULTA SI NO TIENE SIHCE                                        --}}
+            {{-- ========================================================================================= --}}
+            <div id="seccion-gestion-completa"
+                class="form-card section-container mt-6 {{ ($registro->utiliza_sihce ?? '') == 'SI' ? '' : 'hidden' }}">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
                     <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
                         <i data-lucide="bar-chart-2" class="w-6 h-6"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-slate-800">Gestión y Calidad</h2>
+                    <h2 class="text-xl font-bold text-slate-800">Gestión, Calidad y Soporte</h2>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {{-- LADO IZQUIERDO: CITAS Y PRODUCCION --}}
                     <div>
                         <div class="flex flex-col md:flex-row md:justify-between md:items-end mb-5 gap-4">
                             <div>
@@ -987,8 +965,8 @@
                         </button>
                     </div>
 
-                    <div id="bloque-calidad-dificultades"
-                        class="space-y-8 {{ ($registro->utiliza_sihce ?? '') == 'SI' ? '' : 'hidden' }}">
+                    {{-- LADO DERECHO: CALIDAD Y SOPORTE --}}
+                    <div id="bloque-calidad-dificultades" class="space-y-8">
                         <div>
                             <label class="input-label border-b border-slate-100 pb-2 mb-4 block">Evaluación de
                                 Calidad</label>
@@ -1031,7 +1009,8 @@
                                 {{-- Pregunta 3 --}}
                                 <div class="bg-slate-50 rounded-lg border border-slate-100 p-3">
                                     <div class="flex items-center justify-between">
-                                        <p class="text-xs font-bold text-slate-600 pr-4">¿Se utilizan reportes del sistema?
+                                        <p class="text-xs font-bold text-slate-600 pr-4">¿Se utilizan reportes del
+                                            sistema?
                                         </p>
                                         <div class="toggle-group">
                                             <label><input type="radio" name="contenido[calidad][reportes]"
@@ -1058,15 +1037,11 @@
                                                 'DIRESA',
                                                 'OTROS',
                                             ];
-                                            // Ojo: Usamos la variable que venía en el value original ($registro->calidad_socializa_con)
                                             $valorSocializa = $registro->calidad_socializa_con ?? '';
                                         @endphp
-
-                                        {{-- Agregamos un label pequeño para reemplazar el placeholder --}}
                                         <label class="block text-xs font-medium text-indigo-700 mb-1">
                                             ¿Con quién lo socializa?
                                         </label>
-
                                         <div class="relative">
                                             <select name="contenido[calidad][reportes_socializa]"
                                                 class="input-blue text-xs w-full appearance-none border-indigo-200 focus:border-indigo-500 text-indigo-700 rounded-md py-2 pl-3 pr-8">
@@ -1078,8 +1053,6 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-
-                                            {{-- Flecha decorativa para mantener el estilo consistente --}}
                                             <span
                                                 class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                                 <svg class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24"
@@ -1094,10 +1067,10 @@
                             </div>
                         </div>
 
-                        {{-- Dificultades --}}
+                        {{-- Dificultades (Soporte) --}}
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                             <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-                                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Reporte de
+                                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Soporte /
                                     Dificultades</h3>
                             </div>
                             <div class="p-5 space-y-6">
@@ -1153,9 +1126,9 @@
             </div>
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 4: EVIDENCIAS FOTOGRÁFICAS                                     --}}
+            {{-- SECCIÓN: EVIDENCIAS FOTOGRÁFICAS                                       --}}
             {{-- ======================================================================== --}}
-            <div class="form-card section-container">
+            <div class="form-card section-container mt-6">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
                     <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
                         <i data-lucide="camera" class="w-6 h-6"></i>
@@ -1192,7 +1165,8 @@
                         <div class="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
                             <div class="mb-4">
                                 <i data-lucide="hard-drive" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
-                                <p class="text-sm font-bold text-slate-600">Seleccionar archivos alojados en el Hosting</p>
+                                <p class="text-sm font-bold text-slate-600">Seleccionar archivos alojados en el Hosting
+                                </p>
                             </div>
                             <button type="button" onclick="openServerModal()"
                                 class="bg-slate-800 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-slate-900 transition flex items-center justify-center gap-2 mx-auto">
@@ -1239,16 +1213,11 @@
             if (!seccion) return;
 
             if (tipoDoc === 'CE') {
-                // USAR ESTILO EN LÍNEA para asegurar que se oculte (gana a cualquier clase CSS)
                 seccion.style.display = 'none';
-
-                // Limpiamos los radios internos
                 const radios = seccion.querySelectorAll('input[type="radio"]');
                 radios.forEach(r => r.checked = false);
-
                 toggleDniOptions(null);
             } else {
-                // USAR ESTILO VACÍO para volver al comportamiento CSS normal
                 seccion.style.display = '';
             }
         }
@@ -1264,7 +1233,6 @@
                 selectTipo.addEventListener('change', function() {
                     verificarVisibilidadSeccionDni(this.value);
                 });
-                // Verificar al cargar
                 verificarVisibilidadSeccionDni(selectTipo.value);
             }
 
@@ -1379,21 +1347,17 @@
             }
         });
 
-        // --- 4. RELLENAR DATOS ---
         function rellenarDatos(prof) {
             const nombreCompleto = `${prof.apellido_paterno} ${prof.apellido_materno} ${prof.nombres}`.trim();
             document.getElementById('personal_nombre').value = nombreCompleto;
             document.getElementById('personal_dni').value = prof.doc;
 
             const selectTipo = document.getElementById('personal_tipo_doc');
-
             if (['DNI', 'CE'].includes(prof.tipo_doc)) {
                 selectTipo.value = prof.tipo_doc;
             } else {
                 selectTipo.value = 'OTRO';
             }
-
-            // Validar visibilidad tras rellenar
             verificarVisibilidadSeccionDni(selectTipo.value);
 
             const correo = prof.email || prof.correo || '';
@@ -1402,7 +1366,6 @@
             document.getElementById('personal_celular').value = celular;
         }
 
-        // --- RESTO DE FUNCIONES UI ---
         window.toggleRolDropdown = function() {
             document.getElementById('rol-dropdown-list').classList.toggle('hidden');
         }
@@ -1458,25 +1421,28 @@
             const div = document.getElementById('div-reportes-detalle');
             if (div) show ? div.classList.remove('hidden') : div.classList.add('hidden');
         }
-        window.toggleSihce = function(show) {
-            // 1. Bloque de Declaración Jurada y Confidencialidad (Ya existía)
-            const bloqueSeguridad = document.getElementById('bloque-seguridad-sihce');
 
-            // 2. Nuevo bloque de Calidad y Dificultades
-            const bloqueCalidad = document.getElementById('bloque-calidad-dificultades');
+        // --- LÓGICA CLAVE DE VISIBILIDAD SIHCE (Corregida) ---
+        window.toggleSihce = function(show) {
+            // 1. Bloque de Declaración Jurada y Confidencialidad
+            const bloqueSeguridad = document.getElementById('bloque-seguridad-sihce');
+            // 2. Bloque COMPLETO de Gestión, Calidad, Ventanillas y Producción
+            const bloqueGestionCompleto = document.getElementById('seccion-gestion-completa');
 
             if (show) {
-                // Si es SI: Mostrar ambos
                 if (bloqueSeguridad) bloqueSeguridad.classList.remove('hidden');
-                if (bloqueCalidad) bloqueCalidad.classList.remove('hidden');
-            } else {
-                // Si es NO: Ocultar ambos
-                if (bloqueSeguridad) bloqueSeguridad.classList.add('hidden');
-                if (bloqueCalidad) bloqueCalidad.classList.add('hidden');
 
-                // Opcional: Limpiar los radios de calidad si quieres que se reseteen al ocultar
-                // const radios = bloqueCalidad.querySelectorAll('input[type="radio"]');
-                // radios.forEach(r => r.checked = false);
+                if (bloqueGestionCompleto) {
+                    bloqueGestionCompleto.classList.remove('hidden');
+                    bloqueGestionCompleto.style.display = '';
+                }
+            } else {
+                if (bloqueSeguridad) bloqueSeguridad.classList.add('hidden');
+
+                if (bloqueGestionCompleto) {
+                    bloqueGestionCompleto.classList.add('hidden');
+                    bloqueGestionCompleto.style.display = 'none'; // Fuerza el ocultamiento
+                }
             }
         }
 
@@ -1500,86 +1466,77 @@
             const esOtro = tipoEquipo === 'OTRO';
             const valorNombre = esOtro ? '' : tipoEquipo;
 
-            // Construcción de la fila con Template Literals
-            // NOTA: En la columna de SERIE se inserta la nueva estructura "Split Input"
             const fila = `
-            <tr class="group hover:bg-slate-50 transition-colors">
-                <td class="p-2 align-middle">
-                    <input type="text" name="contenido[equipos][${equipoIndex}][nombre]" 
-                           value="${valorNombre}" 
-                           class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300" 
-                           placeholder="Escriba nombre del equipo..." ${esOtro ? 'autofocus' : ''}>
-                </td>
-                
-                <td class="p-2 align-middle">
-                    <div class="relative flex items-center w-full bg-white border border-slate-200 rounded shadow-sm focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500 overflow-hidden">
-                        
-                        <input type="hidden" class="input-serie-final" 
-                               name="contenido[equipos][${equipoIndex}][serie]" value="">
-                        
-                        <div class="bg-slate-50 border-r border-slate-200">
-                            <select onchange="actualizarSerieConcatenada(this)"
-                                    class="select-prefix h-7 bg-transparent border-none text-[10px] font-bold text-slate-700 focus:ring-0 cursor-pointer pl-2 pr-6 py-0">
-                                <option value="S">S</option>
-                                <option value="CP">CP</option>
-                            </select>
-                        </div>
-                        
-                        <input type="text" id="serie-input-${equipoIndex}" 
-                               oninput="actualizarSerieConcatenada(this)"
-                               class="input-valor w-full border-none bg-transparent text-[11px] font-mono uppercase text-slate-600 focus:ring-0 px-2 py-1 placeholder-slate-300" 
-                               placeholder="DIGITE...">
-                               
-                        <button type="button" onclick="iniciarEscaneo('serie-input-${equipoIndex}')" 
-                                class="pr-2 pl-1 text-slate-400 hover:text-indigo-600 cursor-pointer transition-colors"
-                                title="Escanear">
-                            <i data-lucide="scan-barcode" class="w-3.5 h-3.5"></i>
-                        </button>
+        <tr class="group hover:bg-slate-50 transition-colors">
+            <td class="p-2 align-middle">
+                <input type="text" name="contenido[equipos][${equipoIndex}][nombre]" 
+                       value="${valorNombre}" 
+                       class="w-full bg-transparent border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 font-bold text-slate-700 text-xs px-2 py-1 placeholder-slate-300" 
+                       placeholder="Escriba nombre del equipo..." ${esOtro ? 'autofocus' : ''}>
+            </td>
+            
+            <td class="p-2 align-middle">
+                <div class="relative flex items-center w-full bg-white border border-slate-200 rounded shadow-sm focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500 overflow-hidden">
+                    
+                    <input type="hidden" class="input-serie-final" 
+                           name="contenido[equipos][${equipoIndex}][serie]" value="">
+                    
+                    <div class="bg-slate-50 border-r border-slate-200">
+                        <select onchange="actualizarSerieConcatenada(this)"
+                                class="select-prefix h-7 bg-transparent border-none text-[10px] font-bold text-slate-700 focus:ring-0 cursor-pointer pl-2 pr-6 py-0">
+                            <option value="S">S</option>
+                            <option value="CP">CP</option>
+                        </select>
                     </div>
-                </td>
-
-                <td class="p-2 align-middle">
-                    <select name="contenido[equipos][${equipoIndex}][propiedad]" class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
-                        <option value="EXCLUSIVO" selected>Exclusivo</option>
-                        <option value="COMPARTIDO">Compartido</option>
-                        <option value="PERSONAL">Personal</option>
-                    </select>
-                </td>
-
-                <td class="p-2 align-middle">
-                    <select name="contenido[equipos][${equipoIndex}][estado]" class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
-                        <option value="Operativo" selected>Operativo</option>
-                        <option value="Regular">Regular</option>
-                        <option value="Inoperativo">Inoperativo</option>
-                    </select>
-                </td>
-
-                <td class="p-2 align-middle">
-                    <input type="text" name="contenido[equipos][${equipoIndex}][observaciones]" class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1" placeholder="Observaciones...">
-                </td>
-
-                <td class="p-2 text-center align-middle">
-                    <button type="button" onclick="this.closest('tr').remove()" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
-                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    
+                    <input type="text" id="serie-input-${equipoIndex}" 
+                           oninput="actualizarSerieConcatenada(this)"
+                           class="input-valor w-full border-none bg-transparent text-[11px] font-mono uppercase text-slate-600 focus:ring-0 px-2 py-1 placeholder-slate-300" 
+                           placeholder="DIGITE...">
+                           
+                    <button type="button" onclick="iniciarEscaneo('serie-input-${equipoIndex}')" 
+                            class="pr-2 pl-1 text-slate-400 hover:text-indigo-600 cursor-pointer transition-colors"
+                            title="Escanear">
+                        <i data-lucide="scan-barcode" class="w-3.5 h-3.5"></i>
                     </button>
-                </td>
-            </tr>
-        `;
+                </div>
+            </td>
+
+            <td class="p-2 align-middle">
+                <select name="contenido[equipos][${equipoIndex}][propiedad]" class="w-full bg-white border border-slate-200 text-[11px] text-slate-600 rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer">
+                    <option value="EXCLUSIVO" selected>Exclusivo</option>
+                    <option value="COMPARTIDO">Compartido</option>
+                    <option value="PERSONAL">Personal</option>
+                </select>
+            </td>
+
+            <td class="p-2 align-middle">
+                <select name="contenido[equipos][${equipoIndex}][estado]" class="w-full bg-white border border-slate-200 text-[11px] rounded px-1 py-1 focus:border-indigo-500 focus:ring-0 cursor-pointer text-slate-600">
+                    <option value="Operativo" selected>Operativo</option>
+                    <option value="Regular">Regular</option>
+                    <option value="Inoperativo">Inoperativo</option>
+                </select>
+            </td>
+
+            <td class="p-2 align-middle">
+                <input type="text" name="contenido[equipos][${equipoIndex}][observaciones]" class="w-full bg-transparent text-[11px] text-slate-500 border-0 border-b border-transparent focus:border-indigo-500 focus:ring-0 placeholder-slate-300 italic px-2 py-1" placeholder="Observaciones...">
+            </td>
+
+            <td class="p-2 text-center align-middle">
+                <button type="button" onclick="this.closest('tr').remove()" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all">
+                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                </button>
+            </td>
+        </tr>
+    `;
 
             tbody.insertAdjacentHTML('beforeend', fila);
-
-            // Recargar iconos Lucide
             if (typeof lucide !== 'undefined') lucide.createIcons();
-
-            // Limpiar select y aumentar índice
             select.value = "";
             equipoIndex++;
         }
 
-        // --- FUNCIÓN DE CONCATENACIÓN ---
-        // Esta función une S o CP con el texto y llena el input oculto
         function actualizarSerieConcatenada(elemento) {
-            // Buscar el contenedor padre "div relative flex"
             const contenedor = elemento.closest('.relative.flex');
             if (!contenedor) return;
 
@@ -1587,7 +1544,6 @@
             const inputValor = contenedor.querySelector('.input-valor').value;
             const inputFinal = contenedor.querySelector('.input-serie-final');
 
-            // Si el usuario escribe algo, guardamos "PREFIJO:VALOR", si no, vacío
             if (inputValor.trim() === '') {
                 inputFinal.value = '';
             } else {
@@ -1702,7 +1658,7 @@
         // --- OPCIONES DNIe ---
         function toggleDniOptions(tipo) {
             const container = document.getElementById('dnie-options-container');
-            if (!container) return; // Validación extra
+            if (!container) return;
             if (tipo === 'ELECTRONICO') container.classList.remove('hidden');
             else container.classList.add('hidden');
         }

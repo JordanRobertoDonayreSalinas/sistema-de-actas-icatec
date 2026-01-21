@@ -1,5 +1,5 @@
 @extends('layouts.usuario')
-@section('title', 'Monitoreo - Atención de Parto')
+@section('title', 'Monitoreo - Parto')
 
 @push('styles')
     <style>
@@ -135,7 +135,7 @@
 
         /* --- Animaciones --- */
         .section-container {
-            display: block;
+            /* IMPORTANTE: Eliminado display: block para permitir ocultamiento con clase hidden */
             animation: fadeIn 0.4s ease;
         }
 
@@ -175,9 +175,6 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-
-                {{-- CAMPO DE FECHA --}}
-                {{-- Input de Fecha en tu Header --}}
                 <div class="relative w-full sm:w-auto">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i data-lucide="calendar" class="w-4 h-4 text-indigo-500"></i>
@@ -187,7 +184,6 @@
                         class="w-full sm:w-40 pl-10 pr-3 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-bold text-xs focus:border-indigo-500 focus:ring-0 uppercase shadow-sm transition-all cursor-pointer">
                 </div>
 
-                {{-- BOTÓN VOLVER --}}
                 <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}"
                     class="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm w-full sm:w-auto">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Panel
@@ -202,24 +198,44 @@
             <input type="hidden" name="modulo_nombre" value="parto">
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 1: DATOS DEL RESPONSABLE                                       --}}
+            {{-- SECCIÓN 1: DETALLES DEL CONSULTORIO (PDF SECCION 1)                    --}}
             {{-- ======================================================================== --}}
             <div class="form-card section-container">
+                <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div class="p-2 bg-slate-100 text-slate-600 rounded-lg">
+                        <i data-lucide="building" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Detalles del Consultorio</h2>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="input-label">Nro. de Consultorios / Salas</label>
+                        <input type="number" min="0" name="contenido[nro_consultorios]" class="input-blue font-bold"
+                            placeholder="0" value="{{ $registro->nro_consultorios ?? 0 }}">
+                    </div>
+                    <div>
+                        <label class="input-label">Nombre del Consultorio / Ambiente</label>
+                        <input type="text" name="contenido[nombre_consultorio]" class="input-blue"
+                            placeholder="Ej. Sala de Partos / Dilatación" value="{{ $registro->nombre_consultorio ?? '' }}">
+                    </div>
+                </div>
+            </div>
+
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN 2: DATOS DEL RESPONSABLE Y SIHCE (PDF SECCION 2)               --}}
+            {{-- ======================================================================== --}}
+            <div class="form-card section-container mt-6">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
                     <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
                         <i data-lucide="user" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">Datos del Profesional</h2>
+                        <h2 class="text-xl font-bold text-slate-800">Datos del Responsable</h2>
                         <p class="text-slate-500 text-xs">Información del encargado de Parto.</p>
                     </div>
-                </div>
-
-                {{-- Nombre del Ambiente --}}
-                <div class="mb-6">
-                    <label class="input-label">Nombre del Consultorio</label>
-                    <input type="text" name="contenido[nombre_consultorio]" class="input-blue"
-                        placeholder="Ej. Sala de Partos / Dilatación" value="{{ $registro->nombre_consultorio ?? '' }}">
                 </div>
 
                 {{-- FILA 1: Identificación --}}
@@ -236,37 +252,27 @@
 
                     <div class="md:col-span-4">
                         <label class="input-label">Nro. Documento</label>
-
-                        {{-- Contenedor Flex para alinear Input + Botón --}}
                         <div class="flex items-center gap-2">
-
                             <div class="relative w-full">
                                 <input type="text" name="contenido[personal_dni]" id="personal_dni" maxlength="15"
                                     class="input-blue font-bold w-full" placeholder="Ingrese documento..."
-                                    value="{{ $registro->personal_dni ?? '' }}" {{-- Mantenemos Enter para buscar, pero prevenimos envío del form --}}
+                                    value="{{ $registro->personal_dni ?? '' }}"
                                     onkeydown="if(event.key === 'Enter'){event.preventDefault(); }">
-
-                                {{-- Loader dentro del input --}}
                                 <div id="loading-doc" class="hidden absolute right-3 top-2.5">
                                     <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-indigo-600"></i>
                                 </div>
                             </div>
-
-                            {{-- BOTÓN DE BÚSQUEDA --}}
                             <button type="button" onclick="buscarPorDoc()"
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-lg shadow-sm transition-colors flex-shrink-0"
                                 title="Buscar Profesional">
-                                {{-- Icono de Lupa --}}
                                 <i data-lucide="search" class="w-5 h-5"></i>
                             </button>
                         </div>
-
                         <p id="msg-doc" class="text-[10px] text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <div class="md:col-span-5">
                         @php
-                            // Definimos la lista oficial
                             $listaEspecialidades = [
                                 'MEDICO',
                                 'ODONTOLOGO(A)',
@@ -279,63 +285,46 @@
                                 'PSICOLOGO(A)',
                                 'OBSTETRA',
                             ];
-
-                            // Valor actual de la BD
                             $valorEsp = $registro->personal_especialidad ?? '';
-
-                            // Detectamos si es "Otro" (si tiene valor y NO está en la lista)
                             $esOtroEsp = !empty($valorEsp) && !in_array($valorEsp, $listaEspecialidades);
                         @endphp
-
                         <label class="input-label">Profesión</label>
-
-                        <select id="select_especialidad" onchange="toggleEspecialidad(this)" {{-- Si NO es otro, este select lleva el name. Si es otro, se lo quitamos luego --}}
+                        <select id="select_especialidad" onchange="toggleEspecialidad(this)"
                             name="{{ $esOtroEsp ? '' : 'contenido[personal_especialidad]' }}"
                             class="input-blue text-xs w-full mb-2">
-
                             <option value="">-- Seleccionar --</option>
-
                             @foreach ($listaEspecialidades as $esp)
                                 <option value="{{ $esp }}" {{ $valorEsp == $esp ? 'selected' : '' }}>
                                     {{ $esp }}
                                 </option>
                             @endforeach
-
-                            {{-- Opción OTROS seleccionada automáticamente si el valor no coincide con la lista --}}
                             <option value="OTROS" {{ $esOtroEsp ? 'selected' : '' }}>OTROS</option>
                         </select>
-
                         <div id="div_especialidad_manual" class="{{ $esOtroEsp ? '' : 'hidden' }}">
-                            <input type="text" id="input_especialidad_manual" {{-- Si ES otro, este input lleva el name. Si no, está disabled --}}
+                            <input type="text" id="input_especialidad_manual"
                                 name="{{ $esOtroEsp ? 'contenido[personal_especialidad]' : '' }}"
                                 value="{{ $esOtroEsp ? $valorEsp : '' }}"
                                 class="input-blue text-xs w-full placeholder-slate-400"
                                 placeholder="Especifique la profesión..." {{ $esOtroEsp ? '' : 'disabled' }}>
                         </div>
                     </div>
-
                     <script>
                         function toggleEspecialidad(select) {
                             const divManual = document.getElementById('div_especialidad_manual');
                             const inputManual = document.getElementById('input_especialidad_manual');
                             const nombreCampo = 'contenido[personal_especialidad]';
-
                             if (select.value === 'OTROS') {
-                                // MODO MANUAL
-                                divManual.classList.remove('hidden'); // Mostrar input
-                                inputManual.disabled = false; // Habilitar input
-                                inputManual.name = nombreCampo; // Asignar name al input para que se guarde este valor
-                                inputManual.focus(); // Poner cursor
-
-                                select.removeAttribute('name'); // Quitar name al select para que no envíe "OTROS"
+                                divManual.classList.remove('hidden');
+                                inputManual.disabled = false;
+                                inputManual.name = nombreCampo;
+                                inputManual.focus();
+                                select.removeAttribute('name');
                             } else {
-                                // MODO LISTA
-                                divManual.classList.add('hidden'); // Ocultar input
-                                inputManual.disabled = true; // Deshabilitar input
-                                inputManual.value = ''; // Limpiar input
-                                inputManual.removeAttribute('name'); // Quitar name al input
-
-                                select.name = nombreCampo; // Devolver name al select para guardar lo seleccionado
+                                divManual.classList.add('hidden');
+                                inputManual.disabled = true;
+                                inputManual.value = '';
+                                inputManual.removeAttribute('name');
+                                select.name = nombreCampo;
                             }
                         }
                     </script>
@@ -352,7 +341,7 @@
                     </div>
                 </div>
 
-                {{-- FILA 3: Contacto y Cargo (NUEVOS) --}}
+                {{-- FILA 3: Contacto --}}
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6">
                     <div class="md:col-span-6">
                         <label class="input-label">Correo Electrónico</label>
@@ -378,50 +367,7 @@
                     </div>
                 </div>
 
-                {{-- Capacitación --}}
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <div class="flex justify-between items-center gap-4">
-                        <p class="text-sm font-bold text-slate-700">¿El personal recibió capacitación?</p>
-                        <div class="toggle-group">
-                            <label><input type="radio" name="contenido[capacitacion]" value="SI"
-                                    class="toggle-radio" onchange="toggleCapacitacion(true)"
-                                    {{ ($registro->capacitacion_recibida ?? '') == 'SI' ? 'checked' : '' }}><span
-                                    class="toggle-btn"><i data-lucide="check" class="w-4 h-4"></i> SÍ</span></label>
-                            <label><input type="radio" name="contenido[capacitacion]" value="NO"
-                                    class="toggle-radio" onchange="toggleCapacitacion(false)"
-                                    {{ ($registro->capacitacion_recibida ?? '') == 'NO' ? 'checked' : '' }}><span
-                                    class="toggle-btn"><i data-lucide="x" class="w-4 h-4"></i> NO</span></label>
-                        </div>
-                    </div>
-                    <div id="div-capacitacion-detalles"
-                        class="{{ ($registro->capacitacion_recibida ?? '') == 'SI' ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-200">
-                        <p class="input-label mb-2">Entidad que capacitó:</p>
-                        <div class="flex flex-wrap gap-4">
-                            @foreach (['MINSA', 'DIRESA', 'UNIDAD EJECUTORA', 'OTROS'] as $ente)
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="contenido[capacitacion_ente]"
-                                        value="{{ $ente }}" class="text-indigo-600 focus:ring-0"
-                                        {{ ($registro->capacitacion_entes ?? '') == $ente ? 'checked' : '' }}>
-                                    <span class="text-xs font-bold text-slate-600">{{ $ente }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ======================================================================== --}}
-            {{-- SECCIÓN 2: DOCUMENTACIÓN ADMINISTRATIVA Y SIHCE                          --}}
-            {{-- ======================================================================== --}}
-            <div class="form-card section-container mt-6">
-                <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
-                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                        <i data-lucide="file-signature" class="w-6 h-6"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800">Documentación Administrativa</h3>
-                </div>
-
-                {{-- 1. PREGUNTA MAESTRA: ¿Utiliza SIHCE? --}}
+                {{-- SUB-SECCION: USO DE SIHCE --}}
                 <div class="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100 mb-6">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                         <div class="flex items-center gap-3">
@@ -431,7 +377,7 @@
                             <div>
                                 <h4 class="font-bold text-slate-800 text-sm">¿El profesional utiliza SIHCE?</h4>
                                 <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">Habilita opciones de
-                                    seguridad</p>
+                                    seguridad y soporte</p>
                             </div>
                         </div>
                         <div class="toggle-group">
@@ -451,7 +397,7 @@
                     </div>
                 </div>
 
-                {{-- 2. BLOQUE CONDICIONAL --}}
+                {{-- BLOQUE CONDICIONAL SEGURIDAD (DJ y Confidencialidad) --}}
                 <div id="bloque-seguridad-sihce"
                     class="{{ ($registro->utiliza_sihce ?? '') == 'SI' ? '' : 'hidden' }} animate-fadeIn">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -494,13 +440,15 @@
                 </div>
             </div>
 
-            {{-- SECCIÓN: TIPO DE DNI (OCULTAR SI ES C.E.) --}}
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN 3: DETALLE DE DNI Y FIRMA DIGITAL (PDF SECCION 3)              --}}
+            {{-- ======================================================================== --}}
             <div id="seccion-tipo-dni" class="form-card section-container mt-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-                        <h3 class="flex items-center justify-center font-bold w-5 h-5">3</h3>
+                        <i data-lucide="credit-card" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-700 uppercase">Tipo de DNI y Firma Digital</h3>
+                    <h3 class="text-xl font-bold text-slate-800">Tipo de DNI y Firma Digital</h3>
                 </div>
                 <p class="input-label mb-3 text-xs uppercase text-slate-400">Seleccione el tipo de documento físico</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -583,13 +531,56 @@
             </div>
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 2: RECURSOS Y EQUIPAMIENTO                                     --}}
+            {{-- SECCIÓN 4: DETALLES DE CAPACITACION (PDF SECCION 4)                    --}}
             {{-- ======================================================================== --}}
-            <div class="form-card section-container">
+            <div class="form-card section-container mt-6">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
-                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="package"
-                            class="w-6 h-6"></i></div>
-                    <h2 class="text-xl font-bold text-slate-800">Recursos: Materiales y Equipamiento</h2>
+                    <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">Detalles de Capacitación</h2>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <div class="flex justify-between items-center gap-4">
+                        <p class="text-sm font-bold text-slate-700">¿El personal recibió capacitación?</p>
+                        <div class="toggle-group">
+                            <label><input type="radio" name="contenido[capacitacion]" value="SI"
+                                    class="toggle-radio" onchange="toggleCapacitacion(true)"
+                                    {{ ($registro->capacitacion_recibida ?? '') == 'SI' ? 'checked' : '' }}><span
+                                    class="toggle-btn"><i data-lucide="check" class="w-4 h-4"></i> SÍ</span></label>
+                            <label><input type="radio" name="contenido[capacitacion]" value="NO"
+                                    class="toggle-radio" onchange="toggleCapacitacion(false)"
+                                    {{ ($registro->capacitacion_recibida ?? '') == 'NO' ? 'checked' : '' }}><span
+                                    class="toggle-btn"><i data-lucide="x" class="w-4 h-4"></i> NO</span></label>
+                        </div>
+                    </div>
+                    <div id="div-capacitacion-detalles"
+                        class="{{ ($registro->capacitacion_recibida ?? '') == 'SI' ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-200">
+                        <p class="input-label mb-2">Entidad que capacitó:</p>
+                        <div class="flex flex-wrap gap-4">
+                            @foreach (['MINSA', 'DIRESA', 'UNIDAD EJECUTORA', 'OTROS'] as $ente)
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="contenido[capacitacion_ente]"
+                                        value="{{ $ente }}" class="text-indigo-600 focus:ring-0"
+                                        {{ ($registro->capacitacion_entes ?? '') == $ente ? 'checked' : '' }}>
+                                    <span class="text-xs font-bold text-slate-600">{{ $ente }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN 5: MATERIALES (PDF SECCION 5)                                  --}}
+            {{-- ======================================================================== --}}
+            <div class="form-card section-container mt-6">
+                <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div class="p-2 bg-teal-50 text-teal-600 rounded-lg">
+                        <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">Materiales</h2>
                 </div>
 
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 mb-6">
@@ -606,6 +597,17 @@
                             </label>
                         @endforeach
                     </div>
+                </div>
+            </div>
+
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN 6: EQUIPAMIENTO (PDF SECCION 6)                                --}}
+            {{-- ======================================================================== --}}
+            <div class="form-card section-container mt-6">
+                <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="monitor"
+                            class="w-6 h-6"></i></div>
+                    <h2 class="text-xl font-bold text-slate-800">Equipamiento</h2>
                 </div>
 
                 <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
@@ -652,12 +654,9 @@
 
                                     <td class="p-2 align-middle">
                                         @php
-                                            // Lógica para separar S:12345 en prefijo y valor
                                             $fullSerie = $item['serie'] ?? '';
                                             $prefix = 'S';
                                             $valor = $fullSerie;
-
-                                            // Si contiene ':', separamos. Ej: CP:9999 -> Prefix: CP, Valor: 9999
                                             if (strpos($fullSerie, ':') !== false) {
                                                 $parts = explode(':', $fullSerie, 2);
                                                 if (in_array($parts[0], ['S', 'CP'])) {
@@ -666,13 +665,11 @@
                                                 }
                                             }
                                         @endphp
-
                                         <div
                                             class="relative flex items-center w-full bg-slate-50 border border-slate-200 rounded overflow-hidden">
                                             <input type="hidden" class="input-serie-final"
                                                 name="contenido[equipos][{{ $idx }}][serie]"
                                                 value="{{ $fullSerie }}">
-
                                             <div class="bg-slate-100 border-r border-slate-200">
                                                 <select onchange="actualizarSerieConcatenada(this)"
                                                     class="select-prefix h-full bg-transparent border-none text-[10px] font-bold text-slate-700 focus:ring-0 cursor-pointer pl-2 pr-6 py-1">
@@ -682,12 +679,10 @@
                                                     </option>
                                                 </select>
                                             </div>
-
                                             <input type="text" id="serie-input-{{ $idx }}"
                                                 value="{{ $valor }}" oninput="actualizarSerieConcatenada(this)"
                                                 class="input-valor w-full bg-white border-none text-[11px] font-mono uppercase text-slate-600 focus:ring-0 px-2 py-1 placeholder-slate-400"
                                                 placeholder="DIGITE...">
-
                                             <button type="button"
                                                 onclick="iniciarEscaneo('serie-input-{{ $idx }}')"
                                                 class="pr-1 pl-1 text-slate-400 hover:text-indigo-600 cursor-pointer transition-colors bg-white h-full">
@@ -770,9 +765,9 @@
             </div>
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 3: DATOS DE GESTIÓN                                            --}}
+            {{-- SECCIÓN 7: DATOS DE GESTIÓN (PDF SECCION 7)                            --}}
             {{-- ======================================================================== --}}
-            <div class="form-card section-container">
+            <div class="form-card section-container mt-6">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
                     <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="bar-chart-2"
                             class="w-6 h-6"></i></div>
@@ -780,14 +775,9 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- Indicadores --}}
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <label class="input-label mb-4 border-b pb-2">Información de la Sala</label>
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-xs font-bold text-slate-700 uppercase">Nro. Salas de Parto:</span>
-                            <input type="number" min="0" name="contenido[nro_consultorios]"
-                                class="w-20 border border-indigo-200 rounded p-2 text-center font-bold text-indigo-700 bg-white"
-                                value="{{ $registro->nro_consultorios ?? 0 }}">
-                        </div>
+                        <label class="input-label mb-4 border-b pb-2">Indicadores</label>
                         <div class="flex justify-between items-center mb-4">
                             <span class="text-xs font-bold text-slate-700 uppercase">Partos Registrados (Mes):</span>
                             <input type="number" min="0" name="contenido[nro_gestantes_mes]"
@@ -809,6 +799,7 @@
                         </div>
                     </div>
 
+                    {{-- Reportes (Condicional dentro de gestión) --}}
                     <div id="bloque-reportes-sistema" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <label class="input-label mb-4 border-b pb-2">Reportes del Sistema</label>
                         <div class="flex justify-between items-center mb-4">
@@ -838,9 +829,7 @@
                                 ];
                                 $valSocializa = $registro->gestion_reportes_socializa ?? '';
                             @endphp
-
                             <label class="input-label mb-1">Si es "SI" ¿con quién lo socializa?</label>
-
                             <div class="relative">
                                 <select name="contenido[gestion_reportes_socializa]"
                                     class="input-blue w-full appearance-none pr-8 cursor-pointer">
@@ -852,8 +841,6 @@
                                         </option>
                                     @endforeach
                                 </select>
-
-                                {{-- Flecha decorativa para mantener el estilo --}}
                                 <span
                                     class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-indigo-500">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -864,60 +851,66 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div id="bloque-dificultades"
-                        class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden md:col-span-2">
-                        <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Reporte de Dificultades
-                            </h3>
+            {{-- ======================================================================== --}}
+            {{-- SECCIÓN 8: SOPORTE (Visible si usa SIHCE) (PDF SECCION 8)              --}}
+            {{-- ======================================================================== --}}
+            <div id="bloque-dificultades"
+                class="form-card section-container mt-6 {{ ($registro->utiliza_sihce ?? '') == 'SI' ? '' : 'hidden' }}">
+                <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div class="p-2 bg-red-50 text-red-600 rounded-lg"><i data-lucide="life-buoy" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">Soporte</h2>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">1. Ante
+                                Dificultades ¿A quién comunica?</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                @foreach (['MINSA', 'DIRESA', 'OTROS', 'UNIDAD EJECUTORA', 'JEFE DE ESTABLECIMIENTO'] as $opcion)
+                                    <label class="cursor-pointer group relative">
+                                        <input type="radio" name="contenido[dificultades][comunica]"
+                                            value="{{ $opcion }}" class="peer sr-only"
+                                            {{ ($registro->dificultad_comunica_a ?? '') == $opcion ? 'checked' : '' }}>
+                                        <div
+                                            class="text-center py-3 px-1 rounded-lg border border-slate-200 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 peer-checked:shadow-sm group-hover:border-indigo-300 h-full flex items-center justify-center">
+                                            <span
+                                                class="block text-[10px] font-bold text-slate-500 peer-checked:text-indigo-700">{{ $opcion }}</span>
+                                        </div>
+                                        <div
+                                            class="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-opacity shadow-sm">
+                                            <i data-lucide="check" class="w-2 h-2"></i>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
-                        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-                            <div>
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">1. ¿A quién
-                                    comunica?</p>
-                                <div class="grid grid-cols-3 gap-3">
-                                    @foreach (['MINSA', 'DIRESA', 'OTROS', 'UNIDAD EJECUTORA', 'JEFE DE ESTABLECIMIENTO'] as $opcion)
-                                        <label class="cursor-pointer group relative">
-                                            <input type="radio" name="contenido[dificultades][comunica]"
-                                                value="{{ $opcion }}" class="peer sr-only"
-                                                {{ ($registro->dificultad_comunica_a ?? '') == $opcion ? 'checked' : '' }}>
-                                            <div
-                                                class="text-center py-3 px-1 rounded-lg border border-slate-200 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 peer-checked:shadow-sm group-hover:border-indigo-300 h-full flex items-center justify-center">
-                                                <span
-                                                    class="block text-[10px] font-bold text-slate-500 peer-checked:text-indigo-700">{{ $opcion }}</span>
-                                            </div>
-                                            <div
-                                                class="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-opacity shadow-sm">
-                                                <i data-lucide="check" class="w-2 h-2"></i>
-                                            </div>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                            <div
-                                class="hidden md:block absolute top-4 bottom-4 left-1/2 w-px bg-slate-100 -translate-x-1/2">
-                            </div>
-                            <div>
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">2. ¿Qué
-                                    medio utiliza?</p>
-                                <div class="grid grid-cols-3 gap-3">
-                                    @foreach (['WHATSAPP', 'CELULAR', 'CORREO', 'OTROS'] as $opcion)
-                                        <label class="cursor-pointer group relative">
-                                            <input type="radio" name="contenido[dificultades][medio]"
-                                                value="{{ $opcion }}" class="peer sr-only"
-                                                {{ ($registro->dificultad_medio_uso ?? '') == $opcion ? 'checked' : '' }}>
-                                            <div
-                                                class="text-center py-3 px-1 rounded-lg border border-slate-200 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 peer-checked:shadow-sm group-hover:border-indigo-300 h-full flex items-center justify-center">
-                                                <span
-                                                    class="block text-[10px] font-bold text-slate-500 peer-checked:text-indigo-700">{{ $opcion }}</span>
-                                            </div>
-                                            <div
-                                                class="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-opacity shadow-sm">
-                                                <i data-lucide="check" class="w-2 h-2"></i>
-                                            </div>
-                                        </label>
-                                    @endforeach
-                                </div>
+                        <div class="hidden md:block absolute top-4 bottom-4 left-1/2 w-px bg-slate-100 -translate-x-1/2">
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">2. ¿Qué medio
+                                utiliza?</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                @foreach (['WHATSAPP', 'CELULAR', 'CORREO', 'OTROS'] as $opcion)
+                                    <label class="cursor-pointer group relative">
+                                        <input type="radio" name="contenido[dificultades][medio]"
+                                            value="{{ $opcion }}" class="peer sr-only"
+                                            {{ ($registro->dificultad_medio_uso ?? '') == $opcion ? 'checked' : '' }}>
+                                        <div
+                                            class="text-center py-3 px-1 rounded-lg border border-slate-200 bg-white transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 peer-checked:shadow-sm group-hover:border-indigo-300 h-full flex items-center justify-center">
+                                            <span
+                                                class="block text-[10px] font-bold text-slate-500 peer-checked:text-indigo-700">{{ $opcion }}</span>
+                                        </div>
+                                        <div
+                                            class="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-opacity shadow-sm">
+                                            <i data-lucide="check" class="w-2 h-2"></i>
+                                        </div>
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -925,9 +918,9 @@
             </div>
 
             {{-- ======================================================================== --}}
-            {{-- SECCIÓN 4: EVIDENCIAS FOTOGRÁFICAS                                     --}}
+            {{-- SECCIÓN 9: EVIDENCIAS FOTOGRÁFICAS (PDF SECCION 9)                     --}}
             {{-- ======================================================================== --}}
-            <div class="form-card section-container">
+            <div class="form-card section-container mt-6">
                 <div class="mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
                     <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i data-lucide="camera" class="w-6 h-6"></i>
                     </div>
@@ -1141,24 +1134,33 @@
             s);
         window.toggleReportesPrenatal = (s) => document.getElementById('div-reportes-prenatal-detalle').classList.toggle(
             'hidden', !s);
-        window.toggleSihce = (s) => {
-            // 1. Bloque de Seguridad (Ya existía)
-            const bloqueSeguridad = document.getElementById('bloque-seguridad-sihce');
 
-            // 2. Nuevos bloques de Gestión que acabamos de identificar
-            const bloqueReportes = document.getElementById('bloque-reportes-sistema');
+        // ACTUALIZADO: toggleSihce ahora controla explícitamente el bloque de soporte separado
+        window.toggleSihce = (s) => {
+            // 1. Bloque de Seguridad (Declaración Jurada y Confidencialidad)
+            const bloqueSeguridad = document.getElementById('bloque-seguridad-sihce');
+            // 2. Bloques de Soporte
             const bloqueDificultades = document.getElementById('bloque-dificultades');
 
+            // Importante: Limpiamos display inline que a veces queda por JS anteriores
             if (s) {
-                // SI USA SIHCE: Mostrar todo
-                if (bloqueSeguridad) bloqueSeguridad.classList.remove('hidden');
-                if (bloqueReportes) bloqueReportes.classList.remove('hidden');
-                if (bloqueDificultades) bloqueDificultades.classList.remove('hidden');
+                if (bloqueSeguridad) {
+                    bloqueSeguridad.classList.remove('hidden');
+                    bloqueSeguridad.style.display = '';
+                }
+                if (bloqueDificultades) {
+                    bloqueDificultades.classList.remove('hidden');
+                    bloqueDificultades.style.display = '';
+                }
             } else {
-                // NO USA SIHCE: Ocultar todo
-                if (bloqueSeguridad) bloqueSeguridad.classList.add('hidden');
-                if (bloqueReportes) bloqueReportes.classList.add('hidden');
-                if (bloqueDificultades) bloqueDificultades.classList.add('hidden');
+                if (bloqueSeguridad) {
+                    bloqueSeguridad.classList.add('hidden');
+                    bloqueSeguridad.style.display = 'none';
+                }
+                if (bloqueDificultades) {
+                    bloqueDificultades.classList.add('hidden');
+                    bloqueDificultades.style.display = 'none';
+                }
             }
         }
         window.switchTab = (t) => {
@@ -1189,7 +1191,6 @@
             const esOtro = tipoEquipo === 'OTRO';
             const valorNombre = esOtro ? '' : tipoEquipo;
 
-            // Construimos la nueva fila con la estructura de Serie modificada
             const fila = `
             <tr class="group hover:bg-slate-50 transition-colors">
                 <td class="p-2 align-middle">
@@ -1255,25 +1256,19 @@
 
             tbody.insertAdjacentHTML('beforeend', fila);
 
-            // Actualizar iconos y limpiar
             if (typeof lucide !== 'undefined') lucide.createIcons();
             select.value = "";
             equipoIndex++;
         }
 
-        // --- FUNCION CLAVE: CONCATENACIÓN ---
         function actualizarSerieConcatenada(elemento) {
-            // Busca el contenedor padre (div relative)
             const contenedor = elemento.closest('.relative');
             if (!contenedor) return;
 
-            // Obtiene los 3 elementos del grupo
             const selectPrefix = contenedor.querySelector('.select-prefix').value;
             const inputValor = contenedor.querySelector('.input-valor').value;
             const inputFinal = contenedor.querySelector('.input-serie-final');
 
-            // Une los valores (S:xxxx o CP:xxxx)
-            // Si está vacío el texto, puedes decidir si dejarlo vacío o guardar solo el prefijo.
             if (inputValor.trim() === '') {
                 inputFinal.value = '';
             } else {
