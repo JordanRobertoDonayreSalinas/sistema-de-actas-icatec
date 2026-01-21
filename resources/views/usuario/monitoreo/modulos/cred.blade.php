@@ -762,7 +762,6 @@
         // Búsqueda de profesional
         const inputDoc = document.getElementById('doc');
         const loader = document.getElementById('loading_profesional');
-        const tipo = document.getElementById('tipo_doc').value;
         const limpiarInputs = () => {
             ['nombres', 'apellido_paterno', 'apellido_materno', 'telefono', 'email'].forEach(id => {
                 const el = document.getElementById(id);
