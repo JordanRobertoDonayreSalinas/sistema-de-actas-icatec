@@ -149,7 +149,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
                                 <div class="md:col-span-3 space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Tipo de Doc.</label>
-                                    <select name="contenido[personal][tipo_doc]" class="input-standard w-full">
+                                    <select name="contenido[personal][tipo_doc]" id="tipo_doc" class="input-standard w-full">
                                         <option value="DNI" {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'DNI' ? 'selected' : '' }}>DNI</option>
                                         <option value="C.E." {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'C.E.' ? 'selected' : '' }}>C.E.</option>
                                     </select>
@@ -182,11 +182,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-end" x-data="{ profesion: '{{ $detalle->contenido['personal']['profesion'] ?? '' }}' }">
                                 <div class="md:col-span-2 space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Celular</label>
-                                    <input type="text" name="contenido[personal][contacto]" value="{{ $detalle->contenido['personal']['contacto'] ?? '' }}" class="input-standard w-full font-mono">
+                                    <input type="text" name="contenido[personal][contacto]" id="telefono" value="{{ $detalle->contenido['personal']['contacto'] ?? '' }}" class="input-standard w-full font-mono">
                                 </div>
                                 <div class="md:col-span-3 space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Correo Electrónico</label>
-                                    <input type="email" name="contenido[personal][email]" value="{{ $detalle->contenido['personal']['email'] ?? '' }}" class="input-standard w-full">
+                                    <input type="email" name="contenido[personal][email]" id="email" value="{{ $detalle->contenido['personal']['email'] ?? '' }}" class="input-standard w-full">
                                 </div>
                                 <div class="md:col-span-2 space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 text-center block">Turno</label>
