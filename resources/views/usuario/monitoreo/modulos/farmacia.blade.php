@@ -211,7 +211,7 @@
                                 {{-- Profesión con ancho dinámico --}}
                                 <div :class="profesion === 'OTROS' ? 'md:col-span-2' : 'md:col-span-5'" class="space-y-2 transition-all duration-300">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Profesión</label>
-                                    <select name="contenido[personal][profesion]" id="profesion" x-model="profesion" class="input-standard w-full uppercase font-semibold">
+                                    <select name="contenido[personal][profesion]" x-model="profesion" class="input-standard w-full uppercase font-semibold">
                                         <option value="">-- SELECCIONE --</option>
                                         @foreach(['MEDICO', 'ODONTOLOGO(A)', 'ENFERMERO(A)', 'TECNICO ENFERMERIA', 'TECNICO LABORATORIO', 'BIOLOGO(A)', 'QUIMICO FARMACEUTICO(A)', 'NUTRICIONISTA', 'PSICOLOGO(A)', 'OBSTETRA'] as $p)
                                             <option value="{{ $p }}">{{ $p }}</option>
