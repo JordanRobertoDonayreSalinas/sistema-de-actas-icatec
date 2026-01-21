@@ -59,7 +59,8 @@
 @section('content')
 <div class="py-10 bg-slate-50 min-h-screen" 
      x-data="{ 
-        openModal: false, 
+        openModal: false,
+        tipoDoc: '{{ $detalle->contenido['personal']['tipo_doc'] ?? 'DNI' }}',
         utilizaSihce: '{{ $detalle->contenido['personal']['utiliza_sihce'] ?? 'NO' }}',
         docNuevo: '',
         profesion: '{{ $detalle->contenido['personal']['profesion'] ?? '' }}', 
@@ -149,7 +150,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
                                 <div class="md:col-span-3 space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Tipo de Doc.</label>
-                                    <select name="contenido[personal][tipo_doc]" id="tipo_doc" class="input-standard w-full">
+                                    <select name="contenido[personal][tipo_doc]" id="tipo_doc" x-model="tipoDoc" class="input-standard w-full">
                                         <option value="DNI" {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'DNI' ? 'selected' : '' }}>DNI</option>
                                         <option value="C.E." {{ ($detalle->contenido['personal']['tipo_doc'] ?? '') == 'C.E.' ? 'selected' : '' }}>C.E.</option>
                                     </select>
@@ -340,7 +341,11 @@
                 </div>
 
                 {{-- SECCIÓN 02: TIPO DE DNI Y FIRMA DIGITAL --}}
-                <div class="mt-6 border-t border-slate-100 pt-6" x-data="{ tipoDni: '{{ $detalle->contenido['dni_firma']['tipo_dni_fisico'] ?? ($registro->tipo_dni_fisico ?? 'AZUL') }}' }">
+                <div class="mt-6 border-t border-slate-100 pt-6" 
+                x-show="tipoDoc === 'DNI'" 
+                x-cloak 
+                x-transition
+                x-data="{ tipoDni: '{{ $detalle->contenido['dni_firma']['tipo_dni_fisico'] ?? ($registro->tipo_dni_fisico ?? 'AZUL') }}' }">
                     <div class="flex items-center gap-4 mb-6">
                         <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
                         <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Tipo de DNI y Firma Digital</h4>
