@@ -277,7 +277,7 @@
                                     </label>
                                     <div class="flex flex-wrap gap-2">
                                         @php $entes_guardados = (array)($detalle->contenido['capacitacion']['ente'] ?? []); @endphp
-                                        @foreach(['MINSA', 'DIRESA', 'UNIDAD EJECUTORA'] as $val => $label)
+                                        @foreach(['MINSA', 'DIRESA', 'UNIDAD EJECUTORA', 'OTROS'] as $val => $label)
                                             @php 
                                                 $realVal = is_numeric($val) ? $label : $val; 
                                                 $visibleLabel = is_numeric($val) ? $label : $label;
@@ -299,7 +299,7 @@
                 </div>
 
                 {{-- DOCUMENTACIÓN ADMINISTRATIVA --}}
-                <div class="mt-6 mb-6 border-t border-slate-100 pt-6">
+                <div x-show="utilizaSihce === 'SI'" class="mt-6 mb-6 border-t border-slate-100 pt-6">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                             <i data-lucide="file-signature" class="w-5 h-5"></i>

@@ -142,7 +142,7 @@ class ReferenciasController extends Controller
                         'apellido_materno' => mb_strtoupper($personal['apellido_materno'] ?? '', 'UTF-8'),
                         'email'            => mb_strtoupper($personal['email'] ?? '', 'UTF-8'),
                         'telefono'         => mb_strtoupper($personal['contacto'] ?? '', 'UTF-8'),
-                        'profesion'        => mb_strtoupper($profesionFinal, 'UTF-8'),
+                        'cargo'            => mb_strtoupper($profesionFinal, 'UTF-8'),
                         'updated_at'       => now(),
                         'created_at'       => now()
                     ]
