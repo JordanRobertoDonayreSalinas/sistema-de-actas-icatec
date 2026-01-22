@@ -9,6 +9,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\CitaController;
+use App\Http\Controllers\CitaESPController;
+use App\Http\Controllers\CitaESPpdfController; // <--- NUEVO CONTROLADOR PDF IMPORTADO
 use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EditMonitoreoController;
 use App\Http\Controllers\GestionAdministrativaController;
@@ -127,12 +129,20 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
             });
 
-            // Módulo 02: Citas
+            // Módulo 02: Citas (ESTÁNDAR)
             Route::prefix('modulo/citas')->name('citas.')->group(function () {
                 Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
                 Route::get('/{id}', [CitaController::class, 'index'])->name('index');
                 Route::post('/{id}', [CitaController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo Especializado: Citas CSMC
+            Route::prefix('modulo/citas-especializada')->name('citas_esp.')->group(function () {
+                Route::get('/{id}', [CitaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [CitaESPController::class, 'store'])->name('store');
+                // RUTA AGREGADA PARA PDF
+                Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 03: Triaje
