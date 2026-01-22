@@ -190,4 +190,20 @@ class CredController extends Controller
             return back()->with('error', 'Error al guardar Cred: ' . $e->getMessage())->withInput();
         }
     }
+    public function buscarProfesional($doc)
+    {
+        $profesional = DB::table('mon_profesionales')->where('doc', $doc)->first();
+        if ($profesional) {
+            return response()->json([
+                'exists' => true,
+                'nombres' => $profesional->nombres,
+                'apellido_paterno' => $profesional->apellido_paterno,
+                'apellido_materno' => $profesional->apellido_materno,
+                'telefono' => $profesional->telefono,
+                'email' => $profesional->email,
+                'cargo' => $profesional->cargo, // Asegúrate de que este nombre coincida con data.cargo en el JS
+            ]);
+        }
+        return response()->json(['exists' => false]);
+    }
 }

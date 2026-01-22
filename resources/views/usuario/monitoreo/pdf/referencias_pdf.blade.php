@@ -218,7 +218,7 @@
         <table class="table-data" style="text-transform: uppercase;">
             <tr>
                 <th>Tipo de DNI:</th>
-                <td><strong>DNI {{ $datos['dni_firma']['tipo_dni_fisico'] ?? 'AZUL' }}</strong></td>
+                <td><strong>{{ $datos['dni_firma']['tipo_dni_fisico'] ?? 'AZUL' }}</strong></td>
             </tr>
 
             @if(($datos['dni_firma']['tipo_dni_fisico'] ?? '') == 'ELECTRONICO')
