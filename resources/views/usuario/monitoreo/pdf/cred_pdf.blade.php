@@ -148,6 +148,27 @@
             ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
         </div>
     </div>
+
+    {{-- 01. DETALLES DEL CONSULTORIO --}}
+    <div class="section-header">Detalles del Consultorio</div>
+    <table class="table-data">
+        <tr>
+            <th width="35%">Cantidad de consultorios:</th>
+            <td>{{ $datos['consultorio']['cantidad'] ?? 'N/A' }}</td>
+        </tr>
+        
+        <tr>
+            <th>Consultorio entrevistado:</th>
+            {{-- Usamos mb_strtoupper para asegurar que se vea en MAYÚSCULAS --}}
+            <td>{{ mb_strtoupper($datos['consultorio']['nombre'] ?? 'N/A', 'UTF-8') }}</td>
+        </tr>
+
+        <tr>
+            <th>Turno:</th>
+            <td>{{ mb_strtoupper($datos['consultorio']['turno'] ?? 'N/A', 'UTF-8') }}</td>
+        </tr>
+    </table>
+
     <div class="section-header">Datos del Profesional</div>
     <table class="table-data">
         <tr>
@@ -192,11 +213,6 @@
         </tr>
 
         <tr>
-            <th>Turno:</th>
-            <td class="uppercase">{{ $detalle->personal_turno ?? 'N/A' }}</td>
-        </tr>
-
-        <tr>
             <th>¿Firmó Declaración Jurada?:</th>
             <td>{{ $datos['documentacion']['firma_dj'] ?? 'NO' }}</td>
         </tr>
@@ -218,7 +234,7 @@
         <table class="table-data" style="text-transform: uppercase;">
             <tr>
                 <th>Tipo de DNI:</th>
-                <td><strong>DNI {{ $datos['dni_firma']['tipo_dni_fisico'] ?? 'AZUL' }}</strong></td>
+                <td><strong>{{ $datos['dni_firma']['tipo_dni_fisico'] ?? 'AZUL' }}</strong></td>
             </tr>
 
             @if(($datos['dni_firma']['tipo_dni_fisico'] ?? '') == 'ELECTRONICO')
