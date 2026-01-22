@@ -36,6 +36,7 @@
                     <option value="UNIDAD EJECUTORA">UNIDAD EJECUTORA</option>
                     <option value="MINSA">MINSA</option>
                     <option value="DIRESA">DIRESA</option>
+                    <option value="OTROS">OTROS</option>
                 </select>
             </div>
         </div>
@@ -50,6 +51,7 @@
                     <option value="CELULAR">CELULAR</option>
                     <option value="CORREO">CORREO</option>
                     <option value="WHATSAPP">WHATSAPP</option>
+                    <option value="OTROS">OTROS</option>
                 </select>
             </div>
         </div>

@@ -14,7 +14,7 @@
         }
 
         @page {
-            margin: 1cm 1.5cm 1.5cm 1.5cm; /* Márgenes para no cortar contenido */
+            margin: 1cm 1.5cm 1.5cm 1.5cm; 
         }
 
         /* --- ENCABEZADO SUPERIOR --- */
@@ -38,43 +38,39 @@
 
         /* --- TÍTULOS DE SECCIÓN --- */
         .section-header {
-            background-color: #f3f4f6; /* Fondo gris claro */
-            border-left: 5px solid #4f46e5; /* Barra azul a la izquierda */
+            background-color: #f3f4f6; 
+            border-left: 5px solid #4f46e5; 
             padding: 6px 10px;
             font-weight: bold;
             font-size: 11px;
             text-transform: uppercase;
             color: #1f2937;
             margin-top: 15px;
-            margin-bottom: 0; /* Pegado a la tabla */
+            margin-bottom: 0; 
         }
 
-        /* --- TABLAS DE DETALLE (GRILLA) --- */
+        /* --- TABLAS --- */
         .details-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 5px;
         }
         .details-table td, .details-table th {
-            border: 1px solid #e5e7eb; /* Bordes grises suaves */
+            border: 1px solid #e5e7eb; 
             padding: 6px 8px;
             vertical-align: middle;
         }
-        
-        /* Celdas de "Etiqueta" (Izquierda) */
         .label-cell {
             background-color: #ffffff;
             font-weight: bold;
-            color: #374151; /* Gris oscuro */
-            width: 25%; /* Ancho fijo para etiquetas */
+            color: #374151; 
+            width: 25%; 
         }
-
-        /* Celdas de "Valor" (Derecha) */
         .value-cell {
             color: #000;
         }
 
-        /* --- TABLA DE INVENTARIO (LISTA) --- */
+        /* --- INVENTARIO --- */
         .inventory-table {
             width: 100%;
             border-collapse: collapse;
@@ -94,7 +90,7 @@
             font-size: 9px;
         }
 
-        /* --- GALERÍA DE FOTOS --- */
+        /* --- GALERÍA --- */
         .gallery { 
             width: 100%; 
             margin-top: 10px; 
@@ -120,7 +116,6 @@
             width: 100%;
             text-align: center;
         }
-
         .signature-frame {
             width: 350px;
             height: 160px;
@@ -130,7 +125,6 @@
             position: relative;
             background-color: #fff;
         }
-
         .signature-box {
             position: absolute;
             bottom: 15px;
@@ -146,7 +140,9 @@
 </head>
 <body>
 
-    {{-- ENCABEZADO GENERAL --}}
+    {{-- INICIALIZAR CONTADOR --}}
+    @php $i = 1; @endphp
+
     <div class="main-header">
         <h1>MODULO 07 - CONSULTA EXTERNA: Psicología</h1>
         <p>
@@ -156,8 +152,8 @@
         </p>
     </div>
 
-    {{-- 1. DETALLES DEL CONSULTORIO --}}
-    <div class="section-header">1. DETALLES DEL CONSULTORIO</div>
+    {{-- 1. DETALLES --}}
+    <div class="section-header">{{ $i++ }}. DETALLES DEL CONSULTORIO</div>
     <table class="details-table">
         <tr>
             <td class="label-cell">CANTIDAD CONSULTORIOS:</td>
@@ -171,16 +167,10 @@
             <td class="label-cell">TURNO:</td> 
             <td class="value-cell" colspan="3">{{ $dbInicioLabores->turno ?? '-' }}</td> 
         </tr>
-        {{-- <tr>
-            <td class="label-cell">FECHA DE MONITOREO:</td> 
-            <td class="value-cell" colspan="3">
-                {{ $dbInicioLabores->fecha_registro ? \Carbon\Carbon::parse($dbInicioLabores->fecha_registro)->format('d/m/Y') : '-' }}
-            </td> 
-        </tr> --}}
     </table>
 
-    {{-- 2. DATOS DEL PROFESIONAL --}}
-    <div class="section-header">2. DATOS DEL PROFESIONAL</div>
+    {{-- 2. PROFESIONAL --}}
+    <div class="section-header">{{ $i++ }}. DATOS DEL PROFESIONAL</div>
     @php 
         $prof = $dbCapacitacion->profesional ?? null; 
     @endphp
@@ -214,49 +204,46 @@
         <tr>
             <td class="label-cell" colspan="2"></td>
             <td class="label-cell">¿UTILIZA SIHCE?</td>
-            <td class="value-cell">
-                 @if(isset($dbInicioLabores) && (str_contains(strtoupper($dbInicioLabores->fua), 'SIHCE') || str_contains(strtoupper($dbInicioLabores->receta), 'SIHCE')))
-                    SI
-                 @else
-                    NO
-                 @endif
-            </td>
+            <td class="value-cell">{{ $dbInicioLabores->utiliza_sihce ?? '-' }}</td>
         </tr>
     </table>
 
-    {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
-    <div class="section-header">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
-    <table class="details-table">
-        <tr>
-            <td class="label-cell">TIPO DNI:</td>
-            <td class="value-cell">{{ str_replace('_', ' ', $dbDni->tip_dni ?? '-') }}</td>
-            <td class="label-cell">VERSIÓN DNIe:</td>
-            <td class="value-cell">{{ $dbDni->version_dni ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">¿REALIZA FIRMA EN SIHCE?</td>
-            <td class="value-cell" colspan="3">{{ $dbDni->firma_sihce ?? 'NO' }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">OBSERVACIONES DNI:</td>
-            <td class="value-cell" colspan="3">{{ $dbDni->comentarios ?? '-' }}</td>
-        </tr>
-    </table>
+    {{-- 3. DNI (CONDICIONAL) --}}
+    @if(isset($prof->tipo_doc) && $prof->tipo_doc === 'DNI')
+        <div class="section-header">{{ $i++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
+        <table class="details-table">
+            <tr>
+                <td class="label-cell">TIPO DNI:</td>
+                <td class="value-cell">{{ str_replace('_', ' ', $dbDni->tip_dni ?? '-') }}</td>
+                <td class="label-cell">VERSIÓN DNIe:</td>
+                <td class="value-cell">{{ $dbDni->version_dni ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label-cell">¿REALIZA FIRMA EN SIHCE?</td>
+                <td class="value-cell" colspan="3">{{ $dbDni->firma_sihce ?? 'NO' }}</td>
+            </tr>
+            <tr>
+                <td class="label-cell">OBSERVACIONES DNI:</td>
+                <td class="value-cell" colspan="3">{{ $dbDni->comentarios ?? '-' }}</td>
+            </tr>
+        </table>
+    @endif
 
-    {{-- 4. DETALLES DE CAPACITACIÓN --}}
-    <div class="section-header">4. DETALLES DE CAPACITACIÓN</div>
-    <table class="details-table">
-        <tr>
-            <td class="label-cell">¿RECIBIÓ CAPACITACIÓN?</td>
-            <td class="value-cell">{{ $dbCapacitacion->recibieron_cap ?? '-' }}</td>
-            <td class="label-cell">ENTIDAD CAPACITADORA:</td>
-            <td class="value-cell">{{ $dbCapacitacion->institucion_cap ?? 'N/A' }}</td>
-        </tr>
-    </table>
+    {{-- 4. CAPACITACIÓN (CONDICIONAL) --}}
+    @if(isset($dbInicioLabores->utiliza_sihce) && $dbInicioLabores->utiliza_sihce === 'SI')
+        <div class="section-header">{{ $i++ }}. DETALLES DE CAPACITACIÓN</div>
+        <table class="details-table">
+            <tr>
+                <td class="label-cell">¿RECIBIÓ CAPACITACIÓN?</td>
+                <td class="value-cell">{{ $dbCapacitacion->recibieron_cap ?? '-' }}</td>
+                <td class="label-cell">ENTIDAD CAPACITADORA:</td>
+                <td class="value-cell">{{ $dbCapacitacion->institucion_cap ?? 'N/A' }}</td>
+            </tr>
+        </table>
+    @endif
 
-    {{-- 5. MATERIALES (INICIO DE LABORES) --}}
-    {{-- CAMBIO: Solo mostramos TIPO FUA y REFERENCIA, eliminando Receta y Orden Lab --}}
-    <div class="section-header">5. MATERIALES (INICIO DE LABORES)</div>
+    {{-- 5. MATERIALES --}}
+    <div class="section-header">{{ $i++ }}. MATERIALES (INICIO DE LABORES)</div>
     <table class="details-table">
         <tr>
             <td class="label-cell">TIPO FUA:</td>
@@ -266,8 +253,8 @@
         </tr>
     </table>
 
-    {{-- 6. EQUIPAMIENTO DEL CONSULTORIO --}}
-    <div class="section-header">6. EQUIPAMIENTO DEL CONSULTORIO</div>
+    {{-- 6. EQUIPAMIENTO --}}
+    <div class="section-header">{{ $i++ }}. EQUIPAMIENTO DEL CONSULTORIO</div>
     <table class="inventory-table">
         <thead>
             <tr>
@@ -297,19 +284,21 @@
         </tbody>
     </table>
 
-    {{-- 7. SOPORTE --}}
-    <div class="section-header">7. SOPORTE</div>
-    <table class="details-table">
-        <tr>
-            <td class="label-cell">INSTITUCIÓN QUE COORDINA:</td>
-            <td class="value-cell">{{ $dbDificultad->insti_comunica ?? '-' }}</td>
-            <td class="label-cell">MEDIO DE COMUNICACIÓN:</td>
-            <td class="value-cell">{{ $dbDificultad->medio_comunica ?? '-' }}</td>
-        </tr>
-    </table>
+    {{-- 7. SOPORTE (CONDICIONAL) --}}
+    @if(isset($dbInicioLabores->utiliza_sihce) && $dbInicioLabores->utiliza_sihce === 'SI')
+        <div class="section-header">{{ $i++ }}. SOPORTE</div>
+        <table class="details-table">
+            <tr>
+                <td class="label-cell">INSTITUCIÓN QUE COORDINA:</td>
+                <td class="value-cell">{{ $dbDificultad->insti_comunica ?? '-' }}</td>
+                <td class="label-cell">MEDIO DE COMUNICACIÓN:</td>
+                <td class="value-cell">{{ $dbDificultad->medio_comunica ?? '-' }}</td>
+            </tr>
+        </table>
+    @endif
 
-    {{-- 8. COMENTARIOS GENERALES --}}
-    <div class="section-header">8. COMENTARIOS GENERALES</div>
+    {{-- 8. COMENTARIOS --}}
+    <div class="section-header">{{ $i++ }}. COMENTARIOS GENERALES</div>
     <table class="details-table">
         <tr>
             <td style="padding: 10px; height: 40px; vertical-align: top;">
@@ -318,8 +307,8 @@
         </tr>
     </table>
 
-    {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
-    <div class="section-header">9. EVIDENCIA FOTOGRÁFICA</div>
+    {{-- 9. FOTOS --}}
+    <div class="section-header">{{ $i++ }}. EVIDENCIA FOTOGRÁFICA</div>
     <div class="gallery">
         @forelse($dbFotos as $foto)
             <div class="photo-box">
@@ -330,15 +319,15 @@
         @endforelse
     </div>
 
-    {{-- 10. FIRMA (CONSULTA EXTERNA) --}}
-    <div class="section-header">10. FIRMA (CONSULTA EXTERNA)</div>
+    {{-- 10. FIRMA --}}
+    <div class="section-header">{{ $i++ }}. FIRMA </div>
     
     <div class="signature-section">
         <div class="signature-frame">
             <div class="signature-box">
                 @if($prof)
                     <div style="font-weight: bold; font-size: 11px; color: #1e293b;">
-                        {{ $prof->apellido_paterno }} {{ $prof->apellido_materno }}, {{ $prof->nombres }}
+                        {{ $prof->apellido_paterno }} {{ $prof->apellido_materno }} {{ $prof->nombres }}
                     </div>                
                     <div style="font-size: 10px; color: #64748b; margin-top: 1px;">
                         {{ $prof->tipo_doc }}: {{ $prof->doc }}
@@ -351,7 +340,7 @@
         </div>
     </div>
 
-    {{-- SCRIPT PIE DE PÁGINA --}}
+    {{-- SCRIPT --}}
     <script type="text/php">
         if (isset($pdf)) {
             $y = $pdf->get_height() - 30;

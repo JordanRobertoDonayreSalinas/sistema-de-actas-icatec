@@ -138,16 +138,18 @@ class TriajeController extends Controller
 
             // 5. INICIO LABORES (Tabla SQL)
             $datosInicio = $data['inicio_labores'] ?? [];
+            $datosProfesionalParaSihce = $data['profesional'] ?? [];
             ComDocuAsisten::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => 'triaje'],
                 [
                     'profesional_id'    => $profesional->id,
                     // Usamos ?? null para evitar el error "cannot be null" si falta el dato
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
-                    'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
+                    'nombre_consultorio'=> str($datosInicio['nombre_consultorio'])->upper() ?? null,
                     'turno'             => $datosInicio['turno'] ?? null,
                     'fecha_registro'    => $datosInicio['fecha_registro'] ?? null,
                     'comentarios'       => isset($datosInicio['comentarios']) ? str($datosInicio['comentarios'])->upper() : null,
+                    'utiliza_sihce'     => $datosProfesionalParaSihce['utiliza_sihce'] ?? null,
                     
                     // Estos campos no existen en el form de Triaje, enviamos null o defaults
                     'fua'               => null,
@@ -159,7 +161,7 @@ class TriajeController extends Controller
 
             // 6. SECCIÓN DNI (Tabla SQL - CORREGIDO)
             $datosDni = $data['seccion_dni'] ?? [];     
-            $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO';
+            $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'ELECTRONICO';
             
             // Usamos 'triaje' en lugar de self::MODULO_ID si no está definido
             ComDni::updateOrCreate(

@@ -92,72 +92,45 @@
     }"
         @abrir-modal-nuevo.window="openModal = true; docNuevo = $event.detail.doc">
         
-        <div class="max-w-5xl mx-auto px-4">
-            @if(session('success'))
-                <div class="mb-6 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-xl shadow-sm">
-                    <p class="text-emerald-800 font-bold uppercase text-xs tracking-widest">{{ session('success') }}</p>
-                </div>
-            @endif
-
-            <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}" class="inline-flex items-center gap-2 text-slate-400 font-bold text-[11px] uppercase tracking-widest mb-6 hover:text-indigo-600 transition-all group">
-                <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
-                Panel de Módulos
-            </a>
-
-            <div class="bg-white border border-slate-200 rounded-[3rem] shadow-xl overflow-hidden">
-                <div class="bg-slate-900 p-10 text-white relative overflow-hidden">
-                    {{-- Decoración de fondo mejorada --}}
-                    <div class="absolute top-0 right-0 p-10 opacity-[0.03] rotate-12">
-                        <i data-lucide="baby" class="w-64 h-64"></i>
+        <div class="py-12 bg-slate-50 min-h-screen">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                
+                {{-- ENCABEZADO SUPERIOR ACTUALIZADO --}}
+                <div class="mb-10 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            {{-- Badge en Azul (Indigo 600) --}}
+                            <span class="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest shadow-sm shadow-indigo-200">
+                                Módulo 08
+                            </span>
+                            <span class="text-slate-400 font-bold text-[10px] uppercase tracking-tighter">
+                                ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}
+                            </span>
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">
+                            CRED
+                        </h2>
+                        <p class="text-slate-500 font-bold uppercase text-[11px] mt-1 tracking-widest flex items-center gap-2">
+                            <i data-lucide="hospital" class="w-4 h-4 text-indigo-500"></i> 
+                            {{ $acta->establecimiento->nombre ?? 'Establecimiento no asignado' }}
+                        </p>
                     </div>
 
-                    <div class="relative z-10 flex flex-col gap-8">
-                        {{-- Fila Superior: Título y Fecha --}}
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div class="flex items-center gap-5">
-                                <div class="h-16 w-16 rounded-3xl bg-emerald-500 flex items-center justify-center shadow-2xl shadow-emerald-500/40 border border-emerald-400/30">
-                                    <span class="text-3xl font-black italic text-emerald-950">08</span>
-                                </div>
-                                <div>
-                                    <h3 class="text-4xl font-black uppercase tracking-tighter italic leading-none">CRED</h3>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Crecimiento y Desarrollo</p>
-                                </div>
-                            </div>
-
-                            {{-- Widget de Fecha --}}
-                            <div class="flex items-center gap-4 bg-white/5 backdrop-blur-md px-5 py-3 rounded-3xl border border-white/10 shadow-xl">
-                                <div class="p-2 bg-indigo-500/20 rounded-xl">
-                                    <i data-lucide="calendar" class="w-5 h-5 text-indigo-400"></i>
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-[9px] font-black text-indigo-300 uppercase tracking-widest leading-none mb-1">Fecha Monitoreo</label>
-                                    <input type="date" name="fecha_monitoreo" id="fecha_monitoreo" form="form-cred-store"
-                                        value="{{ old('fecha_monitoreo', \Carbon\Carbon::parse($fechaParaVista)->format('Y-m-d')) }}"
-                                        class="bg-transparent text-white border-none p-0 focus:ring-0 font-bold text-lg cursor-pointer [color-scheme:dark]">
-                                </div>
-                            </div>
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        {{-- Selector de Fecha integrado --}}
+                        <div class="flex items-center gap-3 px-4 py-2 bg-white border-2 border-slate-100 rounded-2xl shadow-sm">
+                            <i data-lucide="calendar" class="w-4 h-4 text-indigo-500"></i>
+                            <input type="date" name="fecha_monitoreo" form="form-cred-store"
+                                value="{{ old('fecha_monitoreo', \Carbon\Carbon::parse($fechaParaVista)->format('Y-m-d')) }}"
+                                class="border-none p-0 text-xs font-black text-slate-600 focus:ring-0 cursor-pointer uppercase">
                         </div>
 
-                        {{-- Fila Inferior: Info del Acta y Establecimiento --}}
-                        <div class="flex flex-wrap gap-4">
-                            {{-- Badge: ID Acta --}}
-                            <div class="flex items-center gap-3 bg-indigo-600 px-4 py-2 rounded-2xl shadow-lg shadow-indigo-900/20 border border-indigo-400/30">
-                                <i data-lucide="hash" class="w-4 h-4 text-indigo-200"></i>
-                                <div class="flex flex-col">
-                                    <span class="text-[8px] font-black text-indigo-200 uppercase leading-none">ID Acta</span>
-                                    <span class="text-sm font-black font-mono">#{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
-                                </div>
-                            </div>
-
-                            {{-- Badge: Establecimiento --}}
-                            <div class="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-lg">
-                                <i data-lucide="hospital" class="w-4 h-4 text-slate-400"></i>
-                                <div class="flex flex-col">
-                                    <span class="text-[8px] font-black text-slate-500 uppercase leading-none">Establecimiento</span>
-                                    <span class="text-sm font-black uppercase tracking-tight">{{ $acta->establecimiento->nombre ?? 'No asignado' }}</span>
-                                </div>
-                            </div>
-                        </div>
+                        {{-- Botón Volver --}}
+                        <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}" 
+                        class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-100 hover:border-slate-300 transition-all uppercase shadow-sm group">
+                            <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i> 
+                            Volver al Panel
+                        </a>
                     </div>
                 </div>
 
@@ -187,9 +160,13 @@
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
                                         <i data-lucide="layers" class="w-3 h-3 text-indigo-600"></i> Cantidad
                                     </label>
-                                    <input type="number" name="contenido[consultorio][cantidad]" 
-                                        value="{{ $detalle->contenido['consultorio']['cantidad'] ?? '' }}" 
-                                        placeholder="0" class="input-standard">
+                                    <input type="number" 
+                                    name="contenido[consultorio][cantidad]" 
+                                    value="{{ $detalle->contenido['consultorio']['cantidad'] ?? '' }}" 
+                                    placeholder="0" 
+                                    min="0" {{-- Bloquea las flechitas del navegador --}}
+                                    oninput="if(this.value < 0) this.value = 0;" {{-- Corrección inmediata si escriben manualmente -1 --}}
+                                    class="input-standard">
                                 </div>
 
                                 {{-- Consultorio Entrevistado --}}
@@ -212,7 +189,6 @@
                                         <option value="TARDE" {{ ($detalle->contenido['consultorio']['turno'] ?? '') == 'TARDE' ? 'selected' : '' }}>TARDE</option>
                                     </select>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -281,14 +257,6 @@
                                     <div class="md:col-span-3 space-y-2">
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Correo Electrónico</label>
                                         <input type="email" name="contenido[personal][email]" id="email" value="{{ $detalle->contenido['personal']['email'] ?? '' }}" class="input-standard w-full">
-                                    </div>
-                                     <div class="md:col-span-2 space-y-2">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 text-center block">Turno</label>
-                                        <select name="contenido[personal][turno]" class="input-standard w-full text-center uppercase font-bold text-indigo-600">
-                                            <option value="">-- SELEC. --</option>
-                                            <option value="MAÑANA" {{ ($detalle->contenido['personal']['turno'] ?? '') == 'MAÑANA' ? 'selected' : '' }}>MAÑANA</option>
-                                            <option value="TARDE" {{ ($detalle->contenido['personal']['turno'] ?? '') == 'TARDE' ? 'selected' : '' }}>TARDE</option>
-                                        </select>
                                     </div>
                                     {{-- Profesión con ancho dinámico --}}
                                     <div :class="profesion === 'OTROS' ? 'md:col-span-2' : 'md:col-span-5'" class="space-y-2 transition-all duration-300">

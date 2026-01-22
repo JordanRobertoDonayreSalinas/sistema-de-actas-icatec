@@ -210,12 +210,7 @@
                 {{ mb_strtoupper($profesion, 'UTF-8') }}
             </td>
         </tr>
-
-        <tr>
-            <th>Turno:</th>
-            <td class="uppercase">{{ $detalle->personal_turno ?? 'N/A' }}</td>
-        </tr>
-
+        
         <tr>
             <th>¿Firmó Declaración Jurada?:</th>
             <td>{{ $datos['documentacion']['firma_dj'] ?? 'NO' }}</td>

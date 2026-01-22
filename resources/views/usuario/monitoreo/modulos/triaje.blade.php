@@ -33,19 +33,52 @@
             <x-documentos model="form.inicio_labores" />
             
             {{-- 2. SECCION DATOS DEL PROFESIONAL --}}
-            <x-seleccion-profesional model="form.profesional" />
+            <x-seleccion-profesional model="form.profesional" capacitacion="form.capacitacion" />
 
-            {{-- 3. SECCION: CAPACITACIÓN --}}
-            <x-capacitacion model="form.capacitacion" />
+            {{-- 3. SECCIÓN DNI (CONDICIONAL: Solo si Tipo Doc es DNI) --}}
+            <div x-show="form.profesional.tipo_doc === 'DNI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dni model="form.seccion_dni" />
+                
+            </div>
 
-            {{-- 4. SECCION: INVENTARIO DE EQUIPAMIENTO --}}
+            {{-- 4. SECCION: CAPACITACIÓN (CONDICIONAL) --}}
+            {{-- Solo se muestra si utiliza_sihce es 'SI' --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                
+                <x-capacitacion model="form.capacitacion" />
+                
+            </div>
+
+            {{-- 5. INVENTARIO --}}
             <x-equipamiento model="form.inventario" />
                   
-            {{-- 5. SECCION: DIFICULTADES CON EL SISTEMA --}}
-            <x-dificultad model="form.dificultades" />
-
-            {{-- 6. SECCIÓN DNI --}}
-            <x-dni model="form.seccion_dni" />
+            
+            {{-- 6. SECCION: DIFICULTADES CON EL SISTEMA (CONDICIONAL) --}}
+            {{-- Solo se muestra si utiliza_sihce es 'SI' --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dificultad model="form.dificultades" />
+                
+            </div>
 
             {{-- 7. NUEVA SECCIÓN: COMENTARIOS GENERALES (HTML Directo) --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
@@ -56,7 +89,7 @@
                         <i data-lucide="message-square-plus" class="text-white w-6 h-6"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Comentarios Generales</h3>
+                        <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Comentarios</h3>
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Observaciones Adicionales</p>
                     </div>
                 </div>
@@ -99,7 +132,13 @@
 
         // --- 2. INICIALIZACIÓN ---
         
-        let initProfesional = { tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', cargo: '', telefono: '' };
+        // A) Profesional: Agregamos 'utiliza_sihce' aquí para el componente visual
+        let initProfesional = { 
+            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', 
+            email: '', cargo: '', telefono: '', 
+            utiliza_sihce: '' // <--- NUEVO CAMPO VISUAL
+        };
+
         let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: '' };
 
         if (dbCapacitacion) {
@@ -109,49 +148,14 @@
             initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
             
             if (dbCapacitacion.profesional) {
-                initProfesional = { ...dbCapacitacion.profesional };
+                // Copiamos los datos del profesional
+                initProfesional = { ...initProfesional, ...dbCapacitacion.profesional };
             }
         }
 
-        let initInventario = [];
-        if (dbInventario && dbInventario.length > 0) {
-            initInventario = dbInventario.map(item => {
-                let fullCode = item.nro_serie || '';
-                let tipoDetectado = 'NS'; 
-                let codigoLimpio = fullCode;
-                if (fullCode.includes(' ')) {
-                    let partes = fullCode.split(' ');
-                    if (partes.length > 0 && ['NS', 'CB', 'S/C'].includes(partes[0])) {
-                        tipoDetectado = partes[0];
-                        codigoLimpio = partes.slice(1).join(' '); 
-                    }
-                }
-                return {
-                    id: Date.now() + Math.random(),
-                    descripcion: item.descripcion,
-                    propiedad: item.propio,
-                    estado: item.estado,
-                    tipo_codigo: tipoDetectado, 
-                    codigo: codigoLimpio,
-                    observacion: item.observacion
-                };
-            });
-        }
-
-        let initDificultades = { institucion: '', medio: '' };
-        if (dbDificultad) {
-            initDificultades.institucion = dbDificultad.insti_comunica || '';
-            initDificultades.medio = dbDificultad.medio_comunica || '';
-        }
-
-        // --- MODIFICADO: Agregamos comentarios ---
-        // 'inicio_labores' mapea a la tabla 'com_docu_asisten'
+        // B) Inicio Labores (Aquí está el dato real en BD)
         let initInicioLabores = { 
-            fecha_registro: '',
-            consultorios: '', 
-            nombre_consultorio: '', 
-            turno: '',
-            comentarios: '' // <--- NUEVO CAMPO
+            fecha_registro: '', consultorios: '', nombre_consultorio: '', turno: '', comentarios: '' 
         };
         
         if (dbInicioLabores) {
@@ -159,9 +163,67 @@
             initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
             initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
             initInicioLabores.turno = dbInicioLabores.turno || '';
-            initInicioLabores.comentarios = dbInicioLabores.comentarios || ''; // <--- CARGAR DE BD
+            initInicioLabores.comentarios = dbInicioLabores.comentarios || '';
+            
+            // *** CRUCIAL ***: Pasamos el dato de la tabla inicio_labores al objeto visual del profesional
+            initProfesional.utiliza_sihce = dbInicioLabores.utiliza_sihce || ''; 
         }
 
+        // C) Inventario
+        let initInventario = [];
+        if (dbInventario && dbInventario.length > 0) {
+            initInventario = dbInventario.map(item => {
+                let fullCode = item.nro_serie || '';
+                
+                // Valores por defecto
+                let tipoDetectado = 'S'; 
+                let codigoLimpio = fullCode;
+
+                // Lógica mejorada para separar el Prefijo del Código
+                // Buscamos si empieza con "S " o "CP " (o los antiguos NS, CB, S/C)
+                const prefijosPosibles = ['S', 'CP', 'NS', 'CB', 'S/C'];
+                
+                for (let prefijo of prefijosPosibles) {
+                    // Verificamos si la cadena comienza con el prefijo + espacio
+                    if (fullCode.startsWith(prefijo + ' ')) {
+                        tipoDetectado = prefijo;
+                        // Cortamos el prefijo y el espacio para dejar solo el número
+                        codigoLimpio = fullCode.substring(prefijo.length + 1);
+                        break; 
+                    }
+                }
+
+                // CORRECCIÓN VISUAL: Si la BD tiene un tipo antiguo (NS, CB, etc)
+                // forzamos a que el selector muestre 'S' o 'CP' para que no quede en blanco.
+                if (tipoDetectado !== 'S' && tipoDetectado !== 'CP') {
+                    tipoDetectado = 'S'; // Por defecto S si no se reconoce
+                }
+
+                // CORRECCIÓN DE SEGURIDAD: 
+                // Si por algún error de guardado anterior el código limpio aún tiene el prefijo (ej: "S 456"), lo limpiamos de nuevo.
+                if (codigoLimpio.startsWith('S ')) codigoLimpio = codigoLimpio.substring(2);
+                if (codigoLimpio.startsWith('CP ')) codigoLimpio = codigoLimpio.substring(3);
+
+                return {
+                    id: Date.now() + Math.random(),
+                    descripcion: item.descripcion,
+                    propiedad: item.propio,       
+                    estado: item.estado,
+                    tipo_codigo: tipoDetectado, 
+                    codigo: codigoLimpio,       
+                    observacion: item.observacion
+                };
+            });
+        }
+
+        // D) Dificultades
+        let initDificultades = { institucion: '', medio: '' };
+        if (dbDificultad) {
+            initDificultades.institucion = dbDificultad.insti_comunica || '';
+            initDificultades.medio = dbDificultad.medio_comunica || '';
+        }
+
+        // E) DNI
         let initDni = { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' };
         if (dbDni) {
             initDni.tipo_dni = dbDni.tip_dni || ''; 
@@ -179,7 +241,7 @@
                 capacitacion: initCapacitacion,
                 inventario: initInventario,
                 dificultades: initDificultades,
-                inicio_labores: initInicioLabores, // Contiene fecha, consultorios y AHORA comentarios
+                inicio_labores: initInicioLabores,
                 seccion_dni: initDni
             },
             guardarTodo() {

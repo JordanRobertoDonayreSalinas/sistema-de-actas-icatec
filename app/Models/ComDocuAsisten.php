@@ -27,6 +27,7 @@ class ComDocuAsisten extends Model
         'receta',
         'orden_laboratorio',
         'comentarios',
+        'utiliza_sihce',
     ];
 
     public function acta()

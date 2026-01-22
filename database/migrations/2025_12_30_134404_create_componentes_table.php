@@ -66,7 +66,7 @@ return new class extends Migration
             
             $table->foreignId('profesional_id')->constrained('mon_profesionales');
 
-            $table->string('url_foto')->nullable();;
+            $table->string('url_foto')->nullable();
             $table->timestamps();
         });
 
@@ -87,6 +87,7 @@ return new class extends Migration
             $table->string('receta')->nullable(); // Opciones: RECETA POR SIHCE, RECETA MANUAL
             $table->string('orden_laboratorio')->nullable(); // Opciones: ORDEN POR SIHCE / ORDEN MANUAL
             $table->text('comentarios')->nullable();
+            $table->string('utiliza_sihce'); // Opciones: SI, NO, esta campo se utiliza el componente profesional
             $table->timestamps();
         });
 
