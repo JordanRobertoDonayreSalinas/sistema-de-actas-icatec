@@ -1,12 +1,13 @@
-@props(['model'])
+@props(['model', 'capacitacion'])
 
-<div x-data="seleccionProfesional({{ $model }})" 
+<div x-data="seleccionProfesional({{ $model }}, {{ $capacitacion }})" 
      x-init="initComponent()"
      class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
     
     <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-60 pointer-events-none"></div>
     
     <div class="relative z-10">
+        {{-- Encabezado --}}
         <div class="flex items-center gap-4 mb-8">
             <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                 <i data-lucide="user-cog" class="text-white w-6 h-6"></i>
@@ -59,7 +60,6 @@
                 
             {{-- Fila 3: Datos de Contacto y Cargo --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {{-- Profesión --}}
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Profesión / Cargo</label>
                     <div class="flex flex-col gap-2">
@@ -75,19 +75,17 @@
                         </div>
                     </div>
                 </div>
-                {{-- Email --}}
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Email</label>
                     <input type="email" x-model="entidad.email" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-medium lowercase">
                 </div>
-                {{-- Teléfono --}}
                 <div>
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Teléfono</label>
                     <input type="text" x-model="entidad.telefono" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold">
                 </div>
             </div>
 
-            {{-- Fila 4 (NUEVA): UTILIZA SIHCE --}}
+            {{-- Fila 4: UTILIZA SIHCE --}}
             <div class="mt-2 pt-4 border-t border-slate-100">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿El profesional utiliza SIHCE?</label>
                 <div class="flex gap-4">
@@ -102,13 +100,57 @@
                 </div>
             </div>
 
+            {{-- BLOQUE MOVIDO: FIRMAS (Solo si SIHCE = SI) --}}
+            <div x-show="entidad.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="mt-4 pt-4 border-t border-dashed border-slate-200">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- Declaración Jurada (ESTILO NEUTRO RESTAURADO) --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">¿Firmó Declaración Jurada?</label>
+                        <div class="flex gap-4">
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" value="SI" x-model="cap.decl_jurada" class="peer sr-only">
+                                {{-- Estilo índigo/azul para el SÍ --}}
+                                <div class="text-center py-2 rounded-lg border-2 border-slate-200 bg-white text-slate-500 font-bold text-[10px] peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-slate-50 transition-all">SÍ</div>
+                            </label>
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" value="NO" x-model="cap.decl_jurada" class="peer sr-only">
+                                {{-- Estilo gris para el NO --}}
+                                <div class="text-center py-2 rounded-lg border-2 border-slate-200 bg-white text-slate-500 font-bold text-[10px] peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-400 hover:bg-slate-50 transition-all">NO</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Confidencialidad (ESTILO NEUTRO RESTAURADO) --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">¿Firmó Confidencialidad?</label>
+                        <div class="flex gap-4">
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" value="SI" x-model="cap.comp_confidencialidad" class="peer sr-only">
+                                <div class="text-center py-2 rounded-lg border-2 border-slate-200 bg-white text-slate-500 font-bold text-[10px] peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-slate-50 transition-all">SÍ</div>
+                            </label>
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" value="NO" x-model="cap.comp_confidencialidad" class="peer sr-only">
+                                <div class="text-center py-2 rounded-lg border-2 border-slate-200 bg-white text-slate-500 font-bold text-[10px] peer-checked:bg-slate-100 peer-checked:text-slate-600 peer-checked:border-slate-400 hover:bg-slate-50 transition-all">NO</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('seleccionProfesional', (entidadVinculada) => ({
-                entidad: entidadVinculada,
+            Alpine.data('seleccionProfesional', (profesionalData, capacitacionData) => ({
+                entidad: profesionalData,
+                cap: capacitacionData,
+                
                 buscando: false,
                 msgEstado: '',
                 encontrado: false,

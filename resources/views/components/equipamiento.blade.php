@@ -1,28 +1,21 @@
 @props(['model'])
 
-{{-- 
-    Uso: <x-equipamiento model="form.inventario" />
-    'model' es la referencia al array de inventario en el objeto padre.
---}}
-
 <div x-data="equipamientoComponent({{ $model }})" 
      class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
     
-    {{-- Decoración de fondo --}}
+    {{-- (El HTML del encabezado sigue igual...) --}}
     <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
-    
-    {{-- Encabezado --}}
     <div class="flex items-center gap-4 mb-8 relative z-10">
         <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
             <i data-lucide="monitor" class="text-white w-6 h-6"></i>
         </div>
         <div>
-            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Inventario de Equipamiento</h3>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">EQUIPAMIENTO DEL CONSULTORIO</h3>
             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Registro de Activos Fijos</p>
         </div>
     </div>
 
-    {{-- BARRA DE AGREGAR --}}
+    {{-- (Barra de Agregar sigue igual...) --}}
     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6 flex flex-col md:flex-row gap-4 items-end md:items-center relative z-10">
         <div class="flex-1 w-full">
             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Seleccionar Equipo</label>
@@ -92,7 +85,7 @@
                             </select>
                         </td>
 
-                        {{-- Nro Serie / Codigo --}}
+                        {{-- Nro Serie / Codigo (CORREGIDO PARA MOSTRAR SIEMPRE S o CP) --}}
                         <td class="py-3 px-2 align-middle">
                             <div class="flex items-center group/input">
                                 <div class="relative">
@@ -134,10 +127,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('equipamientoComponent', (inventarioRef) => ({
-                // Vinculamos el array del padre por referencia
                 items: inventarioRef,
-                
-                // Variables locales del componente
                 itemSeleccionado: '',
                 listaOpciones: [
                     'MONITOR', 'CPU', 'TECLADO', 'MOUSE', 'IMPRESORA', 
@@ -148,18 +138,17 @@
                 agregarItem() {
                     if (!this.itemSeleccionado) return;
                     
-                    // Modificamos directamente el array vinculado (referencia)
                     this.items.push({
-                        id: Date.now() + Math.random(), // ID único temporal
+                        id: Date.now() + Math.random(),
                         descripcion: this.itemSeleccionado,
-                        propiedad: 'ESTABLECIMIENTO',
-                        estado: 'OPERATIVO', 
-                        tipo_codigo: 'NS', 
+                        propiedad: 'COMPARTIDO', // Agregado valor por defecto
+                        estado: 'OPERATIVO',     // Agregado valor por defecto
+                        tipo_codigo: 'S',        // CORREGIDO: Inicializar en 'S' en vez de vacío
                         codigo: '', 
                         observacion: ''
                     });
                     
-                    this.itemSeleccionado = ''; // Resetear selector
+                    this.itemSeleccionado = ''; 
                 },
 
                 eliminarItem(index) {

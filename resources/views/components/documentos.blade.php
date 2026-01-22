@@ -23,7 +23,7 @@
             <i data-lucide="clipboard-list" class="text-white w-6 h-6"></i>
         </div>
         <div>
-            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Inicio Labores</h3>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">DETALLES DEL CONSULTORIO</h3>
             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configuración Inicial</p>
         </div>
     </div>

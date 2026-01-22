@@ -16,7 +16,7 @@
             <i data-lucide="id-card" class="text-white w-6 h-6"></i>
         </div>
         <div>
-            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Sección DNI</h3>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">DETALLE DE DNI Y FIRMA DIGITAL</h3>
             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configuración de Identidad Digital</p>
         </div>
     </div>
