@@ -27,22 +27,22 @@
             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Tipo de DNI</label>
             <div class="flex flex-col md:flex-row gap-4">
                 <label class="cursor-pointer flex-1 relative">
-                    <input type="radio" value="DNI_ELECTRONICO" x-model="entidad.tipo_dni" class="peer sr-only">
+                    <input type="radio" value="ELECTRONICO" x-model="entidad.tipo_dni" class="peer sr-only">
                     <div class="text-center py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-white shadow-sm hover:shadow-md">
-                        DNI Electrónico
+                        ELECTRONICO
                     </div>
                 </label>
                 <label class="cursor-pointer flex-1 relative">
-                    <input type="radio" value="DNI_AZUL" x-model="entidad.tipo_dni" class="peer sr-only">
+                    <input type="radio" value="AZUL" x-model="entidad.tipo_dni" class="peer sr-only">
                     <div class="text-center py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-slate-400 font-bold text-xs uppercase transition-all peer-checked:bg-indigo-50 peer-checked:text-indigo-600 peer-checked:border-indigo-500 hover:bg-white shadow-sm hover:shadow-md">
-                        DNI Azul
+                        AZUL
                     </div>
                 </label>
             </div>
         </div>
 
         {{-- 2. BLOQUE CONDICIONAL (DNIe) --}}
-        <div x-show="entidad.tipo_dni === 'DNI_ELECTRONICO'" 
+        <div x-show="entidad.tipo_dni === 'ELECTRONICO'" 
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 -translate-y-2"
              x-transition:enter-end="opacity-100 translate-y-0"
@@ -52,9 +52,9 @@
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Versión DNIe</label>
                 <select x-model="entidad.version_dnie" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold uppercase text-sm focus:ring-indigo-500 cursor-pointer">
                     <option value="" selected disabled>Seleccione Versión...</option>
-                    <option value="v1">Versión 1.0</option>
-                    <option value="v2">Versión 2.0</option>
-                    <option value="v3">Versión 3.0</option>
+                    <option value="1.0">1.0</option>
+                    <option value="2.0">2.0</option>
+                    <option value="3.0">3.0</option>
                 </select>
             </div>
 

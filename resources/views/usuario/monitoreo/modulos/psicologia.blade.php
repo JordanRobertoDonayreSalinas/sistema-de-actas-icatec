@@ -37,29 +37,57 @@
         {{-- FORMULARIO --}}
         <form @submit.prevent="guardarTodo" class="space-y-8">
 
-            {{-- 1. SECCIÓN INICIO LABORES (Componente adaptado a Psicología) --}}
-            {{-- Muestra: Consultorios, Turno, FUA, Referencia. Oculta: Receta, Lab. --}}
+            {{-- 1. SECCIÓN INICIO LABORES --}}
             <x-documentos model="form.inicio_labores" tipo="psicologia" />
 
-            {{-- 2. DATOS DEL PROFESIONAL (Componente) --}}
+            {{-- 2. DATOS DEL PROFESIONAL --}}
             <x-seleccion-profesional model="form.profesional" />
 
-            {{-- 3. CAPACITACIÓN (Componente) --}}
-            <x-capacitacion model="form.capacitacion" />
+            {{-- 3. CAPACITACIÓN (CONDICIONAL: Solo si SIHCE = SI) --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-capacitacion model="form.capacitacion" />
+            </div>
 
-            {{-- 4. INVENTARIO DE EQUIPAMIENTO (Componente) --}}
+            {{-- 4. INVENTARIO DE EQUIPAMIENTO (Siempre visible) --}}
             <x-equipamiento model="form.inventario" />
 
-            {{-- 5. DIFICULTADES CON EL SISTEMA (Componente) --}}
-            <x-dificultad model="form.dificultades" />
+            {{-- 5. DIFICULTADES CON EL SISTEMA (CONDICIONAL: Solo si SIHCE = SI) --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dificultad model="form.dificultades" />
+            </div>
 
-            {{-- 6. SECCIÓN DNI (Componente) --}}
-            <x-dni model="form.seccion_dni" />
+            {{-- 6. SECCIÓN DNI (CONDICIONAL: Solo si Tipo Doc es DNI) --}}
+            <div x-show="form.profesional.tipo_doc === 'DNI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dni model="form.seccion_dni" />
+            </div>
 
-            {{-- 7. COMENTARIOS GENERALES (Bloque Nuevo) --}}
+            {{-- 7. MATERIALES (NUEVO COMPONENTE) --}}
+            <x-materiales model="form.inicio_labores" tipo="psicologia" />
+
+            {{-- 8. COMENTARIOS GENERALES --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
-                
                 <div class="flex items-center gap-4 mb-6 relative z-10">
                     <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <i data-lucide="message-square-plus" class="text-white w-6 h-6"></i>
@@ -69,18 +97,13 @@
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Observaciones Adicionales</p>
                     </div>
                 </div>
-
                 <div class="relative z-10">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Detalle de observaciones</label>
-                    <textarea 
-                        x-model="form.inicio_labores.comentarios" 
-                        rows="3" 
-                        placeholder="Ingrese cualquier observación general relevante sobre el servicio..." 
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-medium text-sm focus:ring-indigo-500 text-slate-700 uppercase"></textarea>
+                    <textarea x-model="form.inicio_labores.comentarios" rows="3" placeholder="Ingrese cualquier observación general relevante sobre el servicio..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-medium text-sm focus:ring-indigo-500 text-slate-700 uppercase"></textarea>
                 </div>
             </div>
 
-            {{-- 8. EVIDENCIA FOTOGRÁFICA (Componente) --}}
+            {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
             <x-fotos files="files" old-files="oldFiles" />
             
             {{-- BOTÓN GUARDAR --}}
@@ -105,8 +128,13 @@
         const dbInicioLabores = @json($dbInicioLabores ?? null);
         const dbDni           = @json($dbDni ?? null); 
 
-        // 1. Profesional y Capacitación
-        let initProfesional = { tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', cargo: '', telefono: '' };
+        // 1. Profesional & Capacitación
+        let initProfesional = { 
+            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', 
+            email: '', cargo: '', telefono: '',
+            utiliza_sihce: '' // <--- NUEVO CAMPO
+        };
+
         let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: ''};
 
         if (dbCapacitacion) {
@@ -115,21 +143,14 @@
             initCapacitacion.decl_jurada = dbCapacitacion.decl_jurada || ''; 
             initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
             if (dbCapacitacion.profesional) {
-                initProfesional = { ...dbCapacitacion.profesional };
+                initProfesional = { ...initProfesional, ...dbCapacitacion.profesional };
             }
         }
 
-        // 2. Inicio Labores (Incluye fecha y comentarios)
+        // 2. Inicio Labores (Aquí viene el valor real de utiliza_sihce de la BD)
         let initInicioLabores = { 
-            fecha_registro: '', 
-            consultorios: '', 
-            nombre_consultorio: '', 
-            turno: '', 
-            fua: '', 
-            referencia: '', 
-            receta: '',     // No se usa visualmente en psico, pero mantenemos la estructura
-            orden_lab: '',  // No se usa visualmente en psico
-            comentarios: '' 
+            fecha_registro: '', consultorios: '', nombre_consultorio: '', turno: '', 
+            fua: '', referencia: '', receta: '', orden_lab: '', comentarios: '' 
         };
         
         if (dbInicioLabores) {
@@ -139,11 +160,15 @@
             initInicioLabores.turno = dbInicioLabores.turno || '';
             initInicioLabores.fua = dbInicioLabores.fua || '';
             initInicioLabores.referencia = dbInicioLabores.referencia || '';
-            // Receta y Orden Lab pueden venir null, no importa
+            initInicioLabores.receta = dbInicioLabores.receta || ''; // Opcional en psico, pero bueno tenerlo
+            initInicioLabores.orden_lab = dbInicioLabores.orden_laboratorio || '';
             initInicioLabores.comentarios = dbInicioLabores.comentarios || '';
+            
+            // Asignar al objeto profesional para la lógica visual
+            initProfesional.utiliza_sihce = dbInicioLabores.utiliza_sihce || ''; 
         }
 
-        // 3. DNI
+        // 3. Sección DNI
         let initDni = { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' };
         if (dbDni) {
             initDni.tipo_dni = dbDni.tip_dni || '';

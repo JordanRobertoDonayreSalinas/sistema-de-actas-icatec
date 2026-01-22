@@ -171,13 +171,6 @@
             <td class="label-cell">TURNO:</td> 
             <td class="value-cell" colspan="3">{{ $dbInicioLabores->turno ?? '-' }}</td> 
         </tr>
-        {{-- Agregamos la fecha de registro aquí si deseas visualizarla también --}}
-        {{-- <tr>
-            <td class="label-cell">FECHA DE MONITOREO:</td> 
-            <td class="value-cell" colspan="3">
-                {{ $dbInicioLabores->fecha_registro ? \Carbon\Carbon::parse($dbInicioLabores->fecha_registro)->format('d/m/Y') : '-' }}
-            </td> 
-        </tr> --}}
     </table>
 
     {{-- 2. DATOS DEL PROFESIONAL --}}
@@ -216,13 +209,7 @@
         <tr>
             <td class="label-cell" colspan="2"></td>
             <td class="label-cell">¿UTILIZA SIHCE?</td>
-            <td class="value-cell">
-                 @if(isset($dbInicioLabores) && (str_contains(strtoupper($dbInicioLabores->fua), 'SIHCE') || str_contains(strtoupper($dbInicioLabores->receta), 'SIHCE')))
-                    SI
-                 @else
-                    NO
-                 @endif
-            </td>
+            <td class="value-cell">{{ $dbInicioLabores->utiliza_sihce ?? '-' }}</td>
         </tr>
     </table>
 
@@ -323,7 +310,7 @@
     </div>
 
     {{-- 9. FIRMA --}}
-    <div class="section-header">9. FIRMA (CONSULTA EXTERNA)</div>
+    <div class="section-header">9. FIRMA</div>
     
     <div class="signature-section">
         <div class="signature-frame">

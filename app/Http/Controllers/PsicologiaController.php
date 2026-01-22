@@ -42,7 +42,7 @@ class PsicologiaController extends Controller
         $dbDni = ComDni::where('acta_id', $id)
                     ->where('modulo_id', self::MODULO_ID)->first();
 
-        // --- Obtener fecha de actualización para mostrar en la vista ---
+        // Obtener fecha de actualización
         $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->where('modulo_nombre', 'consulta_psicologia')
                             ->first();
@@ -90,7 +90,6 @@ class PsicologiaController extends Controller
                     'apellido_materno' => $datosProfesional['apellido_materno'],
                     'nombres'          => $datosProfesional['nombres'],
                     'email'            => $datosProfesional['email'] ?? null,
-                    // Aseguramos mayúsculas y sin espacios
                     'cargo'            => isset($datosProfesional['cargo']) ? mb_strtoupper(trim($datosProfesional['cargo']), 'UTF-8') : null,
                     'telefono'         => $datosProfesional['telefono'] ?? null,
                 ]
@@ -141,31 +140,40 @@ class PsicologiaController extends Controller
                 ]
             );
 
-            // 5. INICIO LABORES / TABLAS AUXILIARES (AQUÍ ESTÁ EL CAMBIO)
+            // 5. INICIO LABORES / TABLAS AUXILIARES
             $datosInicio = $data['inicio_labores'] ?? [];
+            
+            // Recibimos 'utiliza_sihce' desde el objeto 'profesional' del request
+            $datosProfesionalParaSihce = $data['profesional'] ?? [];
+
+            // Valor por defecto 'NO' si viene vacío
+            $valorUtilizaSihce = isset($datosProfesionalParaSihce['utiliza_sihce']) && $datosProfesionalParaSihce['utiliza_sihce'] !== '' 
+                                 ? $datosProfesionalParaSihce['utiliza_sihce'] 
+                                 : 'NO';
+
             ComDocuAsisten::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
                 [
                     'profesional_id'    => $profesional->id,
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
-                    'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
+                    'nombre_consultorio'=> str($datosInicio['nombre_consultorio'])->upper() ?? null,
                     'turno'             => $datosInicio['turno'] ?? null,
-                    
-                    // --- NUEVOS CAMPOS ---
                     'fecha_registro'    => $datosInicio['fecha_registro'] ?? null,
                     'comentarios'       => isset($datosInicio['comentarios']) ? str($datosInicio['comentarios'])->upper() : null,
-                    // ---------------------
+                    
+                    // NUEVO CAMPO: Guardamos el SIHCE
+                    'utiliza_sihce'     => $valorUtilizaSihce,
 
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
-                    'receta'            => $datosInicio['receta'] ?? null, // Se guardan aunque en Psico no se usen (por si acaso)
+                    'receta'            => $datosInicio['receta'] ?? null,
                     'orden_laboratorio' => $datosInicio['orden_lab'] ?? null,
                 ]
             );
 
             // 6. SECCIÓN DNI
             $datosDni = $data['seccion_dni'] ?? [];     
-            $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO';
+            $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'ELECTRONICO';
             
             ComDni::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
@@ -189,7 +197,8 @@ class PsicologiaController extends Controller
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
                 'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
-                'fecha_registro'         => $datosInicio['fecha_registro'] ?? null, // <--- AGREGADO
+                'fecha_registro'         => $datosInicio['fecha_registro'] ?? null,
+                'utiliza_sihce'          => $valorUtilizaSihce, // Agregado
                 
                 // Mapeo de Capacitación
                 'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
@@ -213,7 +222,7 @@ class PsicologiaController extends Controller
                 'receta'                 => $datosInicio['receta'] ?? null, 
                 
                 // Comentarios Generales
-                'comentarios_generales'  => $datosInicio['comentarios'] ?? null, // <--- AGREGADO
+                'comentarios_generales'  => $datosInicio['comentarios'] ?? null,
                 
                 // Snapshot inventario
                 'inventario'             => $listaInventario,

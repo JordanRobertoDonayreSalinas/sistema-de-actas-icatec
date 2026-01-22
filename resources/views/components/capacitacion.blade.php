@@ -46,9 +46,11 @@
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Entidad que capacitó</label>
                 <select x-model="entidad.institucion_cap" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold uppercase text-sm focus:ring-indigo-500 cursor-pointer">
                     <option value="" disabled>Seleccione entidad...</option>
+                    <option value="JEFE DE ESTABLECIMIENTO">JEFE DE ESTABLECIMIENTO</option>
+                    <option value="UNIDAD EJECUTORA">UNIDAD EJECUTORA</option>
                     <option value="MINSA">MINSA</option>
                     <option value="DIRESA">DIRESA</option>
-                    <option value="UNIDAD EJECUTORA">UNIDAD EJECUTORA</option>
+                    <option value="OTROS">OTROS</option>
                 </select>
             </div>
         </div>

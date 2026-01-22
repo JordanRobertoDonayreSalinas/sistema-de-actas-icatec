@@ -214,13 +214,7 @@
         <tr>
             <td class="label-cell" colspan="2"></td>
             <td class="label-cell">¿UTILIZA SIHCE?</td>
-            <td class="value-cell">
-                 @if(isset($dbInicioLabores) && (str_contains(strtoupper($dbInicioLabores->fua), 'SIHCE') || str_contains(strtoupper($dbInicioLabores->receta), 'SIHCE')))
-                    SI
-                 @else
-                    NO
-                 @endif
-            </td>
+            <td class="value-cell">{{ $dbInicioLabores->utiliza_sihce ?? '-' }}</td>
         </tr>
     </table>
 
@@ -330,8 +324,8 @@
         @endforelse
     </div>
 
-    {{-- 10. FIRMA (CONSULTA EXTERNA) --}}
-    <div class="section-header">10. FIRMA (CONSULTA EXTERNA)</div>
+    {{-- 10. FIRMA --}}
+    <div class="section-header">10. FIRMA</div>
     
     <div class="signature-section">
         <div class="signature-frame">

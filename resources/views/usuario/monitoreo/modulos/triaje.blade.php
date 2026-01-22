@@ -35,17 +35,50 @@
             {{-- 2. SECCION DATOS DEL PROFESIONAL --}}
             <x-seleccion-profesional model="form.profesional" />
 
-            {{-- 3. SECCION: CAPACITACIÓN --}}
-            <x-capacitacion model="form.capacitacion" />
+            {{-- 3. SECCION: CAPACITACIÓN (CONDICIONAL) --}}
+            {{-- Solo se muestra si utiliza_sihce es 'SI' --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                
+                <x-capacitacion model="form.capacitacion" />
+                
+            </div>
 
             {{-- 4. SECCION: INVENTARIO DE EQUIPAMIENTO --}}
             <x-equipamiento model="form.inventario" />
                   
-            {{-- 5. SECCION: DIFICULTADES CON EL SISTEMA --}}
-            <x-dificultad model="form.dificultades" />
+            
+            {{-- 5. SECCIÓN DNI (CONDICIONAL: Solo si Tipo Doc es DNI) --}}
+            <div x-show="form.profesional.tipo_doc === 'DNI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dni model="form.seccion_dni" />
+                
+            </div>
 
-            {{-- 6. SECCIÓN DNI --}}
-            <x-dni model="form.seccion_dni" />
+            {{-- 6. SECCION: DIFICULTADES CON EL SISTEMA (CONDICIONAL) --}}
+            {{-- Solo se muestra si utiliza_sihce es 'SI' --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dificultad model="form.dificultades" />
+                
+            </div>
 
             {{-- 7. NUEVA SECCIÓN: COMENTARIOS GENERALES (HTML Directo) --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
@@ -99,7 +132,13 @@
 
         // --- 2. INICIALIZACIÓN ---
         
-        let initProfesional = { tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', cargo: '', telefono: '' };
+        // A) Profesional: Agregamos 'utiliza_sihce' aquí para el componente visual
+        let initProfesional = { 
+            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', 
+            email: '', cargo: '', telefono: '', 
+            utiliza_sihce: '' // <--- NUEVO CAMPO VISUAL
+        };
+
         let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: '' };
 
         if (dbCapacitacion) {
@@ -109,10 +148,28 @@
             initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
             
             if (dbCapacitacion.profesional) {
-                initProfesional = { ...dbCapacitacion.profesional };
+                // Copiamos los datos del profesional
+                initProfesional = { ...initProfesional, ...dbCapacitacion.profesional };
             }
         }
 
+        // B) Inicio Labores (Aquí está el dato real en BD)
+        let initInicioLabores = { 
+            fecha_registro: '', consultorios: '', nombre_consultorio: '', turno: '', comentarios: '' 
+        };
+        
+        if (dbInicioLabores) {
+            initInicioLabores.fecha_registro = dbInicioLabores.fecha_registro || '';
+            initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
+            initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
+            initInicioLabores.turno = dbInicioLabores.turno || '';
+            initInicioLabores.comentarios = dbInicioLabores.comentarios || '';
+            
+            // *** CRUCIAL ***: Pasamos el dato de la tabla inicio_labores al objeto visual del profesional
+            initProfesional.utiliza_sihce = dbInicioLabores.utiliza_sihce || ''; 
+        }
+
+        // C) Inventario
         let initInventario = [];
         if (dbInventario && dbInventario.length > 0) {
             initInventario = dbInventario.map(item => {
@@ -138,30 +195,14 @@
             });
         }
 
+        // D) Dificultades
         let initDificultades = { institucion: '', medio: '' };
         if (dbDificultad) {
             initDificultades.institucion = dbDificultad.insti_comunica || '';
             initDificultades.medio = dbDificultad.medio_comunica || '';
         }
 
-        // --- MODIFICADO: Agregamos comentarios ---
-        // 'inicio_labores' mapea a la tabla 'com_docu_asisten'
-        let initInicioLabores = { 
-            fecha_registro: '',
-            consultorios: '', 
-            nombre_consultorio: '', 
-            turno: '',
-            comentarios: '' // <--- NUEVO CAMPO
-        };
-        
-        if (dbInicioLabores) {
-            initInicioLabores.fecha_registro = dbInicioLabores.fecha_registro || '';
-            initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
-            initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
-            initInicioLabores.turno = dbInicioLabores.turno || '';
-            initInicioLabores.comentarios = dbInicioLabores.comentarios || ''; // <--- CARGAR DE BD
-        }
-
+        // E) DNI
         let initDni = { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' };
         if (dbDni) {
             initDni.tipo_dni = dbDni.tip_dni || ''; 
@@ -179,7 +220,7 @@
                 capacitacion: initCapacitacion,
                 inventario: initInventario,
                 dificultades: initDificultades,
-                inicio_labores: initInicioLabores, // Contiene fecha, consultorios y AHORA comentarios
+                inicio_labores: initInicioLabores,
                 seccion_dni: initDni
             },
             guardarTodo() {
