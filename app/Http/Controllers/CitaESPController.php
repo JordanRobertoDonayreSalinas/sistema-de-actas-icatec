@@ -8,6 +8,7 @@ use App\Models\MonitoreoModulos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CitaESPController extends Controller
 {
@@ -20,21 +21,20 @@ class CitaESPController extends Controller
         // 1. Obtener la cabecera del monitoreo
         $monitoreo = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Validación de seguridad: Verificar que sea una IPRESS Especializada
+        // 2. Validación de seguridad
         if ($monitoreo->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
-        // 3. Buscar datos existentes usando la clave estandarizada 'citas_esp'
+        // 3. Buscar datos existentes (Clave: citas_esp)
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'citas_esp') // <--- CLAVE CORREGIDA
+                                    ->where('modulo_nombre', 'citas_esp')
                                     ->first();
 
-        // 4. Decodificar el JSON guardado (si existe) para llenar el formulario
+        // 4. Decodificar JSON
         $data = $registro ? json_decode($registro->contenido, true) : [];
 
-        // 5. Retornar la vista especializada
         return view('usuario.monitoreo.modulos_especializados.citas', compact('monitoreo', 'data'));
     }
 
@@ -44,59 +44,79 @@ class CitaESPController extends Controller
      */
     public function store(Request $request, $id)
     {
+        // DEBUG: Si sigue sin guardar, descomenta la siguiente línea para ver qué llega
+        // dd($request->all());
+
         try {
             DB::beginTransaction();
 
+            // 1. Validar que exista la cabecera
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
 
-            // 1. Buscar registro previo o crear una nueva instancia
-            // IMPORTANTE: Usamos 'citas_esp' para que coincida con el tablero y se marque en verde
-            $registro = MonitoreoModulos::firstOrNew([
-                'cabecera_monitoreo_id' => $id,
-                'modulo_nombre' => 'citas_esp' // <--- CLAVE CORREGIDA
-            ]);
+            // 2. Buscar si ya existe el registro de este módulo
+            $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                        ->where('modulo_nombre', 'citas_esp')
+                                        ->first();
 
-            // 2. Obtener datos actuales para gestionar la foto (no perderla si no se sube una nueva)
-            $contenidoActual = $registro->exists ? json_decode($registro->contenido, true) : [];
+            $contenidoActual = [];
 
-            // 3. Recoger todos los campos del formulario excepto token y archivo
+            // 3. Si no existe, creamos la instancia y asignamos claves forzosamente
+            if (!$registro) {
+                $registro = new MonitoreoModulos();
+                $registro->cabecera_monitoreo_id = $id;
+                $registro->modulo_nombre = 'citas_esp';
+            } else {
+                // Si existe, recuperamos su contenido actual para no perder la foto
+                $contenidoActual = json_decode($registro->contenido, true) ?? [];
+            }
+
+            // 4. Recoger datos del formulario (Quitamos token y archivo físico)
             $nuevosDatos = $request->except(['_token', 'foto_evidencia']);
 
-            // 4. Procesar Subida de Imagen
+            // 5. Procesar Imagen
             if ($request->hasFile('foto_evidencia')) {
+                // Validación estricta de imagen
                 $request->validate([
-                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:5120' // Máx 5MB
+                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240' // 10MB Máx
                 ]);
 
-                // Borrar imagen anterior si existe
+                // Borrar anterior si existe
                 if (!empty($contenidoActual['foto_evidencia'])) {
-                    Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
+                    if (Storage::disk('public')->exists($contenidoActual['foto_evidencia'])) {
+                        Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
+                    }
                 }
 
-                // Guardar la nueva imagen
+                // Guardar nueva
                 $path = $request->file('foto_evidencia')->store('evidencias_csmc', 'public');
                 $nuevosDatos['foto_evidencia'] = $path;
             } else {
-                // Si no subió foto nueva, mantener la ruta de la anterior
+                // Mantener anterior si no se subió nueva
                 if (!empty($contenidoActual['foto_evidencia'])) {
                     $nuevosDatos['foto_evidencia'] = $contenidoActual['foto_evidencia'];
                 }
             }
 
-            // 5. Guardar en la base de datos (columna JSON)
-            $registro->contenido = json_encode($nuevosDatos);
+            // 6. Guardar JSON
+            // JSON_UNESCAPED_UNICODE asegura que las tildes se guarden bien
+            $registro->contenido = json_encode($nuevosDatos, JSON_UNESCAPED_UNICODE);
+            
             $registro->save();
 
             DB::commit();
 
-            // 6. Redirigir al panel de módulos
             return redirect()
                 ->route('usuario.monitoreo.modulos', $id)
                 ->with('success', 'Módulo de Citas CSMC guardado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Error al guardar el módulo: ' . $e->getMessage())->withInput();
+            // Esto imprimirá el error en tu archivo de log (storage/logs/laravel.log)
+            Log::error("Error guardando Citas CSMC: " . $e->getMessage());
+            
+            return back()
+                ->with('error', 'Error al guardar: ' . $e->getMessage())
+                ->withInput();
         }
     }
 }
