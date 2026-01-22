@@ -27,6 +27,8 @@ use App\Http\Controllers\ConsolidadoPdfController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\TriajeController;
 use App\Http\Controllers\TriajePdfController;
+use App\Http\Controllers\TriajeESPController;
+use App\Http\Controllers\TriajeESPpdfController;
 use App\Http\Controllers\OdontologiaController;
 use App\Http\Controllers\OdontologiaPdfController;
 use App\Http\Controllers\PsicologiaController;
@@ -145,6 +147,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
             });
 
+
             // Módulo 03: Triaje
             Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
                 Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
@@ -152,6 +155,14 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
                 Route::get('/buscar-profesional/{doc}', [TriajeController::class, 'buscarProfesional'])->name('buscarProfesional');
                 Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');
+            });
+
+            // En web.php, dentro del grupo 'monitoreo' y subgrupo 'triaje.':
+            Route::prefix('modulo/triaje-especializada')->name('triaje_esp.')->group(function () {
+                Route::get('/{id}', [TriajeESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [TriajeESPController::class, 'store'])->name('store');
+                // ESTA LÍNEA ES LA NUEVA PARA ESTE CONTROLADOR:
+                Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 04: Consulta Externa - Medicina
