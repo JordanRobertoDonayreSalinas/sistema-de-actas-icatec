@@ -308,9 +308,10 @@ class MonitoreoController extends Controller
 
         if ($esEspecializada) {
             $modulosMaster = [
-                'citas_esp' => ['nombre' => 'Admisión y Citas', 'icon' => 'calendar-clock'],
-                'triaje'    => ['nombre' => 'Triaje', 'icon' => 'clipboard-pulse'],
+                'citas_esp' => ['nombre' => 'Citas', 'icon' => 'calendar-clock'],
+                'triaje_esp'    => ['nombre' => 'Triaje', 'icon' => 'clipboard-pulse'],
                 'acogida'   => ['nombre' => 'Acogida', 'icon' => 'heart-handshake'], 
+                
             ];
 
             return view('usuario.monitoreo.modulos_especializados', compact(
