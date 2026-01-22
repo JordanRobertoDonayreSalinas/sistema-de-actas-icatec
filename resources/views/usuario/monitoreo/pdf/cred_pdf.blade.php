@@ -213,6 +213,11 @@
         </tr>
 
         <tr>
+            <th>Turno:</th>
+            <td class="uppercase">{{ $detalle->personal_turno ?? 'N/A' }}</td>
+        </tr>
+
+        <tr>
             <th>¿Firmó Declaración Jurada?:</th>
             <td>{{ $datos['documentacion']['firma_dj'] ?? 'NO' }}</td>
         </tr>

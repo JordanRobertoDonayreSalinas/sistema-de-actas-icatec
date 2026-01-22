@@ -127,7 +127,7 @@
                                 </div>
                                 <div class="flex flex-col">
                                     <label class="text-[9px] font-black text-indigo-300 uppercase tracking-widest leading-none mb-1">Fecha Monitoreo</label>
-                                    <input type="date" name="fecha_monitoreo" id="fecha_monitoreo" form="form-cred-store"
+                                    <input type="date" name="fecha_monitoreo" id="fecha_monitoreo" form="form-farmacia-store"
                                         value="{{ old('fecha_monitoreo', \Carbon\Carbon::parse($fechaParaVista)->format('Y-m-d')) }}"
                                         class="bg-transparent text-white border-none p-0 focus:ring-0 font-bold text-lg cursor-pointer [color-scheme:dark]">
                                 </div>
@@ -813,69 +813,133 @@
         });
 
         // Búsqueda de profesional
-        const inputDoc = document.getElementById('doc');
-        const btnValidar = document.getElementById('btn-validar-doc');
-        const loader = document.getElementById('loading_profesional');
-        const tipoDocSelect = document.getElementById('tipo_doc');
-        const limpiarInputs = () => {
-            ['nombres', 'apellido_paterno', 'apellido_materno', 'telefono', 'email'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
-        };
+            const inputDoc = document.getElementById('doc');
+            const btnValidar = document.getElementById('btn-validar-doc');
+            const loader = document.getElementById('loading_profesional');
+            const tipoDocSelect = document.getElementById('tipo_doc');
 
-        if (btnValidar) {
-            btnValidar.addEventListener('click', function() {
-                const docValue = inputDoc.value.trim();
-                const tipo = tipoDocSelect.value;
+            const limpiarInputs = () => {
+                ['nombres', 'apellido_paterno', 'apellido_materno', 'telefono', 'email'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                const root = document.querySelector('[x-data]');
+                if (root) { Alpine.$data(root).profesion = ''; }
+            };
 
-                // Validaciones básicas antes de consultar
-                if (docValue === '') {
-                    alert('Por favor, ingrese un número de documento.');
-                    return;
-                }
+            if (btnValidar) {
+                btnValidar.addEventListener('click', function() {
+                    const docValue = inputDoc.value.trim();
+                    if (docValue === '') { alert('Ingrese documento'); return; }
 
-                if (tipo === 'DNI' && docValue.length !== 8) {
-                    alert('El DNI debe tener 8 dígitos.');
-                    return;
-                }
+                    loader.classList.remove('hidden');
+                    btnValidar.disabled = true;
 
-                // Mostrar loader y deshabilitar botón temporalmente
-                loader.classList.remove('hidden');
-                btnValidar.disabled = true;
-                btnValidar.classList.add('opacity-50');
+                    // 1. ACCESO A ALPINE
+                    const alpineRoot = document.querySelector('[x-data]');
+                    const store = Alpine.$data(alpineRoot);
 
-                fetch(`{{ url('usuario/monitoreo/profesional/buscar') }}/${docValue}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        loader.classList.add('hidden');
-                        btnValidar.disabled = false;
-                        btnValidar.classList.remove('opacity-50');
+                    fetch(`{{ url('usuario/monitoreo/profesional/buscar') }}/${docValue}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            loader.classList.add('hidden');
+                            btnValidar.disabled = false;
 
-                        if (data.exists) {
-                            // Autocompletar campos
-                            document.getElementById('nombres').value = data.nombres || '';
-                            document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
-                            document.getElementById('apellido_materno').value = data.apellido_materno || '';
-                            if(document.getElementById('telefono')) document.getElementById('telefono').value = data.telefono || '';
-                            if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
-                        }else {
-                            // Limpiar y mostrar modal de nuevo profesional
-                            limpiarInputs();
-                            window.dispatchEvent(new CustomEvent('abrir-modal-nuevo', { 
-                                detail: { doc: docValue } 
-                            }));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        loader.classList.add('hidden');
-                        btnValidar.disabled = false;
-                        btnValidar.classList.remove('opacity-50');
-                        alert('Ocurrió un error al consultar el documento.');
-                    });
-            });
+                            if (data.exists) {
+                                // 2. RESET TOTAL DE ESTADOS
+                                store.profesion = ''; 
+                                const selectProf = document.querySelector('select[name="contenido[personal][profesion]"]');
+                                const inputOtro = document.querySelector('input[name="contenido[personal][profesion_otro]"]');
+                                
+                                if (selectProf) selectProf.value = '';
+                                if (inputOtro) inputOtro.value = '';
+
+                                // 3. LLENADO DE DATOS PERSONALES
+                                document.getElementById('nombres').value = data.nombres || '';
+                                document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
+                                document.getElementById('apellido_materno').value = data.apellido_materno || '';
+                                if(document.getElementById('telefono')) document.getElementById('telefono').value = data.telefono || '';
+                                if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
+
+                                // 4. LÓGICA MAESTRA DE ASIGNACIÓN
+                                const cargoBD = (data.cargo || '').toUpperCase().trim();
+                                const normalizar = (t) => t.replace(/[\s()]/g, '');
+                                
+                                // Buscamos si el cargo de la BD existe en las opciones del SELECT
+                                let coincidencia = Array.from(selectProf.options).find(opt => 
+                                    opt.value !== "OTROS" && opt.value !== "" && (opt.value === cargoBD || normalizar(opt.value) === normalizar(cargoBD))
+                                );
+
+                                if (coincidencia) {
+                                    // --- CASO A: PROFESIÓN ENCONTRADA EN LA LISTA ---
+                                    console.log("Coincidencia encontrada:", coincidencia.value);
+                                    
+                                    // Forzamos el valor en el HTML y en Alpine simultáneamente
+                                    selectProf.value = coincidencia.value; 
+                                    store.profesion = coincidencia.value; 
+
+                                } else if (cargoBD !== '') {
+                                    // --- CASO B: NO ESTÁ EN LA LISTA (OTROS) ---
+                                    console.log("No está en lista, moviendo a OTROS:", cargoBD);
+                                    
+                                    selectProf.value = 'OTROS';
+                                    store.profesion = 'OTROS';
+                                    
+                                    // Retardo para asegurar que el input "¿Cuál?" sea visible
+                                    setTimeout(() => {
+                                        const inputManual = document.querySelector('input[name="contenido[personal][profesion_otro]"]');
+                                        if (inputManual) {
+                                            inputManual.value = cargoBD;
+                                            inputManual.dispatchEvent(new Event('input', { bubbles: true }));
+                                        }
+                                    }, 100);
+                                }
+                                
+                                // Sincronización final obligatoria para disparar reactividad
+                                selectProf.dispatchEvent(new Event('change', { bubbles: true }));
+
+                            } else {
+                                limpiarInputs();
+                                window.dispatchEvent(new CustomEvent('abrir-modal-nuevo', { detail: { doc: docValue } }));
+                            }
+                        })
+                        .catch(err => {
+                            loader.classList.add('hidden');
+                            btnValidar.disabled = false;
+                            console.error("Error:", err);
+                        });
+                });
+            }
+        });
+
+        // Función para mostrar/ocultar opciones de DNIe
+        function toggleDniOptions(tipo) {
+        const container = document.getElementById('dnie-options-container');
+
+        if (tipo === 'ELECTRONICO') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+            // Opcional: Limpiar los campos internos si se cambia a DNI Azul
+            // document.querySelector('select[name="contenido[dnie_version]"]').value = "";
+            // document.querySelectorAll('input[name="contenido[firma_sihce]"]').forEach(el => el.checked = false);
         }
-    });
-</script>
-@endpush
+        }
+
+        // Ejecutar al cargar la página (para ediciones donde ya hay datos guardados)
+        document.addEventListener("DOMContentLoaded", function() {
+        // Verificar cuál radio button está seleccionado al inicio
+        const selectedDni = document.querySelector('input[name="contenido[tipo_dni_fisico]"]:checked');
+        if (selectedDni) {
+            toggleDniOptions(selectedDni.value);
+        }
+
+        // Reinicializar iconos si usas Lucide
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        });
+    </script>
+
+
+    @endpush

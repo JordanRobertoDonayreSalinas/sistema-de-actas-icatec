@@ -263,6 +263,14 @@
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Correo Electrónico</label>
                                     <input type="email" name="contenido[personal][email]" id="email" value="{{ $detalle->contenido['personal']['email'] ?? '' }}" class="input-standard w-full">
                                 </div>
+                                <div class="md:col-span-2 space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 text-center block">Turno</label>
+                                    <select name="contenido[personal][turno]" class="input-standard w-full text-center uppercase font-bold text-indigo-600">
+                                        <option value="">-- SELEC. --</option>
+                                        <option value="MAÑANA" {{ ($detalle->contenido['personal']['turno'] ?? '') == 'MAÑANA' ? 'selected' : '' }}>MAÑANA</option>
+                                        <option value="TARDE" {{ ($detalle->contenido['personal']['turno'] ?? '') == 'TARDE' ? 'selected' : '' }}>TARDE</option>
+                                    </select>
+                                </div>
 
                                 {{-- Profesión con ancho dinámico --}}
                                 <div :class="profesion === 'OTROS' ? 'md:col-span-2' : 'md:col-span-5'" class="space-y-2 transition-all duration-300">
@@ -559,7 +567,7 @@
                 <div class="space-y-8 mt-12">
                     <div class="flex items-center gap-4">
                         <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
-                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Equipos de Cómputo</h4>
+                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Equipamiento del Consultorio</h4>
                     </div>
 
                     {{-- CONTENEDOR CON BORDE Y SOMBRA (Igual a Secciones 01 y 02) --}}
@@ -575,7 +583,7 @@
 
                         {{-- Componente de la Tabla --}}
                         <div class="overflow-hidden rounded-3xl border border-slate-100">
-                            <x-tabla-equipos :equipos="$equipos" modulo="cred" />
+                            <x-tabla-equipos :equipos="$equipos" modulo="planificacion_familiar" />
                         </div>
 
                         {{-- Nota informativa al pie del contenedor --}}
@@ -817,7 +825,7 @@
                         <div class="mt-6 flex items-start gap-3 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
                             <i data-lucide="shield-check" class="w-4 h-4 text-indigo-500 mt-0.5"></i>
                             <p class="text-[9px] text-indigo-700 leading-relaxed font-medium">
-                                <span class="font-bold">Privacidad de datos:</span> Las imágenes subidas serán utilizadas exclusivamente para fines de auditoría y respaldo del presente monitoreo CRED, cumpliendo con la normativa vigente de protección de datos personales.
+                                <span class="font-bold">Privacidad de datos:</span> Las imágenes subidas serán utilizadas exclusivamente para fines de auditoría y respaldo del presente monitoreo Planificación Familiar, cumpliendo con la normativa vigente de protección de datos personales.
                             </p>
                         </div>
 
@@ -850,113 +858,133 @@
         lucide.createIcons();
 
         // Búsqueda de profesional
-        const inputDoc = document.getElementById('doc');
-        const btnValidar = document.getElementById('btn-validar-doc');
-        const loader = document.getElementById('loading_profesional');
-        const tipoDocSelect = document.getElementById('tipo_doc');
-        const limpiarInputs = () => {
-            ['nombres', 'apellido_paterno', 'apellido_materno', 'telefono', 'email'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
-        };
+            const inputDoc = document.getElementById('doc');
+            const btnValidar = document.getElementById('btn-validar-doc');
+            const loader = document.getElementById('loading_profesional');
+            const tipoDocSelect = document.getElementById('tipo_doc');
 
-        if (btnValidar) {
-            btnValidar.addEventListener('click', function() {
-                const docValue = inputDoc.value.trim();
-                const tipo = tipoDocSelect.value;
+            const limpiarInputs = () => {
+                ['nombres', 'apellido_paterno', 'apellido_materno', 'telefono', 'email'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                const root = document.querySelector('[x-data]');
+                if (root) { Alpine.$data(root).profesion = ''; }
+            };
 
-                // Validaciones básicas antes de consultar
-                if (docValue === '') {
-                    alert('Por favor, ingrese un número de documento.');
-                    return;
-                }
+            if (btnValidar) {
+                btnValidar.addEventListener('click', function() {
+                    const docValue = inputDoc.value.trim();
+                    if (docValue === '') { alert('Ingrese documento'); return; }
 
-                if (tipo === 'DNI' && docValue.length !== 8) {
-                    alert('El DNI debe tener 8 dígitos.');
-                    return;
-                }
+                    loader.classList.remove('hidden');
+                    btnValidar.disabled = true;
 
-                // Mostrar loader y deshabilitar botón temporalmente
-                loader.classList.remove('hidden');
-                btnValidar.disabled = true;
-                btnValidar.classList.add('opacity-50');
+                    // 1. ACCESO A ALPINE
+                    const alpineRoot = document.querySelector('[x-data]');
+                    const store = Alpine.$data(alpineRoot);
 
-                fetch(`{{ url('usuario/monitoreo/profesional/buscar') }}/${docValue}`)
-                    .then(r => r.json())
-                    .then(data => {
-                        loader.classList.add('hidden');
-                        btnValidar.disabled = false;
-                        btnValidar.classList.remove('opacity-50');
+                    fetch(`{{ url('usuario/monitoreo/profesional/buscar') }}/${docValue}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            loader.classList.add('hidden');
+                            btnValidar.disabled = false;
 
-                        if (data.exists) {
-                            // Autocompletar campos
-                            document.getElementById('nombres').value = data.nombres || '';
-                            document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
-                            document.getElementById('apellido_materno').value = data.apellido_materno || '';
-                            if(document.getElementById('telefono')) document.getElementById('telefono').value = data.telefono || '';
-                            if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
-                        }else {
-                            // Limpiar y mostrar modal de nuevo profesional
-                            limpiarInputs();
-                            window.dispatchEvent(new CustomEvent('abrir-modal-nuevo', { 
-                                detail: { doc: docValue } 
-                            }));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        loader.classList.add('hidden');
-                        btnValidar.disabled = false;
-                        btnValidar.classList.remove('opacity-50');
-                        alert('Ocurrió un error al consultar el documento.');
-                    });
-            });
+                            if (data.exists) {
+                                // 2. RESET TOTAL DE ESTADOS
+                                store.profesion = ''; 
+                                const selectProf = document.querySelector('select[name="contenido[personal][profesion]"]');
+                                const inputOtro = document.querySelector('input[name="contenido[personal][profesion_otro]"]');
+                                
+                                if (selectProf) selectProf.value = '';
+                                if (inputOtro) inputOtro.value = '';
+
+                                // 3. LLENADO DE DATOS PERSONALES
+                                document.getElementById('nombres').value = data.nombres || '';
+                                document.getElementById('apellido_paterno').value = data.apellido_paterno || '';
+                                document.getElementById('apellido_materno').value = data.apellido_materno || '';
+                                if(document.getElementById('telefono')) document.getElementById('telefono').value = data.telefono || '';
+                                if(document.getElementById('email')) document.getElementById('email').value = data.email || '';
+
+                                // 4. LÓGICA MAESTRA DE ASIGNACIÓN
+                                const cargoBD = (data.cargo || '').toUpperCase().trim();
+                                const normalizar = (t) => t.replace(/[\s()]/g, '');
+                                
+                                // Buscamos si el cargo de la BD existe en las opciones del SELECT
+                                let coincidencia = Array.from(selectProf.options).find(opt => 
+                                    opt.value !== "OTROS" && opt.value !== "" && (opt.value === cargoBD || normalizar(opt.value) === normalizar(cargoBD))
+                                );
+
+                                if (coincidencia) {
+                                    // --- CASO A: PROFESIÓN ENCONTRADA EN LA LISTA ---
+                                    console.log("Coincidencia encontrada:", coincidencia.value);
+                                    
+                                    // Forzamos el valor en el HTML y en Alpine simultáneamente
+                                    selectProf.value = coincidencia.value; 
+                                    store.profesion = coincidencia.value; 
+
+                                } else if (cargoBD !== '') {
+                                    // --- CASO B: NO ESTÁ EN LA LISTA (OTROS) ---
+                                    console.log("No está en lista, moviendo a OTROS:", cargoBD);
+                                    
+                                    selectProf.value = 'OTROS';
+                                    store.profesion = 'OTROS';
+                                    
+                                    // Retardo para asegurar que el input "¿Cuál?" sea visible
+                                    setTimeout(() => {
+                                        const inputManual = document.querySelector('input[name="contenido[personal][profesion_otro]"]');
+                                        if (inputManual) {
+                                            inputManual.value = cargoBD;
+                                            inputManual.dispatchEvent(new Event('input', { bubbles: true }));
+                                        }
+                                    }, 100);
+                                }
+                                
+                                // Sincronización final obligatoria para disparar reactividad
+                                selectProf.dispatchEvent(new Event('change', { bubbles: true }));
+
+                            } else {
+                                limpiarInputs();
+                                window.dispatchEvent(new CustomEvent('abrir-modal-nuevo', { detail: { doc: docValue } }));
+                            }
+                        })
+                        .catch(err => {
+                            loader.classList.add('hidden');
+                            btnValidar.disabled = false;
+                            console.error("Error:", err);
+                        });
+                });
+            }
+        });
+
+        // Función para mostrar/ocultar opciones de DNIe
+        function toggleDniOptions(tipo) {
+        const container = document.getElementById('dnie-options-container');
+
+        if (tipo === 'ELECTRONICO') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+            // Opcional: Limpiar los campos internos si se cambia a DNI Azul
+            // document.querySelector('select[name="contenido[dnie_version]"]').value = "";
+            // document.querySelectorAll('input[name="contenido[firma_sihce]"]').forEach(el => el.checked = false);
+        }
         }
 
-        // Visibilidad Capacitación
-        const radios = document.querySelectorAll('.radio-capacitacion');
-        const seccion = document.getElementById('seccion_entes');
-        radios.forEach(r => {
-            r.addEventListener('change', function() {
-                if (this.value === 'SI') seccion.classList.remove('hidden');
-                else {
-                    seccion.classList.add('hidden');
-                    seccion.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false);
-                }
-            });
+        // Ejecutar al cargar la página (para ediciones donde ya hay datos guardados)
+        document.addEventListener("DOMContentLoaded", function() {
+        // Verificar cuál radio button está seleccionado al inicio
+        const selectedDni = document.querySelector('input[name="contenido[tipo_dni_fisico]"]:checked');
+        if (selectedDni) {
+            toggleDniOptions(selectedDni.value);
+        }
+
+        // Reinicializar iconos si usas Lucide
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
         });
-    });
-</script>
+    </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Obtenemos los datos de forma segura
-    @if(isset($detalle->contenido['equipos_data']))
-        const equiposData = @json($detalle->contenido['equipos_data']);
-    @else
-        const equiposData = [];
-    @endif
 
-    if (equiposData && equiposData.length > 0) {
-        // Esperamos un poco para que el componente termine de renderizar
-        setTimeout(() => {
-            const filas = document.querySelectorAll('table tbody tr');
-
-            equiposData.forEach((equipo, index) => {
-                if (filas[index]) {
-                    // Seleccionamos por el atributo name exacto
-                    const selectPropiedad = filas[index].querySelector('select[name="equipos[propio][]"]');
-                    
-                    if (selectPropiedad && equipo.propio) {
-                        selectPropiedad.value = equipo.propio;
-                        selectPropiedad.dispatchEvent(new Event('change'));
-                        console.log(`Fila ${index + 1}: Propiedad corregida a ${equipo.propio}`);
-                    }
-                }
-            });
-        }, 300); // Aumentamos a 300ms para asegurar que el componente cargó
-    }
-});
-</script>
-@endpush
+    @endpush
