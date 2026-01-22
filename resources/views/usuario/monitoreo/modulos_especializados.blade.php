@@ -71,7 +71,6 @@
                 $isCompleted = in_array($slug, $modulosGuardados); 
                 $isSigned = in_array($slug, $modulosFirmados ?? []); 
                 
-                // Lógica de rutas
                 $routeName = "usuario.monitoreo.{$slug}.index"; 
                 $pdfRouteName = "usuario.monitoreo.{$slug}.pdf";
                 
@@ -80,38 +79,46 @@
                 $viewSignedRoute = Route::has('usuario.monitoreo.ver-pdf-firmado') ? route('usuario.monitoreo.ver-pdf-firmado', [$acta->id, $slug]) : '#';
             @endphp
             
-            <div class="relative bg-white rounded-[2.5rem] border-2 transition-all duration-500 group overflow-hidden flex flex-col min-h-[280px]"
+            <div class="relative bg-white rounded-[2.5rem] border-2 transition-all duration-500 group overflow-hidden flex flex-col justify-between min-h-[320px]"
                  :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'border-emerald-200' : 'border-teal-100' }} shadow-xl' : 'border-transparent bg-slate-100 opacity-60 grayscale'">
                 
-                {{-- CABECERA --}}
-                <div class="p-6 pb-0 flex justify-between items-start z-10">
-                    <div :class="activos.includes('{{ $slug }}') ? '{{ $isCompleted ? 'bg-emerald-500' : 'bg-teal-600' }}' : 'bg-slate-300'"
-                         class="h-14 w-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-500">
-                        <i data-lucide="{{ $data['icon'] }}" class="w-7 h-7"></i>
+                {{-- CABECERA Y CUERPO --}}
+                <div class="p-8">
+                    {{-- Top Row: Icono y Toggle --}}
+                    <div class="flex justify-between items-start mb-6">
+                        <div :class="activos.includes('{{ $slug }}') ? 'bg-emerald-500' : 'bg-slate-300'"
+                             class="h-16 w-16 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 transition-all duration-500">
+                            <i data-lucide="{{ $data['icon'] }}" class="w-8 h-8"></i>
+                        </div>
+
+                        <button @click="toggle('{{ $slug }}')" 
+                                :class="activos.includes('{{ $slug }}') ? 'bg-indigo-600' : 'bg-slate-300'"
+                                class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none shadow-inner">
+                            <span :class="activos.includes('{{ $slug }}') ? 'translate-x-7' : 'translate-x-1'"
+                                  class="inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-300 shadow-md"></span>
+                        </button>
                     </div>
 
-                    <button @click="toggle('{{ $slug }}')" 
-                            :class="activos.includes('{{ $slug }}') ? 'bg-teal-600' : 'bg-slate-400'"
-                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shadow-inner">
-                        <span :class="activos.includes('{{ $slug }}') ? 'translate-x-6' : 'translate-x-1'"
-                              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300"></span>
-                    </button>
-                </div>
-
-                {{-- CUERPO --}}
-                <div class="flex-1 flex flex-col justify-center">
+                    {{-- Título y Estado --}}
                     <template x-if="activos.includes('{{ $slug }}')">
                         @if($hasRoute)
-                        <a href="{{ route($routeName, $acta->id) }}" class="block p-6 group/link text-center">
+                        <a href="{{ route($routeName, $acta->id) }}" class="block group/link">
                             <h3 class="text-slate-800 text-lg font-black uppercase tracking-tight leading-tight mb-2 group-hover/link:text-teal-600 transition-colors">
                                 {{ $data['nombre'] }}
                             </h3>
-                            <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border {{ $isCompleted ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-teal-600 bg-teal-50 border-teal-100' }}">
-                                {{ $isCompleted ? '✓ Completado' : '● Habilitado' }}
-                            </span>
+                            
+                            @if($isCompleted)
+                            <p class="text-[11px] font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-1.5 animate-fade-in">
+                                <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i> Evaluación Registrada
+                            </p>
+                            @else
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="circle" class="w-3.5 h-3.5"></i> Pendiente
+                            </p>
+                            @endif
                         </a>
                         @else
-                        <div class="p-6 text-center opacity-60">
+                        <div>
                             <h3 class="text-slate-600 text-lg font-black uppercase tracking-tight leading-tight mb-2">{{ $data['nombre'] }}</h3>
                             <span class="text-[9px] font-bold text-slate-400 uppercase italic bg-slate-200 px-2 py-1 rounded">Próximamente</span>
                         </div>
@@ -119,42 +126,44 @@
                     </template>
 
                     <template x-if="!activos.includes('{{ $slug }}')">
-                        <div class="p-6 text-center">
+                        <div>
                             <h3 class="text-slate-400 text-lg font-black uppercase tracking-tight leading-tight mb-2">{{ $data['nombre'] }}</h3>
-                            <span class="text-[9px] font-bold text-slate-300 uppercase tracking-widest italic flex items-center justify-center gap-2">
-                                <i data-lucide="lock" class="w-3 h-3"></i> Módulo Inactivo
+                            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                                <i data-lucide="lock" class="w-3 h-3"></i> Inactivo
                             </span>
                         </div>
                     </template>
                 </div>
 
-                {{-- FOOTER ACCIONES --}}
-                <div class="p-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2" 
-                     x-show="activos.includes('{{ $slug }}') && modulosGuardados.includes('{{ $slug }}')">
+                {{-- FOOTER ACCIONES (Idéntico a la imagen) --}}
+                <div class="px-8 pb-8 pt-0 flex items-stretch justify-between gap-3 mt-auto" 
+                     x-show="activos.includes('{{ $slug }}') && modulosGuardados.includes('{{ $slug }}')"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4"
+                     x-transition:enter-end="opacity-100 translate-y-0">
                     
-                    {{-- BOTÓN 1: PDF GENERADO (Blanco Pequeño) --}}
-                    {{-- Este es el botón que faltaba, el del icono de archivo --}}
+                    {{-- BOTÓN 1: PDF GENERADO (Cuadrado Blanco) --}}
                     @if($hasPdfRoute)
                     <a href="{{ route($pdfRouteName, $acta->id) }}" target="_blank" 
-                       class="h-10 w-12 bg-white text-slate-600 border border-slate-200 rounded-xl flex items-center justify-center hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all shadow-sm group/pdf" 
+                       class="h-12 w-14 bg-white text-slate-600 border-2 border-slate-100 rounded-xl flex items-center justify-center hover:border-slate-300 hover:text-slate-800 transition-all shadow-sm group/pdf" 
                        title="Ver PDF Generado">
-                        <i data-lucide="file-text" class="w-5 h-5 group-hover/pdf:scale-110 transition-transform"></i>
+                        <i data-lucide="file-text" class="w-6 h-6 group-hover/pdf:scale-110 transition-transform"></i>
                     </a>
                     @endif
                     
-                    {{-- BOTÓN 2: FIRMAR / SUBIR (Grande Oscuro) --}}
+                    {{-- BOTÓN 2: FIRMAR / SUBIR (Largo Oscuro) --}}
                     <button @click="openUpload('{{ $slug }}', '{{ $data['nombre'] }}')" 
-                            class="flex-1 h-10 px-4 {{ $isSigned ? 'bg-emerald-600' : 'bg-slate-900' }} text-white rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-md" 
+                            class="flex-1 h-12 px-6 {{ $isSigned ? 'bg-emerald-600' : 'bg-slate-900' }} text-white rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-slate-900/20" 
                             title="Firmar Acta">
-                        <i data-lucide="{{ $isSigned ? 'shield-check' : 'file-signature' }}" class="w-4 h-4 {{ $isSigned ? 'text-emerald-200' : 'text-teal-200' }}"></i>
-                        <span class="text-[9px] font-black uppercase tracking-[0.1em]">
-                            {{ $isSigned ? 'Firmado' : 'Firmar Módulo' }}
+                        <i data-lucide="{{ $isSigned ? 'shield-check' : 'pen-tool' }}" class="w-4 h-4"></i>
+                        <span class="text-[10px] font-black uppercase tracking-[0.1em]">
+                            {{ $isSigned ? 'FIRMADO' : 'FIRMAR MÓDULO' }}
                         </span>
                     </button>
 
-                    {{-- BOTÓN 3: VER FIRMADO (Verde Pequeño - Solo si ya está firmado) --}}
+                    {{-- BOTÓN EXTRA: VER FIRMADO (Si existe, aparece como un ojo al lado) --}}
                     @if($isSigned)
-                    <a href="{{ $viewSignedRoute }}" target="_blank" class="h-10 w-12 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                    <a href="{{ $viewSignedRoute }}" target="_blank" class="h-12 w-14 bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Ver Firma">
                         <i data-lucide="eye" class="w-5 h-5"></i>
                     </a>
                     @endif

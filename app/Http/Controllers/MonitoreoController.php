@@ -19,14 +19,11 @@ class MonitoreoController extends Controller
 {
     /**
      * Función auxiliar para determinar si un establecimiento es IPRESS ESPECIALIZADA (CSMC).
-     * Esta función contiene la lista exacta de códigos y nombres que proporcionaste.
      */
     private function esEspecializada($establecimiento)
     {
-        // Códigos de IPRESS ESPECIALIZADAS
         $codigosCSMC = ['25933','28653','27197','34021','25977','33478','27199','30478'];
         
-        // Nombres de IPRESS ESPECIALIZADAS
         $nombresCSMC = [
             'CSMC TUPAC AMARU', 
             'CSMC COLOR ESPERANZA', 
@@ -147,7 +144,8 @@ class MonitoreoController extends Controller
     }
 
     /**
-     * GUARDAR PASO 1: Lógica de Numeración Independiente.
+     * GUARDAR PASO 1.
+     * CORRECCIÓN: Se cambiaron 'imagen1'/'imagen2' por 'foto1'/'foto2'.
      */
     public function store(Request $request)
     {
@@ -164,49 +162,37 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Actualizar datos del establecimiento
             $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
             $establecimiento->update([
                 'responsable' => mb_strtoupper(trim($request->responsable), 'UTF-8'),
                 'categoria'   => mb_strtoupper(trim($request->categoria), 'UTF-8'),
             ]);
 
-            // 2. LÓGICA DE SERIES INDEPENDIENTES
-            // Determinamos si es Especializada (CSMC) o Estándar (NO Especializada)
             $esEspecializada = $this->esEspecializada($establecimiento);
             $tipoOrigen = $esEspecializada ? 'ESPECIALIZADA' : 'ESTANDAR';
             
-            // Calculamos el siguiente número de acta PARA ESTE TIPO ESPECÍFICO
-            // Si es la primera Especializada, max() será null y empezará en 1.
-            // Si ya existen Especializadas, tomará el último y sumará 1.
-            // Esto es totalmente independiente de las actas 'ESTANDAR'.
             $ultimoNumero = CabeceraMonitoreo::where('tipo_origen', $tipoOrigen)->max('numero_acta');
             $nuevoNumero = $ultimoNumero ? ($ultimoNumero + 1) : 1;
 
-            // 3. Crear Cabecera
             $monitoreo = new CabeceraMonitoreo();
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
-            
-            // Guardamos el tipo y el número calculado
             $monitoreo->tipo_origen = $tipoOrigen;
             $monitoreo->numero_acta = $nuevoNumero;
-            
             $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
             $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8');
             $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
             $monitoreo->user_id = Auth::id();
 
+            // CORRECCIÓN AQUÍ: Usar foto1 y foto2
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
-                // Usamos imagen1 e imagen2 según tu BD real
-                if (isset($files[0])) { $monitoreo->imagen1 = $files[0]->store('evidencias', 'public'); }
-                if (isset($files[1])) { $monitoreo->imagen2 = $files[1]->store('evidencias', 'public'); }
+                if (isset($files[0])) { $monitoreo->foto1 = $files[0]->store('evidencias', 'public'); }
+                if (isset($files[1])) { $monitoreo->foto2 = $files[1]->store('evidencias', 'public'); }
             }
 
             $monitoreo->save();
 
-            // 4. Guardar Equipo
             foreach ($request->equipo as $persona) {
                 if (!empty($persona['doc'])) {
                     MonitoreoEquipo::create([
@@ -224,7 +210,6 @@ class MonitoreoController extends Controller
 
             DB::commit();
             
-            // Mensaje de éxito indicando el número generado
             $msjExito = "Acta {$tipoOrigen} N° {$nuevoNumero} generada con éxito.";
             return redirect()->route('usuario.monitoreo.modulos', $monitoreo->id)->with('success', $msjExito);
 
@@ -234,6 +219,10 @@ class MonitoreoController extends Controller
         }
     }
 
+    /**
+     * UPDATE
+     * CORRECCIÓN: Se cambiaron 'imagen1'/'imagen2' por 'foto1'/'foto2'.
+     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -248,22 +237,22 @@ class MonitoreoController extends Controller
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
             
-            // Nota: No actualizamos numero_acta ni tipo_origen al editar para no romper la secuencia
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
             $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
             $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8');
             $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
 
+            // CORRECCIÓN AQUÍ: Usar foto1 y foto2
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
                 if (isset($files[0])) {
-                    if ($monitoreo->imagen1) Storage::disk('public')->delete($monitoreo->imagen1);
-                    $monitoreo->imagen1 = $files[0]->store('evidencias', 'public');
+                    if ($monitoreo->foto1) Storage::disk('public')->delete($monitoreo->foto1);
+                    $monitoreo->foto1 = $files[0]->store('evidencias', 'public');
                 }
                 if (isset($files[1])) {
-                    if ($monitoreo->imagen2) Storage::disk('public')->delete($monitoreo->imagen2);
-                    $monitoreo->imagen2 = $files[1]->store('evidencias', 'public');
+                    if ($monitoreo->foto2) Storage::disk('public')->delete($monitoreo->foto2);
+                    $monitoreo->foto2 = $files[1]->store('evidencias', 'public');
                 }
             }
 
@@ -298,17 +287,12 @@ class MonitoreoController extends Controller
         }
     }
 
-    /**
-     * GESTIÓN DE MÓDULOS: Redirige a la vista correcta según si es CSMC o No.
-     */
     public function gestionarModulos($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo'])->findOrFail($id);
 
-        // Usamos el campo guardado en BD. Si es antiguo y está vacío, lo recalculamos.
         $esEspecializada = ($acta->tipo_origen === 'ESPECIALIZADA') || $this->esEspecializada($acta->establecimiento);
 
-        // Recuperar datos comunes
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->where('modulo_nombre', '!=', 'config_modulos')
                             ->pluck('modulo_nombre')->toArray();
@@ -322,20 +306,17 @@ class MonitoreoController extends Controller
                   
         $modulosActivos = $config ? $config->contenido : [];
 
-        // LÓGICA DE MÓDULOS DIFERENCIADOS
         if ($esEspecializada) {
-            // Módulos ÚNICOS para IPRESS ESPECIALIZADAS (CSMC)
             $modulosMaster = [
-                'citas_esp'   => ['nombre' => 'Admisión y Citas', 'icon' => 'calendar-clock'],
-                'triaje'  => ['nombre' => 'Triaje', 'icon' => 'clipboard-pulse'],
-                'acogida' => ['nombre' => 'Acogida', 'icon' => 'heart-handshake'], 
+                'citas_esp' => ['nombre' => 'Admisión y Citas', 'icon' => 'calendar-clock'],
+                'triaje'    => ['nombre' => 'Triaje', 'icon' => 'clipboard-pulse'],
+                'acogida'   => ['nombre' => 'Acogida', 'icon' => 'heart-handshake'], 
             ];
 
             return view('usuario.monitoreo.modulos_especializados', compact(
                 'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
             ));
         } else {
-            // Módulos ÚNICOS para IPRESS NO ESPECIALIZADAS
             $modulosMaster = [
                 'gestion_administrativa' => ['nombre' => '01. Gestión Administrativa', 'icon' => 'folder-kanban'],
                 'citas'                  => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
@@ -388,8 +369,9 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            if ($monitoreo->imagen1) Storage::disk('public')->delete($monitoreo->imagen1);
-            if ($monitoreo->imagen2) Storage::disk('public')->delete($monitoreo->imagen2);
+            // CORRECCIÓN AQUÍ TAMBIÉN: borrar foto1 y foto2
+            if ($monitoreo->foto1) Storage::disk('public')->delete($monitoreo->foto1);
+            if ($monitoreo->foto2) Storage::disk('public')->delete($monitoreo->foto2);
 
             $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->get();
             foreach ($modulos as $m) {
@@ -412,10 +394,7 @@ class MonitoreoController extends Controller
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
         $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', '!=', 'config_modulos')->get()->keyBy('modulo_nombre');
         
-        // CORRECCIÓN: Usar el número de acta correcto en el nombre del archivo según su tipo
         $prefijo = $acta->tipo_origen === 'ESPECIALIZADA' ? 'ACTA_CSMC_' : 'ACTA_IPRESS_';
-        
-        // Si numero_acta existe lo usa, sino usa el ID (fallback)
         $numero = str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT);
         
         return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))
