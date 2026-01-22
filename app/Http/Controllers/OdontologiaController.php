@@ -17,7 +17,6 @@ use App\Models\EquipoComputo;
 
 class OdontologiaController extends Controller
 {
-    // Constante para identificar el módulo en la BD
     const MODULO_ID = 'consulta_odontologia';
 
     // 1. MÉTODO INDEX
@@ -42,8 +41,13 @@ class OdontologiaController extends Controller
         $dbDni = ComDni::where('acta_id', $id)
                     ->where('modulo_id', self::MODULO_ID)->first();
         
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', 'consulta_odontologia') 
+                            ->first();
+        
+        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
 
-        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni'));
+        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
     }
 
     // 2. BUSCADOR PROFESIONAL
@@ -84,7 +88,6 @@ class OdontologiaController extends Controller
                     'apellido_materno' => $datosProfesional['apellido_materno'],
                     'nombres'          => $datosProfesional['nombres'],
                     'email'            => $datosProfesional['email'] ?? null,
-                    // Aseguramos mayúsculas y sin espacios para evitar duplicados "OTROS"
                     'cargo'            => isset($datosProfesional['cargo']) ? mb_strtoupper(trim($datosProfesional['cargo']), 'UTF-8') : null,
                     'telefono'         => $datosProfesional['telefono'] ?? null,
                 ]
@@ -135,8 +138,17 @@ class OdontologiaController extends Controller
                 ]
             );
 
-            // 5. INICIO LABORES / TABLAS AUXILIARES (AQUÍ ESTÁ EL CAMBIO PRINCIPAL)
+            // 5. INICIO LABORES / TABLAS AUXILIARES (AQUÍ ESTABA EL ERROR)
             $datosInicio = $data['inicio_labores'] ?? [];
+            
+            // Recibimos 'utiliza_sihce' desde el objeto 'profesional' del request
+            $datosProfesionalParaSihce = $data['profesional'] ?? [];
+
+            // --- CORRECCIÓN: DEFINIMOS LA VARIABLE ANTES DE USARLA ---
+            $valorUtilizaSihce = isset($datosProfesionalParaSihce['utiliza_sihce']) && $datosProfesionalParaSihce['utiliza_sihce'] !== '' 
+                                 ? $datosProfesionalParaSihce['utiliza_sihce'] 
+                                 : 'NO';
+
             ComDocuAsisten::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
                 [
@@ -144,22 +156,22 @@ class OdontologiaController extends Controller
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
                     'turno'             => $datosInicio['turno'] ?? null,
-                    
-                    // --- NUEVOS CAMPOS AGREGADOS ---
                     'fecha_registro'    => $datosInicio['fecha_registro'] ?? null,
                     'comentarios'       => isset($datosInicio['comentarios']) ? str($datosInicio['comentarios'])->upper() : null,
-                    // -------------------------------
+                    
+                    // Usamos la variable definida arriba
+                    'utiliza_sihce'     => $valorUtilizaSihce,
 
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
                     'receta'            => $datosInicio['receta'] ?? null,
-                    'orden_laboratorio' => $datosInicio['orden_lab'] ?? null, // Ojo: en blade es 'orden_lab', mapea a 'orden_laboratorio' en BD
+                    'orden_laboratorio' => $datosInicio['orden_lab'] ?? null, 
                 ]
             );
 
             // 6. SECCION DNI
             $datosDni = $data['seccion_dni'] ?? [];     
-            $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO';
+            $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'ELECTRONICO';
             
             ComDni::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
@@ -183,7 +195,10 @@ class OdontologiaController extends Controller
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
                 'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
-                'fecha_registro'         => $datosInicio['fecha_registro'] ?? null, // <--- AGREGADO
+                'fecha_registro'         => $datosInicio['fecha_registro'] ?? null,
+                
+                // Aquí usamos la variable que ya definimos arriba (ya no dará error)
+                'utiliza_sihce'          => $valorUtilizaSihce, 
                 
                 // Mapeo de Capacitación
                 'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
@@ -208,7 +223,7 @@ class OdontologiaController extends Controller
                 'orden_laboratorio'      => $datosInicio['orden_lab'] ?? null,
 
                 // Comentarios Generales
-                'comentarios_generales'  => $datosInicio['comentarios'] ?? null, // <--- AGREGADO
+                'comentarios_generales'  => $datosInicio['comentarios'] ?? null,
                 
                 // Snapshot de inventario
                 'inventario'             => $listaInventario,

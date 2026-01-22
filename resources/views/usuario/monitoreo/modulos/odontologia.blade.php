@@ -18,6 +18,14 @@
                     </div>
                     <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Odontología</h2>
 
+                    @if(!empty($fechaValidacion))
+                        <div class="flex items-center gap-2 mt-2 text-slate-400 animate-pulse">
+                            <i data-lucide="clock" class="w-3 h-3"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-widest">
+                                Guardado: {{ \Carbon\Carbon::parse($fechaValidacion)->format('d/m/Y - h:i A') }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
             </div>
             
@@ -29,27 +37,52 @@
         {{-- FORMULARIO --}}
         <form @submit.prevent="guardarTodo" class="space-y-8">
 
-            {{-- 1. SECCIÓN INICIO LABORES (Componente polimórfico) --}}
+            {{-- 1. SECCIÓN INICIO LABORES --}}
             <x-documentos model="form.inicio_labores" tipo="odontologia" />
 
-            {{-- 2. DATOS DEL PROFESIONAL (Componente) --}}
-            {{-- Nota: Si usas el mismo componente de Triaje, asegúrate que odontología tenga los campos necesarios. --}}
-            {{-- Por ahora usaré el componente 'seleccion-profesional' que ya arreglamos --}}
-            <x-seleccion-profesional model="form.profesional" />
+            {{-- 2. DATOS DEL PROFESIONAL --}}
+            <x-seleccion-profesional model="form.profesional" capacitacion="form.capacitacion" />
 
-            {{-- 3. CAPACITACIÓN (Componente) --}}
-            <x-capacitacion model="form.capacitacion" />
+            {{-- 3. SECCIÓN DNI --}}
+            <div x-show="form.profesional.tipo_doc === 'DNI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                <x-dni model="form.seccion_dni" />
+            </div>
 
-            {{-- 4. INVENTARIO DE EQUIPAMIENTO (Componente) --}}
+            {{-- 4. CAPACITACIÓN --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                <x-capacitacion model="form.capacitacion" />
+            </div>
+
+            {{-- 5. INVENTARIO --}}
             <x-equipamiento model="form.inventario" />
 
-            {{-- 5. DIFICULTADES CON EL SISTEMA (Componente) --}}
-            <x-dificultad model="form.dificultades" />
+            {{-- 6. DIFICULTADES --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                <x-dificultad model="form.dificultades" />
+            </div>
 
-            {{-- 6. SECCIÓN DNI (Componente) --}}
-            <x-dni model="form.seccion_dni" />
+            {{-- 7. MATERIALES (NUEVO COMPONENTE) --}}
+            <x-materiales model="form.inicio_labores" tipo="odontologia" />
 
-            {{-- 7. COMENTARIOS GENERALES (Nuevo bloque HTML) --}}
+            {{-- 8. COMENTARIOS GENERALES --}}
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
                 <div class="flex items-center gap-4 mb-6 relative z-10">
@@ -67,7 +100,7 @@
                 </div>
             </div>
 
-            {{-- 8. EVIDENCIA FOTOGRÁFICA (Componente) --}}
+            {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
             <x-fotos files="files" old-files="oldFiles" />
             
             {{-- BOTÓN GUARDAR --}}
@@ -92,8 +125,13 @@
         const dbInicioLabores = @json($dbInicioLabores ?? null);
         const dbDni           = @json($dbDni ?? null); 
 
-        // 1. Profesional & Capacitación
-        let initProfesional = { tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', email: '', cargo: '', telefono: '' };
+        // 1. Profesional
+        let initProfesional = { 
+            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', 
+            email: '', cargo: '', telefono: '',
+            utiliza_sihce: '' 
+        };
+
         let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: ''};
 
         if (dbCapacitacion) {
@@ -101,22 +139,16 @@
             initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
             initCapacitacion.decl_jurada = dbCapacitacion.decl_jurada || ''; 
             initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
+            
             if (dbCapacitacion.profesional) {
-                initProfesional = { ...dbCapacitacion.profesional };
+                initProfesional = { ...initProfesional, ...dbCapacitacion.profesional };
             }
         }
 
-        // 2. Inicio Labores (AGREGADO: fecha_registro y comentarios)
+        // 2. Inicio Labores (Incluye materiales y comentarios)
         let initInicioLabores = { 
-            fecha_registro: '', 
-            consultorios: '', 
-            nombre_consultorio: '', 
-            turno: '', 
-            fua: '', 
-            referencia: '', 
-            receta: '', 
-            orden_lab: '',
-            comentarios: '' 
+            fecha_registro: '', consultorios: '', nombre_consultorio: '', turno: '', 
+            fua: '', referencia: '', receta: '', orden_lab: '', comentarios: '' 
         };
         
         if (dbInicioLabores) {
@@ -129,9 +161,11 @@
             initInicioLabores.receta = dbInicioLabores.receta || '';
             initInicioLabores.orden_lab = dbInicioLabores.orden_laboratorio || '';
             initInicioLabores.comentarios = dbInicioLabores.comentarios || '';
+            
+            initProfesional.utiliza_sihce = dbInicioLabores.utiliza_sihce || ''; 
         }
 
-        // 3. Sección DNI
+        // 3. DNI
         let initDni = { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' };
         if (dbDni) {
             initDni.tipo_dni = dbDni.tip_dni || '';
@@ -140,21 +174,41 @@
             initDni.comentarios = dbDni.comentarios || '';
         }
 
-        // 4. Inventario (Preparación)
+        // 4. Inventario
         let initInventario = [];
         if (dbInventario && dbInventario.length > 0) {
             initInventario = dbInventario.map(item => {
                 let fullCode = item.nro_serie || '';
-                let tipoDetectado = 'NS'; 
+                
+                // Valores por defecto
+                let tipoDetectado = 'S'; 
                 let codigoLimpio = fullCode;
-                if (fullCode.includes(' ')) {
-                    let partes = fullCode.split(' ');
-                    // Soporte para NS, CB y S/C
-                    if (partes.length > 0 && ['NS', 'CB', 'S/C', 'S', 'CP'].includes(partes[0])) {
-                        tipoDetectado = partes[0];
-                        codigoLimpio = partes.slice(1).join(' '); 
+
+                // Lógica mejorada para separar el Prefijo del Código
+                // Buscamos si empieza con "S " o "CP " (o los antiguos NS, CB, S/C)
+                const prefijosPosibles = ['S', 'CP', 'NS', 'CB', 'S/C'];
+                
+                for (let prefijo of prefijosPosibles) {
+                    // Verificamos si la cadena comienza con el prefijo + espacio
+                    if (fullCode.startsWith(prefijo + ' ')) {
+                        tipoDetectado = prefijo;
+                        // Cortamos el prefijo y el espacio para dejar solo el número
+                        codigoLimpio = fullCode.substring(prefijo.length + 1);
+                        break; 
                     }
                 }
+
+                // CORRECCIÓN VISUAL: Si la BD tiene un tipo antiguo (NS, CB, etc)
+                // forzamos a que el selector muestre 'S' o 'CP' para que no quede en blanco.
+                if (tipoDetectado !== 'S' && tipoDetectado !== 'CP') {
+                    tipoDetectado = 'S'; // Por defecto S si no se reconoce
+                }
+
+                // CORRECCIÓN DE SEGURIDAD: 
+                // Si por algún error de guardado anterior el código limpio aún tiene el prefijo (ej: "S 456"), lo limpiamos de nuevo.
+                if (codigoLimpio.startsWith('S ')) codigoLimpio = codigoLimpio.substring(2);
+                if (codigoLimpio.startsWith('CP ')) codigoLimpio = codigoLimpio.substring(3);
+
                 return {
                     id: Date.now() + Math.random(),
                     descripcion: item.descripcion,
@@ -178,7 +232,6 @@
             saving: false,
             files: [],
             oldFiles: dbFotos,
-            
             form: {
                 profesional: initProfesional,
                 capacitacion: initCapacitacion,
@@ -187,19 +240,15 @@
                 inventario: initInventario,
                 dificultades: initDificultades,
             },
-
             guardarTodo() {
                 this.saving = true;
                 let formToSend = JSON.parse(JSON.stringify(this.form));
-
-                // Unir códigos Inventario
                 formToSend.inventario = formToSend.inventario.map(item => {
                     let tipo = item.tipo_codigo || 'NS';
                     let valor = item.codigo || '';
                     item.codigo = (tipo + ' ' + valor).trim(); 
                     return item;
                 });
-
                 let fd = new FormData();
                 fd.append('data', JSON.stringify(formToSend));
                 this.files.forEach(f => fd.append('fotos[]', f));
