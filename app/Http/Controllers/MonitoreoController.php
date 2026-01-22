@@ -145,7 +145,6 @@ class MonitoreoController extends Controller
 
     /**
      * GUARDAR PASO 1.
-     * CORRECCIÓN: Se cambiaron 'imagen1'/'imagen2' por 'foto1'/'foto2'.
      */
     public function store(Request $request)
     {
@@ -184,7 +183,7 @@ class MonitoreoController extends Controller
             $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
             $monitoreo->user_id = Auth::id();
 
-            // CORRECCIÓN AQUÍ: Usar foto1 y foto2
+            // Guardar fotos usando campos correctos de BD: foto1 y foto2
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
                 if (isset($files[0])) { $monitoreo->foto1 = $files[0]->store('evidencias', 'public'); }
@@ -221,7 +220,6 @@ class MonitoreoController extends Controller
 
     /**
      * UPDATE
-     * CORRECCIÓN: Se cambiaron 'imagen1'/'imagen2' por 'foto1'/'foto2'.
      */
     public function update(Request $request, $id)
     {
@@ -243,7 +241,6 @@ class MonitoreoController extends Controller
             $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8');
             $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
 
-            // CORRECCIÓN AQUÍ: Usar foto1 y foto2
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
                 if (isset($files[0])) {
@@ -307,17 +304,25 @@ class MonitoreoController extends Controller
         $modulosActivos = $config ? $config->contenido : [];
 
         if ($esEspecializada) {
+            // LISTA DE MÓDULOS ESPECIALIZADOS (CSMC) - ORDEN ACTUALIZADO
             $modulosMaster = [
-                'citas_esp' => ['nombre' => 'Citas', 'icon' => 'calendar-clock'],
-                'triaje_esp'    => ['nombre' => 'Triaje', 'icon' => 'clipboard-pulse'],
-                'acogida'   => ['nombre' => 'Acogida', 'icon' => 'heart-handshake'], 
-                
+                'citas_esp'         => ['nombre' => '1. Citas', 'icon' => 'calendar-clock'],
+                'triaje_esp'        => ['nombre' => '2. Triaje', 'icon' => 'stethoscope'],
+                'acogida'           => ['nombre' => '3. Acogida', 'icon' => 'heart-handshake'],
+                'psicologia'        => ['nombre' => '4. Psicología', 'icon' => 'brain'],
+                'psiquiatria'       => ['nombre' => '5. Psiquiatría', 'icon' => 'user-cog'],
+                'medicina'          => ['nombre' => '6. Medicina', 'icon' => 'stethoscope'],
+                'terapia'           => ['nombre' => '7. Terapia', 'icon' => 'activity'],
+                'toma_muestra'      => ['nombre' => '8. Toma de Muestra', 'icon' => 'test-tube'],
+                'farmacia_esp'      => ['nombre' => '9. Farmacia', 'icon' => 'pill'],
+                'asistencia_social' => ['nombre' => '10. Asistencia Social', 'icon' => 'users'],
             ];
 
             return view('usuario.monitoreo.modulos_especializados', compact(
                 'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
             ));
         } else {
+            // LISTA DE MÓDULOS ESTÁNDAR (IPRESS NO ESPECIALIZADAS)
             $modulosMaster = [
                 'gestion_administrativa' => ['nombre' => '01. Gestión Administrativa', 'icon' => 'folder-kanban'],
                 'citas'                  => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
@@ -370,7 +375,7 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            // CORRECCIÓN AQUÍ TAMBIÉN: borrar foto1 y foto2
+            
             if ($monitoreo->foto1) Storage::disk('public')->delete($monitoreo->foto1);
             if ($monitoreo->foto2) Storage::disk('public')->delete($monitoreo->foto2);
 
