@@ -168,7 +168,7 @@ class MonitoreoController extends Controller
             ]);
 
             $esEspecializada = $this->esEspecializada($establecimiento);
-            $tipoOrigen = $esEspecializada ? 'ESPECIALIZADA' : 'ESTANDAR';
+            $tipoOrigen = $esEspecializada ? 'ESPECIALIZADA' : 'NO ESPECIALIZADA';
             
             $ultimoNumero = CabeceraMonitoreo::where('tipo_origen', $tipoOrigen)->max('numero_acta');
             $nuevoNumero = $ultimoNumero ? ($ultimoNumero + 1) : 1;
