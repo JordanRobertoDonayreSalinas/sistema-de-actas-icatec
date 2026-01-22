@@ -12,10 +12,27 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route; // Agregado para validación de rutas
 use Carbon\Carbon;
 
 class MonitoreoController extends Controller
 {
+    /**
+     * Función auxiliar para determinar si un establecimiento es Especializado (CSMC).
+     */
+    private function esEspecializada($establecimiento)
+    {
+        $codigosCSMC = ['25933','28653','27197','34021','25977','33478','27199','30478'];
+        $nombresCSMC = [
+            'CSMC TUPAC AMARU', 'CSMC COLOR ESPERANZA', 'CSMC DECÍDETE A SER FELIZ',
+            'CSMC SANTISIMA VIRGEN DE YAUCA', 'CSMC VITALIZA', 'CSMC CRISTO MORENO DE LUREN',
+            'CSMC NUEVO HORIZONTE', 'CSMC MENTE SANA'
+        ];
+
+        return in_array($establecimiento->codigo, $codigosCSMC) || 
+               in_array(strtoupper($establecimiento->nombre), $nombresCSMC);
+    }
+
     /**
      * Listado principal: Muestra todos los monitoreos con filtros de estado y fechas predefinidas.
      */
@@ -133,6 +150,7 @@ class MonitoreoController extends Controller
 
     /**
      * GUARDAR PASO 1: Cabecera e Integrantes.
+     * Calcula número de acta independiente (CSMC vs Estándar).
      */
     public function store(Request $request)
     {
@@ -149,15 +167,29 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
 
+            // 1. Actualizar establecimiento
             $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
             $establecimiento->update([
                 'responsable' => mb_strtoupper(trim($request->responsable), 'UTF-8'),
                 'categoria'   => mb_strtoupper(trim($request->categoria), 'UTF-8'),
             ]);
 
+            // 2. Determinar Tipo y Número de Acta
+            $tipoOrigen = $this->esEspecializada($establecimiento) ? 'ESPECIALIZADA' : 'ESTANDAR';
+            
+            // Buscar el último número de este tipo específico y sumar 1
+            $ultimoNumero = CabeceraMonitoreo::where('tipo_origen', $tipoOrigen)->max('numero_acta');
+            $nuevoNumero = $ultimoNumero ? ($ultimoNumero + 1) : 1;
+
+            // 3. Crear Cabecera
             $monitoreo = new CabeceraMonitoreo();
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
+            
+            // Nuevos campos para control de series
+            $monitoreo->tipo_origen = $tipoOrigen;
+            $monitoreo->numero_acta = $nuevoNumero;
+            
             $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
             $monitoreo->categoria_congelada = mb_strtoupper(trim($request->categoria), 'UTF-8');
             $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
@@ -171,6 +203,7 @@ class MonitoreoController extends Controller
 
             $monitoreo->save();
 
+            // 4. Guardar Equipo
             foreach ($request->equipo as $persona) {
                 if (!empty($persona['doc'])) {
                     MonitoreoEquipo::create([
@@ -187,7 +220,10 @@ class MonitoreoController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('usuario.monitoreo.modulos', $monitoreo->id)->with('success', 'Acta iniciada correctamente.');
+            
+            $msjExito = "Acta {$tipoOrigen} N° {$nuevoNumero} iniciada correctamente.";
+            return redirect()->route('usuario.monitoreo.modulos', $monitoreo->id)->with('success', $msjExito);
+
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors('Error: ' . $e->getMessage())->withInput();
@@ -257,36 +293,69 @@ class MonitoreoController extends Controller
         }
     }
 
+    /**
+     * GESTIÓN DE MÓDULOS: Detecta si es CSMC o IPRESS Normal y redirige.
+     */
     public function gestionarModulos($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo'])->findOrFail($id);
-        $modulosMaster = [
-            'gestion_administrativa' => ['nombre' => '01. Gestión Administrativa', 'icon' => 'folder-kanban'],
-            'citas'                  => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
-            'triaje'                 => ['nombre' => '03. Triaje', 'icon' => 'stethoscope'],
-            'consulta_medicina'      => ['nombre' => '04. Consulta Externa: Medicina', 'icon' => 'user-cog'],
-            'consulta_odontologia'   => ['nombre' => '05. Consulta Externa: Odontología', 'icon' => 'smile'],
-            'consulta_nutricion'     => ['nombre' => '06. Consulta Externa: Nutrición', 'icon' => 'apple'],
-            'consulta_psicologia'    => ['nombre' => '07. Consulta Externa: Psicología', 'icon' => 'brain'],
-            'cred'                   => ['nombre' => '08. CRED', 'icon' => 'baby'],
-            'inmunizaciones'         => ['nombre' => '09. Inmunizaciones', 'icon' => 'syringe'],
-            'atencion_prenatal'      => ['nombre' => '10. Atención Prenatal', 'icon' => 'heart-pulse'],
-            'planificacion_familiar' => ['nombre' => '11. Planificación Familiar', 'icon' => 'users'],
-            'parto'                  => ['nombre' => '12. Parto', 'icon' => 'bed'],
-            'puerperio'              => ['nombre' => '13. Puerperio', 'icon' => 'home'],
-            'fua_electronico'        => ['nombre' => '14. FUA Electrónico', 'icon' => 'file-digit'],
-            'farmacia'               => ['nombre' => '15. Farmacia', 'icon' => 'pill'],
-            'referencias'            => ['nombre' => '16. Refcon', 'icon' => 'map-pinned'],
-            'laboratorio'            => ['nombre' => '17. Laboratorio', 'icon' => 'test-tube-2'],
-            'urgencias'              => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
-        ];
 
-        $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', '!=', 'config_modulos')->pluck('modulo_nombre')->toArray();
-        $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->whereNotNull('pdf_firmado_path')->pluck('modulo_nombre')->toArray();
-        $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', 'config_modulos')->first();
+        // 1. Usar el campo guardado en BD si existe, o recalcular si es antiguo
+        $esEspecializada = ($acta->tipo_origen === 'ESPECIALIZADA') || $this->esEspecializada($acta->establecimiento);
+
+        // 2. RECUPERAR ESTADOS
+        $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', '!=', 'config_modulos')
+                            ->pluck('modulo_nombre')->toArray();
+                            
+        $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                           ->whereNotNull('pdf_firmado_path')
+                           ->pluck('modulo_nombre')->toArray();
+                           
+        $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                  ->where('modulo_nombre', 'config_modulos')->first();
+                  
         $modulosActivos = $config ? $config->contenido : [];
 
-        return view('usuario.monitoreo.modulos', compact('acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'));
+        // 3. SELECCIÓN DE VISTA Y MÓDULOS
+        if ($esEspecializada) {
+            // Módulos especializados para CSMC
+            $modulosMaster = [
+                'citas'   => ['nombre' => 'Admisión y Citas', 'icon' => 'calendar-clock'],
+                'triaje'  => ['nombre' => 'Triaje', 'icon' => 'clipboard-pulse'],
+                'acogida' => ['nombre' => 'Acogida', 'icon' => 'heart-handshake'], 
+            ];
+
+            return view('usuario.monitoreo.modulos_especializados', compact(
+                'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
+            ));
+        } else {
+            // Módulos Estándar (IPRESS Normal)
+            $modulosMaster = [
+                'gestion_administrativa' => ['nombre' => '01. Gestión Administrativa', 'icon' => 'folder-kanban'],
+                'citas'                  => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
+                'triaje'                 => ['nombre' => '03. Triaje', 'icon' => 'stethoscope'],
+                'consulta_medicina'      => ['nombre' => '04. Consulta Externa: Medicina', 'icon' => 'user-cog'],
+                'consulta_odontologia'   => ['nombre' => '05. Consulta Externa: Odontología', 'icon' => 'smile'],
+                'consulta_nutricion'     => ['nombre' => '06. Consulta Externa: Nutrición', 'icon' => 'apple'],
+                'consulta_psicologia'    => ['nombre' => '07. Consulta Externa: Psicología', 'icon' => 'brain'],
+                'cred'                   => ['nombre' => '08. CRED', 'icon' => 'baby'],
+                'inmunizaciones'         => ['nombre' => '09. Inmunizaciones', 'icon' => 'syringe'],
+                'atencion_prenatal'      => ['nombre' => '10. Atención Prenatal', 'icon' => 'heart-pulse'],
+                'planificacion_familiar' => ['nombre' => '11. Planificación Familiar', 'icon' => 'users'],
+                'parto'                  => ['nombre' => '12. Parto', 'icon' => 'bed'],
+                'puerperio'              => ['nombre' => '13. Puerperio', 'icon' => 'home'],
+                'fua_electronico'        => ['nombre' => '14. FUA Electrónico', 'icon' => 'file-digit'],
+                'farmacia'               => ['nombre' => '15. Farmacia', 'icon' => 'pill'],
+                'referencias'            => ['nombre' => '16. Refcon', 'icon' => 'map-pinned'],
+                'laboratorio'            => ['nombre' => '17. Laboratorio', 'icon' => 'test-tube-2'],
+                'urgencias'              => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
+            ];
+
+            return view('usuario.monitoreo.modulos', compact(
+                'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
+            ));
+        }
     }
 
     public function toggleModulos(Request $request, $id)
@@ -337,7 +406,14 @@ class MonitoreoController extends Controller
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
         $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', '!=', 'config_modulos')->get()->keyBy('modulo_nombre');
-        return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))->setPaper('a4', 'portrait')->stream("ACTA_CONSOLIDADA_NRO_{$acta->id}.pdf");
+        
+        // CORRECCIÓN: Usar el número de acta correcto en el nombre del archivo
+        $prefijo = $acta->tipo_origen === 'ESPECIALIZADA' ? 'ACTA_CSMC_' : 'ACTA_IPRESS_';
+        $numero = str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT);
+        
+        return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))
+            ->setPaper('a4', 'portrait')
+            ->stream("{$prefijo}{$numero}.pdf");
     }
 
     /**

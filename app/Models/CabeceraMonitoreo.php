@@ -18,7 +18,7 @@ class CabeceraMonitoreo extends Model
 
     /**
      * Atributos asignables masivamente.
-     * Se han agregado 'foto1' y 'foto2' para permitir el guardado de evidencias.
+     * IMPORTANTE: Se agregaron 'tipo_origen' y 'numero_acta' para permitir la numeración independiente.
      */
     protected $fillable = [
         'user_id',
@@ -31,7 +31,11 @@ class CabeceraMonitoreo extends Model
         'categoria_congelada',
         'responsable_congelado',
         'foto1',
-        'foto2'
+        'foto2',
+        
+        // CAMPOS NUEVOS PARA LA LÓGICA DE SERIES
+        'tipo_origen', // 'ESTANDAR' o 'ESPECIALIZADA'
+        'numero_acta'  // Correlativo (1, 2, 3...)
     ];
 
     /**
@@ -69,13 +73,18 @@ class CabeceraMonitoreo extends Model
 
     /**
      * Accesor para obtener el progreso del monitoreo.
-     * Calcula el porcentaje basado en los módulos completados.
+     * CORREGIDO: Calcula el porcentaje dinámicamente según si es CSMC (3 módulos) o IPRESS (18 módulos).
      */
     public function getProgresoAttribute()
     {
-        $totalModulos = 18; // Actualizado a 18 según tu lista de módulos jerárquicos
-        $completados = $this->detalles()->where('modulo_nombre', '!=', 'config_modulos')->count();
+        // Si es ESPECIALIZADA son 3 módulos (Citas, Triaje, Acogida)
+        // Si es ESTANDAR son 18 módulos
+        $totalModulos = ($this->tipo_origen === 'ESPECIALIZADA') ? 3 : 18;
         
-        return ($totalModulos > 0) ? ($completados / $totalModulos) * 100 : 0;
+        $completados = $this->detalles()
+                            ->where('modulo_nombre', '!=', 'config_modulos')
+                            ->count();
+        
+        return ($totalModulos > 0) ? round(($completados / $totalModulos) * 100) : 0;
     }
 }
