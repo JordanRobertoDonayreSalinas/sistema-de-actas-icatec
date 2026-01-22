@@ -53,7 +53,7 @@
 
     <div class="max-w-5xl mx-auto px-6 -mt-16 relative z-20">
         
-        <form action="{{ route('usuario.monitoreo.guardar_modulo', ['id' => $monitoreo->id, 'modulo' => 'citas_csmc']) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('usuario.monitoreo.citas_esp.store', ['id' => $monitoreo->id, 'modulo' => 'citas_csmc']) }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             {{-- BLOQUE 1: GESTIÓN DE CITAS Y ADMISIÓN --}}

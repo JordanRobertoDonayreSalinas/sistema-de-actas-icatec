@@ -326,7 +326,7 @@ class MonitoreoController extends Controller
         if ($esEspecializada) {
             // Módulos ÚNICOS para IPRESS ESPECIALIZADAS (CSMC)
             $modulosMaster = [
-                'citas'   => ['nombre' => 'Admisión y Citas', 'icon' => 'calendar-clock'],
+                'citas_esp'   => ['nombre' => 'Admisión y Citas', 'icon' => 'calendar-clock'],
                 'triaje'  => ['nombre' => 'Triaje', 'icon' => 'clipboard-pulse'],
                 'acogida' => ['nombre' => 'Acogida', 'icon' => 'heart-handshake'], 
             ];
