@@ -8,20 +8,19 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\CabeceraMonitoreo;
 use App\Models\Profesional;
 use App\Models\ComCapacitacion;
-//use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
 use App\Models\ComDocuAsisten;
 use App\Models\ComDni;
-
 use App\Models\MonitoreoModulos;
 use App\Models\EquipoComputo;
 
 class PsicologiaController extends Controller
 {
-    // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
+    // Constante para identificar el módulo
     const MODULO_ID = 'consulta_psicologia';
 
+    // 1. MÉTODO INDEX
     public function index($id){
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
         
@@ -39,22 +38,21 @@ class PsicologiaController extends Controller
 
         $dbInicioLabores = ComDocuAsisten::where('acta_id', $id)
                             ->where('modulo_id', self::MODULO_ID)->first();
+                            
         $dbDni = ComDni::where('acta_id', $id)
                     ->where('modulo_id', self::MODULO_ID)->first();
 
-        // --- Obtener fecha de actualización ---
+        // --- Obtener fecha de actualización para mostrar en la vista ---
         $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', 'triaje')
+                            ->where('modulo_nombre', 'consulta_psicologia')
                             ->first();
         
-        // Si existe, tomamos la fecha, si no, now
-        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : now();
+        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
 
-        // Enviamos la nueva variable a la vista
         return view('usuario.monitoreo.modulos.psicologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
     }
 
-    // 2. BUSCADOR (Sin cambios)
+    // 2. BUSCADOR PROFESIONAL
     public function buscarProfesional($doc)
     {
         $profesional = Profesional::where('doc', $doc)->first();
@@ -66,8 +64,7 @@ class PsicologiaController extends Controller
         }
     }
 
-    // 3. STORE: Guarda y Redirige
-    // 3. STORE: Guarda y Redirige
+    // 3. STORE: Guardar datos
     public function store(Request $request, $id)
     {
         $data = json_decode($request->input('data'), true);
@@ -79,9 +76,9 @@ class PsicologiaController extends Controller
         try {
             DB::beginTransaction();
 
-            // ---------------------------------------------------------
-            // A. GUARDADO SQL (TABLAS RELACIONALES) - ESTO ESTÁ BIEN
-            // ---------------------------------------------------------
+            // =========================================================
+            // A. GUARDADO EN TABLAS SQL
+            // =========================================================
 
             // 1. PROFESIONAL
             $datosProfesional = $data['profesional'];
@@ -93,24 +90,26 @@ class PsicologiaController extends Controller
                     'apellido_materno' => $datosProfesional['apellido_materno'],
                     'nombres'          => $datosProfesional['nombres'],
                     'email'            => $datosProfesional['email'] ?? null,
+                    // Aseguramos mayúsculas y sin espacios
+                    'cargo'            => isset($datosProfesional['cargo']) ? mb_strtoupper(trim($datosProfesional['cargo']), 'UTF-8') : null,
                     'telefono'         => $datosProfesional['telefono'] ?? null,
                 ]
             );
 
-            // 2. CAPACITACIÓN (SQL)
+            // 2. CAPACITACIÓN
             $datosCapacitacion = $data['capacitacion'];
             ComCapacitacion::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
                 [
-                    'profesional_id'  => $profesional->id,
-                    'recibieron_cap'  => $datosCapacitacion['recibieron_cap'],
-                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
+                    'profesional_id'        => $profesional->id,
+                    'recibieron_cap'        => $datosCapacitacion['recibieron_cap'],
+                    'institucion_cap'       => ($datosCapacitacion['recibieron_cap'] === 'SI') ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
                     'decl_jurada'           => $datosCapacitacion['decl_jurada'] ?? null,
                     'comp_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? null,
                 ]
             );
 
-            // 3. INVENTARIO (SQL)
+            // 3. INVENTARIO
             EquipoComputo::where('cabecera_monitoreo_id', $id)
                          ->where('modulo', self::MODULO_ID)
                          ->delete();
@@ -122,7 +121,7 @@ class PsicologiaController extends Controller
                         'cabecera_monitoreo_id' => $id,
                         'modulo'                => self::MODULO_ID,
                         'descripcion'           => $item['descripcion'],
-                        'cantidad'              => '1',
+                        'cantidad'              => 1,
                         'estado'                => $item['estado'] ?? 'OPERATIVO',
                         'nro_serie'             => $item['codigo'] ? str($item['codigo'])->upper() : null,
                         'propio'                => $item['propiedad'] ?? 'COMPARTIDO',
@@ -131,7 +130,7 @@ class PsicologiaController extends Controller
                 }
             }
 
-            // 4. DIFICULTADES (SQL)
+            // 4. DIFICULTADES
             $datosDificultad = $data['dificultades'];
             ComDificultad::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
@@ -142,7 +141,7 @@ class PsicologiaController extends Controller
                 ]
             );
 
-            // 5. INICIO LABORES (SQL)
+            // 5. INICIO LABORES / TABLAS AUXILIARES (AQUÍ ESTÁ EL CAMBIO)
             $datosInicio = $data['inicio_labores'] ?? [];
             ComDocuAsisten::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
@@ -151,14 +150,20 @@ class PsicologiaController extends Controller
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
                     'turno'             => $datosInicio['turno'] ?? null,
+                    
+                    // --- NUEVOS CAMPOS ---
+                    'fecha_registro'    => $datosInicio['fecha_registro'] ?? null,
+                    'comentarios'       => isset($datosInicio['comentarios']) ? str($datosInicio['comentarios'])->upper() : null,
+                    // ---------------------
+
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
-                    'receta'            => $datosInicio['receta'] ?? null,
+                    'receta'            => $datosInicio['receta'] ?? null, // Se guardan aunque en Psico no se usen (por si acaso)
                     'orden_laboratorio' => $datosInicio['orden_lab'] ?? null,
                 ]
             );
 
-            // 6. SECCIÓN DNI (SQL)
+            // 6. SECCIÓN DNI
             $datosDni = $data['seccion_dni'] ?? [];     
             $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO';
             
@@ -169,49 +174,57 @@ class PsicologiaController extends Controller
                     'tip_dni'        => $datosDni['tipo_dni'] ?? null,
                     'version_dni'    => $esElectronico ? ($datosDni['version_dnie'] ?? null) : null,
                     'firma_sihce'    => $esElectronico ? ($datosDni['firma_sihce'] ?? null) : null,
-                    'comentarios'    => $datosDni['comentarios'] ?? null,
+                    'comentarios'    => isset($datosDni['comentarios']) ? str($datosDni['comentarios'])->upper() : null,
                 ]
             );
 
-            // ---------------------------------------------------------
-            // B. TRANSFORMACIÓN JSON (AQUÍ ESTÁ LA SOLUCIÓN AL PDF)
-            // ---------------------------------------------------------
-            // Creamos un array nuevo "plano" que coincida con lo que pide el PDF
+            // =========================================================
+            // B. PREPARACIÓN DEL JSON PARA EL PDF
+            // =========================================================
             
             $contenidoParaPDF = [
                 'profesional'            => $data['profesional'],
                 
-                // Mapeo manual de claves anidadas a claves planas
+                // Mapeo de Inicio de Labores
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
                 'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
+                'fecha_registro'         => $datosInicio['fecha_registro'] ?? null, // <--- AGREGADO
                 
+                // Mapeo de Capacitación
                 'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
                 'firmo_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
                 'recibio_capacitacion'   => $datosCapacitacion['recibieron_cap'] ?? 'NO',
                 'inst_capacitacion'      => ($datosCapacitacion['recibieron_cap'] === 'SI') ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
                 
+                // Mapeo de DNI
                 'tipo_dni_fisico'        => ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO' ? 'ELECTRONICO' : 'AZUL',
                 'dnie_version'           => $esElectronico ? ($datosDni['version_dnie'] ?? null) : null,
                 'dnie_firma_sihce'       => $esElectronico ? ($datosDni['firma_sihce'] ?? null) : null,
                 'dni_observacion'        => $datosDni['comentarios'] ?? null,
                 
+                // Mapeo de Dificultades
                 'comunica_a'             => $datosDificultad['institucion'] ?? null,
                 'medio_soporte'          => $datosDificultad['medio'] ?? null,
 
+                // Campos específicos
                 'fua'                    => $datosInicio['fua'] ?? null,
-                'receta'                 => $datosInicio['receta'] ?? null,
+                'referencia'             => $datosInicio['referencia'] ?? null,
+                'receta'                 => $datosInicio['receta'] ?? null, 
                 
-                // Estos campos extra aseguran que no falle si la vista los pide
-                'comentarios'            => null 
+                // Comentarios Generales
+                'comentarios_generales'  => $datosInicio['comentarios'] ?? null, // <--- AGREGADO
+                
+                // Snapshot inventario
+                'inventario'             => $listaInventario,
             ];
 
-            // ---------------------------------------------------------
-            // C. FOTOS
-            // ---------------------------------------------------------
+            // =========================================================
+            // C. GESTIÓN DE FOTOS
+            // =========================================================
             $rutasFotos = [];
             
-            // Recuperar fotos anteriores si existen en la BD
+            // Recuperar fotos anteriores
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo_nombre', 'consulta_psicologia')->first();
             
@@ -236,19 +249,18 @@ class PsicologiaController extends Controller
                 }
             }
 
-            // Agregamos las fotos al JSON "Plano" (Usando singular para estandarizar con medicina)
             $contenidoParaPDF['foto_evidencia'] = $rutasFotos;
 
-            // ---------------------------------------------------------
-            // D. GUARDAR EN MONITOREO_MODULOS
-            // ---------------------------------------------------------
+            // =========================================================
+            // D. GUARDAR JSON FINAL
+            // =========================================================
             MonitoreoModulos::updateOrCreate(
                 [
                     'cabecera_monitoreo_id' => $id, 
                     'modulo_nombre'         => 'consulta_psicologia'
                 ],
                 [
-                    'contenido' => $contenidoParaPDF, // ¡AQUÍ GUARDAMOS EL ARRAY TRANSFORMADO!
+                    'contenido' => $contenidoParaPDF,
                     'pdf_firmado_path' => null
                 ]
             );
@@ -267,7 +279,7 @@ class PsicologiaController extends Controller
         try {
             $foto = ComFotos::findOrFail($id);
 
-            // 1. Borrar archivo del almacenamiento (disco 'public')
+            // 1. Borrar archivo del almacenamiento
             if (Storage::disk('public')->exists($foto->url_foto)) {
                 Storage::disk('public')->delete($foto->url_foto);
             }

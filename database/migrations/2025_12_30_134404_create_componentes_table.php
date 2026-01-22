@@ -70,7 +70,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 6. Componente Documentos Asistencias
+        // 6. Componente Documentos Asistencias {Inicio de Labores}
         Schema::create('com_docu_asisten', function (Blueprint $table) {
             $table->id();
             $table->foreignId('acta_id')->constrained('mon_cabecera_monitoreo')->onDelete('cascade');
@@ -81,6 +81,7 @@ return new class extends Migration
             $table->string('cant_consultorios'); 
             $table->string('nombre_consultorio'); 
             $table->string('turno'); // Opciones: MAÑANA, TARDE
+            $table->date('fecha_registro');
             $table->string('fua')->nullable(); // Opciones: FUA ELECTRONICA, FUA MANUAL
             $table->string('referencia')->nullable(); // Opciones: REFERENCIA POR SIHCE, DIRECTO A REFCON
             $table->string('receta')->nullable(); // Opciones: RECETA POR SIHCE, RECETA MANUAL

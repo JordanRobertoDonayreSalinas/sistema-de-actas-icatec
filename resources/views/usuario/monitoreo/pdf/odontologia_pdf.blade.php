@@ -36,7 +36,7 @@
             color: #555; 
         }
 
-        /* --- TÍTULOS DE SECCIÓN (ESTILO NUEVO) --- */
+        /* --- TÍTULOS DE SECCIÓN --- */
         .section-header {
             background-color: #f3f4f6; /* Fondo gris claro */
             border-left: 5px solid #4f46e5; /* Barra azul a la izquierda */
@@ -123,22 +123,22 @@
 
         .signature-frame {
             width: 350px;
-            height: 160px;         /* <--- AUMENTADO (Antes 120px) */
+            height: 160px;
             margin: 0 auto;
             border: 1px solid #cbd5e1;
-            border-radius: 12px;   /* Bordes redondeados */
-            position: relative;    /* Necesario para anclar el texto abajo */
+            border-radius: 12px;
+            position: relative;
             background-color: #fff;
         }
 
         .signature-box {
-            position: absolute;    /* Se pega al fondo del marco */
-            bottom: 15px;          /* Distancia desde abajo */
+            position: absolute;
+            bottom: 15px;
             left: 0;
             right: 0;
-            width: 85%;            /* Ancho de la línea interna */
+            width: 85%;
             margin: 0 auto;
-            border-top: 1px solid #000; /* La línea de firma */
+            border-top: 1px solid #000;
             padding-top: 8px;
             text-align: center;
         }
@@ -152,31 +152,32 @@
         <p>
             ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre ?? '-' }} |
-            FECHA: {{ \Carbon\Carbon::parse($acta->fecha_generacion ?? $acta->fecha_validacion)->format('d/m/Y') }}
+            FECHA: {{ $dbInicioLabores->fecha_registro ? \Carbon\Carbon::parse($dbInicioLabores->fecha_registro)->format('d/m/Y') : '-' }}
         </p>
     </div>
 
     {{-- 1. DETALLES DEL CONSULTORIO --}}
     <div class="section-header">1. DETALLES DEL CONSULTORIO</div>
     <table class="details-table">
-        {{-- FILA 1: Cantidad --}}
         <tr>
             <td class="label-cell">CANTIDAD CONSULTORIOS:</td>
-            {{-- colspan="3" asegura que la celda llegue hasta el borde derecho --}}
             <td class="value-cell" colspan="3">{{ $dbInicioLabores->cant_consultorios ?? '-' }}</td>
         </tr>
-
-        {{-- FILA 2: Consultorio Entrevistado --}}
         <tr>
             <td class="label-cell">CONSULTORIO ENTREVISTADO:</td>
             <td class="value-cell" colspan="3">{{ $dbInicioLabores->nombre_consultorio ?? '-' }}</td>
         </tr>
-
-        {{-- FILA 3: Turno --}}
         <tr>
             <td class="label-cell">TURNO:</td> 
             <td class="value-cell" colspan="3">{{ $dbInicioLabores->turno ?? '-' }}</td> 
         </tr>
+        {{-- Agregamos la fecha de registro/monitoreo --}}
+        {{-- <tr>
+            <td class="label-cell">FECHA DE MONITOREO:</td> 
+            <td class="value-cell" colspan="3">
+                {{ $dbInicioLabores->fecha_registro ? \Carbon\Carbon::parse($dbInicioLabores->fecha_registro)->format('d/m/Y') : '-' }}
+            </td> 
+        </tr> --}}
     </table>
 
     {{-- 2. DATOS DEL PROFESIONAL --}}
@@ -191,7 +192,8 @@
                 {{ $prof ? "$prof->apellido_paterno $prof->apellido_materno, $prof->nombres" : 'NO REGISTRADO' }}
             </td>
             <td class="label-cell">CARGO:</td>
-            <td class="value-cell">ODONTÓLOGO</td>
+            {{-- CAMBIO 1: Cargo dinámico --}}
+            <td class="value-cell">{{ $prof->cargo ?? '-' }}</td>
         </tr>
         <tr>
             <td class="label-cell">TIPO DOC:</td>
@@ -215,7 +217,6 @@
             <td class="label-cell" colspan="2"></td>
             <td class="label-cell">¿UTILIZA SIHCE?</td>
             <td class="value-cell">
-                 {{-- Lógica: Si el FUA o Receta es electrónico/SIHCE, asumimos SI --}}
                  @if(isset($dbInicioLabores) && (str_contains(strtoupper($dbInicioLabores->fua), 'SIHCE') || str_contains(strtoupper($dbInicioLabores->receta), 'SIHCE')))
                     SI
                  @else
@@ -238,6 +239,11 @@
             <td class="label-cell">¿REALIZA FIRMA EN SIHCE?</td>
             <td class="value-cell" colspan="3">{{ $dbDni->firma_sihce ?? 'NO' }}</td>
         </tr>
+        {{-- CAMBIO 2: Comentarios DNI --}}
+        <tr>
+            <td class="label-cell">OBSERVACIONES DNI:</td>
+            <td class="value-cell" colspan="3">{{ $dbDni->comentarios ?? '-' }}</td>
+        </tr>
     </table>
 
     {{-- 4. DETALLES DE CAPACITACIÓN --}}
@@ -251,7 +257,7 @@
         </tr>
     </table>
 
-    {{-- 5. MATERIALES (INICIO DE LABORES) --}}
+    {{-- 5. MATERIALES (INICIO DE LABORES) - ESPECÍFICO DE ODONTOLOGÍA --}}
     <div class="section-header">5. MATERIALES (INICIO DE LABORES)</div>
     <table class="details-table">
         <tr>
@@ -310,13 +316,13 @@
         </tr>
     </table>
 
-    {{-- 8. COMENTARIOS --}}
-    <div class="section-header">8. COMENTARIOS</div>
+    {{-- 8. COMENTARIOS GENERALES --}}
+    <div class="section-header">8. COMENTARIOS GENERALES</div>
     <table class="details-table">
         <tr>
             <td style="padding: 10px; height: 40px; vertical-align: top;">
-                {{-- Prioridad: Comentarios DNI > Observaciones Acta > Texto default --}}
-                {{ $dbDni->comentarios ?? ($acta->observaciones ?? 'Sin comentarios adicionales registrados.') }}
+                {{-- CAMBIO 3: Comentarios Generales guardados en dbInicioLabores --}}
+                {{ $dbInicioLabores->comentarios ?? 'Sin comentarios generales registrados.' }}
             </td>
         </tr>
     </table>
@@ -337,10 +343,7 @@
     <div class="section-header">10. FIRMA (CONSULTA EXTERNA)</div>
     
     <div class="signature-section">
-        {{-- Nuevo Marco Estilo Tarjeta --}}
         <div class="signature-frame">
-            
-            {{-- Tu estructura de datos original --}}
             <div class="signature-box">
                 @if($prof)
                     <div style="font-weight: bold; font-size: 11px; color: #1e293b;">
@@ -349,17 +352,15 @@
                     <div style="font-size: 10px; color: #64748b; margin-top: 1px;">
                         {{ $prof->tipo_doc }}: {{ $prof->doc }}
                     </div>
-                    {{-- Si deseas mantener el texto "FIRMA DEL ENTREVISTADO" o quitarlo para que se vea igual a la imagen --}}
                     <div style="font-weight: bold; font-size: 9px; margin-top: 4px;">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
                 @else
                     <div style="padding: 10px;">FIRMA PENDIENTE</div>
                 @endif
             </div>
-            
         </div>
     </div>
 
-    {{-- SCRIPT PIE DE PÁGINA (PAGINACIÓN CORREGIDA) --}}
+    {{-- SCRIPT PIE DE PÁGINA --}}
     <script type="text/php">
         if (isset($pdf)) {
             $y = $pdf->get_height() - 30;
@@ -367,10 +368,8 @@
             $size = 8;
             $color = array(0.3, 0.3, 0.3);
 
-            // Texto Izquierdo
             $pdf->page_text(40, $y, "SISTEMA DE ACTAS", $font, $size, $color);
 
-            // Texto Derecho
             $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
             $dummyText = "PAG: 10 / 10"; 
             $width = $fontMetrics->get_text_width($dummyText, $font, $size);

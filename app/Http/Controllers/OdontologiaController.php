@@ -8,20 +8,19 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\CabeceraMonitoreo;
 use App\Models\Profesional;
 use App\Models\ComCapacitacion;
-//use App\Models\ComEquipamiento;
 use App\Models\ComDificultad;
 use App\Models\ComFotos;
 use App\Models\ComDocuAsisten;
 use App\Models\ComDni;
-
 use App\Models\MonitoreoModulos;
 use App\Models\EquipoComputo;
 
 class OdontologiaController extends Controller
 {
-    // 1. MÉTODO INDEX: Carga el formulario Y los datos guardados previamente
+    // Constante para identificar el módulo en la BD
     const MODULO_ID = 'consulta_odontologia';
 
+    // 1. MÉTODO INDEX
     public function index($id){
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
         
@@ -39,22 +38,15 @@ class OdontologiaController extends Controller
 
         $dbInicioLabores = ComDocuAsisten::where('acta_id', $id)
                             ->where('modulo_id', self::MODULO_ID)->first();
+                            
         $dbDni = ComDni::where('acta_id', $id)
                     ->where('modulo_id', self::MODULO_ID)->first();
         
-        // --- Obtener fecha de actualización ---
-        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', 'triaje')
-                            ->first();
-        
-        // Si existe, tomamos la fecha, si no, now
-        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : now();
 
-        // Enviamos la nueva variable a la vista
-        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
+        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni'));
     }
 
-    // 2. BUSCADOR (Sin cambios)
+    // 2. BUSCADOR PROFESIONAL
     public function buscarProfesional($doc)
     {
         $profesional = Profesional::where('doc', $doc)->first();
@@ -66,13 +58,11 @@ class OdontologiaController extends Controller
         }
     }
 
-    // 3. STORE: Guarda y Redirige
+    // 3. STORE: Guardar datos
     public function store(Request $request, $id)
     {
-        // 1. Decodificar el JSON de datos
         $data = json_decode($request->input('data'), true);
 
-        // Validamos manualmente
         if (!$data || !isset($data['profesional']['doc'])) {
                 return response()->json(['success' => false, 'message' => 'Faltan datos del profesional'], 422);
         }
@@ -81,19 +71,22 @@ class OdontologiaController extends Controller
             DB::beginTransaction();
 
             // =========================================================
-            // A. GUARDADO EN TABLAS SQL (Se mantiene igual para reportes)
+            // A. GUARDADO EN TABLAS SQL
             // =========================================================
 
             // 1. PROFESIONAL
             $datosProfesional = $data['profesional'];
             $profesional = Profesional::updateOrCreate(
-                ['doc' => $datosProfesional['doc'], 'tipo_doc' => $datosProfesional['tipo_doc'] ?? 'DNI'],
+                ['doc' => $datosProfesional['doc']],
                 [
+                    'tipo_doc'         => $datosProfesional['tipo_doc'] ?? 'DNI',
                     'apellido_paterno' => $datosProfesional['apellido_paterno'],
                     'apellido_materno' => $datosProfesional['apellido_materno'],
                     'nombres'          => $datosProfesional['nombres'],
-                    'email'            => $datosProfesional['email'],
-                    'telefono'         => $datosProfesional['telefono'],
+                    'email'            => $datosProfesional['email'] ?? null,
+                    // Aseguramos mayúsculas y sin espacios para evitar duplicados "OTROS"
+                    'cargo'            => isset($datosProfesional['cargo']) ? mb_strtoupper(trim($datosProfesional['cargo']), 'UTF-8') : null,
+                    'telefono'         => $datosProfesional['telefono'] ?? null,
                 ]
             );
 
@@ -102,15 +95,15 @@ class OdontologiaController extends Controller
             ComCapacitacion::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
                 [
-                    'profesional_id'  => $profesional->id,
-                    'recibieron_cap'  => $datosCapacitacion['recibieron_cap'],
-                    'institucion_cap' => ($datosCapacitacion['recibieron_cap'] === 'SI') ? $datosCapacitacion['institucion_cap'] : null,
-                    'decl_jurada'           => $datosCapacitacion['decl_jurada'] ?? null,
-                    'comp_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? null,
+                    'profesional_id'        => $profesional->id,
+                    'recibieron_cap'        => $datosCapacitacion['recibieron_cap'] ?? 'NO',
+                    'institucion_cap'       => ($datosCapacitacion['recibieron_cap'] === 'SI') ? ($datosCapacitacion['institucion_cap'] ?? null) : null,
+                    'decl_jurada'           => $datosCapacitacion['decl_jurada'] ?? 'NO',
+                    'comp_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
                 ]
             );
 
-            // 3. INVENTARIO (Tabla EquipoComputo)
+            // 3. INVENTARIO
             EquipoComputo::where('cabecera_monitoreo_id', $id)
                             ->where('modulo', self::MODULO_ID)
                             ->delete();
@@ -122,7 +115,7 @@ class OdontologiaController extends Controller
                         'cabecera_monitoreo_id' => $id,
                         'modulo'                => self::MODULO_ID, 
                         'descripcion'           => $item['descripcion'],
-                        'cantidad'              => '1', 
+                        'cantidad'              => 1, 
                         'estado'                => $item['estado'] ?? 'OPERATIVO',
                         'nro_serie'             => $item['codigo'] ? str($item['codigo'])->upper() : null,
                         'propio'                => $item['propiedad'] ?? 'COMPARTIDO',
@@ -142,7 +135,7 @@ class OdontologiaController extends Controller
                 ]
             );
 
-            // 5. INICIO LABORES / TABLAS AUXILIARES
+            // 5. INICIO LABORES / TABLAS AUXILIARES (AQUÍ ESTÁ EL CAMBIO PRINCIPAL)
             $datosInicio = $data['inicio_labores'] ?? [];
             ComDocuAsisten::updateOrCreate(
                 ['acta_id' => $id, 'modulo_id' => self::MODULO_ID],
@@ -151,13 +144,20 @@ class OdontologiaController extends Controller
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
                     'turno'             => $datosInicio['turno'] ?? null,
+                    
+                    // --- NUEVOS CAMPOS AGREGADOS ---
+                    'fecha_registro'    => $datosInicio['fecha_registro'] ?? null,
+                    'comentarios'       => isset($datosInicio['comentarios']) ? str($datosInicio['comentarios'])->upper() : null,
+                    // -------------------------------
+
                     'fua'               => $datosInicio['fua'] ?? null,
                     'referencia'        => $datosInicio['referencia'] ?? null,
                     'receta'            => $datosInicio['receta'] ?? null,
-                    'orden_laboratorio' => $datosInicio['orden_lab'] ?? null,
+                    'orden_laboratorio' => $datosInicio['orden_lab'] ?? null, // Ojo: en blade es 'orden_lab', mapea a 'orden_laboratorio' en BD
                 ]
             );
 
+            // 6. SECCION DNI
             $datosDni = $data['seccion_dni'] ?? [];     
             $esElectronico = ($datosDni['tipo_dni'] ?? '') === 'DNI_ELECTRONICO';
             
@@ -168,16 +168,13 @@ class OdontologiaController extends Controller
                     'tip_dni'        => $datosDni['tipo_dni'] ?? null,
                     'version_dni'    => $esElectronico ? ($datosDni['version_dnie'] ?? null) : null,
                     'firma_sihce'    => $esElectronico ? ($datosDni['firma_sihce'] ?? null) : null,
-                    'comentarios'    => $datosDni['comentarios'] ?? null,
+                    'comentarios'    => isset($datosDni['comentarios']) ? str($datosDni['comentarios'])->upper() : null,
                 ]
             );
 
             // =========================================================
-            // B. PREPARACIÓN DEL JSON PARA EL PDF (TRANSFORMACIÓN)
+            // B. PREPARACIÓN DEL JSON PARA EL PDF
             // =========================================================
-            
-            // Aquí "aplanamos" los datos para que el ConsolidadoPdfController
-            // encuentre las claves directamente (ej: $modulo->recibio_capacitacion)
             
             $contenidoParaPDF = [
                 'profesional'            => $data['profesional'],
@@ -186,8 +183,9 @@ class OdontologiaController extends Controller
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
                 'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',
+                'fecha_registro'         => $datosInicio['fecha_registro'] ?? null, // <--- AGREGADO
                 
-                // Mapeo de Capacitación y Documentación
+                // Mapeo de Capacitación
                 'firmo_dj'               => $datosCapacitacion['decl_jurada'] ?? 'NO',
                 'firmo_confidencialidad' => $datosCapacitacion['comp_confidencialidad'] ?? 'NO',
                 'recibio_capacitacion'   => $datosCapacitacion['recibieron_cap'] ?? 'NO',
@@ -203,9 +201,17 @@ class OdontologiaController extends Controller
                 'comunica_a'             => $datosDificultad['institucion'] ?? null,
                 'medio_soporte'          => $datosDificultad['medio'] ?? null,
 
-                // Datos extra del módulo
+                // Datos específicos Odontología
                 'fua'                    => $datosInicio['fua'] ?? null,
-                'receta'                 => $datosInicio['receta'] ?? null
+                'referencia'             => $datosInicio['referencia'] ?? null,
+                'receta'                 => $datosInicio['receta'] ?? null,
+                'orden_laboratorio'      => $datosInicio['orden_lab'] ?? null,
+
+                // Comentarios Generales
+                'comentarios_generales'  => $datosInicio['comentarios'] ?? null, // <--- AGREGADO
+                
+                // Snapshot de inventario
+                'inventario'             => $listaInventario,
             ];
 
             // =========================================================
@@ -213,34 +219,27 @@ class OdontologiaController extends Controller
             // =========================================================
             
             $rutasFotos = [];
-            
-            // 1. Recuperar fotos previas (si es edición)
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                 ->where('modulo_nombre', 'consulta_odontologia')->first();
 
-            // Nota: Usamos 'foto_evidencia' en singular para mantener el estándar
             if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                 $prev = $registroPrevio->contenido['foto_evidencia'];
                 $rutasFotos = is_array($prev) ? $prev : [$prev];
             }
 
-            // 2. Guardar nuevas fotos
             if ($request->hasFile('fotos')) {
                 foreach ($request->file('fotos') as $foto) {
                     $path = $foto->store('evidencia_fotos', 'public');
-
                     ComFotos::create([
                         'acta_id'        => $id,
                         'modulo_id'      => self::MODULO_ID,
                         'profesional_id' => $profesional->id,
                         'url_foto'       => $path
                     ]);
-
                     $rutasFotos[] = $path;
                 }
             }
 
-            // Agregamos las fotos al JSON estandarizado (usando clave singular 'foto_evidencia')
             $contenidoParaPDF['foto_evidencia'] = $rutasFotos;
 
             // =========================================================
@@ -253,7 +252,7 @@ class OdontologiaController extends Controller
                     'modulo_nombre'         => 'consulta_odontologia'
                 ],
                 [
-                    'contenido' => $contenidoParaPDF, // Guardamos el array transformado
+                    'contenido' => $contenidoParaPDF,
                     'pdf_firmado_path' => null
                 ]
             );
@@ -267,20 +266,14 @@ class OdontologiaController extends Controller
         }
     }
 
-
     public function eliminarFoto($id)
     {
         try {
             $foto = ComFotos::findOrFail($id);
-
-            // 1. Borrar archivo del almacenamiento (disco 'public')
             if (Storage::disk('public')->exists($foto->url_foto)) {
                 Storage::disk('public')->delete($foto->url_foto);
             }
-
-            // 2. Borrar registro de la BD
             $foto->delete();
-
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

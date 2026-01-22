@@ -40,15 +40,9 @@ class TriajeController extends Controller
         $dbDni = ComDni::where('acta_id', $id)
                         ->where('modulo_id', 'triaje')->first();
 
-        // --- Obtener fecha de actualización ---
-        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', 'triaje')
-                            ->first();
-        
-        // Si existe, tomamos la fecha, si no, now
-        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : now();
 
-        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
+
+        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni'));
     }
 
     // 2. BUSCADOR (Sin cambios)
@@ -90,6 +84,7 @@ class TriajeController extends Controller
                     'apellido_materno' => $datosProfesional['apellido_materno'],
                     'nombres'          => $datosProfesional['nombres'],
                     'email'            => $datosProfesional['email'] ?? null,
+                    'cargo'            => isset($datosProfesional['cargo']) ? mb_strtoupper(trim($datosProfesional['cargo']), 'UTF-8') : null,
                     'telefono'         => $datosProfesional['telefono'] ?? null,
                 ]
             );
@@ -151,6 +146,8 @@ class TriajeController extends Controller
                     'cant_consultorios' => $datosInicio['consultorios'] ?? null,
                     'nombre_consultorio'=> $datosInicio['nombre_consultorio'] ?? null,
                     'turno'             => $datosInicio['turno'] ?? null,
+                    'fecha_registro'    => $datosInicio['fecha_registro'] ?? null,
+                    'comentarios'       => isset($datosInicio['comentarios']) ? str($datosInicio['comentarios'])->upper() : null,
                     
                     // Estos campos no existen en el form de Triaje, enviamos null o defaults
                     'fua'               => null,
@@ -185,6 +182,8 @@ class TriajeController extends Controller
 
                 // Inicio Labores
                 'inicio_labores'         => $datosInicio, // Guardamos el objeto completo también por si acaso
+                'fecha_registro'         => $datosInicio['fecha_registro'] ?? null,
+                'comentarios_generales'  => $datosInicio['comentarios'] ?? null,
                 'num_consultorios'       => $datosInicio['consultorios'] ?? '1',
                 'denominacion_consultorio' => $datosInicio['nombre_consultorio'] ?? '',
                 'turno'                  => $datosInicio['turno'] ?? 'MAÑANA',

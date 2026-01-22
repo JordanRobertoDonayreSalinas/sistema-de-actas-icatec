@@ -21,6 +21,7 @@ class ComDocuAsisten extends Model
         'cant_consultorios',
         'nombre_consultorio',
         'turno',
+        'fecha_registro',
         'fua',
         'referencia',
         'receta',

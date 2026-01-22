@@ -25,6 +25,7 @@ class Profesional extends Model
         'apellido_materno',
         'nombres',
         'email',
+        'cargo',
         'telefono',
     ];
 
