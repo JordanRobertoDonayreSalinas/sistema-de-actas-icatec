@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>FUA Electrónico - Acta {{ $acta->id }}</title>
+    <title>FUA Electrónico - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* AJUSTES EXACTOS DEL ARCHIVO DE MEDICINA */
         @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }
@@ -96,7 +96,7 @@
     <div class="header">
         <h1>Módulo 14: FUA Electrónico</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
-            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | 
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
             FECHA: 
             @php
