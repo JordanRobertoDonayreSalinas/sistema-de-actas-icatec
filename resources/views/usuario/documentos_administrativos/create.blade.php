@@ -1,110 +1,217 @@
 @extends('layouts.usuario')
 
-@section('title', 'Generar Documento Administrativo')
+@section('title', 'Generar Documentos de Acceso')
 
 @push('styles')
-    {{-- jQuery UI para Autocomplete (Mismo que en Asistencia Técnica) --}}
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <style>
-        .ui-autocomplete { border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; z-index: 9999 !important; }
-        .ui-menu-item-wrapper.ui-state-active { background-color: #6366f1 !important; border: none !important; color: white !important; }
-        input:read-only { background-color: #f8fafc; cursor: not-allowed; }
+        /* Animaciones */
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* Autocomplete UI */
+        .ui-autocomplete { 
+            border-radius: 1rem !important; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important; 
+            border: 1px solid #e2e8f0 !important; 
+            padding: 0.5rem !important; 
+            z-index: 9999 !important; 
+            background: white !important; 
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .ui-menu-item-wrapper { 
+            padding: 12px 16px !important; 
+            border-radius: 0.5rem !important; 
+            font-size: 12px !important; 
+            font-weight: 600 !important; 
+            color: #475569 !important; 
+            text-transform: uppercase;
+        }
+        .ui-state-active { background: #4f46e5 !important; color: white !important; border: none !important; }
+        
+        /* Checkbox Cards */
+        .checkbox-card:checked + div { 
+            background-color: #eef2ff; 
+            border-color: #6366f1; 
+            color: #4338ca; 
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1); 
+        }
+        .checkbox-card:checked + div .check-icon { transform: scale(1); opacity: 1; }
+        
+        /* Inputs */
+        .input-nice { 
+            background-color: #f8fafc; 
+            border: 1px solid #cbd5e1; 
+            transition: all 0.2s ease; 
+        }
+        .input-nice:focus { 
+            background-color: #ffffff; 
+            border-color: #6366f1; 
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); 
+            outline: none;
+        }
     </style>
 @endpush
 
 @section('content')
-<div class="max-w-5xl mx-auto pb-20">
-    <form action="{{ route('usuario.documentos.store') }}" method="POST" class="space-y-6">
-        @csrf
+<div class="min-h-screen bg-slate-50/50 pb-20 pt-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
         
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 uppercase tracking-tighter flex items-center gap-3">
-                <i data-lucide="file-plus" class="w-8 h-8 text-indigo-600"></i>
-                Nuevo Documento Administrativo
-            </h2>
+        <form action="{{ route('usuario.documentos.store') }}" method="POST" class="animate-fade-in-up space-y-8">
+            @csrf
+            
+            {{-- ENVIAMOS "AMBOS" AUTOMÁTICAMENTE --}}
+            <input type="hidden" name="tipo_formato" value="AMBOS">
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha</label>
-                    <input type="date" name="fecha" value="{{ date('Y-m-d') }}" class="w-full rounded-xl border-slate-200 font-bold text-slate-700 py-3">
+            {{-- CABECERA --}}
+            <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-slate-200/60 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div class="p-3 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-200">
+                        <i data-lucide="files" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase leading-none">Generar Documentos</h1>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Se generarán: Compromiso y Declaración Jurada</p>
+                    </div>
                 </div>
-                <div class="md:col-span-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Seleccionar Formato a Generar</label>
-                    <select name="tipo_formato" required class="w-full rounded-xl border-slate-200 font-bold text-slate-700 py-3">
-                        <option value="Compromiso">Compromiso de Confidencialidad SIHCE</option>
-                        <option value="DeclaracionJurada">Declaración Jurada SIHCE (Ventanilla Única)</option>
-                    </select>
+
+                <div class="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-200 min-w-[200px]">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fecha Emisión</label>
+                    <input type="date" name="fecha" value="{{ date('Y-m-d') }}" class="font-black text-slate-700 bg-transparent border-none p-0 focus:ring-0 text-base w-full cursor-pointer">
                 </div>
             </div>
 
-            {{-- SECCIÓN 1: ESTABLECIMIENTO (Autocompletado igual al Acta de Asistencia) --}}
-            <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 mb-6">
-                <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-1 block mb-2">Buscador de Establecimiento</label>
-                <input type="text" id="establecimiento" name="establecimiento_nombre" class="w-full rounded-xl border-slate-200 py-3 font-bold mb-4" placeholder="Ingresa nombre o código de establecimiento..." autocomplete="off">
-                <input type="hidden" name="establecimiento_id" id="establecimiento_id">
+            {{-- 1. DATOS DEL PROFESIONAL (VERTICAL) --}}
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200/60 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-500 to-purple-500"></div>
+                
+                <h3 class="text-slate-800 font-black text-xs uppercase tracking-widest mb-8 flex items-center gap-3">
+                    <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-xl flex items-center justify-center text-sm shadow-sm border border-indigo-200/50">1</span>
+                    Datos Personales del Solicitante
+                </h3>
+                
+                <div class="pl-2">
+                    <x-busqueda-profesional prefix="solicitante" :detalle="$detalle" />
+                </div>
+            </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {{-- 2. DATOS LABORALES (VERTICAL) --}}
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200/60 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-purple-500 to-pink-500"></div>
+
+                <h3 class="text-slate-800 font-black text-xs uppercase tracking-widest mb-8 flex items-center gap-3">
+                    <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-xl flex items-center justify-center text-sm shadow-sm border border-purple-200/50">2</span>
+                    Datos Laborales y Ubicación
+                </h3>
+
+                <div class="pl-2 space-y-8">
+                    {{-- Buscador IPRESS --}}
                     <div>
-                        <label class="text-[9px] text-slate-400 font-bold uppercase">Provincia</label>
-                        <input type="text" id="provincia" name="provincia" readonly class="w-full bg-transparent border-none text-xs font-black text-slate-700 p-0">
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-slate-400 font-bold uppercase">Distrito</label>
-                        <input type="text" id="distrito" name="distrito" readonly class="w-full bg-transparent border-none text-xs font-black text-slate-700 p-0">
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-slate-400 font-bold uppercase">Microred / Red</label>
-                        <div class="flex gap-1">
-                            <input type="text" id="microred" readonly class="w-1/2 bg-transparent border-none text-[10px] font-black text-slate-700 p-0">
-                            <input type="text" id="red" readonly class="w-1/2 bg-transparent border-none text-[10px] font-black text-slate-700 p-0">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Establecimiento de Salud (IPRESS)</label>
+                        <div class="relative group">
+                            <input type="text" id="establecimiento_search" placeholder="Escribe el nombre del establecimiento..." autocomplete="off"
+                                   class="input-nice w-full rounded-2xl py-4 pl-5 pr-12 text-sm font-bold text-slate-700 placeholder:text-slate-400 uppercase">
+                            <div class="absolute right-4 top-4 text-slate-300 group-hover:text-purple-400 transition-colors">
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                            </div>
+                            <input type="hidden" name="establecimiento_id" id="establecimiento_id">
+                        </div>
+                        
+                        <div id="establecimiento_seleccionado" class="mt-3 hidden animate-fade-in-up">
+                            <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex items-center gap-4 shadow-sm">
+                                <div class="bg-emerald-100 p-2 rounded-xl text-emerald-600">
+                                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-0.5">IPRESS Seleccionada</p>
+                                    <p id="establecimiento_nombre" class="text-sm font-black text-emerald-900 leading-tight uppercase"></p>
+                                </div>
+                                <button type="button" id="btn_clear_estab" class="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-all">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="text-[9px] text-slate-400 font-bold uppercase">Jefe (Responsable)</label>
-                        <input type="text" id="responsable" name="area_oficina" readonly class="w-full bg-transparent border-none text-xs font-black text-slate-700 p-0">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {{-- Área / Rol --}}
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Área / Oficina Solicitante</label>
+                            <input type="text" name="area_oficina" required placeholder="EJ: ADMISION, TRIAJE, EMERGENCIA"
+                                   class="input-nice w-full rounded-2xl py-4 px-5 text-sm font-bold text-slate-700 uppercase">
+                        </div>
+
+                        {{-- Cargo / Funciones --}}
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Cargo / Funciones</label>
+                            <input type="text" name="cargo_rol" required placeholder="EJ: MEDICO CIRUJANO, ENFERMERA"
+                                   class="input-nice w-full rounded-2xl py-4 px-5 text-sm font-bold text-slate-700 uppercase">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {{-- SECCIÓN 2: PROFESIONAL (Componente Corregido y sin Cargo redundante) --}}
-            <div class="p-6 bg-indigo-50/50 rounded-[2rem] border border-indigo-100 mb-6">
-                <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1 block mb-4">Datos del Profesional Solicitante</label>
-                
-                {{-- CORRECCIÓN: Uso de componente con variables obligatorias para evitar el error --}}
-                @php $emptyDetalle = (object)['contenido' => []]; @endphp
-                <x-busqueda-profesional prefix="solicitante" :detalle="$emptyDetalle" />
+            {{-- 3. SELECCIÓN DE MÓDULOS (VERTICAL) --}}
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200/60 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-pink-500 to-orange-500"></div>
 
-                {{-- CORRECCIÓN: Se eliminó el input de Cargo/Rol. Solo queda el correo. --}}
-                <div class="mt-6">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo Institucional / Personal</label>
-                    <input type="email" name="correo_electronico" required class="w-full rounded-xl border-slate-200 text-sm font-bold py-3" placeholder="ejemplo@minsa.gob.pe">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                    <h3 class="text-slate-800 font-black text-xs uppercase tracking-widest flex items-center gap-3">
+                        <span class="bg-pink-100 text-pink-600 w-8 h-8 rounded-xl flex items-center justify-center text-sm shadow-sm border border-pink-200/50">3</span>
+                        Selección de Módulos
+                    </h3>
+                    <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-4 py-2 rounded-xl uppercase tracking-wide border border-indigo-100">
+                        Seleccione uno o varios accesos
+                    </span>
                 </div>
-            </div>
-
-            {{-- SECCIÓN 3: ACCESOS (Requerido por los documentos Word) --}}
-            <div class="p-6 bg-white rounded-[2rem] border border-slate-200">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 block mb-4">Sistemas / Módulos Solicitados</label>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                
+                <div class="pl-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     @php
-                        $sistemas = ['Consulta Externa: Medicina', 'Bandeja Electrónica', 'Firma Digital', 'Triaje', 'Admisión', 'Farmacia', 'Laboratorio', 'Emergencia'];
+                        $modulos = [
+                            'Gestion Administrativa', 'Citas', 'Triaje', 
+                            'Consulta Externa: Medicina', 'Consulta Externa: Odontologia', 
+                            'Consulta Externa: Nutricion', 'Consulta Externa: Psicologia',
+                            'Cred', 'Inmunizaciones', 'Atencion Prenatal', 
+                            'Planificacion Familiar', 'Parto', 'Puerperio', 
+                            'Fua Electronico', 'Farmacia', 'Refcon',
+                            'Laboratorio', 'Urgencias y Emergencias'
+                        ];
                     @endphp
-                    @foreach($sistemas as $sistema)
-                    <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
-                        <input type="checkbox" name="sistemas_acceso[]" value="{{ $sistema }}" class="rounded text-indigo-600">
-                        <span class="text-[11px] font-bold text-slate-600">{{ $sistema }}</span>
+
+                    @foreach($modulos as $modulo)
+                    <label class="cursor-pointer group relative">
+                        <input type="checkbox" name="sistemas_acceso[]" value="{{ $modulo }}" class="checkbox-card absolute opacity-0 w-0 h-0">
+                        
+                        <div class="h-full min-h-[90px] p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 group-hover:border-indigo-200 group-hover:bg-white transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
+                            <span class="text-[10px] font-black uppercase text-slate-600 group-hover:text-indigo-800 leading-snug z-10 pr-6">
+                                {{ $modulo }}
+                            </span>
+                            <div class="absolute bottom-3 right-3 z-10">
+                                <div class="check-icon w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white opacity-0 transform scale-50 transition-all duration-300 shadow-lg shadow-indigo-200">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                </div>
+                            </div>
+                            <div class="absolute -bottom-6 -right-6 w-20 h-20 bg-gradient-to-br from-slate-200/40 to-transparent rounded-full z-0 group-hover:from-indigo-100/50 transition-colors"></div>
+                        </div>
                     </label>
                     @endforeach
                 </div>
             </div>
 
-            <div class="pt-8 flex justify-end gap-4">
-                <a href="{{ route('usuario.monitoreo.index') }}" class="px-8 py-4 rounded-2xl font-black text-slate-400 uppercase text-xs">Cancelar</a>
-                <button type="submit" class="px-10 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase text-xs shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all">
-                    Generar Documento
+            {{-- BOTONES --}}
+            <div class="flex flex-col sm:flex-row justify-end items-center gap-4 pt-6 pb-12">
+                <a href="{{ route('usuario.documentos.index') }}" class="w-full sm:w-auto text-center px-8 py-4 rounded-2xl font-black text-slate-400 uppercase text-[11px] hover:bg-slate-100 hover:text-slate-600 transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-indigo-200 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3">
+                    <span>Guardar y Generar Documentos</span>
+                    <i data-lucide="save" class="w-5 h-5"></i>
                 </button>
             </div>
-        </div>
-    </form>
+
+        </form>
+    </div>
 </div>
 @endsection
 
@@ -113,33 +220,25 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 <script>
     $(function() {
-        // Implementación del Autocomplete (Mismo que en Asistencia Técnica)
-        $("#establecimiento").autocomplete({
-            minLength: 1,
-            delay: 200,
-            source: function(request, response) {
-                $.ajax({
-                    url: "{{ route('establecimientos.buscar') }}",
-                    method: "GET",
-                    dataType: "json",
-                    data: { term: request.term },
-                    success: function(data) {
-                        response(data);
-                    }
-                });
-            },
+        lucide.createIcons();
+
+        $("#establecimiento_search").autocomplete({
+            minLength: 2,
+            source: "{{ route('establecimientos.buscar') }}",
             select: function(event, ui) {
                 event.preventDefault();
-                // Rellenado automático de campos según EstablecimientoController
+                $("#establecimiento_search").val(''); 
                 $("#establecimiento_id").val(ui.item.id);
-                $("#establecimiento").val(ui.item.value);
-                $("#provincia").val(ui.item.provincia);
-                $("#distrito").val(ui.item.distrito);
-                $("#microred").val(ui.item.microred);
-                $("#red").val(ui.item.red);
-                $("#responsable").val(ui.item.responsable);
+                $("#establecimiento_nombre").text(ui.item.value);
+                $("#establecimiento_seleccionado").removeClass('hidden').addClass('flex');
                 return false;
             }
+        });
+
+        $("#btn_clear_estab").on('click', function() {
+            $("#establecimiento_id").val('');
+            $("#establecimiento_seleccionado").addClass('hidden').removeClass('flex');
+            $("#establecimiento_search").focus();
         });
     });
 </script>
