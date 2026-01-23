@@ -62,13 +62,17 @@ class TriajeESPController extends Controller
             }
         }
 
-        // 5. SOLUCIÓN DEL ERROR: Transformar Strings a Objetos
-        // El componente x-tabla-equipos espera objetos con propiedad ->descripcion
+        // 5. SOLUCIÓN DEFINITIVA: Mapeo completo de propiedades
+        // El componente espera: id, descripcion, estado, propio, prestado, observacion (singular)
         $equiposFormateados = collect($this->listaEquipos)->map(function($nombre, $index) {
             return (object) [
-                'id' => $index + 1, // Generamos un ID virtual
+                'id' => $index + 1,
                 'descripcion' => $nombre,
-                'estado' => 'OPERATIVO' // Estado por defecto visual
+                'estado' => 'OPERATIVO', // Valor por defecto
+                'propio' => 'SI',        // Valor por defecto
+                'prestado' => 'NO',      // Valor por defecto
+                'cantidad' => 1,         // Agregado por seguridad
+                'observacion' => ''      // <--- CORRECCIÓN: Singular, como pide el error
             ];
         });
 
@@ -76,7 +80,7 @@ class TriajeESPController extends Controller
         return view('usuario.monitoreo.modulos_especializados.triaje', [
             'acta' => $acta,
             'detalle' => $detalle,
-            'equipos' => $equiposFormateados // Enviamos la lista convertida
+            'equipos' => $equiposFormateados
         ]);
     }
 
@@ -89,17 +93,14 @@ class TriajeESPController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Obtener datos básicos del Request
             $datosFormulario = $request->input('contenido', []);
 
-            // 2. Buscar si ya existe el registro
             $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                         ->where('modulo_nombre', 'triaje_esp')
                                         ->first();
 
             $contenidoActual = [];
 
-            // 3. Instanciar o recuperar
             if (!$registro) {
                 $registro = new MonitoreoModulos();
                 $registro->cabecera_monitoreo_id = $id;
@@ -108,36 +109,32 @@ class TriajeESPController extends Controller
                 $contenidoActual = json_decode($registro->contenido, true) ?? [];
             }
 
-            // 4. Procesar Imagen (foto_evidencia)
+            // Procesar Imagen
             if ($request->hasFile('foto_evidencia')) {
                 $request->validate([
-                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240' // 10MB Máx
+                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240'
                 ]);
 
-                // Borrar anterior si existe
                 if (!empty($contenidoActual['foto_evidencia'])) {
                     if (Storage::disk('public')->exists($contenidoActual['foto_evidencia'])) {
                         Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
                     }
                 }
 
-                // Guardar nueva
                 $path = $request->file('foto_evidencia')->store('evidencias_csmc/triaje', 'public');
                 $datosFormulario['foto_evidencia'] = $path;
             } else {
-                // Mantener la foto anterior si no se subió una nueva
                 if (!empty($contenidoActual['foto_evidencia'])) {
                     $datosFormulario['foto_evidencia'] = $contenidoActual['foto_evidencia'];
                 }
             }
 
-            // 5. Procesar Equipos
-            // Capturamos el array de equipos enviado por el componente
+            // Procesar Equipos
+            // Importante: Guardamos los equipos tal cual vienen del formulario para mantener el estado (checked/unchecked)
             if ($request->has('equipos')) {
                 $datosFormulario['equipos'] = $request->input('equipos');
             }
 
-            // 6. Guardar JSON
             $registro->contenido = json_encode($datosFormulario, JSON_UNESCAPED_UNICODE);
             $registro->save();
 
