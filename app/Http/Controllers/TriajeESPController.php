@@ -36,13 +36,12 @@ class TriajeESPController extends Controller
             $detalle = new MonitoreoModulos();
             $detalle->contenido = []; 
         } else {
-            // Asegurar que sea array
             if (is_string($detalle->contenido)) {
                 $detalle->contenido = json_decode($detalle->contenido, true) ?? [];
             }
         }
 
-        // 5. Preparar equipos (Usando data_get para evitar errores de índice indefinido)
+        // 5. Preparar equipos
         $listaEquiposRaw = data_get($detalle->contenido, 'equipos', []);
         $equiposFormateados = [];
         
@@ -61,32 +60,37 @@ class TriajeESPController extends Controller
 
     /**
      * Guarda la información del módulo.
+     * SOLUCIÓN: Captura inputs que están fuera del array 'contenido'.
      */
     public function store(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
-            // 1. Datos nuevos del formulario
+            // 1. Obtener datos base del array 'contenido'
             $nuevosDatos = $request->input('contenido', []);
 
-            // ----------------------------------------------------------------------
-            // LÓGICA DE RRHH (PROFESIONAL) - Fusión inteligente
-            // ----------------------------------------------------------------------
-            $datosRRHH = $request->input('rrhh');
+            // ==============================================================================
+            // PARCHE: CAPTURAR DATOS DE COMPONENTES QUE NO TIENEN EL NAME CORRECTO
+            // ==============================================================================
 
-            // Si rrhh viene dentro de contenido, lo extraemos
+            // A. Capturar COMENTARIO (Componente 7 envía 'comentario_esp' suelto)
+            if ($request->has('comentario_esp')) {
+                $nuevosDatos['comentario_esp'] = $request->input('comentario_esp');
+            }
+
+            // ==============================================================================
+
+            // 2. LÓGICA DE RRHH (PROFESIONAL)
+            $datosRRHH = $request->input('rrhh');
             if (empty($datosRRHH) && isset($nuevosDatos['rrhh'])) {
                 $datosRRHH = $nuevosDatos['rrhh'];
             }
 
-            // Si hay datos de RRHH, los preparamos
             if (!empty($datosRRHH) && !empty($datosRRHH['doc'])) {
-                
-                // Aseguramos que se guarde en el JSON bajo la llave 'rrhh'
                 $nuevosDatos['rrhh'] = $datosRRHH;
 
-                // Actualizar Tabla Maestra (Solo campos esenciales)
+                // Actualizar Tabla Maestra
                 DB::table('mon_profesionales')->updateOrInsert(
                     ['doc' => $datosRRHH['doc']],
                     [
@@ -99,52 +103,67 @@ class TriajeESPController extends Controller
                     ]
                 );
             }
-            // ----------------------------------------------------------------------
 
-            // 2. Obtener registro actual de la BD para no perder datos no enviados
+            // 3. Obtener registro actual de la BD
             $registro = MonitoreoModulos::firstOrNew([
                 'cabecera_monitoreo_id' => $id,
                 'modulo_nombre' => 'triaje_esp'
             ]);
 
-            // Recuperar contenido anterior (si existe)
             $contenidoAnterior = is_string($registro->contenido) 
                 ? (json_decode($registro->contenido, true) ?? []) 
                 : ($registro->contenido ?? []);
 
-            // 3. Procesar Imagen (Solo si se sube nueva)
-            if ($request->hasFile('foto_evidencia')) {
+            // ==============================================================================
+            // B. Capturar FOTO (Componente 7 envía 'foto_esp_file' en lugar de 'foto_evidencia')
+            // ==============================================================================
+            
+            // Detectar cuál nombre de input está enviando el archivo
+            $inputNameFoto = null;
+            if ($request->hasFile('foto_esp_file')) {
+                $inputNameFoto = 'foto_esp_file';
+            } elseif ($request->hasFile('foto_evidencia')) {
+                $inputNameFoto = 'foto_evidencia';
+            }
+
+            if ($inputNameFoto) {
                 $request->validate([
-                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240'
+                    $inputNameFoto => 'image|mimes:jpeg,png,jpg|max:10240'
                 ]);
 
-                // Borrar anterior
-                if (!empty($contenidoAnterior['foto_evidencia'])) {
-                    if (Storage::disk('public')->exists($contenidoAnterior['foto_evidencia'])) {
-                        Storage::disk('public')->delete($contenidoAnterior['foto_evidencia']);
+                // Borrar foto anterior (La clave en JSON que usa tu vista es 'foto_url_esp')
+                $claveFotoEnJson = 'foto_url_esp'; 
+
+                if (!empty($contenidoAnterior[$claveFotoEnJson])) {
+                    if (Storage::disk('public')->exists($contenidoAnterior[$claveFotoEnJson])) {
+                        Storage::disk('public')->delete($contenidoAnterior[$claveFotoEnJson]);
                     }
                 }
 
-                $path = $request->file('foto_evidencia')->store('evidencias_csmc/triaje', 'public');
+                // Guardar nueva foto
+                $path = $request->file($inputNameFoto)->store('evidencias_csmc/triaje', 'public');
+                
+                // GUARDAR CON LA CLAVE QUE ESPERA TU VISTA ('foto_url_esp')
+                $nuevosDatos['foto_url_esp'] = $path;
+                
+                // Opcional: guardar también como 'foto_evidencia' por si acaso
                 $nuevosDatos['foto_evidencia'] = $path;
             } else {
-                // Mantener la foto vieja si no se envió una nueva
-                if (isset($contenidoAnterior['foto_evidencia'])) {
-                    $nuevosDatos['foto_evidencia'] = $contenidoAnterior['foto_evidencia'];
+                // Mantener la foto vieja si no se subió una nueva
+                if (isset($contenidoAnterior['foto_url_esp'])) {
+                    $nuevosDatos['foto_url_esp'] = $contenidoAnterior['foto_url_esp'];
                 }
             }
+            // ==============================================================================
 
-            // 4. Procesar Equipos (Reemplazo total de la lista)
+            // 4. Procesar Equipos
             if ($request->has('equipos')) {
                 $nuevosDatos['equipos'] = $request->input('equipos');
             } else {
-                // Si no se envían equipos, asumimos lista vacía (borrado)
                 $nuevosDatos['equipos'] = [];
             }
 
-            // 5. FUSIÓN FINAL: Usamos array_replace_recursive para que los nuevos datos
-            // sobrescriban a los viejos, pero manteniendo claves viejas que no vinieron en el request
-            // (Útil por si algún input disabled no se envió)
+            // 5. FUSIÓN FINAL (Sobrescribir datos viejos con los nuevos)
             $contenidoFinal = array_replace_recursive($contenidoAnterior, $nuevosDatos);
 
             // 6. Guardar
