@@ -2,44 +2,84 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\CabeceraMonitoreo;
-use App\Models\MonitoreoModulos;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\CabeceraMonitoreo;
+use App\Models\ComCapacitacion;
+use App\Models\ComDificultad;
+use App\Models\ComFotos;
+use App\Models\EquipoComputo;
+use App\Models\ComDocuAsisten; 
+use App\Models\MonitoreoModulos;
+use App\Models\ComDni;
 
 class CitaESPpdfController extends Controller
 {
-    /**
-     * Genera el PDF del módulo "Admisión y Citas" (CSMC).
-     */
     public function generar($id)
     {
-        // 1. Obtener datos de la cabecera (Establecimiento, Equipo, Usuario)
-        $monitoreo = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'user'])->findOrFail($id);
+        // 1. Cargar datos generales del Acta
+        $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
 
-        // 2. Obtener los datos guardados del módulo específico ('citas_esp')
-        $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                  ->where('modulo_nombre', 'citas_esp') // Clave correcta
-                                  ->first();
+        // 2. Cargar datos específicos del módulo citas_esp
 
-        // 3. Decodificar JSON (si existe)
-        $data = $modulo ? json_decode($modulo->contenido, true) : [];
+        // --- NUEVO CÓDIGO AQUÍ ---
+        // Buscamos el registro en MonitoreoModulos
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', 'citas_esp')
+                            ->first();
 
-        // 4. Definir nombre del archivo
-        // Usamos numero_acta si existe, sino el ID (fallback)
-        $numero = $monitoreo->numero_acta ?? $monitoreo->id;
-        $numeroActa = str_pad($numero, 5, '0', STR_PAD_LEFT);
+        // Inyectamos el updated_at como una nueva propiedad dentro de $acta
+        // Le pondremos 'fecha_validacion' para no sobrescribir el updated_at original del acta
+        $acta->fecha_validacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
+        // -------------------------
         
-        $fileName = "REPORTE_CITAS_CSMC_ACTA_{$numeroActa}.pdf";
+        // Capacitación y Profesional
+        $dbCapacitacion = ComCapacitacion::with('profesional')
+                            ->where('acta_id', $id)
+                            ->where('modulo_id', 'citas_esp')
+                            ->first();
 
-        // 5. Cargar la vista del PDF
-        // CORRECCIÓN: Apuntando a la carpeta 'pdf_especializados' que creaste
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.citas', compact('monitoreo', 'data', 'modulo'));
+        // NUEVO: Inicio de Labores
+        $dbInicioLabores = ComDocuAsisten::where('acta_id', $id)
+                            ->where('modulo_id', 'citas_esp')->first();
+        
+        // Inventario
+        $dbInventario = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo', 'citas_esp')
+                            ->get();
 
-        // 6. Configurar hoja y renderizar
+        // Dificultades
+        $dbDificultad = ComDificultad::where('acta_id', $id)
+                            ->where('modulo_id', 'citas_esp')
+                            ->first();
+
+        $dbDni = ComDni::where('acta_id', $id)
+                            ->where('modulo_id', 'citas_esp')->first();
+        
+        // Fotos
+        $dbFotos = ComFotos::where('acta_id', $id)
+                        ->where('modulo_id', 'citas_esp')
+                        ->get();
+
+        // 3. Preparar el PDF
+        // 'usuario.monitoreo.pdf_especializados.citas_pdf' será la vista que crearemos a continuación
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.citas_pdf', compact(
+            'acta', 
+            'dbCapacitacion', 
+            'dbInventario', 
+            'dbDificultad', 
+            'dbInicioLabores',
+            'dbDni',
+            'dbFotos'
+        ));
+
+
+        $pdf->setOption('isPhpEnabled', true);
+
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream($fileName);
+        // 4. Retornar el PDF al navegador
+        // 'stream' lo muestra en el navegador, 'download' lo descarga directo.
+        return $pdf->stream('Reporte_Citas_CSMC_' . $acta->id . '.pdf');
     }
 }
