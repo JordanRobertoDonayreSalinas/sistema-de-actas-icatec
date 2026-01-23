@@ -34,16 +34,48 @@
             {{-- 1. DETALLES DEL CONSULTORIO --}}
             <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
 
-            {{-- 2. DATOS DEL PROFESIONAL --}}
-            {{-- CORRECCIÓN AQUI: Se agrega prefix="rrhh" para que el componente funcione --}}
+            {{-- 2. DATOS DEL PROFESIONAL (RRHH - Identidad y Cargo) --}}
             <x-esp_2_datosProfesional prefix="rrhh" :detalle="$detalle" />
 
-            {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
-            {{-- Asegúrate que este componente tenga el ID 'seccion_detalle_dni' internamente --}}
-            <x-esp_3_detalleDni :detalle="$detalle" />
+            {{-- 2.1 DOCUMENTACIÓN ADMINISTRATIVA (SIHCE, DDJJ, Confidencialidad) --}}
+            <x-esp_2_1_docAdmin prefix="rrhh" :detalle="$detalle" />
 
-            {{-- 4. DETALLES DE CAPACITACIÓN --}}
-            <x-esp_4_detalleCap :detalle="$detalle" />
+            {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
+            {{-- Se muestra condicionalmente si el tipo de doc en el componente 2 es DNI --}}
+            <x-esp_3_detalleDni :detalle="$detalle" parentKey="rrhh" />
+
+            {{-- ================================================================================= --}}
+            {{-- 4. DETALLES DE CAPACITACIÓN (PARCHE DE COMPATIBILIDAD)                           --}}
+            {{-- ================================================================================= --}}
+            @php
+                // Preparamos los datos en formato JSON/Objeto como espera el componente antiguo
+                $datosCapacitacion = [
+                    'recibieron_cap' => data_get($detalle->contenido, 'capacitacion.recibieron_cap', ''),
+                    'institucion_cap' => data_get($detalle->contenido, 'capacitacion.institucion_cap', '')
+                ];
+                // Convertimos a string JSON para pasarlo a la variable $model
+                $modelJson = json_encode($datosCapacitacion);
+            @endphp
+
+            {{-- Llamamos al componente pasando 'model' en lugar de 'detalle' --}}
+            <x-esp_4_detalleCap :model="$modelJson" />
+
+            {{-- Script IN-LINE para forzar los atributos 'name' en este componente específico --}}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    // Esperamos un momento para asegurar que Alpine haya renderizado
+                    setTimeout(() => {
+                        // Inyectar name a los Radio Buttons de Capacitación
+                        const radiosCap = document.querySelectorAll('[x-model="entidad.recibieron_cap"]');
+                        radiosCap.forEach(r => r.setAttribute('name', 'contenido[capacitacion][recibieron_cap]'));
+
+                        // Inyectar name al Select de Institución
+                        const selectCap = document.querySelector('[x-model="entidad.institucion_cap"]');
+                        if(selectCap) selectCap.setAttribute('name', 'contenido[capacitacion][institucion_cap]');
+                    }, 500);
+                });
+            </script>
+            {{-- ================================================================================= --}}
 
             {{-- 5. EQUIPAMIENTO DE TRIAJE --}}
             <x-esp_5_equipos :equipos="$equipos" modulo="triaje_esp" />
@@ -77,154 +109,53 @@
     </div>
 </div>
 
-{{-- 
-    SCRIPTS DE INTERACCIÓN 
-    Estos scripts controlan la lógica entre componentes.
-    IMPORTANTE: Los IDs utilizados aquí deben coincidir con los que están dentro de tus componentes blade (esp_*).
---}}
 <script>
-    // Controla visibilidad de campos SIHCE/DJ (Componente 2 y 4)
-    function toggleSihceAndDocs(val) {
-        const divDj = document.getElementById('div_firmo_dj');
-        const divConf = document.getElementById('div_firmo_confidencialidad');
-        const djSelect = document.getElementById('firmo_dj');
-        const confSelect = document.getElementById('firmo_confidencialidad');
-
-        if (divDj && divConf) {
-            if (val === 'SI') {
-                divDj.classList.remove('hidden');
-                divConf.classList.remove('hidden');
-            } else {
-                divDj.classList.add('hidden');
-                divConf.classList.add('hidden');
-                if(djSelect) djSelect.value = 'NO';
-                if(confSelect) confSelect.value = 'NO';
-            }
-        }
-    }
-
-    // Controla visibilidad de la sección de DNI (Componente 3)
-    function toggleSeccionDni(tipoDoc) {
-        const seccion = document.getElementById('seccion_detalle_dni');
-        if (!seccion) return;
-        
-        if (tipoDoc === 'DNI') {
-            seccion.classList.remove('hidden');
-            const dniVal = document.getElementById('tipo_dni_input').value;
-            if(dniVal) selectDniType(dniVal);
-        } else {
-            seccion.classList.add('hidden');
-        }
-    }
-
-    // Controla selección visual de tipo de DNI (Componente 3)
-    function selectDniType(tipo) {
-        const input = document.getElementById('tipo_dni_input');
-        const cardElectronico = document.getElementById('card_electronico');
-        const cardAzul = document.getElementById('card_azul');
-        const bloqueOpciones = document.getElementById('bloque_opciones_dni');
-        const bloqueVersion = document.getElementById('bloque_version_dnie');
-        const bloqueFirma = document.getElementById('bloque_firma_digital');
-
-        if(input) input.value = tipo;
-        if(bloqueOpciones) bloqueOpciones.classList.remove('hidden');
-
-        if (tipo === 'ELECTRONICO') {
-            if(cardElectronico) {
-                cardElectronico.classList.add('border-teal-600', 'bg-teal-50');
-                cardElectronico.classList.remove('border-slate-200', 'bg-white');
-            }
-            if(cardAzul) {
-                cardAzul.classList.remove('border-teal-600', 'bg-teal-50');
-                cardAzul.classList.add('border-slate-200', 'bg-white');
-            }
-            if(bloqueVersion) bloqueVersion.classList.remove('hidden');
-            if(bloqueFirma) bloqueFirma.classList.remove('hidden');
-        } else {
-            if(cardAzul) {
-                cardAzul.classList.add('border-teal-600', 'bg-teal-50');
-                cardAzul.classList.remove('border-slate-200', 'bg-white');
-            }
-            if(cardElectronico) {
-                cardElectronico.classList.remove('border-teal-600', 'bg-teal-50');
-                cardElectronico.classList.add('border-slate-200', 'bg-white');
-            }
-            if(bloqueVersion) bloqueVersion.classList.add('hidden');
-            if(bloqueFirma) bloqueFirma.classList.add('hidden');
-        }
-    }
-
-    // Controla visibilidad de entidad capacitadora (Componente 4)
-    function toggleEntidadCapacitadora(val) {
-        const wrapper = document.getElementById('wrapper_entidad_capacitadora');
-        if(wrapper) {
-            val === 'SI' ? wrapper.classList.remove('hidden') : wrapper.classList.add('hidden');
-        }
-    }
-
-    // Preview de imagen de evidencia (Componente 7)
-    function previewImage(event) {
-        const input = event.target;
-        const preview = document.getElementById('img-preview');
-        const icon = document.getElementById('upload-icon');
-        const fileName = document.getElementById('file-name-display');
-        
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if(preview) {
-                    preview.src = e.target.result;
-                    preview.classList.remove('hidden');
-                }
-                if(icon) icon.classList.add('hidden');
-                if(fileName) fileName.innerText = "NUEVA: " + input.files[0].name.substring(0, 15).toUpperCase() + "...";
-            }
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    // Inicialización
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        // Inicializar estados según valores guardados
-        const selectCapacitacion = document.getElementById('recibio_capacitacion');
-        if (selectCapacitacion) toggleEntidadCapacitadora(selectCapacitacion.value);
-
-        const selectSihce = document.getElementById('cuenta_sihce');
-        if (selectSihce) toggleSihceAndDocs(selectSihce.value);
-
-        const dniInput = document.getElementById('tipo_dni_input');
-        if(dniInput && dniInput.value) selectDniType(dniInput.value);
+        // 1. Lógica para mostrar/ocultar sección DNI detalles (Componente 3)
+        // Se basa en el select "Tipo Doc" del Componente 2 (RRHH)
+        const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]');
         
-        // Listener para el tipo de documento del profesional en Componente 2
-        // IMPORTANTE: Como usas prefix='rrhh', el name es contenido[rrhh][tipo_doc]
-        const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]'); 
-        
+        function toggleSeccionDni(val) {
+            const seccion = document.getElementById('seccion_dni_firma'); // ID del div principal en esp_3_detalleDni
+            if (!seccion) return;
+            
+            // Mostramos si es DNI, ocultamos si es CE u otro
+            if (val === 'DNI') {
+                seccion.classList.remove('hidden');
+            } else {
+                seccion.classList.add('hidden');
+            }
+        }
+
         if (selectTipoDoc) {
+            // Estado inicial al cargar
             toggleSeccionDni(selectTipoDoc.value);
+            
+            // Al cambiar el select
             selectTipoDoc.addEventListener('change', function() {
                 toggleSeccionDni(this.value);
             });
         }
-    });
 
-    // Animación Submit
-    const form = document.getElementById('form-monitoreo-triaje');
-    if(form){
-        form.onsubmit = function() {
-            const btn = document.getElementById('btn-submit-action');
-            const icon = document.getElementById('icon-save-loader');
-            
-            if(btn) {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-            if(icon) {
-                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
-            }
-            return true;
-        };
-    }
+        // 2. Animación Submit y bloqueo de botón
+        const form = document.getElementById('form-monitoreo-triaje');
+        if(form){
+            form.onsubmit = function() {
+                const btn = document.getElementById('btn-submit-action');
+                const icon = document.getElementById('icon-save-loader');
+                
+                if(btn) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                if(icon) {
+                    icon.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                }
+                return true;
+            };
+        }
+    });
 </script>
 @endsection
