@@ -48,7 +48,7 @@ class MedicinaEspecializadoController extends Controller
 
         // 4. FUSIONAR FOTO (Componente 7 - Archivo)
         if ($request->hasFile('foto_esp_file')) {
-            $path = $request->file('foto_esp_file')->store('evidencias_monitoreo', 'public');
+            $path = $request->file('foto_esp_file')->store('evidencias_esp', 'public');
             $contenido['comentarios']['foto'] = $path;
         } else {
             // Mantener foto anterior si existe

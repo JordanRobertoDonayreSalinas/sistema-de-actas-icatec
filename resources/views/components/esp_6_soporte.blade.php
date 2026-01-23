@@ -9,15 +9,15 @@
     {{ $attributes->merge(['class' => 'bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-6']) }}>
 
     {{-- 1. Encabezado Integrado --}}
-    {{-- Le puse un fondo gris muy tenue (bg-slate-50) para diferenciarlo sutilmente del cuerpo --}}
     <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/50">
-        <div class="p-2 bg-red-50 text-red-600 rounded-lg border border-red-100 shadow-sm">
-            <i data-lucide="life-buoy" class="w-5 h-5"></i>
+        {{-- Contenedor del icono con colores teal (verde azulado) --}}
+        <div class="p-2 bg-teal-50 text-teal-600 rounded-lg border border-teal-100 shadow-sm">
+            {{-- "cpu" es ideal para soporte tecnológico. Otras opciones: "monitor-wrench" o "terminal" --}}
+            <i data-lucide="cpu" class="w-5 h-5"></i>
         </div>
         <div>
-            <h2 class="text-lg font-bold text-slate-800 leading-tight">Soporte</h2>
-            {{-- Agregué un subtítulo pequeño para darle más "cuerpo" al diseño --}}
-            <p class="text-xs text-slate-500 font-medium">Registro de incidencias y canales de comunicación</p>
+            <h2 class="text-lg font-bold text-slate-800 leading-tight">Soporte Tecnológico</h2>
+            <p class="text-xs text-slate-500 font-medium">Incidencias de hardware, software y conectividad</p>
         </div>
     </div>
 

@@ -36,22 +36,25 @@
                     {{-- 2. DATOS PROFESIONAL (Funciona directo) --}}
                     <x-esp_2_datosProfesional :detalle="$detalle" prefix="profesional" />
 
+                    <esp_2_1_docAdmin.blade :detalle="$detalle" prefix="profesional" />
+
                     {{-- 3. DNI (Funciona directo) --}}
                     <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
-                    {{-- 4. CAPACITACIÓN (NO TIENE NAME - LO ENVOLVEMOS) --}}
-                    {{-- <div id="wrapper_capacitacion">
-                        <x-esp_4_detalleCap :model="$detalle->contenido['capacitacion'] ?? []" />
+                    {{-- DETALLES DE CAPACITACIÓN --}}
+                    <div id="wrapper_capacitacion">
+                        {{-- 2. Pasamos solo la parte de 'capacitacion' para que Alpine lea bien los datos --}}
+                        <x-esp_4_detalleCap :model="json_encode($detalle->contenido['capacitacion'] ?? [])" />
                     </div>
 
-                    {{-- 5. MATERIALES (NO TIENE NAME - LO ENVOLVEMOS) --}}
-                    {{--  <div id="wrapper_materiales">
-                        {{-- OJO: Asegúrate que el tipo coincida con lo que quieres mostrar, aquí puse odontologia por tu ejemplo anterior --}}
-                    {{--     <x-materiales :model="$detalle->contenido['materiales'] ?? []" tipo="odontologia" />
-                    </div>
+                    {{-- EQUIPAMIENTO --}}
+                    @php
+                        $equiposComoObjetos = collect($equipos)->map(function ($item) {
+                            return (object) $item;
+                        });
+                    @endphp
 
-                    {{-- 6. EQUIPOS (Envía 'equipos[...]') --}}
-                    {{-- <x-esp_5_equipos :equipos="$equipos" modulo="medicina" />
+                    <x-esp_5_equipos :equipos="$equiposComoObjetos" modulo="sm_medicina_general" />
 
                     {{-- 7. SOPORTE (Funciona directo) --}}
                     <x-esp_6_soporte :detalle="$detalle" />
