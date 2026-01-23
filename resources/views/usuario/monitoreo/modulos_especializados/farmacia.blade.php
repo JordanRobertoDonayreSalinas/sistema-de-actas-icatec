@@ -31,71 +31,27 @@
               id="form-monitoreo-triaje">
             @csrf
             
-            {{-- 1.- DETALLES DEL AMBIENTE --}}
+            {{-- DETALLES DEL AMBIENTE --}}
             <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
 
             {{-- DATOS DEL PROFESIONAL --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL</h3>
-                </div>
-
-                {{-- BUSQUEDA DE PROFESIONAL (Componente reutilizable) --}}
-                <div class="mb-6">
-                    <x-esp_2_datosProfesional prefix="profesional" :detalle="$detalle" color="teal" />
-                </div>
-
-                {{-- SIHCE / DDJJ / CONFIDENCIALIDAD --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
-                    <div>
-                        <label class="block text-teal-600 text-[10px] font-black uppercase tracking-widest mb-2">¿Utiliza SIHCE?</label>
-                        <select name="contenido[cuenta_sihce]" id="cuenta_sihce" onchange="toggleSihceAndDocs(this.value)" class="w-full px-4 py-3 bg-teal-50 border-2 border-teal-100 rounded-xl font-bold text-sm uppercase outline-none text-teal-700 cursor-pointer hover:bg-teal-100 transition-colors">
-                            <option value="SI" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                            <option value="NO" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
-                        </select>
-                    </div>
-                    <div id="div_firmo_dj">
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Declaración Jurada?</label>
-                        <select name="contenido[firmo_dj]" id="firmo_dj" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
-                            <option value="SI" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                            <option value="NO" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
-                        </select>
-                    </div>
-                    <div id="div_firmo_confidencialidad">
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Confidencialidad?</label>
-                        <select name="contenido[firmo_confidencialidad]" id="firmo_confidencialidad" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
-                            <option value="SI" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                            <option value="NO" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <x-esp_2_datosProfesional prefix="profesional" :detalle="$detalle" color="teal" />
+            
+            {{-- DOCUMENTACIÓN ADMINISTRATIVA --}}
+            <x-esp_2_1_docAdmin prefix="profesional" :detalle="$detalle" />
 
             {{-- DETALLE DNI Y FIRMA DIGITAL --}}
             <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
-            {{-- 4.- DETALLES DE CAPACITACIÓN --}}
+            {{-- DETALLES DE CAPACITACIÓN --}}
             <x-esp_4_detalleCap :model="json_encode($detalle->contenido ?? [])" />
             
-            {{-- EQUIPAMIENTO --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO</h3>
-                </div>
-                <x-esp_5_equipos :equipos="$equipos" modulo="farmacia_esp" />
-            </div>
+            {{-- EQUIPAMIENTO --}}  
+            <x-esp_5_equipos :equipos="$equipos" modulo="farmacia_esp" />
 
             {{-- SOPORTE--}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">6</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
-                </div>
-                <x-esp_6_soporte :detalle="$detalle" />
-            </div>
-
+            <x-esp_6_soporte :detalle="$detalle" />
+            
             {{-- COMENTARIOS Y EVIDENCIA FOTOGRAFICA --}}
             <x-esp_7_comentariosEvid :comentario="(object) ($detalle->contenido ?? [])" />
 
