@@ -148,6 +148,16 @@ Route::middleware(['auth'])->group(function () {
                 // RUTA AGREGADA PARA PDF
                 Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
             });
+            
+            /*
+            // Módulo Especializado: Acogida CSMC
+            Route::prefix('modulo/acogida')->name('acogida.')->group(function () {
+                Route::get('/{id}', [CitaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [CitaESPController::class, 'store'])->name('store');
+                // RUTA AGREGADA PARA PDF
+                Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
+            });
+            */ 
 
             // Módulo 03: Triaje
             Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
