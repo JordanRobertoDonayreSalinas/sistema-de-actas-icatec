@@ -8,6 +8,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
+use App\Http\Controllers\AsistentaSocialEspecializadoController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\CitaESPController;
 use App\Http\Controllers\CitaESPpdfController; // <--- NUEVO CONTROLADOR PDF IMPORTADO
@@ -47,6 +48,7 @@ use App\Http\Controllers\ReferenciasController;
 use App\Http\Controllers\ReferenciasPdfController;
 use App\Http\Controllers\FuaElectronicoController;
 use App\Http\Controllers\FuaElectronicoPdfController;
+use App\Http\Controllers\MedicinaEspecializadoController;
 use App\Http\Controllers\UrgenciasController;
 use App\Http\Controllers\UrgenciasPdfController;
 
@@ -161,6 +163,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
             });
 
+
             // Módulo 05: Odontologia
             Route::prefix('modulo/consulta-odontologia')->name('consulta-odontologia.')->group(function () {
                 Route::get('/{id}', [OdontologiaController::class, 'index'])->name('index');
@@ -265,12 +268,28 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
             });
 
+
+            // Modulo 06: Medicina
+            Route::prefix('modulo/medicina-especializada')->name('medicina.')->group(function () {
+                Route::get('/{id}', [MedicinaEspecializadoController::class, 'index'])->name('index');
+                Route::post('/{id}', [MedicinaEspecializadoController::class, 'store'])->name('store');
+                // RUTA AGREGADA PARA PDF
+                Route::get('/{id}/pdf', [MedicinaEspecializadoController::class, 'pdf'])->name('pdf');
+            });
+
+            // Modulo 10: Asistenta Social
+            Route::prefix('modulo/asistenta-social-especializada')->name('asistencia_social.')->group(function () {
+                Route::get('/{id}', [AsistentaSocialEspecializadoController::class, 'index'])->name('index');
+                Route::post('/{id}', [AsistentaSocialEspecializadoController::class, 'store'])->name('store');
+                // RUTA AGREGADA PARA PDF
+                Route::get('/{id}/pdf', [AsistentaSocialEspecializadoController::class, 'pdf'])->name('pdf');
+            });
+
             // MOTOR DE CONSOLIDADO
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
         });
-
     });
 
     // Acta Consolidada (Global)
