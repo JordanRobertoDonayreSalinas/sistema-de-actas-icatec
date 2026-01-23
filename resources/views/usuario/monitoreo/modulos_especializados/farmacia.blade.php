@@ -80,12 +80,12 @@
                         </div>
                     </div>
 
-                    <x-busqueda-profesional prefix="profesional" :detalle="$monitoreo" color="teal" />
+                    <x-busqueda-profesional prefix="profesional" :detalle="$detalle" color="teal" />
                 </div>
 
 
                 {{-- 2. SECCIÓN: DNI Y FIRMA --}}
-                <x-dni_firma :detalle="$monitoreo" color="teal" />
+                <x-dni_firma :detalle="$detalle" color="teal" />
 
 
                 {{-- 3. SECCIÓN: EQUIPAMIENTO (SOBRE FONDO CLARO) --}}

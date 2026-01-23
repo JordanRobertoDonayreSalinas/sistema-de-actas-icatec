@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Profesional;
 
 class FarmaciaESPController extends Controller
 {
@@ -28,14 +29,25 @@ class FarmaciaESPController extends Controller
                                 ->where('modulo', 'farmacia_esp')
                                 ->get();
 
-        $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                     ->where('modulo_nombre', 'farmacia_esp')
                                     ->first();
 
-        $data = $registro ? json_decode($registro->contenido, true) : [];
+        // 3. Si no existe, creamos una instancia vacía para evitar errores en los componentes
+        if (!$detalle) {
+            $detalle = new MonitoreoModulos();
+            $detalle->contenido = []; // Inicializamos como array vacío
+        }
+
+        // 4. Preparar data suelta (por si la usas en inputs manuales fuera de componentes)
+        $data = is_array($detalle->contenido) 
+                ? $detalle->contenido 
+                : json_decode($detalle->contenido, true);
+        
+        if (!is_array($data)) $data = [];
 
         // [3] AGREGADO: PASAR $equipos A LA VISTA
-        return view('usuario.monitoreo.modulos_especializados.farmacia', compact('monitoreo', 'data', 'equipos'));
+        return view('usuario.monitoreo.modulos_especializados.farmacia', compact('monitoreo', 'data', 'equipos', 'detalle'));
     }
 
     public function store(Request $request, $id)
