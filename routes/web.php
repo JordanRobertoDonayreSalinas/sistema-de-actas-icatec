@@ -49,6 +49,8 @@ use App\Http\Controllers\FuaElectronicoController;
 use App\Http\Controllers\FuaElectronicoPdfController;
 use App\Http\Controllers\UrgenciasController;
 use App\Http\Controllers\UrgenciasPdfController;
+use App\Http\Controllers\PsicologiaESPController;
+use App\Http\Controllers\PsicologiaESPpdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
