@@ -14,7 +14,7 @@
     
     {{-- ENCABEZADO CON ICONO AGREGADO --}}
     <div class="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
-        <div class="h-10 w-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center shadow-sm">
+        <div class="h-10 w-10 rounded-xl bg-white text-teal-600 flex items-center justify-center shadow-sm">
             <i data-lucide="building-2" class="w-5 h-5"></i>
         </div>
         <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DEL CONSULTORIO</h3>
