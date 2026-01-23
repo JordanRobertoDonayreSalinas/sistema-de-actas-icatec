@@ -42,7 +42,7 @@
 
             {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
             {{-- Se muestra condicionalmente si el tipo de doc en el componente 2 es DNI --}}
-            <x-esp_3_detalleDni :detalle="$detalle" parentKey="rrhh" />
+            <x-esp_3_detalleDni :detalle="$detalle" parentKey="rrhh" color='teal' />
 
             {{-- ================================================================================= --}}
             {{-- 4. DETALLES DE CAPACITACIÓN (PARCHE DE COMPATIBILIDAD)                           --}}
