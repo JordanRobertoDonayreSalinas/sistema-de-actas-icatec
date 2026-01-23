@@ -109,7 +109,7 @@
                         </div>
                         <div class="text-left">
                             <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
-                            <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo Triaje</p>
+                            <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo Farmacia Especializada</p>
                         </div>
                     </div>
                     <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-teal-600 transition-all duration-500">
