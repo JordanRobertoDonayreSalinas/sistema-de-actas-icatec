@@ -27,6 +27,8 @@ use App\Http\Controllers\ConsolidadoPdfController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\TriajeController;
 use App\Http\Controllers\TriajePdfController;
+use App\Http\Controllers\TriajeESPController;
+use App\Http\Controllers\TriajeESPpdfController;
 use App\Http\Controllers\OdontologiaController;
 use App\Http\Controllers\OdontologiaPdfController;
 use App\Http\Controllers\PsicologiaController;
@@ -146,6 +148,17 @@ Route::middleware(['auth'])->group(function () {
                 // RUTA AGREGADA PARA PDF
                 Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
             });
+            
+            /*
+            // Módulo Especializado: Acogida CSMC
+            Route::prefix('modulo/acogida')->name('acogida.')->group(function () {
+                Route::get('/{id}', [CitaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [CitaESPController::class, 'store'])->name('store');
+                // RUTA AGREGADA PARA PDF
+                Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
+            });
+            */ 
+
 
             // Módulo 03: Triaje
             Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
@@ -154,6 +167,14 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
                 Route::get('/buscar-profesional/{doc}', [TriajeController::class, 'buscarProfesional'])->name('buscarProfesional');
                 Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');
+            });
+
+            // En web.php, dentro del grupo 'monitoreo' y subgrupo 'triaje.':
+            Route::prefix('modulo/triaje-especializada')->name('triaje_esp.')->group(function () {
+                Route::get('/{id}', [TriajeESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [TriajeESPController::class, 'store'])->name('store');
+                // ESTA LÍNEA ES LA NUEVA PARA ESTE CONTROLADOR:
+                Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 04: Consulta Externa - Medicina
@@ -271,6 +292,26 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
+
+            // Módulo Especializado: Farmacia CSMC
+            Route::prefix('modulo/farmacia-especializada')->name('farmacia_esp.')->group(function () {
+                Route::get('/{id}', [FarmaciaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [FarmaciaESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [FarmaciaESPpdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo Especializado: Terapia CSMC
+            Route::prefix('modulo/terapia')->name('terapia.')->group(function () {
+                Route::get('/{id}', [TerapiaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [TerapiaESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [TerapiaESPpdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo Especializado: Psicología CSMC
+            Route::prefix('modulo/psicologia-especializada')->name('psicologia.')->group(function () {
+                Route::get('/{id}', [PsicologiaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [PsicologiaESPController::class, 'store'])->name('store');
+            });
         });
 
     });

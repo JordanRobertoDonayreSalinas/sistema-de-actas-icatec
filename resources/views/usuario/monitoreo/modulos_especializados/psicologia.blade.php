@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Admisión y Citas - CSMC')
+@section('title', 'Psicología - CSMC')
 
 @section('content')
 <div class="min-h-screen bg-[#f4f7fa] pb-20" x-data="{ 
@@ -34,7 +34,7 @@
                             </span>
                         </div>
                         <h1 class="text-3xl font-black text-white tracking-tight uppercase italic">
-                            01. Admisión y Citas
+                            04. Psicología
                         </h1>
                     </div>
                 </div>
@@ -54,7 +54,7 @@
     <div class="max-w-5xl mx-auto px-6 -mt-16 relative z-20">
         
         {{-- FORMULARIO CON RUTA CORRECTA --}}
-        <form action="{{ route('usuario.monitoreo.psicologia_esp.store', $monitoreo->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('usuario.monitoreo.psicologia.store', $monitoreo->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             {{-- BLOQUE 1: GESTIÓN DE PSICOLOGÍA --}}
@@ -165,6 +165,10 @@
                     </div>
                 </div>
             </div>
+
+           {{-- En tu archivo psicologia.blade.php --}}
+
+            <x-esp_4_detalleCap :model="json_encode($data['capacitacion'] ?? ['recibieron_cap' => '', 'institucion_cap' => ''])" />
 
             {{-- BLOQUE 2: EVIDENCIA FOTOGRÁFICA --}}
             {{-- Lógica para mostrar imagen guardada o el placeholder de subida --}}
