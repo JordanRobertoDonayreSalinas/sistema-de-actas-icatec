@@ -16,13 +16,13 @@
                         <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta:
                             #{{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">02. Triaje</h2>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">04.1 Medicina General</h2>
                     <p class="text-slate-500 font-bold uppercase text-xs mt-1">
                         <i data-lucide="clipboard-pulse" class="inline-block w-4 h-4 mr-1 text-teal-500"></i>
                         {{ $acta->establecimiento->nombre }}
                     </p>
                 </div>
-                <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}"
+                <a href="{{ route('usuario.monitoreo.salud_mental_group.index', $acta->id) }}"
                     class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Panel
                 </a>
@@ -41,12 +41,15 @@
                     <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
 
                     {{-- Componente 2: Datos Profesional --}}
-                    <x-esp_2_datosProfesional :detalle="$detalle" :prefix="$prefix" />
+                    <x-esp_2_datosProfesional :detalle="$detalle" : prefix="profesional" />
 
                     {{-- Componente 3: Detalle DNI --}}
                     <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
+                    {{-- Componente 4: Detalle Capacitacion --}}
                     <x-esp_4_detalleCap :model="json_encode($detalle->contenido ?? [])" />
+
+                    <x-materiales model="form.inicio_labores" tipo="odontologia" />
 
                     {{-- Componente 5: Equipos --}}
                     <x-esp_5_equipos model="form.inventario" />
