@@ -13,26 +13,6 @@ use Illuminate\Support\Facades\Log;
 class TriajeESPController extends Controller
 {
     /**
-     * Lista de equipos requeridos para Triaje en CSMC.
-     */
-    private $listaEquipos = [
-        'BALANZA DE PIE CON TALLÍMETRO (ADULTO)',
-        'BALANZA PEDIÁTRICA (Si aplica)',
-        'TENSIÓMETRO ANEROIDE ADULTO',
-        'TENSIÓMETRO PEDIÁTRICO (Si aplica)',
-        'ESTETOSCOPIO ADULTO',
-        'ESTETOSCOPIO PEDIÁTRICO (Si aplica)',
-        'TERMÓMETRO CLÍNICO DIGITAL',
-        'OXÍMETRO DE PULSO',
-        'CINTA MÉTRICA FLEXIBLE',
-        'LINTERNA PARA EXAMEN CLÍNICO',
-        'CAMILLA DE EXAMEN CLÍNICO',
-        'ESCALINATA DE DOS PELDAÑOS',
-        'COMPUTADORA / LAPTOP',
-        'IMPRESORA MULTIFUNCIONAL'
-    ];
-
-    /**
      * Muestra el formulario de "Triaje" específico para CSMC.
      * Ruta: GET /usuario/monitoreo/modulo/triaje-especializada/{id}
      */
@@ -62,19 +42,17 @@ class TriajeESPController extends Controller
             }
         }
 
-        // 5. SOLUCIÓN DEFINITIVA: Mapeo completo de propiedades
-        // El componente espera: id, descripcion, estado, propio, prestado, observacion (singular)
-        $equiposFormateados = collect($this->listaEquipos)->map(function($nombre, $index) {
-            return (object) [
-                'id' => $index + 1,
-                'descripcion' => $nombre,
-                'estado' => 'OPERATIVO', // Valor por defecto
-                'propio' => 'SI',        // Valor por defecto
-                'prestado' => 'NO',      // Valor por defecto
-                'cantidad' => 1,         // Agregado por seguridad
-                'observacion' => ''      // <--- CORRECCIÓN: Singular, como pide el error
-            ];
-        });
+        // 5. LÓGICA DE EQUIPOS (MODIFICADA: INICIO VACÍO)
+        $equiposFormateados = [];
+
+        // Si YA existen equipos guardados en la base de datos, los cargamos
+        if (isset($detalle->contenido['equipos']) && is_array($detalle->contenido['equipos'])) {
+            $equiposFormateados = collect($detalle->contenido['equipos'])->map(function($item) {
+                // Convertimos el array asociativo a objeto para que la vista no de error
+                return (object) $item;
+            });
+        } 
+        // CASO CONTRARIO: Se envía un array vacío [] para que la tabla inicie sin filas.
 
         // 6. Retornar la vista
         return view('usuario.monitoreo.modulos_especializados.triaje', [
@@ -129,10 +107,12 @@ class TriajeESPController extends Controller
                 }
             }
 
-            // Procesar Equipos
-            // Importante: Guardamos los equipos tal cual vienen del formulario para mantener el estado (checked/unchecked)
+            // Procesar Equipos: Guardamos lo que el usuario haya agregado en el formulario
             if ($request->has('equipos')) {
                 $datosFormulario['equipos'] = $request->input('equipos');
+            } else {
+                // Si borró todos los equipos, guardamos un array vacío
+                $datosFormulario['equipos'] = [];
             }
 
             $registro->contenido = json_encode($datosFormulario, JSON_UNESCAPED_UNICODE);

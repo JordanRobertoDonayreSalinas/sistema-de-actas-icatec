@@ -11,7 +11,7 @@
             <div>
                 <div class="flex items-center gap-3 mb-1">
                     <span class="px-3 py-1 bg-teal-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo Especializado</span>
-                    <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta: #{{ str_pad($acta->id ?? '0', 5, '0', STR_PAD_LEFT) }}</span>
+                    <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta: #{{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">02. Triaje</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">
@@ -24,7 +24,6 @@
         </div>
 
         {{-- FORMULARIO --}}
-        {{-- Asegúrate de crear la ruta 'usuario.monitoreo.triaje_esp.store' en web.php --}}
         <form action="{{ route('usuario.monitoreo.triaje_esp.store', $acta->id) }}" 
               method="POST" 
               enctype="multipart/form-data" 
@@ -46,7 +45,7 @@
                         <input type="date" name="contenido[fecha]" value="{{ $detalle->contenido['fecha'] ?? date('Y-m-d') }}" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all">
                     </div>
                     
-                    {{-- TURNO (Componente o Select) --}}
+                    {{-- TURNO --}}
                     <div>
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Turno</label>
                         <select name="contenido[turno]" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all uppercase">
@@ -85,14 +84,13 @@
                     <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL (Triaje)</h3>
                 </div>
 
-                {{-- BUSQUEDA DE PROFESIONAL --}}
+                {{-- BUSQUEDA DE PROFESIONAL (Componente reutilizable) --}}
                 <div class="mb-6">
                     <x-busqueda-profesional prefix="rrhh" :detalle="$detalle" />
                 </div>
 
                 {{-- SIHCE / DDJJ / CONFIDENCIALIDAD --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
-                    {{-- 1. Utiliza SIHCE --}}
                     <div>
                         <label class="block text-teal-600 text-[10px] font-black uppercase tracking-widest mb-2">¿Utiliza SIHCE?</label>
                         <select name="contenido[cuenta_sihce]" id="cuenta_sihce" onchange="toggleSihceAndDocs(this.value)" class="w-full px-4 py-3 bg-teal-50 border-2 border-teal-100 rounded-xl font-bold text-sm uppercase outline-none text-teal-700 cursor-pointer hover:bg-teal-100 transition-colors">
@@ -100,8 +98,6 @@
                             <option value="NO" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
                     </div>
-
-                    {{-- 2. Declaración Jurada --}}
                     <div id="div_firmo_dj">
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Declaración Jurada?</label>
                         <select name="contenido[firmo_dj]" id="firmo_dj" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
@@ -109,8 +105,6 @@
                             <option value="NO" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
                     </div>
-
-                    {{-- 3. Confidencialidad --}}
                     <div id="div_firmo_confidencialidad">
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Confidencialidad?</label>
                         <select name="contenido[firmo_confidencialidad]" id="firmo_confidencialidad" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
@@ -211,7 +205,6 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {{-- USUARIO Y ACCESO --}}
                     <div>
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Cuenta con Usuario y Acceso?</label>
                         <select name="contenido[acceso_sistema]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
@@ -219,8 +212,6 @@
                             <option value="NO" {{ ($detalle->contenido['acceso_sistema'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
                     </div>
-
-                    {{-- CAPACITACIÓN --}}
                     <div>
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Recibió Capacitación?</label>
                         <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion" onchange="toggleEntidadCapacitadora(this.value)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
@@ -228,8 +219,6 @@
                             <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
                     </div>
-                    
-                    {{-- ENTIDAD CAPACITADORA --}}
                     <div id="wrapper_entidad_capacitadora" class="hidden md:col-span-2">
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿De parte de quién?</label>
                         <select name="contenido[inst_que_lo_capacito]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
@@ -248,7 +237,7 @@
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
                     <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DE TRIAJE</h3>
                 </div>
-                {{-- Nota: El modulo se pasa como 'triaje_esp' para diferenciar en el componente si es necesario --}}
+                {{-- COMPONENTE TABLA EQUIPOS --}}
                 <x-tabla-equipos :equipos="$equipos ?? []" modulo="triaje_esp" />
             </div>
 
@@ -337,8 +326,6 @@
 </div>
 
 <script>
-    // --- LÓGICA DE NEGOCIO ---
-
     function toggleSihceAndDocs(val) {
         const divDj = document.getElementById('div_firmo_dj');
         const divConf = document.getElementById('div_firmo_confidencialidad');
@@ -356,11 +343,9 @@
         }
     }
 
-    // --- NUEVA LÓGICA: OCULTAR SECCIÓN DNI SI NO ES DNI ---
     function toggleSeccionDni(tipoDoc) {
         const seccion = document.getElementById('seccion_detalle_dni');
         if (!seccion) return;
-
         if (tipoDoc === 'DNI') {
             seccion.classList.remove('hidden');
         } else {
@@ -436,7 +421,6 @@
         const dniVal = document.getElementById('tipo_dni_input').value;
         if(dniVal) selectDniType(dniVal);
         
-        // --- DETECTAR CAMBIO EN TIPO DOCUMENTO ---
         const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]');
         if (selectTipoDoc) {
             toggleSeccionDni(selectTipoDoc.value);
