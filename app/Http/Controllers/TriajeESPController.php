@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Log;
 
 class TriajeESPController extends Controller
 {
+    /**
+     * Lista de equipos requeridos para Triaje en CSMC (Referencia interna).
+     */
     private $listaEquipos = [
         'BALANZA DE PIE CON TALLÍMETRO (ADULTO)',
         'BALANZA PEDIÁTRICA (Si aplica)',
@@ -29,28 +32,38 @@ class TriajeESPController extends Controller
         'IMPRESORA MULTIFUNCIONAL'
     ];
 
+    /**
+     * Muestra el formulario de "Triaje" específico para CSMC.
+     * Ruta: GET /usuario/monitoreo/modulo/triaje-especializada/{id}
+     */
     public function index($id)
     {
+        // 1. Obtener la cabecera del monitoreo
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
+        // 2. Validación de seguridad: solo actas ESPECIALIZADAS pueden entrar aquí
         if ($acta->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
+        // 3. Buscar datos existentes del módulo (Clave: triaje_esp)
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                     ->where('modulo_nombre', 'triaje_esp')
                                     ->first();
 
+        // 4. Si no existe, inicializamos vacío
         if (!$detalle) {
             $detalle = new MonitoreoModulos();
             $detalle->contenido = []; 
         } else {
+            // Aseguramos que sea array
             if (is_string($detalle->contenido)) {
                 $detalle->contenido = json_decode($detalle->contenido, true) ?? [];
             }
         }
 
+        // 5. Preparar equipos para la vista (Convertir array a objetos para Blade)
         $equiposFormateados = [];
         if (isset($detalle->contenido['equipos']) && is_array($detalle->contenido['equipos'])) {
             $equiposFormateados = collect($detalle->contenido['equipos'])->map(function($item) {
@@ -65,53 +78,53 @@ class TriajeESPController extends Controller
         ]);
     }
 
+    /**
+     * Guarda la información del módulo.
+     * Ruta: POST /usuario/monitoreo/modulo/triaje-especializada/{id}
+     */
     public function store(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
-            // 1. Obtener datos base del formulario
+            // 1. Recoger datos base del formulario (array 'contenido')
             $datosFormulario = $request->input('contenido', []);
 
             // ----------------------------------------------------------------------
-            // LÓGICA ROBUSTA PARA DETECTAR Y GUARDAR PROFESIONAL (RRHH)
+            // LÓGICA DE RRHH (PROFESIONAL)
             // ----------------------------------------------------------------------
-            
-            // Paso A: Intentar obtener 'rrhh' directo del request
+            // Los datos del profesional vienen en un array aparte 'rrhh' en el request
             $datosRRHH = $request->input('rrhh');
 
-            // Paso B: Si está vacío, buscarlo dentro de 'contenido'
+            // Si no vino suelto, buscamos si se coló dentro de 'contenido'
             if (empty($datosRRHH) && isset($datosFormulario['rrhh'])) {
                 $datosRRHH = $datosFormulario['rrhh'];
             }
 
-            // Paso C: Procesar si encontramos datos válidos
+            // Si tenemos datos válidos del profesional (al menos el documento)
             if (!empty($datosRRHH) && !empty($datosRRHH['doc'])) {
                 
-                // Fusionar datosRRHH en datosFormulario para que se persista en el JSON del módulo
+                // A. Fusionar en $datosFormulario para guardar en el JSON del módulo
                 $datosFormulario['rrhh'] = $datosRRHH;
 
-                // Debug: Verificamos en logs qué llega (Revisar storage/logs/laravel.log)
-                Log::info('Guardando Profesional Triaje:', $datosRRHH);
-
-                // Paso D: Actualizar Tabla Maestra 'mon_profesionales'
-                // NOTA: Asegúrate que tu tabla se llama 'mon_profesionales' y la columna DNI es 'doc' o 'dni'
+                // B. Actualizar Tabla Maestra 'mon_profesionales' para el autocompletado
+                // NOTA: Se eliminó 'institucion' porque no existe en la tabla de la BD.
                 DB::table('mon_profesionales')->updateOrInsert(
-                    ['doc' => $datosRRHH['doc']], // Clave: Buscamos por el número de documento
+                    ['doc' => $datosRRHH['doc']], // Clave única (según tu log es 'doc')
                     [
                         'tipo_doc'          => $datosRRHH['tipo_doc'] ?? 'DNI',
                         'nombres'           => mb_strtoupper($datosRRHH['nombres'] ?? '', 'UTF-8'),
                         'apellido_paterno'  => mb_strtoupper($datosRRHH['apellido_paterno'] ?? '', 'UTF-8'),
                         'apellido_materno'  => mb_strtoupper($datosRRHH['apellido_materno'] ?? '', 'UTF-8'),
-                        'cargo'             => mb_strtoupper($datosRRHH['cargo'] ?? '', 'UTF-8'), // <--- CAMPO CARGO
-                        'institucion'       => mb_strtoupper($datosRRHH['institucion'] ?? '', 'UTF-8'),
+                        'cargo'             => mb_strtoupper($datosRRHH['cargo'] ?? '', 'UTF-8'), // Guardamos el CARGO
+                        // 'institucion'    => ... (ELIMINADO PARA EVITAR ERROR SQL 1054)
                         'updated_at'        => now(),
                     ]
                 );
             }
             // ----------------------------------------------------------------------
 
-            // 2. Gestionar el registro del Módulo
+            // 2. Buscar o Crear registro en monitoreo_modulos
             $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                         ->where('modulo_nombre', 'triaje_esp')
                                         ->first();
@@ -126,12 +139,13 @@ class TriajeESPController extends Controller
                 $contenidoActual = json_decode($registro->contenido, true) ?? [];
             }
 
-            // 3. Procesar Imagen
+            // 3. Procesar Imagen de Evidencia
             if ($request->hasFile('foto_evidencia')) {
                 $request->validate([
                     'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240'
                 ]);
 
+                // Borrar foto anterior si existe
                 if (!empty($contenidoActual['foto_evidencia'])) {
                     if (Storage::disk('public')->exists($contenidoActual['foto_evidencia'])) {
                         Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
@@ -141,19 +155,20 @@ class TriajeESPController extends Controller
                 $path = $request->file('foto_evidencia')->store('evidencias_csmc/triaje', 'public');
                 $datosFormulario['foto_evidencia'] = $path;
             } else {
+                // Mantener foto anterior si no se subió una nueva
                 if (!empty($contenidoActual['foto_evidencia'])) {
                     $datosFormulario['foto_evidencia'] = $contenidoActual['foto_evidencia'];
                 }
             }
 
-            // 4. Procesar Equipos
+            // 4. Procesar lista de Equipos
             if ($request->has('equipos')) {
                 $datosFormulario['equipos'] = $request->input('equipos');
             } else {
                 $datosFormulario['equipos'] = [];
             }
 
-            // 5. Guardar
+            // 5. Guardar JSON final en la BD
             $registro->contenido = json_encode($datosFormulario, JSON_UNESCAPED_UNICODE);
             $registro->save();
 
