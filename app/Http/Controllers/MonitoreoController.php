@@ -168,7 +168,7 @@ class MonitoreoController extends Controller
             ]);
 
             $esEspecializada = $this->esEspecializada($establecimiento);
-            $tipoOrigen = $esEspecializada ? 'ESPECIALIZADA' : 'NO ESPECIALIZADA';
+            $tipoOrigen = $esEspecializada ? 'ESPECIALIZADA' : 'ESTANDAR';
             
             $ultimoNumero = CabeceraMonitoreo::where('tipo_origen', $tipoOrigen)->max('numero_acta');
             $nuevoNumero = $ultimoNumero ? ($ultimoNumero + 1) : 1;
@@ -183,7 +183,6 @@ class MonitoreoController extends Controller
             $monitoreo->implementador = mb_strtoupper(trim($request->implementador), 'UTF-8');
             $monitoreo->user_id = Auth::id();
 
-            // Guardar fotos usando campos correctos de BD: foto1 y foto2
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
                 if (isset($files[0])) { $monitoreo->foto1 = $files[0]->store('evidencias', 'public'); }
@@ -284,12 +283,16 @@ class MonitoreoController extends Controller
         }
     }
 
+    /**
+     * GESTIÓN DE MÓDULOS (NIVEL 1)
+     */
     public function gestionarModulos($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo'])->findOrFail($id);
 
         $esEspecializada = ($acta->tipo_origen === 'ESPECIALIZADA') || $this->esEspecializada($acta->establecimiento);
 
+        // Datos de estado para Nivel 1
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->where('modulo_nombre', '!=', 'config_modulos')
                             ->pluck('modulo_nombre')->toArray();
@@ -304,25 +307,22 @@ class MonitoreoController extends Controller
         $modulosActivos = $config ? $config->contenido : [];
 
         if ($esEspecializada) {
-            // LISTA DE MÓDULOS ESPECIALIZADOS (CSMC) - ORDEN ACTUALIZADO
+            // LISTA PRINCIPAL CSMC (Nivel 1)
+            // 'salud_mental_group' llevará al sub-menú (Controlador gestionarSaludMental)
             $modulosMaster = [
-                'citas_esp'         => ['nombre' => '1. Citas', 'icon' => 'calendar-clock'],
-                'triaje_esp'        => ['nombre' => '2. Triaje', 'icon' => 'stethoscope'],
-                'acogida'           => ['nombre' => '3. Acogida', 'icon' => 'heart-handshake'],
-                'psicologia'        => ['nombre' => '4. Psicología', 'icon' => 'brain'],
-                'psiquiatria'       => ['nombre' => '5. Psiquiatría', 'icon' => 'user-cog'],
-                'medicina'          => ['nombre' => '6. Medicina', 'icon' => 'stethoscope'],
-                'terapia'           => ['nombre' => '7. Terapia', 'icon' => 'activity'],
-                'toma_muestra'      => ['nombre' => '8. Toma de Muestra', 'icon' => 'test-tube'],
-                'farmacia_esp'      => ['nombre' => '9. Farmacia', 'icon' => 'pill'],
-                'asistencia_social' => ['nombre' => '10. Asistencia Social', 'icon' => 'users'],
+                'gestion_admin_esp'  => ['nombre' => '1. GESTION ADMINISTRATIVA', 'icon' => 'folder-kanban'],
+                'citas_esp'          => ['nombre' => '2. CITAS', 'icon' => 'calendar-clock'],
+                'triaje_esp'         => ['nombre' => '3. TRIAJE', 'icon' => 'clipboard-pulse'],
+                'salud_mental_group' => ['nombre' => '4. SALUD MENTAL', 'icon' => 'brain-circuit'], // Contenedor Nivel 2
+                'toma_muestra'       => ['nombre' => '5. TOMA DE MUESTRA', 'icon' => 'test-tube'],
+                'farmacia_esp'       => ['nombre' => '6. FARMACIA', 'icon' => 'pill'],
             ];
 
             return view('usuario.monitoreo.modulos_especializados', compact(
                 'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
             ));
         } else {
-            // LISTA DE MÓDULOS ESTÁNDAR (IPRESS NO ESPECIALIZADAS)
+            // LISTA ESTÁNDAR
             $modulosMaster = [
                 'gestion_administrativa' => ['nombre' => '01. Gestión Administrativa', 'icon' => 'folder-kanban'],
                 'citas'                  => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
@@ -348,6 +348,43 @@ class MonitoreoController extends Controller
                 'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
             ));
         }
+    }
+
+    /**
+     * NUEVO: GESTIÓN DE SUB-MÓDULOS DE SALUD MENTAL (NIVEL 2)
+     */
+    public function gestionarSaludMental($id)
+    {
+        $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo'])->findOrFail($id);
+
+        // Recalcular estados para esta vista
+        $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', '!=', 'config_modulos')
+                            ->pluck('modulo_nombre')->toArray();
+                            
+        $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                           ->whereNotNull('pdf_firmado_path')
+                           ->pluck('modulo_nombre')->toArray();
+        
+        $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                  ->where('modulo_nombre', 'config_modulos')->first();
+        $modulosActivos = $config ? $config->contenido : [];
+
+        // LISTA DE SUB-MÓDULOS (4.1 - 4.7)
+        $modulosSaludMental = [
+            'sm_medicina_general'   => ['nombre' => '4.1. MEDICINA GENERAL', 'icon' => 'stethoscope'],
+            'sm_psiquiatria'        => ['nombre' => '4.2. PSIQUIATRIA', 'icon' => 'user-cog'],
+            'sm_med_familiar'       => ['nombre' => '4.3. MED. FAMILIAR Y COMUNITARIA', 'icon' => 'users'],
+            'sm_psicologia'         => ['nombre' => '4.4. PSICOLOGIA', 'icon' => 'brain'],
+            'sm_enfermeria'         => ['nombre' => '4.5. ENFERMERIA', 'icon' => 'activity'],
+            'sm_servicio_social'    => ['nombre' => '4.6. SERVICIO SOCIAL', 'icon' => 'heart-handshake'],
+            'sm_terapias'           => ['nombre' => '4.7. TERAPIA LENGUAJE / OCUPACIONAL', 'icon' => 'puzzle'],
+        ];
+
+        // CORRECCIÓN: Apuntar a la carpeta 'modulos_especializados' donde está el archivo 'submodulos.blade.php'
+        return view('usuario.monitoreo.modulos_especializados.submodulos', compact(
+            'acta', 'modulosSaludMental', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
+        ));
     }
 
     public function toggleModulos(Request $request, $id)

@@ -3,14 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
-// Importación de Controladores
+// --- IMPORTACIÓN DE CONTROLADORES ---
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\CitaESPController;
-use App\Http\Controllers\CitaESPpdfController; // <--- NUEVO CONTROLADOR PDF IMPORTADO
+use App\Http\Controllers\CitaESPpdfController;
 use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EditMonitoreoController;
 use App\Http\Controllers\GestionAdministrativaController;
@@ -111,10 +111,12 @@ Route::middleware(['auth'])->group(function () {
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
 
+            // Utilitarios de búsqueda
             Route::get('/profesional/buscar/{doc}', [GestionAdministrativaController::class, 'buscarProfesional'])->name('profesional.buscar');
             Route::get('/equipo/buscar/{doc}', [MonitoreoController::class, 'buscarMiembroEquipo'])->name('equipo.buscar');
             Route::get('/equipo/buscar-filtro', [MonitoreoController::class, 'buscarFiltro'])->name('equipo.filtro');
 
+            // Gestión de Acta de Monitoreo
             Route::get('/', [MonitoreoController::class, 'index'])->name('index');
             Route::get('/crear-acta', [MonitoreoController::class, 'create'])->name('create');
             Route::post('/', [MonitoreoController::class, 'store'])->name('store');
@@ -128,6 +130,117 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/editar-acta', [EditMonitoreoController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [EditMonitoreoController::class, 'update'])->name('update');
 
+            // ==================================================================================
+            // RUTA NIVEL 2: PANEL DE SALUD MENTAL (4.1 - 4.7)
+            // ==================================================================================
+            Route::get('/{id}/salud-mental-panel', [MonitoreoController::class, 'gestionarSaludMental'])
+                ->name('salud_mental_group.index');
+
+            // ==================================================================================
+            // SUB-MÓDULOS DE SALUD MENTAL (4.x)
+            // ==================================================================================
+            Route::prefix('modulo/salud-mental')->group(function() {
+                
+                // 4.1 Medicina General
+                Route::prefix('medicina-general')->name('sm_medicina_general.')->group(function() {
+                    // TODO: Crear SmMedicinaGeneralController (Usando ConsultaMedicina temporalmente)
+                    Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+                });
+
+                // 4.2 Psiquiatría
+                Route::prefix('psiquiatria')->name('sm_psiquiatria.')->group(function() {
+                    // TODO: Crear SmPsiquiatriaController (Usando ConsultaMedicina temporalmente)
+                    Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+                });
+
+                // 4.3 Medicina Familiar y Comunitaria
+                Route::prefix('medicina-familiar')->name('sm_med_familiar.')->group(function() {
+                    // TODO: Crear SmMedFamiliarController (Usando ConsultaMedicina temporalmente)
+                    Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+                });
+
+                // 4.4 Psicología
+                Route::prefix('psicologia')->name('sm_psicologia.')->group(function() {
+                    // Usamos el controlador de Psicología existente
+                    Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
+                });
+
+                // 4.5 Enfermería
+                Route::prefix('enfermeria')->name('sm_enfermeria.')->group(function() {
+                    // TODO: Crear SmEnfermeriaController (Usando Triaje temporalmente)
+                    Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
+                    Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
+                });
+
+                // 4.6 Servicio Social
+                Route::prefix('servicio-social')->name('sm_servicio_social.')->group(function() {
+                    // TODO: Crear SmServicioSocialController (Usando GestionAdmin temporalmente)
+                    Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+                });
+
+                // 4.7 Terapias (Lenguaje / Ocupacional)
+                Route::prefix('terapias')->name('sm_terapias.')->group(function() {
+                    // Usamos TerapiaESPController
+                    Route::get('/{id}', [TerapiaESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [TerapiaESPController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [TerapiaESPpdfController::class, 'generar'])->name('pdf');
+                });
+            });
+
+            // ==================================================================================
+            // MÓDULOS ESPECIALIZADOS NIVEL 1 (CSMC)
+            // ==================================================================================
+            
+            // 1. Gestión Administrativa (Reutiliza el estándar o crear GestionAdminESP)
+            Route::prefix('modulo/gestion-administrativa-especializada')->name('gestion_admin_esp.')->group(function () {
+                Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+                Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // 2. Citas (CSMC)
+            Route::prefix('modulo/citas-especializada')->name('citas_esp.')->group(function () {
+                Route::get('/{id}', [CitaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [CitaESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
+            });
+
+            // 3. Triaje (CSMC)
+            Route::prefix('modulo/triaje-especializada')->name('triaje_esp.')->group(function () {
+                Route::get('/{id}', [TriajeESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [TriajeESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
+            });
+
+            // 5. Toma de Muestra (CSMC) - Reutiliza Laboratorio o crear TomaMuestraESP
+            Route::prefix('modulo/toma-muestra')->name('toma_muestra.')->group(function () {
+                Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
+                Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // 6. Farmacia (CSMC)
+            Route::prefix('modulo/farmacia-especializada')->name('farmacia_esp.')->group(function () {
+                Route::get('/{id}', [FarmaciaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [FarmaciaESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [FarmaciaESPpdfController::class, 'generar'])->name('pdf');
+            });
+
+            // ==================================================================================
+            // MÓDULOS ESTÁNDAR (IPRESS)
+            // ==================================================================================
+
             // Módulo 01: Gestión Administrativa
             Route::prefix('modulo/gestion-administrativa')->name('gestion-administrativa.')->group(function () {
                 Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
@@ -135,32 +248,13 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
             });
 
-            // Módulo 02: Citas (ESTÁNDAR)
+            // Módulo 02: Citas
             Route::prefix('modulo/citas')->name('citas.')->group(function () {
                 Route::get('/buscar-profesional', [CitaController::class, 'buscarProfesional'])->name('buscar.profesional');
                 Route::get('/{id}', [CitaController::class, 'index'])->name('index');
                 Route::post('/{id}', [CitaController::class, 'create'])->name('create');
                 Route::get('/{id}/pdf', [CitaController::class, 'generar'])->name('pdf');
             });
-
-            // Módulo Especializado: Citas CSMC
-            Route::prefix('modulo/citas-especializada')->name('citas_esp.')->group(function () {
-                Route::get('/{id}', [CitaESPController::class, 'index'])->name('index');
-                Route::post('/{id}', [CitaESPController::class, 'store'])->name('store');
-                // RUTA AGREGADA PARA PDF
-                Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
-            });
-            
-            /*
-            // Módulo Especializado: Acogida CSMC
-            Route::prefix('modulo/acogida')->name('acogida.')->group(function () {
-                Route::get('/{id}', [CitaESPController::class, 'index'])->name('index');
-                Route::post('/{id}', [CitaESPController::class, 'store'])->name('store');
-                // RUTA AGREGADA PARA PDF
-                Route::get('/{id}/pdf', [CitaESPpdfController::class, 'generar'])->name('pdf');
-            });
-            */ 
-
 
             // Módulo 03: Triaje
             Route::prefix('modulo/triaje')->name('triaje.')->group(function () {
@@ -169,14 +263,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
                 Route::get('/buscar-profesional/{doc}', [TriajeController::class, 'buscarProfesional'])->name('buscarProfesional');
                 Route::delete('/foto/{id}', [TriajeController::class, 'eliminarFoto'])->name('eliminarFoto');
-            });
-
-            // En web.php, dentro del grupo 'monitoreo' y subgrupo 'triaje.':
-            Route::prefix('modulo/triaje-especializada')->name('triaje_esp.')->group(function () {
-                Route::get('/{id}', [TriajeESPController::class, 'index'])->name('index');
-                Route::post('/{id}', [TriajeESPController::class, 'store'])->name('store');
-                // ESTA LÍNEA ES LA NUEVA PARA ESTE CONTROLADOR:
-                Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
             // Módulo 04: Consulta Externa - Medicina
@@ -294,20 +380,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
-
-            // Módulo Especializado: Farmacia CSMC
-            Route::prefix('modulo/farmacia-especializada')->name('farmacia_esp.')->group(function () {
-                Route::get('/{id}', [FarmaciaESPController::class, 'index'])->name('index');
-                Route::post('/{id}', [FarmaciaESPController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [FarmaciaESPpdfController::class, 'generar'])->name('pdf');
-            });
-
-            // Módulo Especializado: Terapia CSMC
-            Route::prefix('modulo/terapia')->name('terapia.')->group(function () {
-                Route::get('/{id}', [TerapiaESPController::class, 'index'])->name('index');
-                Route::post('/{id}', [TerapiaESPController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [TerapiaESPpdfController::class, 'generar'])->name('pdf');
-            });
         });
 
     });
