@@ -559,7 +559,9 @@
                 {{-- Otros campos... --}}
 
                 {{-- Aquí llamas a tu nuevo componente --}}
-                <x-soporte :registro="$registro" />
+                <x-soporte_esp :detalle="$detalle" />
+
+                <x-detalle_consultorio_esp :detalle="$detalle" />
 
                 {{-- SECCIÓN FINAL: COMENTARIOS Y FOTOS (SEPARADOS Y LIMPIOS) --}}
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -1,4 +1,4 @@
-@props(['registro' => null])
+@props(['detalle' => null])
 
 {{-- 
     CAMBIO CLAVE: 
@@ -35,7 +35,7 @@
                     <label class="cursor-pointer group relative">
                         <input type="radio" name="contenido[dificultades][comunica]" value="{{ $opcion }}"
                             class="peer sr-only"
-                            {{ ($registro->dificultad_comunica_a ?? '') == $opcion ? 'checked' : '' }}>
+                            {{ ($detalle->dificultad_comunica_a ?? '') == $opcion ? 'checked' : '' }}>
 
                         <div
                             class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:shadow-sm h-full flex items-center justify-center">
@@ -68,7 +68,7 @@
                     <label class="cursor-pointer group relative">
                         <input type="radio" name="contenido[dificultades][medio]" value="{{ $opcion }}"
                             class="peer sr-only"
-                            {{ ($registro->dificultad_medio_uso ?? '') == $opcion ? 'checked' : '' }}>
+                            {{ ($detalle->dificultad_medio_uso ?? '') == $opcion ? 'checked' : '' }}>
 
                         <div
                             class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:shadow-sm h-full flex items-center justify-center">

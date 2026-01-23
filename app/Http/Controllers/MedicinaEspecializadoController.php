@@ -27,11 +27,10 @@ class MedicinaEspecializadoController extends Controller
         // 3. Equipos
         $equipos = []; // Tu lógica de equipos aquí
 
-        $registro = []; // Tu lógica de equipos aquí
 
         // 4. RETORNO DE LA VISTA
         // ¡IMPORTANTE!: Agregar 'detalle' al compact
-        return view('usuario.monitoreo.modulos_especializados.medicina_especializado', compact('acta', 'equipos', 'detalle', 'registro'));
+        return view('usuario.monitoreo.modulos_especializados.medicina_especializado', compact('acta', 'equipos', 'detalle'));
     }
 
     public function store(Request $request, $actaId)
