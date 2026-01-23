@@ -98,7 +98,7 @@
     @endphp
 
     <div class="header">
-        <h1>Módulo 00: Farmacia</h1>
+        <h1>Módulo 06: Farmacia </h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
             ACTA N° {{ str_pad($monitoreo->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $monitoreo->establecimiento->codigo }} - {{ strtoupper($monitoreo->establecimiento->nombre) }} | 

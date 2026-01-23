@@ -46,7 +46,7 @@
             text-transform: uppercase;
             color: #1f2937;
             margin-top: 15px;
-            margin-bottom: 0; 
+            margin-bottom: 5px; 
         }
 
         /* --- TABLAS --- */
@@ -65,16 +65,18 @@
             font-weight: bold;
             color: #374151; 
             width: 25%; 
+            font-size: 9px;
         }
         .value-cell {
             color: #000;
+            font-size: 10px;
         }
 
         /* --- TABLA INVENTARIO --- */
         .inventory-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 0;
+            margin-top: 5px;
         }
         .inventory-table th {
             background-color: #4f46e5;
@@ -91,22 +93,17 @@
         }
 
         /* --- FOTOS --- */
-        .gallery { 
+        .photo-container { 
             width: 100%; 
             margin-top: 10px; 
             text-align: center; 
-        }
-        .photo-box {
-            display: inline-block;
-            width: 48%;
-            margin: 2px;
-            border: 1px solid #ddd;
-            padding: 4px;
+            border: 1px solid #e5e7eb;
+            padding: 10px;
             background: #fff;
         }
-        .photo-box img {
-            width: 100%;
-            height: 200px;
+        .photo-container img {
+            max-width: 100%;
+            max-height: 350px;
             object-fit: contain;
         }
 
@@ -117,24 +114,16 @@
             text-align: center;
         }
         .signature-frame {
-            width: 350px;
-            height: 160px;
+            width: 300px;
+            height: 100px;
             margin: 0 auto;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
+            border-bottom: 1px solid #000;
             position: relative;
-            background-color: #fff;
         }
-        .signature-box {
-            position: absolute;
-            bottom: 15px;
-            left: 0;
-            right: 0;
-            width: 85%;
-            margin: 0 auto;
-            border-top: 1px solid #000;
-            padding-top: 8px;
-            text-align: center;
+        .signature-text {
+            margin-top: 5px;
+            font-size: 10px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -152,7 +141,7 @@
         </p>
     </div>
 
-    {{-- SECCIÓN 1 (Siempre visible) --}}
+    {{-- SECCIÓN 1: DETALLES --}}
     <div class="section-header">{{ $i++ }}. DETALLES DEL CONSULTORIO</div>
     <table class="details-table">
         <tr>
@@ -169,7 +158,7 @@
         </tr>
     </table>
 
-    {{-- SECCIÓN 2 (Siempre visible) --}}
+    {{-- SECCIÓN 2: PROFESIONAL --}}
     <div class="section-header">{{ $i++ }}. DATOS DEL PROFESIONAL</div>
     @php 
         $prof = $dbCapacitacion->profesional ?? null; 
@@ -177,23 +166,15 @@
     <table class="details-table">
         <tr>
             <td class="label-cell">APELLIDOS Y NOMBRES:</td>
-            <td class="value-cell">
+            <td class="value-cell" colspan="3">
                 {{ $prof ? "$prof->apellido_paterno $prof->apellido_materno, $prof->nombres" : 'NO REGISTRADO' }}
             </td>
+        </tr>
+        <tr>
             <td class="label-cell">CARGO:</td>
             <td class="value-cell">{{ $prof->cargo ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="label-cell">TIPO DOC:</td>
-            <td class="value-cell">{{ $prof->tipo_doc ?? '-' }}</td>
-            <td class="label-cell">¿FIRMÓ DECLARACIÓN JURADA?</td>
-            <td class="value-cell">{{ $dbCapacitacion->decl_jurada ?? 'NO' }}</td>
-        </tr>
-        <tr>
             <td class="label-cell">DOCUMENTO:</td>
-            <td class="value-cell">{{ $prof->doc ?? '-' }}</td>
-            <td class="label-cell">¿FIRMÓ COMP. CONFIDENCIALIDAD?</td>
-            <td class="value-cell">{{ $dbCapacitacion->comp_confidencialidad ?? 'NO' }}</td>
+            <td class="value-cell">{{ $prof->tipo_doc ?? '' }}: {{ $prof->doc ?? '-' }}</td>
         </tr>
         <tr>
             <td class="label-cell">CORREO:</td>
@@ -201,20 +182,15 @@
             <td class="label-cell">CELULAR:</td>
             <td class="value-cell">{{ $prof->telefono ?? '-' }}</td>
         </tr>
-        <tr>
-            <td class="label-cell" colspan="2"></td>
-            <td class="label-cell">¿UTILIZA SIHCE?</td>
-            <td class="value-cell">{{ $dbInicioLabores->utiliza_sihce ?? '-' }}</td>
-        </tr>
     </table>
 
-    {{-- SECCIÓN CONDICIONAL: DNI (Solo si es DNI) --}}
-    @if(isset($prof->tipo_doc) && $prof->tipo_doc === 'DNI')
+    {{-- SECCIÓN CONDICIONAL: DNI (Si hay tipo de DNI seleccionado) --}}
+    @if(!empty($dbDni->tip_dni))
         <div class="section-header">{{ $i++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
         <table class="details-table">
             <tr>
                 <td class="label-cell">TIPO DNI:</td>
-                <td class="value-cell">{{ str_replace('_', ' ', $dbDni->tip_dni ?? '-') }}</td>
+                <td class="value-cell">{{ str_replace('_', ' ', $dbDni->tip_dni) }}</td>
                 <td class="label-cell">VERSIÓN DNIe:</td>
                 <td class="value-cell">{{ $dbDni->version_dni ?? '-' }}</td>
             </tr>
@@ -222,22 +198,24 @@
                 <td class="label-cell">¿REALIZA FIRMA EN SIHCE?</td>
                 <td class="value-cell" colspan="3">{{ $dbDni->firma_sihce ?? 'NO' }}</td>
             </tr>
+            @if(!empty($dbDni->comentarios))
             <tr>
                 <td class="label-cell">OBSERVACIONES DNI:</td>
-                <td class="value-cell" colspan="3">{{ $dbDni->comentarios ?? '-' }}</td>
+                <td class="value-cell" colspan="3">{{ $dbDni->comentarios }}</td>
             </tr>
+            @endif
         </table>
     @endif
 
-    {{-- SECCIÓN CONDICIONAL: CAPACITACIÓN (Solo si utiliza SIHCE = SI) --}}
-    @if(isset($dbInicioLabores->utiliza_sihce) && $dbInicioLabores->utiliza_sihce === 'SI')
+    {{-- SECCIÓN CONDICIONAL: CAPACITACIÓN (Si hay respuesta en 'recibieron_cap') --}}
+    @if(!empty($dbCapacitacion->recibieron_cap))
         <div class="section-header">{{ $i++ }}. DETALLES DE CAPACITACIÓN</div>
         <table class="details-table">
             <tr>
                 <td class="label-cell">¿RECIBIÓ CAPACITACIÓN?</td>
-                <td class="value-cell">{{ $dbCapacitacion->recibieron_cap ?? '-' }}</td>
+                <td class="value-cell">{{ $dbCapacitacion->recibieron_cap }}</td>
                 <td class="label-cell">ENTIDAD CAPACITADORA:</td>
-                <td class="value-cell">{{ $dbCapacitacion->institucion_cap ?? 'N/A' }}</td>
+                <td class="value-cell">{{ $dbCapacitacion->institucion_cap ?? '-' }}</td>
             </tr>
         </table>
     @endif
@@ -248,10 +226,10 @@
         <thead>
             <tr>
                 <th width="30%">DESCRIPCIÓN</th>
-                <th width="10%">CANTIDAD</th>
+                <th width="10%">CANT.</th>
                 <th width="15%">ESTADO</th>
                 <th width="15%">PROPIEDAD</th>
-                <th width="15%">N.SERIE / C.PAT</th>
+                <th width="15%">SERIE/COD</th>
                 <th width="15%">OBSERVACIÓN</th>
             </tr>
         </thead>
@@ -259,7 +237,7 @@
             @forelse($dbInventario as $item)
             <tr>
                 <td>{{ $item->descripcion }}</td>
-                <td style="text-align: center;">{{ $item->cantidad ?? '1' }}</td>
+                <td style="text-align: center;">{{ $item->cantidad }}</td>
                 <td>{{ $item->estado }}</td>
                 <td>{{ $item->propio }}</td>
                 <td>{{ $item->nro_serie ?? '-' }}</td>
@@ -273,9 +251,9 @@
         </tbody>
     </table>
 
-    {{-- SECCIÓN CONDICIONAL: SOPORTE (Solo si utiliza SIHCE = SI) --}}
-    @if(isset($dbInicioLabores->utiliza_sihce) && $dbInicioLabores->utiliza_sihce === 'SI')
-        <div class="section-header">{{ $i++ }}. SOPORTE</div>
+    {{-- SECCIÓN CONDICIONAL: SOPORTE (Si hay datos de soporte) --}}
+    @if(!empty($dbDificultad->insti_comunica) || !empty($dbDificultad->medio_comunica))
+        <div class="section-header">{{ $i++ }}. SOPORTE Y DIFICULTADES</div>
         <table class="details-table">
             <tr>
                 <td class="label-cell">INSTITUCIÓN QUE COORDINA:</td>
@@ -286,50 +264,42 @@
         </table>
     @endif
 
-    {{-- SECCIÓN COMENTARIOS (Siempre visible) --}}
+    {{-- SECCIÓN COMENTARIOS --}}
     <div class="section-header">{{ $i++ }}. COMENTARIOS GENERALES</div>
     <table class="details-table">
         <tr>
-            <td style="padding: 10px; height: 40px; vertical-align: top;">
-                {{ $dbInicioLabores->comentarios ?? 'Sin comentarios generales registrados.' }}
+            <td style="padding: 10px; min-height: 40px; vertical-align: top; font-size: 10px;">
+                {{ $dbInicioLabores->comentarios ?? 'Sin comentarios registrados.' }}
             </td>
         </tr>
     </table>
 
-    {{-- SECCIÓN EVIDENCIA (Siempre visible) --}}
+    {{-- SECCIÓN EVIDENCIA --}}
     <div class="section-header">{{ $i++ }}. EVIDENCIA FOTOGRÁFICA</div>
-    <div class="gallery">
-        @forelse($dbFotos as $foto)
-            <div class="photo-box">
-                <img src="{{ public_path('storage/' . $foto->url_foto) }}">
-            </div>
-        @empty
-            <p style="padding: 20px; color: #999;">No se adjuntaron fotografías.</p>
-        @endforelse
+    <div class="photo-container">
+        @if(!empty($fotoUrl))
+            {{-- Usamos public_path para que DomPDF encuentre el archivo localmente --}}
+            <img src="{{ public_path('storage/' . $fotoUrl) }}">
+        @else
+            <p style="padding: 20px; color: #999;">No se adjuntó evidencia fotográfica.</p>
+        @endif
     </div>
 
-    {{-- SECCIÓN FIRMA (Siempre visible) --}}
-    <div class="section-header">{{ $i++ }}. FIRMA</div>
-    
+    {{-- FIRMA --}}
     <div class="signature-section">
-        <div class="signature-frame">
-            <div class="signature-box">
-                @if($prof)
-                    <div style="font-weight: bold; font-size: 11px; color: #1e293b;">
-                        {{ $prof->apellido_paterno }} {{ $prof->apellido_materno }} {{ $prof->nombres }}
-                    </div>                
-                    <div style="font-size: 10px; color: #64748b; margin-top: 1px;">
-                        {{ $prof->tipo_doc }}: {{ $prof->doc }}
-                    </div>
-                    <div style="font-weight: bold; font-size: 9px; margin-top: 4px;">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
-                @else
-                    <div style="padding: 10px;">FIRMA PENDIENTE</div>
-                @endif
-            </div>
+        <div class="signature-frame"></div>
+        <div class="signature-text">
+            @if($prof)
+                {{ $prof->apellido_paterno }} {{ $prof->apellido_materno }} {{ $prof->nombres }}<br>
+                {{ $prof->tipo_doc }}: {{ $prof->doc }}
+            @else
+                FIRMA PROFESIONAL
+            @endif
         </div>
+        <div style="font-size: 9px; color: #666; margin-top: 2px;">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
     </div>
 
-    {{-- SCRIPT PIE DE PÁGINA --}}
+    {{-- PIE DE PÁGINA --}}
     <script type="text/php">
         if (isset($pdf)) {
             $y = $pdf->get_height() - 30;
@@ -337,11 +307,10 @@
             $size = 8;
             $color = array(0.3, 0.3, 0.3);
 
-            $pdf->page_text(40, $y, "SISTEMA DE ACTAS", $font, $size, $color);
+            $pdf->page_text(40, $y, "SISTEMA DE ACTAS - MODULO CITAS", $font, $size, $color);
 
             $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
-            $dummyText = "PAG: 10 / 10"; 
-            $width = $fontMetrics->get_text_width($dummyText, $font, $size);
+            $width = $fontMetrics->get_text_width($text, $font, $size);
             $x = $pdf->get_width() - $width - 30;
             
             $pdf->page_text($x, $y, $text, $font, $size, $color);
