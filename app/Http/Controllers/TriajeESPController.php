@@ -12,27 +12,36 @@ use Illuminate\Support\Facades\Log;
 
 class TriajeESPController extends Controller
 {
-    /**
-     * Muestra el formulario de "Triaje" específico para CSMC.
-     * Ruta: GET /usuario/monitoreo/modulo/triaje-especializada/{id}
-     */
+    private $listaEquipos = [
+        'BALANZA DE PIE CON TALLÍMETRO (ADULTO)',
+        'BALANZA PEDIÁTRICA (Si aplica)',
+        'TENSIÓMETRO ANEROIDE ADULTO',
+        'TENSIÓMETRO PEDIÁTRICO (Si aplica)',
+        'ESTETOSCOPIO ADULTO',
+        'ESTETOSCOPIO PEDIÁTRICO (Si aplica)',
+        'TERMÓMETRO CLÍNICO DIGITAL',
+        'OXÍMETRO DE PULSO',
+        'CINTA MÉTRICA FLEXIBLE',
+        'LINTERNA PARA EXAMEN CLÍNICO',
+        'CAMILLA DE EXAMEN CLÍNICO',
+        'ESCALINATA DE DOS PELDAÑOS',
+        'COMPUTADORA / LAPTOP',
+        'IMPRESORA MULTIFUNCIONAL'
+    ];
+
     public function index($id)
     {
-        // 1. Obtener la cabecera del monitoreo
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Validación de seguridad
         if ($acta->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
-        // 3. Buscar datos existentes (Clave: triaje_esp)
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                     ->where('modulo_nombre', 'triaje_esp')
                                     ->first();
 
-        // 4. Si no existe, creamos una instancia vacía
         if (!$detalle) {
             $detalle = new MonitoreoModulos();
             $detalle->contenido = []; 
@@ -42,19 +51,13 @@ class TriajeESPController extends Controller
             }
         }
 
-        // 5. LÓGICA DE EQUIPOS (MODIFICADA: INICIO VACÍO)
         $equiposFormateados = [];
-
-        // Si YA existen equipos guardados en la base de datos, los cargamos
         if (isset($detalle->contenido['equipos']) && is_array($detalle->contenido['equipos'])) {
             $equiposFormateados = collect($detalle->contenido['equipos'])->map(function($item) {
-                // Convertimos el array asociativo a objeto para que la vista no de error
                 return (object) $item;
             });
         } 
-        // CASO CONTRARIO: Se envía un array vacío [] para que la tabla inicie sin filas.
 
-        // 6. Retornar la vista
         return view('usuario.monitoreo.modulos_especializados.triaje', [
             'acta' => $acta,
             'detalle' => $detalle,
@@ -62,17 +65,53 @@ class TriajeESPController extends Controller
         ]);
     }
 
-    /**
-     * Guarda la información del módulo.
-     * Ruta: POST /usuario/monitoreo/modulo/triaje-especializada/{id}
-     */
     public function store(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
+            // 1. Obtener datos base del formulario
             $datosFormulario = $request->input('contenido', []);
 
+            // ----------------------------------------------------------------------
+            // LÓGICA ROBUSTA PARA DETECTAR Y GUARDAR PROFESIONAL (RRHH)
+            // ----------------------------------------------------------------------
+            
+            // Paso A: Intentar obtener 'rrhh' directo del request
+            $datosRRHH = $request->input('rrhh');
+
+            // Paso B: Si está vacío, buscarlo dentro de 'contenido'
+            if (empty($datosRRHH) && isset($datosFormulario['rrhh'])) {
+                $datosRRHH = $datosFormulario['rrhh'];
+            }
+
+            // Paso C: Procesar si encontramos datos válidos
+            if (!empty($datosRRHH) && !empty($datosRRHH['doc'])) {
+                
+                // Fusionar datosRRHH en datosFormulario para que se persista en el JSON del módulo
+                $datosFormulario['rrhh'] = $datosRRHH;
+
+                // Debug: Verificamos en logs qué llega (Revisar storage/logs/laravel.log)
+                Log::info('Guardando Profesional Triaje:', $datosRRHH);
+
+                // Paso D: Actualizar Tabla Maestra 'mon_profesionales'
+                // NOTA: Asegúrate que tu tabla se llama 'mon_profesionales' y la columna DNI es 'doc' o 'dni'
+                DB::table('mon_profesionales')->updateOrInsert(
+                    ['doc' => $datosRRHH['doc']], // Clave: Buscamos por el número de documento
+                    [
+                        'tipo_doc'          => $datosRRHH['tipo_doc'] ?? 'DNI',
+                        'nombres'           => mb_strtoupper($datosRRHH['nombres'] ?? '', 'UTF-8'),
+                        'apellido_paterno'  => mb_strtoupper($datosRRHH['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno'  => mb_strtoupper($datosRRHH['apellido_materno'] ?? '', 'UTF-8'),
+                        'cargo'             => mb_strtoupper($datosRRHH['cargo'] ?? '', 'UTF-8'), // <--- CAMPO CARGO
+                        'institucion'       => mb_strtoupper($datosRRHH['institucion'] ?? '', 'UTF-8'),
+                        'updated_at'        => now(),
+                    ]
+                );
+            }
+            // ----------------------------------------------------------------------
+
+            // 2. Gestionar el registro del Módulo
             $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                         ->where('modulo_nombre', 'triaje_esp')
                                         ->first();
@@ -87,7 +126,7 @@ class TriajeESPController extends Controller
                 $contenidoActual = json_decode($registro->contenido, true) ?? [];
             }
 
-            // Procesar Imagen
+            // 3. Procesar Imagen
             if ($request->hasFile('foto_evidencia')) {
                 $request->validate([
                     'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240'
@@ -107,14 +146,14 @@ class TriajeESPController extends Controller
                 }
             }
 
-            // Procesar Equipos: Guardamos lo que el usuario haya agregado en el formulario
+            // 4. Procesar Equipos
             if ($request->has('equipos')) {
                 $datosFormulario['equipos'] = $request->input('equipos');
             } else {
-                // Si borró todos los equipos, guardamos un array vacío
                 $datosFormulario['equipos'] = [];
             }
 
+            // 5. Guardar
             $registro->contenido = json_encode($datosFormulario, JSON_UNESCAPED_UNICODE);
             $registro->save();
 
