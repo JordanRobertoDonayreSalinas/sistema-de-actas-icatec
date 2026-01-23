@@ -40,18 +40,18 @@
                     <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
                     {{-- 4. CAPACITACIÓN (NO TIENE NAME - LO ENVOLVEMOS) --}}
-                    <div id="wrapper_capacitacion">
+                    {{-- <div id="wrapper_capacitacion">
                         <x-esp_4_detalleCap :model="$detalle->contenido['capacitacion'] ?? []" />
                     </div>
 
                     {{-- 5. MATERIALES (NO TIENE NAME - LO ENVOLVEMOS) --}}
-                    <div id="wrapper_materiales">
+                    {{--  <div id="wrapper_materiales">
                         {{-- OJO: Asegúrate que el tipo coincida con lo que quieres mostrar, aquí puse odontologia por tu ejemplo anterior --}}
-                        <x-materiales :model="$detalle->contenido['materiales'] ?? []" tipo="odontologia" />
+                    {{--     <x-materiales :model="$detalle->contenido['materiales'] ?? []" tipo="odontologia" />
                     </div>
 
                     {{-- 6. EQUIPOS (Envía 'equipos[...]') --}}
-                    <x-esp_5_equipos :equipos="$equipos" modulo="medicina" />
+                    {{-- <x-esp_5_equipos :equipos="$equipos" modulo="medicina" />
 
                     {{-- 7. SOPORTE (Funciona directo) --}}
                     <x-esp_6_soporte :detalle="$detalle" />

@@ -33,30 +33,25 @@ class MedicinaEspecializadoController extends Controller
 
     public function store(Request $request, $actaId)
     {
-        // 1. Recoger lo que SÍ viene bien estructurado (esp_1, esp_2, esp_3, esp_6)
-        // Esto captura todo lo que tenga name="contenido[...]"
+        // 1. Recoger 'contenido' (Datos de componentes normales)
         $contenido = $request->input('contenido', []);
 
-        // 2. FUSIONAR EQUIPOS (Componente 5)
-        // El componente envía name="equipos[...]", así que lo atrapamos y lo movemos dentro
+        // 2. FUSIONAR EQUIPOS (Componente 5 - JS)
         if ($request->has('equipos')) {
-            // array_values reindexa el array (0,1,2...) para evitar huecos si borraste filas
             $contenido['equipos'] = array_values($request->input('equipos'));
         }
 
         // 3. FUSIONAR COMENTARIOS (Componente 7)
-        // El componente envía name="comentario_esp", lo movemos a su sitio
         if ($request->has('comentario_esp')) {
             $contenido['comentarios']['texto'] = $request->input('comentario_esp');
         }
 
-        // 4. FUSIONAR FOTO (Componente 7)
-        // El archivo viaja aparte. Lo procesamos y guardamos solo la RUTA en el JSON.
+        // 4. FUSIONAR FOTO (Componente 7 - Archivo)
         if ($request->hasFile('foto_esp_file')) {
             $path = $request->file('foto_esp_file')->store('evidencias_monitoreo', 'public');
             $contenido['comentarios']['foto'] = $path;
         } else {
-            // Si no subió foto nueva, intentamos mantener la antigua si existe
+            // Mantener foto anterior si existe
             $anterior = MonitoreoModulos::where('cabecera_monitoreo_id', $actaId)
                 ->where('modulo_nombre', 'sm_medicina_general')->first();
 
@@ -65,18 +60,18 @@ class MedicinaEspecializadoController extends Controller
             }
         }
 
-        // 5. GUARDAR TODO JUNTO
-        // Ahora $contenido tiene TODO unificado.
+        // 5. GUARDAR
         MonitoreoModulos::updateOrCreate(
             [
                 'cabecera_monitoreo_id' => $actaId,
                 'modulo_nombre' => 'sm_medicina_general'
             ],
             [
-                'contenido' => $contenido // El cast 'array' del Modelo lo convertirá a JSON
+                'contenido' => $contenido
             ]
         );
 
+        // 6. REDIRECCIÓN CORREGIDA
         return redirect()
             ->route('usuario.monitoreo.salud_mental_group.index', $actaId)
             ->with('success', 'Ficha guardada correctamente.');
