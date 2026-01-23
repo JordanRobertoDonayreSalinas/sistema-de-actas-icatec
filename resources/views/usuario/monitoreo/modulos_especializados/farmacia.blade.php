@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Farmacia- CSMC')
+@section('title', 'Farmacia - CSMC')
 
 @section('content')
 <div class="min-h-screen bg-[#f4f7fa] pb-20" x-data="{ 
@@ -85,7 +85,7 @@
 
 
                 {{-- 2. SECCIÓN: DNI Y FIRMA --}}
-                <x-dni_firma :detalle="$detalle" color="teal" />
+                <x-dni_firma_esp :detalle="$detalle" color="teal" />
 
 
                 {{-- 3. SECCIÓN: EQUIPAMIENTO (SOBRE FONDO CLARO) --}}
