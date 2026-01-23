@@ -5,19 +5,57 @@
     (Versión reducida: Las firmas se movieron a seleccion-profesional)
 --}}
 
+{{-- 1. DEFINICIÓN DE COLORES Y TEMA --}}
+@php
+    $allThemes = [
+        'indigo' => [
+            'selected-card'  => 'peer-checked:border-indigo-600 peer-checked:ring-1 peer-checked:ring-indigo-600 peer-checked:shadow-indigo-100', // Borde fuerte, fondo blanco
+            'selected-text'  => 'peer-checked:text-indigo-700',
+            'icon-bg'        => 'bg-indigo-50 text-indigo-600 border-indigo-200',
+            'check-icon'     => 'text-indigo-600',
+            'btn-yes-active' => 'peer-checked:bg-indigo-600 peer-checked:border-indigo-600 peer-checked:text-white',
+            'btn-yes-hover'  => 'hover:border-indigo-300 hover:bg-indigo-50',
+        ],
+        'teal' => [
+            'selected-card'  => 'peer-checked:border-teal-500 peer-checked:ring-1 peer-checked:ring-teal-500 peer-checked:shadow-teal-100',
+            'selected-text'  => 'peer-checked:text-teal-700',
+            'icon-bg'        => 'bg-teal-50 text-teal-600 border-teal-200',
+            'check-icon'     => 'text-teal-600',
+            'btn-yes-active' => 'peer-checked:bg-teal-500 peer-checked:border-teal-500 peer-checked:text-white', // Texto blanco forzado
+            'btn-yes-hover'  => 'hover:border-teal-300 hover:bg-teal-50',
+        ],
+        'blue' => [
+            'selected-card'  => 'peer-checked:border-blue-600 peer-checked:ring-1 peer-checked:ring-blue-600 peer-checked:shadow-blue-100',
+            'selected-text'  => 'peer-checked:text-blue-700',
+            'icon-bg'        => 'bg-blue-50 text-blue-600 border-blue-200',
+            'check-icon'     => 'text-blue-600',
+            'btn-yes-active' => 'peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-checked:text-white',
+            'btn-yes-hover'  => 'hover:border-blue-300 hover:bg-blue-50',
+        ],
+    ];
+
+    $t = $allThemes['teal'];
+@endphp
+
 <div x-data="capacitacionComponent({{ $model }})" 
      class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
     
     <div class="absolute top-0 right-0 w-24 h-24 bg-teal-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
     
     <div class="relative z-10">
-        <div class="flex items-center gap-4 mb-6">
-            <div class="h-12 w-12 rounded-2xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-200">
-                <i data-lucide="graduation-cap" class="text-white w-6 h-6"></i>
+        {{-- HEADER --}}
+        <div class="flex items-center gap-5 mb-8 border-b border-slate-50 pb-6">
+            {{-- ICONO PRINCIPAL --}}
+            <div class="h-14 w-14 rounded-2xl bg-white shadow-sm flex items-center justify-center {{ $t['check-icon'] }} border border-slate-100 transition-all duration-700 group-hover/dniblock:scale-105 group-hover/dniblock:shadow-md">
+                <i data-lucide="graduation-cap" class="w-7 h-7"></i>
             </div>
             <div>
-                <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">DETALLES DE CAPACITACION</h3>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Formación Profesional</p>
+                <h3 class="text-slate-800 font-black text-lg uppercase tracking-tight mb-1 transition-colors duration-300">
+                    Detalle de Capacitación
+                </h3>
+                <p class="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+                    Formación Profesional
+                </p>
             </div>
         </div>
 
