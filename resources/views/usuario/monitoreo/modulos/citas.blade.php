@@ -253,6 +253,39 @@
             @csrf
 
             {{-- ======================================================================== --}}
+            {{-- SECCIÓN: INFRAESTRUCTURA (NUEVA POSICIÓN)                              --}}
+            {{-- ======================================================================== --}}
+            <div class="form-card section-container mb-6">
+                <div class="mb-4 border-b border-slate-100 pb-4 flex items-center gap-3">
+                    <div class="p-2 bg-slate-50 text-slate-600 rounded-lg">
+                        <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Detalles del Ambiente</h2>
+                        <p class="text-slate-500 text-xs">Capacidad de atención instalada.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    {{-- Input Ventanillas --}}
+                    <div class="md:col-span-4">
+                        <label class="input-label">Nro. de Ventanillas</label>
+                        <div class="relative">
+                            <span
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="hash" class="w-5 h-5"></i>
+                            </span>
+                            <input type="number" name="contenido[nro_ventanillas]" style="padding-left:2.5rem;"
+                                class="input-blue pl-10 font-bold text-lg text-indigo-700" placeholder="0" min="0"
+                                value="{{ $registro->nro_ventanillas ?? 0 }}">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            {{-- ======================================================================== --}}
             {{-- SECCIÓN: DATOS DEL PROFESIONAL                                         --}}
             {{-- ======================================================================== --}}
             <div class="form-card section-container">
@@ -328,7 +361,8 @@
                                 @foreach (['ADMISIONISTA', 'CAJERO'] as $rol)
                                     <label
                                         class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer border-b border-slate-50 last:border-0">
-                                        <input type="checkbox" name="contenido[personal_rol][]" value="{{ $rol }}"
+                                        <input type="checkbox" name="contenido[personal_rol][]"
+                                            value="{{ $rol }}"
                                             class="rounded text-indigo-600 focus:ring-0 border-slate-300"
                                             onchange="updateRolText()"
                                             {{ in_array($rol, $registro->personal_roles ?? []) ? 'checked' : '' }}>
@@ -551,7 +585,7 @@
                     <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                         <i data-lucide="credit-card" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800">Tipo de DNI y Firma Digital</h3>
+                    <h3 class="text-xl font-bold text-slate-800">Detalle de DNI y Firma Digital</h3>
                 </div>
 
                 <p class="input-label mb-3 text-xs uppercase text-slate-400">Seleccione el tipo de documento físico</p>
@@ -907,13 +941,7 @@
                             <div>
                                 <h2 class="text-l font-black text-slate-700 uppercase">Citas Otorgadas</h2>
                             </div>
-                            <div
-                                class="bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100 flex items-center gap-3">
-                                <label class="text-[10px] font-bold text-indigo-600 uppercase">Nro. Ventanillas:</label>
-                                <input type="number" name="contenido[nro_ventanillas]"
-                                    class="w-14 bg-white border border-indigo-200 text-center font-bold text-lg rounded-md text-indigo-700"
-                                    placeholder="0" min="0" value="{{ $registro->nro_ventanillas ?? 0 }}">
-                            </div>
+
                         </div>
                         <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm mb-4">
                             <table class="blue-table mb-0" id="tabla-produccion">
