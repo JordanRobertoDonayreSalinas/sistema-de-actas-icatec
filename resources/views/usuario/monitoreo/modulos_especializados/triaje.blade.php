@@ -34,17 +34,19 @@
             {{-- 1. DETALLES DEL CONSULTORIO --}}
             <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
 
-            {{-- 2. DATOS DEL PROFESIONAL (RRHH) --}}
+            {{-- 2. DATOS DEL PROFESIONAL (RRHH - Identidad y Cargo) --}}
             <x-esp_2_datosProfesional prefix="rrhh" :detalle="$detalle" />
 
+            {{-- 2.1 DOCUMENTACIÓN ADMINISTRATIVA (SIHCE, DDJJ, Confidencialidad) --}}
+            <x-esp_2_1_docAdmin prefix="rrhh" :detalle="$detalle" />
+
             {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
-            {{-- Pasamos el detalle y especificamos que busque la llave 'rrhh' para la validación inicial --}}
+            {{-- Se muestra condicionalmente si el tipo de doc en el componente 2 es DNI --}}
             <x-esp_3_detalleDni :detalle="$detalle" parentKey="rrhh" />
 
             {{-- ================================================================================= --}}
             {{-- 4. DETALLES DE CAPACITACIÓN (PARCHE DE COMPATIBILIDAD)                           --}}
             {{-- ================================================================================= --}}
-            {{-- Este bloque adapta el formulario para usar el componente ORIGINAL sin editarlo.     --}}
             @php
                 // Preparamos los datos en formato JSON/Objeto como espera el componente antiguo
                 $datosCapacitacion = [
@@ -111,12 +113,14 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        // 1. Lógica para mostrar/ocultar sección DNI según Componente 2 (RRHH)
+        // 1. Lógica para mostrar/ocultar sección DNI detalles (Componente 3)
+        // Se basa en el select "Tipo Doc" del Componente 2 (RRHH)
         const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]');
         
         function toggleSeccionDni(val) {
-            const seccion = document.getElementById('seccion_dni_firma');
+            const seccion = document.getElementById('seccion_dni_firma'); // ID del div principal en esp_3_detalleDni
             if (!seccion) return;
+            
             // Mostramos si es DNI, ocultamos si es CE u otro
             if (val === 'DNI') {
                 seccion.classList.remove('hidden');
@@ -126,15 +130,16 @@
         }
 
         if (selectTipoDoc) {
-            // Estado inicial
+            // Estado inicial al cargar
             toggleSeccionDni(selectTipoDoc.value);
-            // Al cambiar
+            
+            // Al cambiar el select
             selectTipoDoc.addEventListener('change', function() {
                 toggleSeccionDni(this.value);
             });
         }
 
-        // 2. Animación Submit
+        // 2. Animación Submit y bloqueo de botón
         const form = document.getElementById('form-monitoreo-triaje');
         if(form){
             form.onsubmit = function() {
