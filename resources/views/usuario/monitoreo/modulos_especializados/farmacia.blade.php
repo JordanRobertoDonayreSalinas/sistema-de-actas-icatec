@@ -76,111 +76,28 @@
             <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
             {{-- 4.- DETALLES DE CAPACITACIÓN --}}
-            <x-esp_4_detalleCap :detalle="$detalle" />
+            <x-esp_4_detalleCap :model="json_encode($detalle->contenido ?? [])" />
             
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DE CAPACITACIÓN</h3>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Cuenta con Usuario y Acceso?</label>
-                        <select name="contenido[acceso_sistema]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
-                            <option value="SI" {{ ($detalle->contenido['acceso_sistema'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                            <option value="NO" {{ ($detalle->contenido['acceso_sistema'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Recibió Capacitación?</label>
-                        <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion" onchange="toggleEntidadCapacitadora(this.value)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
-                            <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                            <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
-                        </select>
-                    </div>
-                    <div id="wrapper_entidad_capacitadora" class="hidden md:col-span-2">
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿De parte de quién?</label>
-                        <select name="contenido[inst_que_lo_capacito]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
-                            <option value="UNIDAD EJECUTORA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'UNIDAD EJECUTORA' ? 'selected' : '' }}>UNIDAD EJECUTORA</option>
-                            <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
-                            <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
-                            <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
             {{-- EQUIPAMIENTO --}}
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DE TRIAJE</h3>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO</h3>
                 </div>
-                {{-- COMPONENTE TABLA EQUIPOS --}}
-                <x-tabla-equipos :equipos="$equipos" modulo="farmacia_esp" />
+                <x-esp_5_equipos :equipos="$equipos" modulo="farmacia_esp" />
             </div>
 
-            {{-- 6.- SOPORTE Y COMUNICACIÓN --}}
+            {{-- SOPORTE--}}
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">6</span>
                     <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Comunica dificultades a:</label>
-                        <select name="contenido[inst_a_quien_comunica]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
-                            @foreach(['DIRESA','UNIDAD EJECUTORA','JEFE DE ESTABLECIMIENTO','MINSA','OTROS'] as $op)
-                                <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Medio utilizado:</label>
-                        <select name="contenido[medio_que_utiliza]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
-                            @foreach(['CELULAR','EMAIL','WHATSAPP','OTROS'] as $me)
-                                <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
+                <x-esp_6_soporte :detalle="$detalle" />
             </div>
 
-            {{-- 7.- COMENTARIOS y 8.- EVIDENCIA --}}
-            <div class="bg-teal-900 rounded-[3rem] p-10 shadow-2xl text-white">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
-                            <h3 class="text-white font-black text-lg uppercase tracking-tight">COMENTARIOS</h3>
-                        </div>
-                        <textarea name="contenido[comentarios]" rows="6" class="w-full bg-white/10 border-2 border-white/20 rounded-2xl p-4 text-white font-bold outline-none focus:border-teal-500 transition-all uppercase placeholder-white/30">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
-                            <h3 class="text-white font-black text-lg uppercase tracking-tight">EVIDENCIA FOTOGRÁFICA</h3>
-                        </div>
-                        @if(isset($monitoreo->contenido['foto_evidencia']))
-                            <div class="mb-4 relative group w-full">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
-                                <div class="rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg h-32 w-32 bg-black/50">
-                                    <img src="{{ asset('storage/' . $monitoreo->contenido['foto_evidencia']) }}" class="w-full h-full object-cover">
-                                </div>
-                            </div>
-                        @endif
-                        <div class="relative group">
-                            <input type="file" name="foto_evidencia" id="foto_evidencia" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
-                            <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner h-48 border-spacing-4">
-                                <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-teal-400 mb-2"></i>
-                                <span id="file-name-display" class="text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">{{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}</span>
-                                <img id="img-preview" src="#" class="hidden mt-2 w-20 h-20 object-cover rounded-lg border-2 border-teal-500">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{-- COMENTARIOS Y EVIDENCIA FOTOGRAFICA --}}
+            <x-esp_7_comentariosEvid :comentario="(object) ($detalle->contenido ?? [])" />
 
             {{-- BOTÓN GRANDE DE GUARDADO --}}
             <div class="pt-10 pb-5 mt-6">
