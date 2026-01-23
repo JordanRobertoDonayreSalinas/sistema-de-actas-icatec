@@ -141,18 +141,18 @@ Route::middleware(['auth'])->group(function () {
             // ==================================================================================
             // SUB-MÓDULOS DE SALUD MENTAL (4.x)
             // ==================================================================================
-            Route::prefix('modulo/salud-mental')->group(function() {
-                
+            Route::prefix('modulo/salud-mental')->group(function () {
+
                 // 4.1 Medicina General
-                Route::prefix('medicina-general')->name('sm_medicina_general.')->group(function() {
+                Route::prefix('medicina-general')->name('sm_medicina_general.')->group(function () {
                     // TODO: Crear SmMedicinaGeneralController (Usando ConsultaMedicina temporalmente)
-                    Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [MedicinaEspecializadoController::class, 'index'])->name('index');
+                    Route::post('/{id}', [MedicinaEspecializadoController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [MedicinaEspecializadoController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.2 Psiquiatría
-                Route::prefix('psiquiatria')->name('sm_psiquiatria.')->group(function() {
+                Route::prefix('psiquiatria')->name('sm_psiquiatria.')->group(function () {
                     // TODO: Crear SmPsiquiatriaController (Usando ConsultaMedicina temporalmente)
                     Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
                     Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
@@ -160,7 +160,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.3 Medicina Familiar y Comunitaria
-                Route::prefix('medicina-familiar')->name('sm_med_familiar.')->group(function() {
+                Route::prefix('medicina-familiar')->name('sm_med_familiar.')->group(function () {
                     // TODO: Crear SmMedFamiliarController (Usando ConsultaMedicina temporalmente)
                     Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
                     Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
@@ -168,7 +168,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.4 Psicología
-                Route::prefix('psicologia')->name('sm_psicologia.')->group(function() {
+                Route::prefix('psicologia')->name('sm_psicologia.')->group(function () {
                     // Usamos el controlador de Psicología existente
                     Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
                     Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
@@ -176,7 +176,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.5 Enfermería
-                Route::prefix('enfermeria')->name('sm_enfermeria.')->group(function() {
+                Route::prefix('enfermeria')->name('sm_enfermeria.')->group(function () {
                     // TODO: Crear SmEnfermeriaController (Usando Triaje temporalmente)
                     Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
                     Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
@@ -184,7 +184,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.6 Servicio Social
-                Route::prefix('servicio-social')->name('sm_servicio_social.')->group(function() {
+                Route::prefix('servicio-social')->name('sm_servicio_social.')->group(function () {
                     // TODO: Crear SmServicioSocialController (Usando GestionAdmin temporalmente)
                     Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
                     Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
@@ -192,7 +192,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.7 Terapias (Lenguaje / Ocupacional)
-                Route::prefix('terapias')->name('sm_terapias.')->group(function() {
+                Route::prefix('terapias')->name('sm_terapias.')->group(function () {
                     // Usamos TerapiaESPController
                     Route::get('/{id}', [TerapiaESPController::class, 'index'])->name('index');
                     Route::post('/{id}', [TerapiaESPController::class, 'store'])->name('store');
@@ -203,7 +203,7 @@ Route::middleware(['auth'])->group(function () {
             // ==================================================================================
             // MÓDULOS ESPECIALIZADOS NIVEL 1 (CSMC)
             // ==================================================================================
-            
+
             // 1. Gestión Administrativa (Reutiliza el estándar o crear GestionAdminESP)
             Route::prefix('modulo/gestion-administrativa-especializada')->name('gestion_admin_esp.')->group(function () {
                 Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
@@ -377,23 +377,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [UrgenciasController::class, 'index'])->name('index');
                 Route::post('/{id}', [UrgenciasController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
-            });
-
-
-            // Modulo 06: Medicina
-            Route::prefix('modulo/medicina-especializada')->name('medicina.')->group(function () {
-                Route::get('/{id}', [MedicinaEspecializadoController::class, 'index'])->name('index');
-                Route::post('/{id}', [MedicinaEspecializadoController::class, 'store'])->name('store');
-                // RUTA AGREGADA PARA PDF
-                Route::get('/{id}/pdf', [MedicinaEspecializadoController::class, 'pdf'])->name('pdf');
-            });
-
-            // Modulo 10: Asistenta Social
-            Route::prefix('modulo/asistenta-social-especializada')->name('asistencia_social.')->group(function () {
-                Route::get('/{id}', [AsistentaSocialEspecializadoController::class, 'index'])->name('index');
-                Route::post('/{id}', [AsistentaSocialEspecializadoController::class, 'store'])->name('store');
-                // RUTA AGREGADA PARA PDF
-                Route::get('/{id}/pdf', [AsistentaSocialEspecializadoController::class, 'pdf'])->name('pdf');
             });
 
             // MOTOR DE CONSOLIDADO
