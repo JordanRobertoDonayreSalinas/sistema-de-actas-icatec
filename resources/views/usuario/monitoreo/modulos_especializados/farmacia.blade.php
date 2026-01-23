@@ -85,7 +85,7 @@
 
 
                 {{-- 2. SECCIÓN: DNI Y FIRMA --}}
-                <x-dni_firma_esp :detalle="$detalle" color="teal" />
+                <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
 
                 {{-- 3. SECCIÓN: EQUIPAMIENTO (SOBRE FONDO CLARO) --}}
