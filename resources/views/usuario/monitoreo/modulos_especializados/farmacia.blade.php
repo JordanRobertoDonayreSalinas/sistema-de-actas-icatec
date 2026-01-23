@@ -1,163 +1,242 @@
 @extends('layouts.usuario')
 
-@section('title', 'Farmacia - CSMC')
+@section('title', 'Módulo: Farmacia CSMC')
 
 @section('content')
-<div class="min-h-screen bg-[#f4f7fa] pb-20" x-data="{ 
-    unsavedChanges: false,
-    updateProgress() {
-        // Lógica simple para barra de progreso visual
-        let total = document.querySelectorAll('.criterion-toggle').length;
-        let checked = document.querySelectorAll('.criterion-toggle:checked').length;
-        return (total > 0) ? Math.round((checked / total) * 100) : 0;
-    }
-}">
-    
-    {{-- ENCABEZADO ESPECÍFICO PARA CSMC (Color TEAL) --}}
-    <div class="bg-teal-900 pt-10 pb-24 rounded-b-[3rem] shadow-xl relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+<div class="py-12 bg-slate-50 min-h-screen">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
-        <div class="max-w-6xl mx-auto px-6 relative z-10">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="flex items-center gap-6">
-                    <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all">
-                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
-                    </a>
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="px-3 py-1 bg-emerald-400 text-teal-900 text-[10px] font-black rounded-lg uppercase tracking-widest">
-                                Módulo Especializado
-                            </span>
-                            <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest">ID Acta: #{{ str_pad($monitoreo->numero_acta, 5, '0', STR_PAD_LEFT) }}</span>
-                            
-                        </div>
-                        <h1 class="text-3xl font-black text-white tracking-tight uppercase italic">
-                            Farmacia
-                        </h1>
-                        <span class="text-teal-200 text-[11px] font-bold uppercase tracking-widest">
-                            <i data-lucide="hospital" class="inline-block w-4 h-4 mr-1 text-white-500"></i>{{ $monitoreo->establecimiento->nombre }}
-                        </span>
-                    </div>
+        {{-- ENCABEZADO SUPERIOR --}}
+        <div class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="px-3 py-1 bg-teal-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo Especializado</span>
+                    <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta: #{{ str_pad($monitoreo->numero_acta ?? $monitoreo->id, 5, '0', STR_PAD_LEFT) }}</span>
+                </div>
+                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">06. Farmacia</h2>
+                <p class="text-slate-500 font-bold uppercase text-xs mt-1">
+                    <i data-lucide="clipboard-pulse" class="inline-block w-4 h-4 mr-1 text-teal-500"></i> {{ $monitoreo->establecimiento->nombre }}
+                </p>
+            </div>
+            <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Panel
+            </a>
+        </div>
+
+        {{-- FORMULARIO --}}
+        <form action="{{ route('usuario.monitoreo.farmacia_esp.store', $monitoreo->id) }}" 
+              method="POST" 
+              enctype="multipart/form-data" 
+              class="space-y-6" 
+              id="form-monitoreo-triaje">
+            @csrf
+            
+            {{-- 1.- DETALLES DEL AMBIENTE --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">1</span>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DEL ÁREA</h3>
                 </div>
                 
-                {{-- KPI DE CUMPLIMIENTO --}}
-                <div class="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl flex items-center gap-4">
-                    <div class="text-right">
-                        <p class="text-[10px] text-teal-200 font-bold uppercase tracking-widest">Cumplimiento</p>
-                        <p class="text-2xl font-black text-white" x-text="updateProgress() + '%'"></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    {{-- FECHA --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Fecha de Monitoreo</label>
+                        <input type="date" name="contenido[fecha]" value="{{ $monitoreo->contenido['fecha'] ?? date('Y-m-d') }}" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all">
                     </div>
-                    <div class="h-12 w-12 rounded-full border-4 border-emerald-400 border-t-transparent animate-spin-slow"></div>
+                    
+                    {{-- TURNO --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Turno</label>
+                        <select name="contenido[turno]" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all uppercase">
+                            <option value="MAÑANA" {{ ($detalle->contenido['turno'] ?? '') == 'MAÑANA' ? 'selected' : '' }}>MAÑANA</option>
+                            <option value="TARDE" {{ ($detalle->contenido['turno'] ?? '') == 'TARDE' ? 'selected' : '' }}>TARDE</option>
+                        </select>
+                    </div>
+
+                    {{-- NRO DE AMBIENTES --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Nro. de Ambientes</label>
+                        <input type="number" 
+                               name="contenido[num_ambientes]" 
+                               value="{{ $detalle->contenido['num_ambientes'] ?? '' }}" 
+                               min="0"
+                               class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all text-center"
+                               placeholder="EJ: 1">
+                    </div>
+
+                    {{-- DENOMINACIÓN --}}
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Denominación del Ambiente</label>
+                        <input type="text" 
+                               name="contenido[denominacion_ambiente]" 
+                               value="{{ $detalle->contenido['denominacion_ambiente'] ?? '' }}" 
+                               class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all uppercase"
+                               placeholder="EJ: TRIAJE PRINCIPAL">
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="max-w-5xl mx-auto px-6 -mt-16 relative z-20">
-        
-        {{-- FORMULARIO CON RUTA CORRECTA --}}
-        <form action="{{ route('usuario.monitoreo.farmacia_esp.store', $monitoreo->id) }}" method="POST" enctype="multipart/form-data">
-            @csrf
+            {{-- DATOS DEL PROFESIONAL --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL (Triaje)</h3>
+                </div>
 
-            {{-- CONTENEDOR PRINCIPAL --}}
-            <div class="space-y-16 mb-24">
-
-                {{-- 1. SECCIÓN: DATOS DEL PROFESIONAL (SOBRE FONDO VERDE) --}}
-                <div class="relative">
-                    {{-- TÍTULO: Diseño "High Contrast" para fondo oscuro --}}
-                    <div class="flex items-center gap-5 mb-8 pl-2">
-                        {{-- Ícono: Fondo BLANCO para resaltar --}}
-                        <div class="h-14 w-14 bg-white rounded-2xl flex items-center justify-center text-teal-600 shadow-xl shadow-teal-900/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        </div>
-                        <div>
-                            {{-- Texto: BLANCO con sombra suave --}}
-                            <h3 class="text-xl font-black text-white uppercase tracking-tight drop-shadow-md">Profesional Responsable</h3>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="h-1 w-8 bg-teal-400 rounded-full shadow-sm"></span>
-                                <p class="text-[10px] font-bold text-teal-100 uppercase tracking-widest shadow-sm">Identificación y Cargo</p>
-                            </div>
-                        </div>
-                    </div>
-
+                {{-- BUSQUEDA DE PROFESIONAL (Componente reutilizable) --}}
+                <div class="mb-6">
                     <x-busqueda-profesional prefix="profesional" :detalle="$detalle" color="teal" />
                 </div>
 
-
-                {{-- 2. SECCIÓN: DNI Y FIRMA --}}
-                <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
-
-
-                {{-- 3. SECCIÓN: EQUIPAMIENTO (SOBRE FONDO CLARO) --}}
-                <div class="relative">
-                    {{-- TÍTULO: Diseño oscuro normal --}}
-                    <div class="flex items-center gap-5 mb-8 pl-2">
-                        {{-- Ícono: Gradiente Teal --}}
-                        <div class="h-14 w-14 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-teal-200/50">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-                        </div>
-                        <div>
-                            {{-- Texto: OSCURO (Slate-800) --}}
-                            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight">Equipamiento Tecnológico</h3>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="h-1 w-8 bg-teal-500 rounded-full"></span>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inventario de Hardware</p>
-                            </div>
-                        </div>
+                {{-- SIHCE / DDJJ / CONFIDENCIALIDAD --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+                    <div>
+                        <label class="block text-teal-600 text-[10px] font-black uppercase tracking-widest mb-2">¿Utiliza SIHCE?</label>
+                        <select name="contenido[cuenta_sihce]" id="cuenta_sihce" onchange="toggleSihceAndDocs(this.value)" class="w-full px-4 py-3 bg-teal-50 border-2 border-teal-100 rounded-xl font-bold text-sm uppercase outline-none text-teal-700 cursor-pointer hover:bg-teal-100 transition-colors">
+                            <option value="SI" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
                     </div>
-                    
-                    <x-tabla-equipos :equipos="$equipos" modulo="farmacia_esp" />
-                </div>
-
-            </div>
-
-            {{-- BLOQUE 2: EVIDENCIA FOTOGRÁFICA --}}
-            {{-- Lógica para mostrar imagen guardada o el placeholder de subida --}}
-            @php
-                $hasImage = !empty($data['foto_evidencia']);
-                $imageUrl = $hasImage ? asset('storage/' . $data['foto_evidencia']) : '#';
-            @endphp
-
-            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden mb-24">
-                <div class="bg-slate-50 px-8 py-6 border-b border-slate-100 flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
-                        <i data-lucide="image-plus" class="w-5 h-5"></i>
+                    <div id="div_firmo_dj">
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Declaración Jurada?</label>
+                        <select name="contenido[firmo_dj]" id="firmo_dj" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
+                            <option value="SI" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
                     </div>
-                    <h3 class="text-slate-800 font-black text-sm uppercase tracking-wider">Evidencias del Módulo</h3>
-                </div>
-                <div class="p-8">
-                    <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 hover:border-teal-400 transition-all cursor-pointer relative group">
-                        <input type="file" name="foto_evidencia" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" onchange="previewImage(this)">
-                        
-                        {{-- PLACEHOLDER: Solo visible si NO hay imagen guardada y NO se ha seleccionado una nueva en JS --}}
-                        <div id="upload-placeholder" class="{{ $hasImage ? 'hidden' : '' }} group-hover:scale-105 transition-transform duration-300">
-                            <div class="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-teal-50">
-                                <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 group-hover:text-teal-500"></i>
-                            </div>
-                            <p class="text-xs font-bold text-slate-500 uppercase">Arrastra una imagen o haz clic aquí</p>
-                            <p class="text-[10px] text-slate-400 mt-1">Formatos: JPG, PNG (Max 10MB)</p>
-                        </div>
-
-                        {{-- PREVIEW: Visible si HAY imagen guardada --}}
-                        <img id="image-preview" src="{{ $imageUrl }}" class="{{ $hasImage ? '' : 'hidden' }} max-h-96 rounded-xl shadow-lg mt-4 object-cover w-full" />
+                    <div id="div_firmo_confidencialidad">
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Confidencialidad?</label>
+                        <select name="contenido[firmo_confidencialidad]" id="firmo_confidencialidad" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
+                            <option value="SI" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            {{-- BOTÓN DE GUARDADO FINAL --}}
-            <div class="pt-10 pb-20">
+            {{-- DETALLE DNI Y FIRMA DIGITAL --}}
+            <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
+
+            {{-- 4.- DETALLES DE CAPACITACIÓN --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DE CAPACITACIÓN</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Cuenta con Usuario y Acceso?</label>
+                        <select name="contenido[acceso_sistema]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
+                            <option value="SI" {{ ($detalle->contenido['acceso_sistema'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['acceso_sistema'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Recibió Capacitación?</label>
+                        <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion" onchange="toggleEntidadCapacitadora(this.value)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
+                            <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+                    <div id="wrapper_entidad_capacitadora" class="hidden md:col-span-2">
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿De parte de quién?</label>
+                        <select name="contenido[inst_que_lo_capacito]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
+                            <option value="UNIDAD EJECUTORA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'UNIDAD EJECUTORA' ? 'selected' : '' }}>UNIDAD EJECUTORA</option>
+                            <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
+                            <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
+                            <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- EQUIPAMIENTO --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DE TRIAJE</h3>
+                </div>
+                {{-- COMPONENTE TABLA EQUIPOS --}}
+                <x-tabla-equipos :equipos="$equipos" modulo="farmacia_esp" />
+            </div>
+
+            {{-- 6.- SOPORTE Y COMUNICACIÓN --}}
+            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">6</span>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Comunica dificultades a:</label>
+                        <select name="contenido[inst_a_quien_comunica]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
+                            @foreach(['DIRESA','UNIDAD EJECUTORA','JEFE DE ESTABLECIMIENTO','MINSA','OTROS'] as $op)
+                                <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Medio utilizado:</label>
+                        <select name="contenido[medio_que_utiliza]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
+                            @foreach(['CELULAR','EMAIL','WHATSAPP','OTROS'] as $me)
+                                <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 7.- COMENTARIOS y 8.- EVIDENCIA --}}
+            <div class="bg-teal-900 rounded-[3rem] p-10 shadow-2xl text-white">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
+                            <h3 class="text-white font-black text-lg uppercase tracking-tight">COMENTARIOS</h3>
+                        </div>
+                        <textarea name="contenido[comentarios]" rows="6" class="w-full bg-white/10 border-2 border-white/20 rounded-2xl p-4 text-white font-bold outline-none focus:border-teal-500 transition-all uppercase placeholder-white/30">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
+                            <h3 class="text-white font-black text-lg uppercase tracking-tight">EVIDENCIA FOTOGRÁFICA</h3>
+                        </div>
+                        @if(isset($monitoreo->contenido['foto_evidencia']))
+                            <div class="mb-4 relative group w-full">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
+                                <div class="rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg h-32 w-32 bg-black/50">
+                                    <img src="{{ asset('storage/' . $monitoreo->contenido['foto_evidencia']) }}" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+                        @endif
+                        <div class="relative group">
+                            <input type="file" name="foto_evidencia" id="foto_evidencia" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
+                            <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner h-48 border-spacing-4">
+                                <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-teal-400 mb-2"></i>
+                                <span id="file-name-display" class="text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">{{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}</span>
+                                <img id="img-preview" src="#" class="hidden mt-2 w-20 h-20 object-cover rounded-lg border-2 border-teal-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- BOTÓN GRANDE DE GUARDADO --}}
+            <div class="pt-10 pb-5 mt-6">
                 <button type="submit" id="btn-submit-action" 
-                        class="w-full group bg-indigo-600 text-white p-10 rounded-[3rem] font-black shadow-2xl shadow-indigo-200 flex items-center justify-between hover:bg-indigo-700 transition-all duration-500 active:scale-[0.98] cursor-pointer">
+                        class="w-full group bg-teal-600 text-white p-8 rounded-[3rem] font-black shadow-2xl shadow-teal-200 flex items-center justify-between hover:bg-teal-700 transition-all duration-500 active:scale-[0.98] cursor-pointer">
                     <div class="flex items-center gap-8 pointer-events-none">
                         <div class="h-16 w-16 bg-white/20 rounded-3xl flex items-center justify-center group-hover:rotate-12 transition-all shadow-lg border border-white/30">
                             <i data-lucide="save" id="icon-save-loader" class="w-8 h-8 text-white"></i>
                         </div>
                         <div class="text-left">
                             <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
-                            <p class="text-[10px] text-indigo-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Farmacia con el Maestro</p>
+                            <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo Triaje</p>
                         </div>
                     </div>
-                    <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-indigo-600 transition-all duration-500">
+                    <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-teal-600 transition-all duration-500">
                         <i data-lucide="chevron-right" class="w-7 h-7"></i>
                     </div>
                 </button>
@@ -168,21 +247,122 @@
 </div>
 
 <script>
-    function previewImage(input) {
-        const preview = document.getElementById('image-preview');
-        const placeholder = document.getElementById('upload-placeholder');
+    function toggleSihceAndDocs(val) {
+        const divDj = document.getElementById('div_firmo_dj');
+        const divConf = document.getElementById('div_firmo_confidencialidad');
+        const djSelect = document.getElementById('firmo_dj');
+        const confSelect = document.getElementById('firmo_confidencialidad');
+
+        if (val === 'SI') {
+            divDj.classList.remove('hidden');
+            divConf.classList.remove('hidden');
+        } else {
+            divDj.classList.add('hidden');
+            divConf.classList.add('hidden');
+            if(djSelect) djSelect.value = 'NO';
+            if(confSelect) confSelect.value = 'NO';
+        }
+    }
+
+    function toggleSeccionDni(tipoDoc) {
+        const seccion = document.getElementById('seccion_detalle_dni');
+        if (!seccion) return;
+        if (tipoDoc === 'DNI') {
+            seccion.classList.remove('hidden');
+        } else {
+            seccion.classList.add('hidden');
+        }
+    }
+
+    function selectDniType(tipo) {
+        const input = document.getElementById('tipo_dni_input');
+        const cardElectronico = document.getElementById('card_electronico');
+        const cardAzul = document.getElementById('card_azul');
+        const bloqueOpciones = document.getElementById('bloque_opciones_dni');
+        const bloqueVersion = document.getElementById('bloque_version_dnie');
+        const bloqueFirma = document.getElementById('bloque_firma_digital');
+
+        input.value = tipo;
+        bloqueOpciones.classList.remove('hidden');
+
+        if (tipo === 'ELECTRONICO') {
+            cardElectronico.classList.add('border-teal-600', 'bg-teal-50');
+            cardElectronico.classList.remove('border-slate-200', 'bg-white');
+            cardAzul.classList.remove('border-teal-600', 'bg-teal-50');
+            cardAzul.classList.add('border-slate-200', 'bg-white');
+            bloqueVersion.classList.remove('hidden');
+            bloqueFirma.classList.remove('hidden');
+        } else {
+            cardAzul.classList.add('border-teal-600', 'bg-teal-50');
+            cardAzul.classList.remove('border-slate-200', 'bg-white');
+            cardElectronico.classList.remove('border-teal-600', 'bg-teal-50');
+            cardElectronico.classList.add('border-slate-200', 'bg-white');
+            bloqueVersion.classList.add('hidden');
+            bloqueFirma.classList.add('hidden');
+        }
+    }
+
+    function toggleEntidadCapacitadora(val) {
+        const wrapper = document.getElementById('wrapper_entidad_capacitadora');
+        val === 'SI' ? wrapper.classList.remove('hidden') : wrapper.classList.add('hidden');
+    }
+
+    function checkNationality(tipoDoc) {
+        const dniInput = document.getElementById('tipo_dni_input');
+        if (dniInput && dniInput.value) {
+            selectDniType(dniInput.value);
+        }
+    }
+
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('img-preview');
+        const icon = document.getElementById('upload-icon');
+        const fileName = document.getElementById('file-name-display');
+        
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 preview.src = e.target.result;
                 preview.classList.remove('hidden');
-                placeholder.classList.add('hidden');
+                icon.classList.add('hidden');
+                fileName.innerText = "NUEVA: " + input.files[0].name.substring(0, 15).toUpperCase() + "...";
             }
             reader.readAsDataURL(input.files[0]);
         }
     }
-    document.addEventListener('DOMContentLoaded', () => {
-        lucide.createIcons();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectCapacitacion = document.getElementById('recibio_capacitacion');
+        if (selectCapacitacion) toggleEntidadCapacitadora(selectCapacitacion.value);
+
+        const selectSihce = document.getElementById('cuenta_sihce');
+        if (selectSihce) toggleSihceAndDocs(selectSihce.value);
+
+        const dniVal = document.getElementById('tipo_dni_input').value;
+        if(dniVal) selectDniType(dniVal);
+        
+        const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]');
+        if (selectTipoDoc) {
+            toggleSeccionDni(selectTipoDoc.value);
+            selectTipoDoc.addEventListener('change', function() {
+                toggleSeccionDni(this.value);
+            });
+        }
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
+
+    document.getElementById('form-monitoreo-triaje').onsubmit = function() {
+        const btn = document.getElementById('btn-submit-action');
+        const icon = document.getElementById('icon-save-loader');
+        
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        
+        icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+        
+        return true;
+    };
 </script>
 @endsection
