@@ -190,7 +190,15 @@
             </div>
         </div>
 
-        <div class="section-title">1. DATOS DEL PROFESIONAL</div>
+        <div class="section-title">1. DETALLES DE VENTANILLA</div>
+        <table>
+            <tr>
+                <td class="bg-label">N° VENTANILLAS</td>
+                <td>{{ $registro->nro_ventanillas ?? '0' }}</td>
+            </tr>
+        </table>
+
+        <div class="section-title">2. DATOS DEL PROFESIONAL</div>
         <table>
             <tr>
                 <td class="bg-label">APELLIDOS Y NOMBRES</td>
@@ -262,7 +270,7 @@
         </table>
 
         @if (($profesional->tipo_doc ?? '') != 'CE')
-            <div class="section-title">2. DETALLE DE DNI Y FIRMA DIGITAL</div>
+            <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
             <table>
                 <tr>
                     <td class="bg-label">TIPO DE DNI</td>
@@ -282,7 +290,7 @@
             </table>
         @endif
 
-        <div class="section-title">3. DETALLES DE CAPACITACIÓN</div>
+        <div class="section-title">4. DETALLES DE CAPACITACIÓN</div>
         <table>
             <tr>
                 <td class="bg-label">¿RECIBIÓ CAPACITACIÓN?</td>
@@ -296,7 +304,7 @@
             @endif
         </table>
 
-        <div class="section-title">4. MATERIALES</div>
+        <div class="section-title">5. MATERIALES</div>
         <table>
             <tr>
                 <td class="bg-label">AL INICIAR SUS LABORES CUENTA CON:</td>
@@ -305,7 +313,7 @@
             </tr>
         </table>
 
-        <div class="section-title">5. EQUIPAMIENTO</div>
+        <div class="section-title">6. EQUIPAMIENTO</div>
         <table>
             <thead>
                 <tr>
@@ -353,13 +361,7 @@
             </tr>
         </table>
 
-        <div class="section-title">6. GESTIÓN DE CITAS Y CALIDAD DE ATENCIÓN</div>
-        <table>
-            <tr>
-                <td class="bg-label">N° VENTANILLAS</td>
-                <td>{{ $registro->nro_ventanillas ?? '0' }}</td>
-            </tr>
-        </table>
+        <div class="section-title">7. GESTIÓN DE CITAS Y CALIDAD DE ATENCIÓN</div>
 
         <table style="margin-top: 10px;">
             <thead>
@@ -399,7 +401,7 @@
                 </tr>
             </table>
 
-            <div class="section-title">7. SOPORTE</div>
+            <div class="section-title">8. SOPORTE</div>
             <table>
                 <tr>
                     <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
@@ -412,7 +414,7 @@
             </table>
         @endif
 
-        <div class="section-title">8. EVIDENCIA FOTOGRÁFICA</div>
+        <div class="section-title">9. EVIDENCIA FOTOGRÁFICA</div>
 
         @php
             $fotos = $registro->fotos_evidencia ?? [];
@@ -454,7 +456,7 @@
         @endif
 
         <div class="firma-section">
-            <div class="section-title">9. FIRMAS DE CONFORMIDAD</div>
+            <div class="section-title">10. FIRMA</div>
             <br>
             <div class="firma-container">
                 <div class="firma-linea">
