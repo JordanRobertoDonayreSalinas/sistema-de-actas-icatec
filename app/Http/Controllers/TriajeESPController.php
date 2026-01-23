@@ -13,60 +13,41 @@ use Illuminate\Support\Facades\Log;
 class TriajeESPController extends Controller
 {
     /**
-     * Lista de equipos requeridos para Triaje en CSMC (Referencia interna).
-     */
-    private $listaEquipos = [
-        'BALANZA DE PIE CON TALLÍMETRO (ADULTO)',
-        'BALANZA PEDIÁTRICA (Si aplica)',
-        'TENSIÓMETRO ANEROIDE ADULTO',
-        'TENSIÓMETRO PEDIÁTRICO (Si aplica)',
-        'ESTETOSCOPIO ADULTO',
-        'ESTETOSCOPIO PEDIÁTRICO (Si aplica)',
-        'TERMÓMETRO CLÍNICO DIGITAL',
-        'OXÍMETRO DE PULSO',
-        'CINTA MÉTRICA FLEXIBLE',
-        'LINTERNA PARA EXAMEN CLÍNICO',
-        'CAMILLA DE EXAMEN CLÍNICO',
-        'ESCALINATA DE DOS PELDAÑOS',
-        'COMPUTADORA / LAPTOP',
-        'IMPRESORA MULTIFUNCIONAL'
-    ];
-
-    /**
      * Muestra el formulario de "Triaje" específico para CSMC.
-     * Ruta: GET /usuario/monitoreo/modulo/triaje-especializada/{id}
      */
     public function index($id)
     {
-        // 1. Obtener la cabecera del monitoreo
+        // 1. Obtener la cabecera
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Validación de seguridad: solo actas ESPECIALIZADAS pueden entrar aquí
+        // 2. Validación de seguridad
         if ($acta->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
-        // 3. Buscar datos existentes del módulo (Clave: triaje_esp)
+        // 3. Buscar datos existentes
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'triaje_esp')
-                                    ->first();
+                                   ->where('modulo_nombre', 'triaje_esp')
+                                   ->first();
 
-        // 4. Si no existe, inicializamos vacío
+        // 4. Inicializar si no existe
         if (!$detalle) {
             $detalle = new MonitoreoModulos();
             $detalle->contenido = []; 
         } else {
-            // Aseguramos que sea array
+            // Asegurar que sea array
             if (is_string($detalle->contenido)) {
                 $detalle->contenido = json_decode($detalle->contenido, true) ?? [];
             }
         }
 
-        // 5. Preparar equipos para la vista (Convertir array a objetos para Blade)
+        // 5. Preparar equipos (Usando data_get para evitar errores de índice indefinido)
+        $listaEquiposRaw = data_get($detalle->contenido, 'equipos', []);
         $equiposFormateados = [];
-        if (isset($detalle->contenido['equipos']) && is_array($detalle->contenido['equipos'])) {
-            $equiposFormateados = collect($detalle->contenido['equipos'])->map(function($item) {
+        
+        if (is_array($listaEquiposRaw)) {
+            $equiposFormateados = collect($listaEquiposRaw)->map(function($item) {
                 return (object) $item;
             });
         } 
@@ -80,96 +61,94 @@ class TriajeESPController extends Controller
 
     /**
      * Guarda la información del módulo.
-     * Ruta: POST /usuario/monitoreo/modulo/triaje-especializada/{id}
      */
     public function store(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
-            // 1. Recoger datos base del formulario (array 'contenido')
-            $datosFormulario = $request->input('contenido', []);
+            // 1. Datos nuevos del formulario
+            $nuevosDatos = $request->input('contenido', []);
 
             // ----------------------------------------------------------------------
-            // LÓGICA DE RRHH (PROFESIONAL)
+            // LÓGICA DE RRHH (PROFESIONAL) - Fusión inteligente
             // ----------------------------------------------------------------------
-            // Los datos del profesional vienen en un array aparte 'rrhh' en el request
             $datosRRHH = $request->input('rrhh');
 
-            // Si no vino suelto, buscamos si se coló dentro de 'contenido'
-            if (empty($datosRRHH) && isset($datosFormulario['rrhh'])) {
-                $datosRRHH = $datosFormulario['rrhh'];
+            // Si rrhh viene dentro de contenido, lo extraemos
+            if (empty($datosRRHH) && isset($nuevosDatos['rrhh'])) {
+                $datosRRHH = $nuevosDatos['rrhh'];
             }
 
-            // Si tenemos datos válidos del profesional (al menos el documento)
+            // Si hay datos de RRHH, los preparamos
             if (!empty($datosRRHH) && !empty($datosRRHH['doc'])) {
                 
-                // A. Fusionar en $datosFormulario para guardar en el JSON del módulo
-                $datosFormulario['rrhh'] = $datosRRHH;
+                // Aseguramos que se guarde en el JSON bajo la llave 'rrhh'
+                $nuevosDatos['rrhh'] = $datosRRHH;
 
-                // B. Actualizar Tabla Maestra 'mon_profesionales' para el autocompletado
-                // NOTA: Se eliminó 'institucion' porque no existe en la tabla de la BD.
+                // Actualizar Tabla Maestra (Solo campos esenciales)
                 DB::table('mon_profesionales')->updateOrInsert(
-                    ['doc' => $datosRRHH['doc']], // Clave única (según tu log es 'doc')
+                    ['doc' => $datosRRHH['doc']],
                     [
                         'tipo_doc'          => $datosRRHH['tipo_doc'] ?? 'DNI',
                         'nombres'           => mb_strtoupper($datosRRHH['nombres'] ?? '', 'UTF-8'),
                         'apellido_paterno'  => mb_strtoupper($datosRRHH['apellido_paterno'] ?? '', 'UTF-8'),
                         'apellido_materno'  => mb_strtoupper($datosRRHH['apellido_materno'] ?? '', 'UTF-8'),
-                        'cargo'             => mb_strtoupper($datosRRHH['cargo'] ?? '', 'UTF-8'), // Guardamos el CARGO
-                        // 'institucion'    => ... (ELIMINADO PARA EVITAR ERROR SQL 1054)
+                        'cargo'             => mb_strtoupper($datosRRHH['cargo'] ?? '', 'UTF-8'),
                         'updated_at'        => now(),
                     ]
                 );
             }
             // ----------------------------------------------------------------------
 
-            // 2. Buscar o Crear registro en monitoreo_modulos
-            $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                        ->where('modulo_nombre', 'triaje_esp')
-                                        ->first();
+            // 2. Obtener registro actual de la BD para no perder datos no enviados
+            $registro = MonitoreoModulos::firstOrNew([
+                'cabecera_monitoreo_id' => $id,
+                'modulo_nombre' => 'triaje_esp'
+            ]);
 
-            $contenidoActual = [];
+            // Recuperar contenido anterior (si existe)
+            $contenidoAnterior = is_string($registro->contenido) 
+                ? (json_decode($registro->contenido, true) ?? []) 
+                : ($registro->contenido ?? []);
 
-            if (!$registro) {
-                $registro = new MonitoreoModulos();
-                $registro->cabecera_monitoreo_id = $id;
-                $registro->modulo_nombre = 'triaje_esp';
-            } else {
-                $contenidoActual = json_decode($registro->contenido, true) ?? [];
-            }
-
-            // 3. Procesar Imagen de Evidencia
+            // 3. Procesar Imagen (Solo si se sube nueva)
             if ($request->hasFile('foto_evidencia')) {
                 $request->validate([
                     'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240'
                 ]);
 
-                // Borrar foto anterior si existe
-                if (!empty($contenidoActual['foto_evidencia'])) {
-                    if (Storage::disk('public')->exists($contenidoActual['foto_evidencia'])) {
-                        Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
+                // Borrar anterior
+                if (!empty($contenidoAnterior['foto_evidencia'])) {
+                    if (Storage::disk('public')->exists($contenidoAnterior['foto_evidencia'])) {
+                        Storage::disk('public')->delete($contenidoAnterior['foto_evidencia']);
                     }
                 }
 
                 $path = $request->file('foto_evidencia')->store('evidencias_csmc/triaje', 'public');
-                $datosFormulario['foto_evidencia'] = $path;
+                $nuevosDatos['foto_evidencia'] = $path;
             } else {
-                // Mantener foto anterior si no se subió una nueva
-                if (!empty($contenidoActual['foto_evidencia'])) {
-                    $datosFormulario['foto_evidencia'] = $contenidoActual['foto_evidencia'];
+                // Mantener la foto vieja si no se envió una nueva
+                if (isset($contenidoAnterior['foto_evidencia'])) {
+                    $nuevosDatos['foto_evidencia'] = $contenidoAnterior['foto_evidencia'];
                 }
             }
 
-            // 4. Procesar lista de Equipos
+            // 4. Procesar Equipos (Reemplazo total de la lista)
             if ($request->has('equipos')) {
-                $datosFormulario['equipos'] = $request->input('equipos');
+                $nuevosDatos['equipos'] = $request->input('equipos');
             } else {
-                $datosFormulario['equipos'] = [];
+                // Si no se envían equipos, asumimos lista vacía (borrado)
+                $nuevosDatos['equipos'] = [];
             }
 
-            // 5. Guardar JSON final en la BD
-            $registro->contenido = json_encode($datosFormulario, JSON_UNESCAPED_UNICODE);
+            // 5. FUSIÓN FINAL: Usamos array_replace_recursive para que los nuevos datos
+            // sobrescriban a los viejos, pero manteniendo claves viejas que no vinieron en el request
+            // (Útil por si algún input disabled no se envió)
+            $contenidoFinal = array_replace_recursive($contenidoAnterior, $nuevosDatos);
+
+            // 6. Guardar
+            $registro->contenido = json_encode($contenidoFinal, JSON_UNESCAPED_UNICODE);
             $registro->save();
 
             DB::commit();
