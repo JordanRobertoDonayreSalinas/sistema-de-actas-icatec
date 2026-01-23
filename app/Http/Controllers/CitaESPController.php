@@ -29,24 +29,37 @@ class CitaESPController extends Controller
         $data = $registro ? json_decode($registro->contenido, true) : [];
 
         // 3. MAPEO DE DATOS (Para que la vista no se rompa)
-        // Creamos un objeto genérico que agrupa toda la data para los componentes Blade
         $dataMap = new stdClass();
         
-        // A. Contenido General (Componentes 1 y 3 usan $detalle->contenido['...'])
+        // A. Contenido General (Componentes 1, 2, 3 y 6)
+        // Aseguramos que 'contenido' exista
         $dataMap->contenido = $data['contenido'] ?? [];
 
-        // B. Soporte (Componente 6 usa propiedades directas como $detalle->dificultad_comunica_a)
+        // B. Soporte (Componente 6 - Mapeo específico)
         $dataMap->dificultad_comunica_a = $data['contenido']['dificultades']['comunica'] ?? null;
         $dataMap->dificultad_medio_uso  = $data['contenido']['dificultades']['medio'] ?? null;
 
-        // C. Comentarios (Componente 7 usa $comentario->comentario_esp)
+        // C. Comentarios (Componente 7)
         $dataMap->comentario_esp = $data['comentarios_esp']['comentario_esp'] ?? null;
         $dataMap->foto_url_esp   = $data['comentarios_esp']['foto_url_esp'] ?? null;
 
-        // 4. DATOS PARA ALPINE JS (Componentes 4 y 5)
-        // Estos se pasan directo como Arrays
+        // 4. DATOS PARA ALPINE/BLADE
+        // Capacitación: Recuperamos del JSON o valores por defecto
         $valCapacitacion = $data['capacitacion'] ?? ['recibieron_cap' => 'NO', 'institucion_cap' => ''];
-        $valInventario   = $data['inventario'] ?? [];
+        
+        // Inventario: Recuperamos del JSON y lo convertimos a Objetos para que el blade ( ->descripcion ) funcione
+        $arrayInventario = $data['inventario'] ?? [];
+        $valInventario = [];
+        foreach($arrayInventario as $item){
+            $obj = new stdClass();
+            $obj->descripcion = $item['descripcion'] ?? '';
+            $obj->cantidad    = $item['cantidad'] ?? 1;
+            $obj->estado      = $item['estado'] ?? 'OPERATIVO';
+            $obj->propio      = $item['propio'] ?? 'COMPARTIDO';
+            $obj->nro_serie   = $item['nro_serie'] ?? '';
+            $obj->observacion = $item['observacion'] ?? '';
+            $valInventario[] = $obj;
+        }
 
         return view('usuario.monitoreo.modulos_especializados.citas', compact(
             'acta', 
@@ -59,14 +72,13 @@ class CitaESPController extends Controller
     public function store(Request $request, $id)
     {
         try {
-            // 1. Recuperar registro previo (para no perder la foto si no suben una nueva)
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                               ->where('modulo_nombre', 'citas_esp')
                                               ->first();
             
             $jsonPrevio = $registroPrevio ? json_decode($registroPrevio->contenido, true) : [];
 
-            // 2. Lógica de FOTO
+            // 1. Lógica de FOTO (Componente 7)
             $rutaFoto = $jsonPrevio['comentarios_esp']['foto_url_esp'] ?? null;
 
             if ($request->hasFile('foto_esp_file')) {
@@ -76,12 +88,16 @@ class CitaESPController extends Controller
                 $rutaFoto = $request->file('foto_esp_file')->store('evidencias_esp', 'public');
             }
 
+            // 2. Preparar Contenido
+            // El componente 2 (Profesional) guarda dentro de name="contenido[profesional]..."
+            // así que ya viene dentro del array 'contenido'.
+            $contenidoGeneral = $request->input('contenido', []);
+
             // 3. Armar el JSON ÚNICO
             $contenidoParaJson = [
-                'profesional'     => $request->input('profesional', []),
-                'contenido'       => $request->input('contenido', []), // Fechas, DNI, Soporte
-                'capacitacion'    => $request->input('capacitacion', []),
-                'inventario'      => $request->input('inventario', []),
+                'contenido'       => $contenidoGeneral, 
+                'capacitacion'    => $request->input('capacitacion', []), // Recibido gracias a los inputs hidden
+                'inventario'      => $request->input('equipos', []), // OJO: El componente envía 'equipos', guardamos como 'inventario'
                 'comentarios_esp' => [
                     'comentario_esp' => $request->input('comentario_esp'),
                     'foto_url_esp'   => $rutaFoto
@@ -102,7 +118,7 @@ class CitaESPController extends Controller
 
             return redirect()
                 ->route('usuario.monitoreo.modulos', $id)
-                ->with('success', 'Información guardada correctamente.');
+                ->with('success', 'Módulo de Citas guardado correctamente.');
 
         } catch (\Exception $e) {
             return back()->with('error', 'Error: ' . $e->getMessage())->withInput();

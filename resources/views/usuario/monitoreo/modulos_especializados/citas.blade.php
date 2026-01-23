@@ -8,16 +8,12 @@
     function triajeForm() {
         return {
             saving: false,
+            // Inicializamos con los datos del servidor
             form: {
-                profesional: {},
-                // Cargar datos previos de BD o valores por defecto
-                capacitacion: @json($valCapacitacion),
-                inventario: @json($valInventario),
-                dificultades: {}
+                capacitacion: @json($valCapacitacion)
             },
             async guardarTodo() {
                 this.saving = true;
-                // Envío tradicional del formulario
                 this.$refs.formHtml.submit();
             }
         }
@@ -48,10 +44,6 @@
         </div>
 
         {{-- FORMULARIO --}}
-        {{-- 
-            CORRECCIÓN CLAVE 1: Agregado el parámetro $acta->id a la ruta. 
-            CORRECCIÓN CLAVE 2: Agregado x-ref="formHtml" para que Alpine pueda enviarlo.
-        --}}
         <form 
             action="{{ route('usuario.monitoreo.citas_esp.store', $acta->id) }}" 
             method="POST" 
@@ -62,26 +54,31 @@
         >
             @csrf
 
-            {{-- 1. SECCIÓN INICIO LABORES --}}
-            {{-- Usamos $dataMap que contiene la data decodificada del JSON --}}
+            {{-- 1. DETALLE CONSULTORIO --}}
             <x-esp_1_detalleDeConsultorio :detalle="$dataMap" />
             
-            {{-- 2. SECCION DATOS DEL PROFESIONAL --}}
-            {{-- <x-esp_2_datosProfesional :model="form.profesional" /> --}}
+            {{-- 2. DATOS PROFESIONAL --}}
+            {{-- Usamos el prefijo 'profesional' para que se guarde en contenido[profesional] --}}
+            <x-esp_2_datosProfesional prefix="profesional" :detalle="$dataMap" />
 
-            {{-- 3. SECCIÓN DNI --}}
-            <x-esp_3_detalleDni :detalle="$dataMap" color="teal" />
+            {{-- 3. DNI Y FIRMA --}}
+            <x-esp_3_detalleDni :detalle="$dataMap" color="indigo" />
 
-            {{-- 4. SECCION: CAPACITACIÓN (Controlado por Alpine form.capacitacion) --}}
-            {{-- <x-esp_4_detalleCap model="form.capacitacion" /> --}}
-
-            {{-- 5. INVENTARIO (Controlado por Alpine form.inventario) --}}
-            <x-esp_5_equipos model="form.inventario" />
+            {{-- 4. CAPACITACIÓN --}}
+            {{-- Truco: Inputs Hidden para enviar datos de Alpine al servidor --}}
+            <input type="hidden" name="capacitacion[recibieron_cap]" :value="form.capacitacion.recibieron_cap">
+            <input type="hidden" name="capacitacion[institucion_cap]" :value="form.capacitacion.institucion_cap">
             
-            {{-- 6. SECCION: DIFICULTADES --}}
-            <x-esp_6_soporte :detalle="$dataMap" /> 
+            <x-esp_4_detalleCap model="form.capacitacion" />
 
-            {{-- 7. COMENTARIOS GENERALES --}}
+            {{-- 5. INVENTARIO (EQUIPOS) --}}
+            {{-- Pasamos la lista de equipos ($valInventario) y un identificador de módulo --}}
+            <x-esp_5_equipos :equipos="$valInventario" modulo="citas_esp" />
+            
+            {{-- 6. SOPORTE --}}
+            <x-esp_6_soporte :detalle="$dataMap" />
+
+            {{-- 7. COMENTARIOS Y FOTOS --}}
             <x-esp_7_comentariosEvid :comentario="$dataMap" />
 
             {{-- BOTÓN GUARDAR --}}

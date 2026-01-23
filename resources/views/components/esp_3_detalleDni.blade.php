@@ -33,16 +33,20 @@
 @endphp
 
 <div id="seccion_dni_firma" class="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/40 border border-slate-100 mb-8 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/60 {{ data_get($detalle->contenido, 'profesional.tipo_doc', 'DNI') !== 'DNI' && data_get($detalle->contenido, 'profesional.tipo_doc') !== null ? 'hidden' : '' }} seccion-numerada group/dniblock">
-    
     {{-- HEADER --}}
-    <div class="flex items-center gap-4 mb-6">
-            <div class="h-12 w-12 rounded-2xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-200">
-                <i data-lucide="id-card" class="text-white w-6 h-6"></i>
-            </div>
-            <div>
-                <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Detalle DNI y Firma Digital</h3>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Validación de identidad digital</p>
-            </div>
+    <div class="flex items-center gap-5 mb-8 border-b border-slate-50 pb-6">
+        {{-- ICONO PRINCIPAL --}}
+        <div class="h-14 w-14 rounded-2xl bg-white shadow-sm flex items-center justify-center {{ $t['check-icon'] }} border border-slate-100 transition-all duration-700 group-hover/dniblock:scale-105 group-hover/dniblock:shadow-md">
+            <i data-lucide="id-card" class="w-7 h-7"></i>
+        </div>
+        <div>
+            <h3 class="text-slate-800 font-black text-lg uppercase tracking-tight mb-1 transition-colors duration-300">
+                Detalle DNI y Firma Digital
+            </h3>
+            <p class="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+                Validación de identidad digital
+            </p>
+        </div>
     </div>
     
     {{-- TIPO DE DOCUMENTO --}}
