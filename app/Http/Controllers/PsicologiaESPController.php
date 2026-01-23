@@ -20,20 +20,24 @@ class PsicologiaESPController extends Controller
     {
         $monitoreo = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // Validación de seguridad (ajusta 'ESPECIALIZADA' si Psicología aplica a otros tipos)
         if ($monitoreo->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
-        // 3. Buscar datos existentes (Cambiamos el slug a: psicologia)
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', 'psicologia') // Sugiero usar este slug para diferenciarlo del normal
-                            ->first();
+                                    ->where('modulo_nombre', 'sm_psicologia')
+                                    ->first();
+        
+        if (!$registro) {
+            $registro = new MonitoreoModulos();
+            $registro->contenido = []; 
+        }
 
-        $data = $registro ? json_decode($registro->contenido, true) : [];
+        $data = is_array($registro->contenido) ? $registro->contenido : json_decode($registro->contenido, true) ?? [];
 
-        return view('usuario.monitoreo.modulos_especializados.psicologia', compact('monitoreo', 'data'));
+        // CAMBIO AQUÍ: Se agrega 'registro' al compact
+        return view('usuario.monitoreo.modulos_especializados.psicologia', compact('monitoreo', 'data', 'registro'));
     }
 
     /**
@@ -48,7 +52,7 @@ class PsicologiaESPController extends Controller
 
             // Buscamos por el nombre del módulo 'psicologia'
             $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                        ->where('modulo_nombre', 'psicologia')
+                                        ->where('modulo_nombre', 'sm_psicologia')
                                         ->first();
 
             $contenidoActual = [];
@@ -56,7 +60,7 @@ class PsicologiaESPController extends Controller
             if (!$registro) {
                 $registro = new MonitoreoModulos();
                 $registro->cabecera_monitoreo_id = $id;
-                $registro->modulo_nombre = 'psicologia'; // Cambiado a psicologia
+                $registro->modulo_nombre = 'sm_psicologia'; // Cambiado a psicologia
             } else {
                 $contenidoActual = json_decode($registro->contenido, true) ?? [];
             }

@@ -54,8 +54,26 @@
     <div class="max-w-5xl mx-auto px-6 -mt-16 relative z-20">
         
         {{-- FORMULARIO CON RUTA CORRECTA --}}
-        <form action="{{ route('usuario.monitoreo.psicologia.store', $monitoreo->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('usuario.monitoreo.sm_psicologia.store', $monitoreo->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
+            
+             {{-- 1. Detalle del Consultorio --}}
+            <x-esp_1_detalleDeConsultorio :detalle="$registro" />
+
+            {{-- 2. Datos del Profesional (Prefijo: profesional) --}}
+            <x-esp_2_datosProfesional prefix="profesional" :detalle="$registro" />
+
+            {{-- 3. Detalle DNI y Firma Digital (Nuevo) --}}
+            <x-esp_3_detalleDni :detalle="$registro" color="teal" />
+
+            {{-- 4. Detalle Capacitación --}}
+            <x-esp_4_detalleCap :model="json_encode($detalle->contenido ?? [])" />
+
+            {{-- 5. Equipamiento del Consultorio --}}
+            <x-esp_5_equipos :equipos="$equipos" modulo="farmacia_esp" />
+
+            {{-- 6. Soporte e Incidencias --}}
+            <x-esp_6_soporte :detalle="$registro" />
             
             {{-- BLOQUE 1: GESTIÓN DE PSICOLOGÍA --}}
             <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden mb-8">
@@ -165,10 +183,6 @@
                     </div>
                 </div>
             </div>
-
-           {{-- En tu archivo psicologia.blade.php --}}
-
-            <x-esp_4_detalleCap :model="json_encode($data['capacitacion'] ?? ['recibieron_cap' => '', 'institucion_cap' => ''])" />
 
             {{-- BLOQUE 2: EVIDENCIA FOTOGRÁFICA --}}
             {{-- Lógica para mostrar imagen guardada o el placeholder de subida --}}

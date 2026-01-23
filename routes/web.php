@@ -168,9 +168,9 @@ Route::middleware(['auth'])->group(function () {
                 // 4.4 Psicología
                 Route::prefix('psicologia')->name('sm_psicologia.')->group(function() {
                     // Usamos el controlador de Psicología existente
-                    Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [PsicologiaESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [PsicologiaESPController::class, 'store'])->name('store');
+                    
                 });
 
                 // 4.5 Enfermería
@@ -398,7 +398,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
-<<<<<<< HEAD
 
             // Módulo Especializado: Farmacia CSMC
             Route::prefix('modulo/farmacia-especializada')->name('farmacia_esp.')->group(function () {
@@ -419,8 +418,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [PsicologiaESPController::class, 'index'])->name('index');
                 Route::post('/{id}', [PsicologiaESPController::class, 'store'])->name('store');
             });
-=======
->>>>>>> main
         });
     });
 

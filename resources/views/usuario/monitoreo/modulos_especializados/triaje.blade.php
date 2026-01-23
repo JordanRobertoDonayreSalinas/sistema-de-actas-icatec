@@ -31,60 +31,18 @@
               id="form-monitoreo-triaje">
             @csrf
             
-            {{-- 1.- DETALLES DEL AMBIENTE --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">1</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DEL ÁREA</h3>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                    {{-- FECHA --}}
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Fecha de Monitoreo</label>
-                        <input type="date" name="contenido[fecha]" value="{{ $detalle->contenido['fecha'] ?? date('Y-m-d') }}" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all">
-                    </div>
-                    
-                    {{-- TURNO --}}
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Turno</label>
-                        <select name="contenido[turno]" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all uppercase">
-                            <option value="MAÑANA" {{ ($detalle->contenido['turno'] ?? '') == 'MAÑANA' ? 'selected' : '' }}>MAÑANA</option>
-                            <option value="TARDE" {{ ($detalle->contenido['turno'] ?? '') == 'TARDE' ? 'selected' : '' }}>TARDE</option>
-                        </select>
-                    </div>
-
-                    {{-- NRO DE AMBIENTES --}}
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Nro. de Ambientes</label>
-                        <input type="number" 
-                               name="contenido[num_ambientes]" 
-                               value="{{ $detalle->contenido['num_ambientes'] ?? '' }}" 
-                               min="0"
-                               class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all text-center"
-                               placeholder="EJ: 1">
-                    </div>
-
-                    {{-- DENOMINACIÓN --}}
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Denominación del Ambiente</label>
-                        <input type="text" 
-                               name="contenido[denominacion_ambiente]" 
-                               value="{{ $detalle->contenido['denominacion_ambiente'] ?? '' }}" 
-                               class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all uppercase"
-                               placeholder="EJ: TRIAJE PRINCIPAL">
-                    </div>
-                </div>
-            </div>
+            {{-- 1.- DETALLES DEL AMBIENTE (USANDO TU COMPONENTE PULIDO) --}}
+            {{-- Pasamos 'detalle' y opcionalmente 'titulo' si quisieras cambiar el h2 del componente --}}
+            <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
 
             {{-- 2.- DATOS DEL PROFESIONAL --}}
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL (Triaje)</h3>
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL</h3>
                 </div>
 
-                {{-- BUSQUEDA DE PROFESIONAL (Componente reutilizable) --}}
+                {{-- BUSQUEDA DE PROFESIONAL --}}
                 <div class="mb-6">
                     <x-busqueda-profesional prefix="rrhh" :detalle="$detalle" />
                 </div>
