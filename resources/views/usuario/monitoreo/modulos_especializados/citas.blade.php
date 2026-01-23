@@ -1,221 +1,119 @@
 @extends('layouts.usuario')
-
-@section('title', 'Admisión y Citas - CSMC')
+@section('title', 'Módulo 02: Citas')
 
 @section('content')
-<div class="min-h-screen bg-[#f4f7fa] pb-20" x-data="{ 
-    unsavedChanges: false,
-    updateProgress() {
-        // Lógica simple para barra de progreso visual
-        let total = document.querySelectorAll('.criterion-toggle').length;
-        let checked = document.querySelectorAll('.criterion-toggle:checked').length;
-        return (total > 0) ? Math.round((checked / total) * 100) : 0;
-    }
-}">
-    
-    {{-- ENCABEZADO ESPECÍFICO PARA CSMC (Color TEAL) --}}
-    <div class="bg-teal-900 pt-10 pb-24 rounded-b-[3rem] shadow-xl relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
+<div class="py-12 bg-[#f8fafc] min-h-screen" x-data="triajeForm()">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
-        <div class="max-w-6xl mx-auto px-6 relative z-10">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="flex items-center gap-6">
-                    <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all">
-                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
-                    </a>
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="px-3 py-1 bg-emerald-400 text-teal-900 text-[10px] font-black rounded-lg uppercase tracking-widest">
-                                Módulo Especializado
-                            </span>
-                            <span class="text-teal-200 text-[11px] font-bold uppercase tracking-widest">
-                                CSMC: {{ $monitoreo->establecimiento->nombre }}
-                            </span>
-                        </div>
-                        <h1 class="text-3xl font-black text-white tracking-tight uppercase italic">
-                            01. Admisión y Citas
-                        </h1>
-                    </div>
+        {{-- ENCABEZADO --}}
+        <div class="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-6">
+                <div class="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
+                    <span class="text-2xl font-black text-indigo-600">03</span>
                 </div>
-                
-                {{-- KPI DE CUMPLIMIENTO --}}
-                <div class="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl flex items-center gap-4">
-                    <div class="text-right">
-                        <p class="text-[10px] text-teal-200 font-bold uppercase tracking-widest">Cumplimiento</p>
-                        <p class="text-2xl font-black text-white" x-text="updateProgress() + '%'"></p>
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
+                        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <div class="h-12 w-12 rounded-full border-4 border-emerald-400 border-t-transparent animate-spin-slow"></div>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Citas</h2>
+
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="max-w-5xl mx-auto px-6 -mt-16 relative z-20">
-        
-        {{-- FORMULARIO CON RUTA CORRECTA --}}
-        <form action="{{ route('usuario.monitoreo.citas_esp.store', $monitoreo->id) }}" method="POST" enctype="multipart/form-data">
-            @csrf
             
-            {{-- BLOQUE 1: GESTIÓN DE CITAS Y ADMISIÓN --}}
-            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden mb-8">
-                <div class="bg-slate-50 px-8 py-6 border-b border-slate-100 flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600">
-                        <i data-lucide="calendar-check" class="w-5 h-5"></i>
+            <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-colors">
+                Volver
+            </a>
+        </div>
+
+        {{-- FORMULARIO --}}
+        <form @submit.prevent="guardarTodo" class="space-y-8">
+
+            {{-- 1. SECCIÓN INICIO LABORES (Componente 'documentos') --}}
+            <x-documentos model="form.inicio_labores" />
+            
+            {{-- 2. SECCION DATOS DEL PROFESIONAL --}}
+            <x-seleccion-profesional model="form.profesional" capacitacion="form.capacitacion" />
+
+            {{-- 3. SECCIÓN DNI (CONDICIONAL: Solo si Tipo Doc es DNI) --}}
+            <div x-show="form.profesional.tipo_doc === 'DNI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dni model="form.seccion_dni" />
+                
+            </div>
+
+            {{-- 4. SECCION: CAPACITACIÓN (CONDICIONAL) --}}
+            {{-- Solo se muestra si utiliza_sihce es 'SI' --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                
+                <x-capacitacion model="form.capacitacion" />
+                
+            </div>
+
+            {{-- 5. INVENTARIO --}}
+            <x-equipamiento model="form.inventario" />
+                  
+            
+            {{-- 6. SECCION: DIFICULTADES CON EL SISTEMA (CONDICIONAL) --}}
+            {{-- Solo se muestra si utiliza_sihce es 'SI' --}}
+            <div x-show="form.profesional.utiliza_sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95">
+                 
+                <x-dificultad model="form.dificultades" />
+                
+            </div>
+
+            {{-- 7. NUEVA SECCIÓN: COMENTARIOS GENERALES (HTML Directo) --}}
+            <div class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none"></div>
+                
+                <div class="flex items-center gap-4 mb-6 relative z-10">
+                    <div class="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                        <i data-lucide="message-square-plus" class="text-white w-6 h-6"></i>
                     </div>
-                    <h3 class="text-slate-800 font-black text-sm uppercase tracking-wider">Criterios de Evaluación CSMC</h3>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Comentarios</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Observaciones Adicionales</p>
+                    </div>
                 </div>
 
-                <div class="p-8 space-y-8">
-                    {{-- CRITERIO 1 --}}
-                    <div class="group">
-                        <div class="flex items-start gap-4">
-                            <div class="mt-1">
-                                <span class="h-6 w-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-black">01</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-slate-700 font-bold text-xs uppercase leading-relaxed">
-                                    ¿El CSMC cuenta con un sistema de admisión diferenciado que garantice la confidencialidad y el trato humanizado al usuario?
-                                </p>
-                                <div class="mt-3 flex items-center gap-6">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="criterio_1" value="1" 
-                                               {{ (isset($data['criterio_1']) && $data['criterio_1'] == '1') ? 'checked' : '' }}
-                                               class="criterion-toggle w-4 h-4 text-teal-600 focus:ring-teal-500 border-slate-300" 
-                                               @change="unsavedChanges = true">
-                                        <span class="text-[11px] font-bold text-slate-600 uppercase">Cumple</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="criterio_1" value="0" 
-                                               {{ (isset($data['criterio_1']) && $data['criterio_1'] == '0') ? 'checked' : '' }}
-                                               class="w-4 h-4 text-red-600 focus:ring-red-500 border-slate-300" 
-                                               @change="unsavedChanges = true">
-                                        <span class="text-[11px] font-bold text-slate-600 uppercase">No Cumple</span>
-                                    </label>
-                                </div>
-                                <textarea name="obs_1" rows="2" class="mt-3 w-full bg-slate-50 border-slate-200 rounded-xl text-xs focus:border-teal-500 focus:ring-0 placeholder:text-slate-400" placeholder="Observaciones / Hallazgos...">{{ $data['obs_1'] ?? '' }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="w-full h-px bg-slate-100"></div>
-
-                    {{-- CRITERIO 2 --}}
-                    <div class="group">
-                        <div class="flex items-start gap-4">
-                            <div class="mt-1">
-                                <span class="h-6 w-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-black">02</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-slate-700 font-bold text-xs uppercase leading-relaxed">
-                                    ¿Se ofertan turnos para psiquiatría, psicología y terapia ocupacional en horarios que cubren la demanda (Turnos Tarde/Mañana)?
-                                </p>
-                                <div class="mt-3 flex items-center gap-6">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="criterio_2" value="1" 
-                                               {{ (isset($data['criterio_2']) && $data['criterio_2'] == '1') ? 'checked' : '' }}
-                                               class="criterion-toggle w-4 h-4 text-teal-600 focus:ring-teal-500 border-slate-300" 
-                                               @change="unsavedChanges = true">
-                                        <span class="text-[11px] font-bold text-slate-600 uppercase">Cumple</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="criterio_2" value="0" 
-                                               {{ (isset($data['criterio_2']) && $data['criterio_2'] == '0') ? 'checked' : '' }}
-                                               class="w-4 h-4 text-red-600 focus:ring-red-500 border-slate-300" 
-                                               @change="unsavedChanges = true">
-                                        <span class="text-[11px] font-bold text-slate-600 uppercase">No Cumple</span>
-                                    </label>
-                                </div>
-                                <textarea name="obs_2" rows="2" class="mt-3 w-full bg-slate-50 border-slate-200 rounded-xl text-xs focus:border-teal-500 focus:ring-0 placeholder:text-slate-400" placeholder="Observaciones...">{{ $data['obs_2'] ?? '' }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="w-full h-px bg-slate-100"></div>
-
-                    {{-- CRITERIO 3: CONTINUIDAD DE CUIDADOS --}}
-                    <div class="group">
-                        <div class="flex items-start gap-4">
-                            <div class="mt-1">
-                                <span class="h-6 w-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-black">03</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-slate-700 font-bold text-xs uppercase leading-relaxed">
-                                    ¿Existe un mecanismo activo de rescate (llamadas/visitas) para pacientes con trastornos mentales graves que faltan a sus citas?
-                                </p>
-                                <div class="mt-3 flex items-center gap-6">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="criterio_3" value="1" 
-                                               {{ (isset($data['criterio_3']) && $data['criterio_3'] == '1') ? 'checked' : '' }}
-                                               class="criterion-toggle w-4 h-4 text-teal-600 focus:ring-teal-500 border-slate-300" 
-                                               @change="unsavedChanges = true">
-                                        <span class="text-[11px] font-bold text-slate-600 uppercase">Cumple</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="criterio_3" value="0" 
-                                               {{ (isset($data['criterio_3']) && $data['criterio_3'] == '0') ? 'checked' : '' }}
-                                               class="w-4 h-4 text-red-600 focus:ring-red-500 border-slate-300" 
-                                               @change="unsavedChanges = true">
-                                        <span class="text-[11px] font-bold text-slate-600 uppercase">No Cumple</span>
-                                    </label>
-                                </div>
-                                <textarea name="obs_3" rows="2" class="mt-3 w-full bg-slate-50 border-slate-200 rounded-xl text-xs focus:border-teal-500 focus:ring-0 placeholder:text-slate-400" placeholder="Detallar mecanismo usado...">{{ $data['obs_3'] ?? '' }}</textarea>
-                            </div>
-                        </div>
-                    </div>
+                <div class="relative z-10">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Detalle de observaciones</label>
+                    <textarea 
+                        x-model="form.inicio_labores.comentarios" 
+                        rows="3" 
+                        placeholder="Ingrese cualquier observación general relevante sobre el servicio..." 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-medium text-sm focus:ring-indigo-500 text-slate-700 uppercase"></textarea>
                 </div>
             </div>
 
-            {{-- BLOQUE 2: EVIDENCIA FOTOGRÁFICA --}}
-            {{-- Lógica para mostrar imagen guardada o el placeholder de subida --}}
-            @php
-                $hasImage = !empty($data['foto_evidencia']);
-                $imageUrl = $hasImage ? asset('storage/' . $data['foto_evidencia']) : '#';
-            @endphp
-
-            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden mb-24">
-                <div class="bg-slate-50 px-8 py-6 border-b border-slate-100 flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
-                        <i data-lucide="image-plus" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="text-slate-800 font-black text-sm uppercase tracking-wider">Evidencias del Módulo</h3>
-                </div>
-                <div class="p-8">
-                    <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 hover:border-teal-400 transition-all cursor-pointer relative group">
-                        <input type="file" name="foto_evidencia" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" onchange="previewImage(this)">
-                        
-                        {{-- PLACEHOLDER: Solo visible si NO hay imagen guardada y NO se ha seleccionado una nueva en JS --}}
-                        <div id="upload-placeholder" class="{{ $hasImage ? 'hidden' : '' }} group-hover:scale-105 transition-transform duration-300">
-                            <div class="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-teal-50">
-                                <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 group-hover:text-teal-500"></i>
-                            </div>
-                            <p class="text-xs font-bold text-slate-500 uppercase">Arrastra una imagen o haz clic aquí</p>
-                            <p class="text-[10px] text-slate-400 mt-1">Formatos: JPG, PNG (Max 10MB)</p>
-                        </div>
-
-                        {{-- PREVIEW: Visible si HAY imagen guardada --}}
-                        <img id="image-preview" src="{{ $imageUrl }}" class="{{ $hasImage ? '' : 'hidden' }} max-h-96 rounded-xl shadow-lg mt-4 object-cover w-full" />
-                    </div>
-                </div>
-            </div>
-
-            {{-- BARRA DE ACCIONES FLOTANTE --}}
-            <div class="fixed bottom-6 left-0 right-0 px-6 z-50">
-                <div class="max-w-5xl mx-auto bg-slate-900/90 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10">
-                    <div class="flex items-center gap-3 px-2">
-                        <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-300" x-show="unsavedChanges">Cambios sin guardar</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400" x-show="!unsavedChanges">Todo al día</span>
-                    </div>
-                    <div class="flex gap-3">
-                        <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="px-6 py-3 rounded-xl border border-white/20 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-colors">
-                            Cancelar
-                        </a>
-                        <button type="submit" class="px-8 py-3 rounded-xl bg-teal-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-teal-500/30 hover:bg-teal-400 hover:scale-105 transition-all flex items-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i> Guardar Citas CSMC
-                        </button>
-                    </div>
-                </div>
+            {{-- 8. EVIDENCIA FOTOGRÁFICA --}}
+            <x-fotos files="files" old-files="oldFiles" />
+            
+            {{-- BOTÓN GUARDAR --}}
+            <div class="fixed bottom-6 right-6 z-50 md:static md:flex md:justify-end mt-10">
+                <button type="submit" :disabled="saving" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center gap-3 transition-all transform hover:scale-105 disabled:opacity-70 disabled:scale-100">
+                    <i x-show="!saving" data-lucide="save" class="w-5 h-5"></i>
+                    <i x-show="saving" data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                    <span x-text="saving ? 'Guardando...' : 'Guardar Cambios'"></span>
+                </button>
             </div>
 
         </form>
@@ -223,21 +121,165 @@
 </div>
 
 <script>
-    function previewImage(input) {
-        const preview = document.getElementById('image-preview');
-        const placeholder = document.getElementById('upload-placeholder');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                placeholder.classList.add('hidden');
+    function triajeForm() {
+        // --- 1. RECEPCIÓN DE DATOS ---
+        const dbCapacitacion  = @json($dbCapacitacion ?? null);
+        const dbInventario    = @json($dbInventario ?? []);
+        const dbDificultad    = @json($dbDificultad ?? null);
+        const dbFotos         = @json($dbFotos ?? []);
+        const dbInicioLabores = @json($dbInicioLabores ?? null);
+        const dbDni           = @json($dbDni ?? null);
+
+        // --- 2. INICIALIZACIÓN ---
+        
+        // A) Profesional: Agregamos 'utiliza_sihce' aquí para el componente visual
+        let initProfesional = { 
+            tipo_doc: 'DNI', doc: '', nombres: '', apellido_paterno: '', apellido_materno: '', 
+            email: '', cargo: '', telefono: '', 
+            utiliza_sihce: '' // <--- NUEVO CAMPO VISUAL
+        };
+
+        let initCapacitacion = { recibieron_cap: '', institucion_cap: '', decl_jurada: '', comp_confidencialidad: '' };
+
+        if (dbCapacitacion) {
+            initCapacitacion.recibieron_cap = dbCapacitacion.recibieron_cap || '';
+            initCapacitacion.institucion_cap = dbCapacitacion.institucion_cap || '';
+            initCapacitacion.decl_jurada = dbCapacitacion.decl_jurada || ''; 
+            initCapacitacion.comp_confidencialidad = dbCapacitacion.comp_confidencialidad || '';
+            
+            if (dbCapacitacion.profesional) {
+                // Copiamos los datos del profesional
+                initProfesional = { ...initProfesional, ...dbCapacitacion.profesional };
             }
-            reader.readAsDataURL(input.files[0]);
+        }
+
+        // B) Inicio Labores (Aquí está el dato real en BD)
+        let initInicioLabores = { 
+            fecha_registro: '', consultorios: '', nombre_consultorio: '', turno: '', comentarios: '' 
+        };
+        
+        if (dbInicioLabores) {
+            initInicioLabores.fecha_registro = dbInicioLabores.fecha_registro || '';
+            initInicioLabores.consultorios = dbInicioLabores.cant_consultorios || '';
+            initInicioLabores.nombre_consultorio = dbInicioLabores.nombre_consultorio || '';
+            initInicioLabores.turno = dbInicioLabores.turno || '';
+            initInicioLabores.comentarios = dbInicioLabores.comentarios || '';
+            
+            // *** CRUCIAL ***: Pasamos el dato de la tabla inicio_labores al objeto visual del profesional
+            initProfesional.utiliza_sihce = dbInicioLabores.utiliza_sihce || ''; 
+        }
+
+        // C) Inventario
+        let initInventario = [];
+        if (dbInventario && dbInventario.length > 0) {
+            initInventario = dbInventario.map(item => {
+                let fullCode = item.nro_serie || '';
+                
+                // Valores por defecto
+                let tipoDetectado = 'S'; 
+                let codigoLimpio = fullCode;
+
+                // Lógica mejorada para separar el Prefijo del Código
+                // Buscamos si empieza con "S " o "CP " (o los antiguos NS, CB, S/C)
+                const prefijosPosibles = ['S', 'CP', 'NS', 'CB', 'S/C'];
+                
+                for (let prefijo of prefijosPosibles) {
+                    // Verificamos si la cadena comienza con el prefijo + espacio
+                    if (fullCode.startsWith(prefijo + ' ')) {
+                        tipoDetectado = prefijo;
+                        // Cortamos el prefijo y el espacio para dejar solo el número
+                        codigoLimpio = fullCode.substring(prefijo.length + 1);
+                        break; 
+                    }
+                }
+
+                // CORRECCIÓN VISUAL: Si la BD tiene un tipo antiguo (NS, CB, etc)
+                // forzamos a que el selector muestre 'S' o 'CP' para que no quede en blanco.
+                if (tipoDetectado !== 'S' && tipoDetectado !== 'CP') {
+                    tipoDetectado = 'S'; // Por defecto S si no se reconoce
+                }
+
+                // CORRECCIÓN DE SEGURIDAD: 
+                // Si por algún error de guardado anterior el código limpio aún tiene el prefijo (ej: "S 456"), lo limpiamos de nuevo.
+                if (codigoLimpio.startsWith('S ')) codigoLimpio = codigoLimpio.substring(2);
+                if (codigoLimpio.startsWith('CP ')) codigoLimpio = codigoLimpio.substring(3);
+
+                return {
+                    id: Date.now() + Math.random(),
+                    descripcion: item.descripcion,
+                    propiedad: item.propio,       
+                    estado: item.estado,
+                    tipo_codigo: tipoDetectado, 
+                    codigo: codigoLimpio,       
+                    observacion: item.observacion
+                };
+            });
+        }
+
+        // D) Dificultades
+        let initDificultades = { institucion: '', medio: '' };
+        if (dbDificultad) {
+            initDificultades.institucion = dbDificultad.insti_comunica || '';
+            initDificultades.medio = dbDificultad.medio_comunica || '';
+        }
+
+        // E) DNI
+        let initDni = { tipo_dni: '', version_dnie: '', firma_sihce: '', comentarios: '' };
+        if (dbDni) {
+            initDni.tipo_dni = dbDni.tip_dni || ''; 
+            initDni.version_dnie = dbDni.version_dni || '';
+            initDni.firma_sihce = dbDni.firma_sihce || '';
+            initDni.comentarios = dbDni.comentarios || '';
+        }
+
+        return {
+            saving: false,
+            files: [],      
+            oldFiles: dbFotos, 
+            form: {
+                profesional: initProfesional,
+                capacitacion: initCapacitacion,
+                inventario: initInventario,
+                dificultades: initDificultades,
+                inicio_labores: initInicioLabores,
+                seccion_dni: initDni
+            },
+            guardarTodo() {
+                this.saving = true;
+                let formToSend = JSON.parse(JSON.stringify(this.form));
+
+                formToSend.inventario = formToSend.inventario.map(item => {
+                    let tipo = item.tipo_codigo || 'NS';
+                    let valor = item.codigo || '';
+                    item.codigo = (tipo + ' ' + valor).trim(); 
+                    return item;
+                });
+
+                let formData = new FormData();
+                formData.append('data', JSON.stringify(formToSend));
+                this.files.forEach(file => { formData.append('fotos[]', file); });
+
+                fetch("{{ route('usuario.monitoreo.citas_esp.store', $acta->id) }}", {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.redirect ? window.location.href = data.redirect : window.location.reload();
+                    } else {
+                        this.saving = false;
+                        alert('Error al guardar: ' + JSON.stringify(data.message));
+                    }
+                })
+                .catch(error => {
+                    this.saving = false;
+                    alert('Error técnico.');
+                    console.error(error);
+                });
+            }
         }
     }
-    document.addEventListener('DOMContentLoaded', () => {
-        lucide.createIcons();
-    });
 </script>
 @endsection

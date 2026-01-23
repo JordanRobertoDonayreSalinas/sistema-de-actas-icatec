@@ -13,26 +13,6 @@ use Illuminate\Support\Facades\Log;
 class TriajeESPController extends Controller
 {
     /**
-     * Lista de equipos requeridos para Triaje en CSMC.
-     */
-    private $listaEquipos = [
-        'BALANZA DE PIE CON TALLÍMETRO (ADULTO)',
-        'BALANZA PEDIÁTRICA (Si aplica)',
-        'TENSIÓMETRO ANEROIDE ADULTO',
-        'TENSIÓMETRO PEDIÁTRICO (Si aplica)',
-        'ESTETOSCOPIO ADULTO',
-        'ESTETOSCOPIO PEDIÁTRICO (Si aplica)',
-        'TERMÓMETRO CLÍNICO DIGITAL',
-        'OXÍMETRO DE PULSO',
-        'CINTA MÉTRICA FLEXIBLE',
-        'LINTERNA PARA EXAMEN CLÍNICO',
-        'CAMILLA DE EXAMEN CLÍNICO',
-        'ESCALINATA DE DOS PELDAÑOS',
-        'COMPUTADORA / LAPTOP',
-        'IMPRESORA MULTIFUNCIONAL'
-    ];
-
-    /**
      * Muestra el formulario de "Triaje" específico para CSMC.
      * Ruta: GET /usuario/monitoreo/modulo/triaje-especializada/{id}
      */
@@ -62,21 +42,23 @@ class TriajeESPController extends Controller
             }
         }
 
-        // 5. SOLUCIÓN DEL ERROR: Transformar Strings a Objetos
-        // El componente x-tabla-equipos espera objetos con propiedad ->descripcion
-        $equiposFormateados = collect($this->listaEquipos)->map(function($nombre, $index) {
-            return (object) [
-                'id' => $index + 1, // Generamos un ID virtual
-                'descripcion' => $nombre,
-                'estado' => 'OPERATIVO' // Estado por defecto visual
-            ];
-        });
+        // 5. LÓGICA DE EQUIPOS (MODIFICADA: INICIO VACÍO)
+        $equiposFormateados = [];
+
+        // Si YA existen equipos guardados en la base de datos, los cargamos
+        if (isset($detalle->contenido['equipos']) && is_array($detalle->contenido['equipos'])) {
+            $equiposFormateados = collect($detalle->contenido['equipos'])->map(function($item) {
+                // Convertimos el array asociativo a objeto para que la vista no de error
+                return (object) $item;
+            });
+        } 
+        // CASO CONTRARIO: Se envía un array vacío [] para que la tabla inicie sin filas.
 
         // 6. Retornar la vista
         return view('usuario.monitoreo.modulos_especializados.triaje', [
             'acta' => $acta,
             'detalle' => $detalle,
-            'equipos' => $equiposFormateados // Enviamos la lista convertida
+            'equipos' => $equiposFormateados
         ]);
     }
 
@@ -89,17 +71,14 @@ class TriajeESPController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Obtener datos básicos del Request
             $datosFormulario = $request->input('contenido', []);
 
-            // 2. Buscar si ya existe el registro
             $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                         ->where('modulo_nombre', 'triaje_esp')
                                         ->first();
 
             $contenidoActual = [];
 
-            // 3. Instanciar o recuperar
             if (!$registro) {
                 $registro = new MonitoreoModulos();
                 $registro->cabecera_monitoreo_id = $id;
@@ -108,36 +87,34 @@ class TriajeESPController extends Controller
                 $contenidoActual = json_decode($registro->contenido, true) ?? [];
             }
 
-            // 4. Procesar Imagen (foto_evidencia)
+            // Procesar Imagen
             if ($request->hasFile('foto_evidencia')) {
                 $request->validate([
-                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240' // 10MB Máx
+                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240'
                 ]);
 
-                // Borrar anterior si existe
                 if (!empty($contenidoActual['foto_evidencia'])) {
                     if (Storage::disk('public')->exists($contenidoActual['foto_evidencia'])) {
                         Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
                     }
                 }
 
-                // Guardar nueva
                 $path = $request->file('foto_evidencia')->store('evidencias_csmc/triaje', 'public');
                 $datosFormulario['foto_evidencia'] = $path;
             } else {
-                // Mantener la foto anterior si no se subió una nueva
                 if (!empty($contenidoActual['foto_evidencia'])) {
                     $datosFormulario['foto_evidencia'] = $contenidoActual['foto_evidencia'];
                 }
             }
 
-            // 5. Procesar Equipos
-            // Capturamos el array de equipos enviado por el componente
+            // Procesar Equipos: Guardamos lo que el usuario haya agregado en el formulario
             if ($request->has('equipos')) {
                 $datosFormulario['equipos'] = $request->input('equipos');
+            } else {
+                // Si borró todos los equipos, guardamos un array vacío
+                $datosFormulario['equipos'] = [];
             }
 
-            // 6. Guardar JSON
             $registro->contenido = json_encode($datosFormulario, JSON_UNESCAPED_UNICODE);
             $registro->save();
 
