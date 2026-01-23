@@ -142,7 +142,7 @@ class FarmaciaESPController extends Controller
                 $prev = $registroPrevio->contenido['foto_evidencia'];
                 $fotosFinales = is_array($prev) ? $prev : [$prev];
             }
-            if ($request->hasFile('foto_evidencia')) {
+            if ($request->hasFile('foto_esp_file')) {
                 // --- NUEVO: BORRADO FÍSICO DE ARCHIVOS ANTERIORES ---
                 if (count($fotosFinales) > 0) {
                     foreach ($fotosFinales as $pathViejo) {
@@ -153,13 +153,11 @@ class FarmaciaESPController extends Controller
                     }
                 }
                 // -----------------------------------------------------
-                // Subir nuevas fotos
-                $fotosFinales = [];
-                foreach ($request->file('foto_evidencia') as $file) {
-                    // Guardamos en la carpeta pública
-                    $path = $file->store('evidencias_monitoreo', 'public');
-                    $fotosFinales[] = $path;
-                }
+                // 2. Subir la nueva foto única
+                $file = $request->file('foto_esp_file');
+                $path = $file->store('evidencias_esp', 'public');
+                // 3. Guardarla en el array (como único elemento)
+                $fotosFinales = [$path];
             }
             // Asignamos el array final al JSON
             $datos['foto_evidencia'] = $fotosFinales;

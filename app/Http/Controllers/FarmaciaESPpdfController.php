@@ -28,42 +28,27 @@ class FarmaciaESPpdfController extends Controller
         
         // 2. Procesar imágenes (Comprimir y convertir a Base64)
         $imagenesData = [];
-        $fotos = $modulo->contenido['foto_evidencia'] ?? null;
+        $fotos = $modulo->contenido['foto_evidencia'] ?? [];
+        if (is_string($fotos)) $fotos = [$fotos];
 
-        if ($fotos) {
-            // Aseguramos que sea un array
-            $paths = is_array($fotos) ? $fotos : [$fotos];
-
-            foreach ($paths as $p) {
-                // Verificamos existencia
-                if ($p && Storage::disk('public')->exists($p)) {
-                    //try {
-                        // Obtenemos la ruta real del sistema para Intervention Image
-                        $realPath = storage_path('app/public/' . $p);
-
-                        // A. Redimensionar (Máximo 600px de ancho, alto automático)
-                        // B. Codificar a JPG con 60% de calidad
-                        $img = Image::make($realPath)
-                            ->resize(600, null, function ($constraint) {
-                                $constraint->aspectRatio();
-                                $constraint->upsize();
-                            })
-                            ->encode('jpg', 60);
-
-                        // C. Guardar en el array como Base64 listo para HTML
-                        $imagenesData[] = 'data:image/jpeg;base64,' . base64_encode($img);
-
-                        // Limite de seguridad: solo procesar las primeras 5 para no reventar memoria
-                        if (count($imagenesData) >= 5) break;
-
-                    //} catch (\Exception $e) {
-                        // Si una imagen falla al comprimirse, la ignoramos y seguimos
-                      //  continue;
-                    //}
-                }
+        foreach ($fotos as $path) {
+            // Verificamos si el archivo existe en el disco 'public'
+            if ($path && Storage::disk('public')->exists($path)) {
+                
+                // Obtenemos la ruta absoluta del archivo en el servidor
+                $rutaAbsoluta = storage_path("app/public/{$path}");
+                
+                // Obtenemos el tipo de archivo (jpg, png, etc.)
+                $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
+                
+                // Leemos el contenido del archivo y lo convertimos a Base64
+                $data = file_get_contents($rutaAbsoluta);
+                $base64 = 'data:image/' . $extension . ';base64,' . base64_encode($data);
+                
+                $imagenesData[] = $base64;
             }
         }
-        
+
         // 3. Generar PDF
         // Pasamos $imagenesData que contiene las cadenas Base64 optimizadas
         $usuarioLogeado = Auth::user();
