@@ -67,7 +67,7 @@
             <x-esp_1_detalleDeConsultorio :detalle="$dataMap" />
             
             {{-- 2. SECCION DATOS DEL PROFESIONAL --}}
-            {{-- <x-esp_2_datosProfesionalCitas model="form.profesional" /> --}}
+            {{-- <x-esp_2_datosProfesional :model="form.profesional" /> --}}
 
             {{-- 3. SECCIÓN DNI --}}
             <x-esp_3_detalleDni :detalle="$dataMap" color="teal" />
@@ -76,10 +76,10 @@
             {{-- <x-esp_4_detalleCap model="form.capacitacion" /> --}}
 
             {{-- 5. INVENTARIO (Controlado por Alpine form.inventario) --}}
-            {{-- <x-esp_5_equipos model="form.inventario" /> --}}
+            <x-esp_5_equipos model="form.inventario" />
             
             {{-- 6. SECCION: DIFICULTADES --}}
-            {{-- <x-esp_6_soporte :detalle="$dataMap" /> --}}
+            <x-esp_6_soporte :detalle="$dataMap" /> 
 
             {{-- 7. COMENTARIOS GENERALES --}}
             <x-esp_7_comentariosEvid :comentario="$dataMap" />

@@ -35,16 +35,14 @@
 <div id="seccion_dni_firma" class="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/40 border border-slate-100 mb-8 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/60 {{ data_get($detalle->contenido, 'profesional.tipo_doc', 'DNI') !== 'DNI' && data_get($detalle->contenido, 'profesional.tipo_doc') !== null ? 'hidden' : '' }} seccion-numerada group/dniblock">
     
     {{-- HEADER --}}
-    <div class="flex items-center gap-5 mb-10 border-b border-slate-50 pb-6">
-        <div class="h-14 w-14 rounded-2xl flex items-center justify-center shadow-sm border transition-transform duration-300 group-hover/dniblock:scale-105 {{ $t['icon-bg'] }}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 10h2"/><path d="M16 14h2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><circle cx="9" cy="11" r="2"/><rect x="2" y="5" width="20" height="14" rx="2"/>
-            </svg>
-        </div>
-        <div>
-            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight leading-tight">Detalle DNI y Firma Digital</h3>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Validación de identidad digital</p>
-        </div>
+    <div class="flex items-center gap-4 mb-6">
+            <div class="h-12 w-12 rounded-2xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-200">
+                <i data-lucide="id-card" class="text-white w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Detalle DNI y Firma Digital</h3>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Validación de identidad digital</p>
+            </div>
     </div>
     
     {{-- TIPO DE DOCUMENTO --}}
