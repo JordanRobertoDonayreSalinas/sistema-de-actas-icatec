@@ -75,12 +75,36 @@
                                placeholder="EJ: TRIAJE PRINCIPAL">
                     </div>
                 </div>
+                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">06. Farmacia</h2>
+                <p class="text-slate-500 font-bold uppercase text-xs mt-1">
+                    <i data-lucide="clipboard-pulse" class="inline-block w-4 h-4 mr-1 text-teal-500"></i> {{ $monitoreo->establecimiento->nombre }}
+                </p>
             </div>
+<<<<<<< HEAD
 
+=======
+            <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Panel
+            </a>
+        </div>
+
+        {{-- FORMULARIO --}}
+        <form action="{{ route('usuario.monitoreo.farmacia_esp.store', $monitoreo->id) }}" 
+              method="POST" 
+              enctype="multipart/form-data" 
+              class="space-y-6" 
+              id="form-monitoreo-triaje">
+            @csrf
+            
+            {{-- 1.- DETALLES DEL AMBIENTE --}}
+            <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
+
+>>>>>>> main
             {{-- DATOS DEL PROFESIONAL --}}
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
+<<<<<<< HEAD
                     <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL (Triaje)</h3>
                 </div>
 
@@ -89,6 +113,16 @@
                     <x-busqueda-profesional prefix="profesional" :detalle="$detalle" color="teal" />
                 </div>
 
+=======
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL</h3>
+                </div>
+
+                {{-- BUSQUEDA DE PROFESIONAL (Componente reutilizable) --}}
+                <div class="mb-6">
+                    <x-esp_2_datosProfesional prefix="profesional" :detalle="$detalle" color="teal" />
+                </div>
+
+>>>>>>> main
                 {{-- SIHCE / DDJJ / CONFIDENCIALIDAD --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
                     <div>
@@ -97,6 +131,7 @@
                             <option value="SI" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
                             <option value="NO" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
+<<<<<<< HEAD
                     </div>
                     <div id="div_firmo_dj">
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Declaración Jurada?</label>
@@ -105,6 +140,16 @@
                             <option value="NO" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                         </select>
                     </div>
+=======
+                    </div>
+                    <div id="div_firmo_dj">
+                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Declaración Jurada?</label>
+                        <select name="contenido[firmo_dj]" id="firmo_dj" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
+                            <option value="SI" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                            <option value="NO" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                        </select>
+                    </div>
+>>>>>>> main
                     <div id="div_firmo_confidencialidad">
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Firmó Confidencialidad?</label>
                         <select name="contenido[firmo_confidencialidad]" id="firmo_confidencialidad" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500">
@@ -119,6 +164,7 @@
             <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
             {{-- 4.- DETALLES DE CAPACITACIÓN --}}
+<<<<<<< HEAD
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
@@ -152,10 +198,15 @@
                 </div>
             </div>
 
+=======
+            <x-esp_4_detalleCap :model="json_encode($detalle->contenido ?? [])" />
+            
+>>>>>>> main
             {{-- EQUIPAMIENTO --}}
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
+<<<<<<< HEAD
                     <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DE TRIAJE</h3>
                 </div>
                 {{-- COMPONENTE TABLA EQUIPOS --}}
@@ -163,11 +214,20 @@
             </div>
 
             {{-- 6.- SOPORTE Y COMUNICACIÓN --}}
+=======
+                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO</h3>
+                </div>
+                <x-esp_5_equipos :equipos="$equipos" modulo="farmacia_esp" />
+            </div>
+
+            {{-- SOPORTE--}}
+>>>>>>> main
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">6</span>
                     <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
                 </div>
+<<<<<<< HEAD
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Comunica dificultades a:</label>
@@ -222,6 +282,13 @@
                     </div>
                 </div>
             </div>
+=======
+                <x-esp_6_soporte :detalle="$detalle" />
+            </div>
+
+            {{-- COMENTARIOS Y EVIDENCIA FOTOGRAFICA --}}
+            <x-esp_7_comentariosEvid :comentario="(object) ($detalle->contenido ?? [])" />
+>>>>>>> main
 
             {{-- BOTÓN GRANDE DE GUARDADO --}}
             <div class="pt-10 pb-5 mt-6">

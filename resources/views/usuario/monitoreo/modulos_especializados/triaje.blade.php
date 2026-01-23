@@ -23,7 +23,7 @@
             </a>
         </div>
 
-        {{-- FORMULARIO --}}
+        {{-- FORMULARIO PRINCIPAL --}}
         <form action="{{ route('usuario.monitoreo.triaje_esp.store', $acta->id) }}" 
               method="POST" 
               enctype="multipart/form-data" 
@@ -31,10 +31,15 @@
               id="form-monitoreo-triaje">
             @csrf
             
+            {{-- 1. DETALLES DEL CONSULTORIO --}}
+            <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
             {{-- 1.- DETALLES DEL AMBIENTE (USANDO TU COMPONENTE PULIDO) --}}
             {{-- Pasamos 'detalle' y opcionalmente 'titulo' si quisieras cambiar el h2 del componente --}}
             <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
 
+            {{-- 2. DATOS DEL PROFESIONAL --}}
+            {{-- CORRECCIÓN AQUI: Se agrega prefix="rrhh" para que el componente funcione --}}
+            <x-esp_2_datosProfesional prefix="rrhh" :detalle="$detalle" />
             {{-- 2.- DATOS DEL PROFESIONAL --}}
             <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
@@ -73,194 +78,23 @@
                 </div>
             </div>
 
-            {{-- 3.- TIPO DE DNI Y FIRMA DIGITAL --}}
-            <div id="seccion_detalle_dni" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 transition-all duration-300">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">3</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLE DE DNI Y FIRMA DIGITAL</h3>
-                </div>
-                
-                <div class="mb-8">
-                    <label class="block text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">SELECCIONE EL TIPO DE DOCUMENTO FÍSICO</label>
-                    <input type="hidden" name="contenido[tipo_dni]" id="tipo_dni_input" value="{{ $detalle->contenido['tipo_dni'] ?? '' }}">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- DNI ELECTRÓNICO --}}
-                        <div id="card_electronico" onclick="selectDniType('ELECTRONICO')" 
-                             class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? 'border-teal-600 bg-teal-50' : 'border-slate-200 bg-white' }}">
-                            <div class="h-12 w-12 rounded-xl bg-teal-100 flex items-center justify-center text-teal-600">
-                                <i data-lucide="credit-card" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-black text-slate-800 uppercase">DNI ELECTRÓNICO</h4>
-                                <span class="text-[10px] font-bold text-teal-500 bg-teal-100 px-2 py-0.5 rounded uppercase">Con Chip</span>
-                            </div>
-                        </div>
+            {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
+            {{-- Asegúrate que este componente tenga el ID 'seccion_detalle_dni' internamente --}}
+            <x-esp_3_detalleDni :detalle="$detalle" />
 
-                        {{-- DNI AZUL --}}
-                        <div id="card_azul" onclick="selectDniType('AZUL')" 
-                             class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($detalle->contenido['tipo_dni'] ?? '') == 'AZUL' ? 'border-teal-600 bg-teal-50' : 'border-slate-200 bg-white' }}">
-                            <div class="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                                <i data-lucide="user-square" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-black text-slate-800 uppercase">DNI AZUL</h4>
-                                <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded uppercase">Sin Chip</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {{-- 4. DETALLES DE CAPACITACIÓN --}}
+            <x-esp_4_detalleCap :detalle="$detalle" />
 
-                {{-- BLOQUE INFERIOR DNI --}}
-                <div id="bloque_opciones_dni" class="bg-slate-50 rounded-2xl p-6 border border-slate-200 {{ empty($detalle->contenido['tipo_dni']) ? 'hidden' : '' }}">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {{-- Versión DNIe --}}
-                        <div id="bloque_version_dnie" class="{{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
-                            <label class="block text-teal-600 text-[10px] font-black uppercase tracking-widest mb-2">Versión del DNIe</label>
-                            <select name="contenido[version_dnie]" class="w-full px-4 py-3 bg-white border-2 border-teal-100 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500 text-teal-700">
-                                <option value="" selected disabled>-- SELECCIONE --</option>
-                                <option value="1.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '1.0' ? 'selected' : '' }}>VERSIÓN 1.0</option>
-                                <option value="2.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '2.0' ? 'selected' : '' }}>VERSIÓN 2.0</option>
-                                <option value="3.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '3.0' ? 'selected' : '' }}>VERSIÓN 3.0</option>
-                            </select>
-                        </div>
+            {{-- 5. EQUIPAMIENTO DE TRIAJE --}}
+            <x-esp_5_equipos :equipos="$equipos" modulo="triaje_esp" />
 
-                        {{-- Firma Digital --}}
-                        <div id="bloque_firma_digital" class="{{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
-                            <label class="block text-teal-600 text-[10px] font-black uppercase tracking-widest mb-3">¿Firma Digitalmente en SIHCE?</label>
-                            <div class="flex items-center gap-6">
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <div class="relative flex items-center">
-                                        <input type="radio" name="contenido[firma_digital_sihce]" value="SI" class="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-slate-300 checked:border-teal-600 transition-all" {{ ($detalle->contenido['firma_digital_sihce'] ?? '') == 'SI' ? 'checked' : '' }}>
-                                        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-teal-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></span>
-                                    </div>
-                                    <span class="text-sm font-bold text-slate-600 group-hover:text-teal-600 transition-colors">SÍ</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <div class="relative flex items-center">
-                                        <input type="radio" name="contenido[firma_digital_sihce]" value="NO" class="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-slate-300 checked:border-red-500 transition-all" {{ ($detalle->contenido['firma_digital_sihce'] ?? '') == 'NO' ? 'checked' : '' }}>
-                                        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-red-500 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></span>
-                                    </div>
-                                    <span class="text-sm font-bold text-slate-600 group-hover:text-red-500 transition-colors">NO</span>
-                                </label>
-                            </div>
-                        </div>
+            {{-- 6. SOPORTE --}}
+            <x-esp_6_soporte :detalle="$detalle" />
 
-                        {{-- Observaciones --}}
-                        <div class="md:col-span-2 mt-2">
-                            <label class="block text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Observaciones</label>
-                            <textarea name="contenido[observaciones_dni]" rows="2" class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-teal-500 placeholder-slate-300" placeholder="Escriba aquí si presenta dificultades...">{{ $detalle->contenido['observaciones_dni'] ?? '' }}</textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{-- 7. COMENTARIOS Y EVIDENCIA --}}
+            <x-esp_7_comentariosEvid :detalle="$detalle" />
 
-            {{-- 4.- DETALLES DE CAPACITACIÓN --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">DETALLES DE CAPACITACIÓN</h3>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Cuenta con Usuario y Acceso?</label>
-                        <select name="contenido[acceso_sistema]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
-                            <option value="SI" {{ ($detalle->contenido['acceso_sistema'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                            <option value="NO" {{ ($detalle->contenido['acceso_sistema'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿Recibió Capacitación?</label>
-                        <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion" onchange="toggleEntidadCapacitadora(this.value)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
-                            <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                            <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
-                        </select>
-                    </div>
-                    <div id="wrapper_entidad_capacitadora" class="hidden md:col-span-2">
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">¿De parte de quién?</label>
-                        <select name="contenido[inst_que_lo_capacito]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-teal-500 transition-all uppercase cursor-pointer">
-                            <option value="UNIDAD EJECUTORA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'UNIDAD EJECUTORA' ? 'selected' : '' }}>UNIDAD EJECUTORA</option>
-                            <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
-                            <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
-                            <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 5.- EQUIPAMIENTO --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">EQUIPAMIENTO DE TRIAJE</h3>
-                </div>
-                {{-- COMPONENTE TABLA EQUIPOS --}}
-                <x-tabla-equipos :equipos="$equipos ?? []" modulo="triaje_esp" />
-            </div>
-
-            {{-- 6.- SOPORTE Y COMUNICACIÓN --}}
-            <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <span class="bg-teal-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">6</span>
-                    <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Comunica dificultades a:</label>
-                        <select name="contenido[inst_a_quien_comunica]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
-                            @foreach(['DIRESA','UNIDAD EJECUTORA','JEFE DE ESTABLECIMIENTO','MINSA','OTROS'] as $op)
-                                <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Medio utilizado:</label>
-                        <select name="contenido[medio_que_utiliza]" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
-                            @foreach(['CELULAR','EMAIL','WHATSAPP','OTROS'] as $me)
-                                <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {{-- 7.- COMENTARIOS y 8.- EVIDENCIA --}}
-            <div class="bg-teal-900 rounded-[3rem] p-10 shadow-2xl text-white">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
-                            <h3 class="text-white font-black text-lg uppercase tracking-tight">COMENTARIOS</h3>
-                        </div>
-                        <textarea name="contenido[comentarios]" rows="6" class="w-full bg-white/10 border-2 border-white/20 rounded-2xl p-4 text-white font-bold outline-none focus:border-teal-500 transition-all uppercase placeholder-white/30">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-teal-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
-                            <h3 class="text-white font-black text-lg uppercase tracking-tight">EVIDENCIA FOTOGRÁFICA</h3>
-                        </div>
-                        @if(isset($detalle->contenido['foto_evidencia']))
-                            <div class="mb-4 relative group w-full">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Imagen Actual:</p>
-                                <div class="rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg h-32 w-32 bg-black/50">
-                                    <img src="{{ asset('storage/' . $detalle->contenido['foto_evidencia']) }}" class="w-full h-full object-cover">
-                                </div>
-                            </div>
-                        @endif
-                        <div class="relative group">
-                            <input type="file" name="foto_evidencia" id="foto_evidencia" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(event)">
-                            <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner h-48 border-spacing-4">
-                                <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-teal-400 mb-2"></i>
-                                <span id="file-name-display" class="text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">{{ isset($detalle->contenido['foto_evidencia']) ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}</span>
-                                <img id="img-preview" src="#" class="hidden mt-2 w-20 h-20 object-cover rounded-lg border-2 border-teal-500">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- BOTÓN GRANDE DE GUARDADO --}}
+            {{-- BOTÓN DE GUARDADO --}}
             <div class="pt-10 pb-5 mt-6">
                 <button type="submit" id="btn-submit-action" 
                         class="w-full group bg-teal-600 text-white p-8 rounded-[3rem] font-black shadow-2xl shadow-teal-200 flex items-center justify-between hover:bg-teal-700 transition-all duration-500 active:scale-[0.98] cursor-pointer">
@@ -283,34 +117,47 @@
     </div>
 </div>
 
+{{-- 
+    SCRIPTS DE INTERACCIÓN 
+    Estos scripts controlan la lógica entre componentes.
+    IMPORTANTE: Los IDs utilizados aquí deben coincidir con los que están dentro de tus componentes blade (esp_*).
+--}}
 <script>
+    // Controla visibilidad de campos SIHCE/DJ (Componente 2 y 4)
     function toggleSihceAndDocs(val) {
         const divDj = document.getElementById('div_firmo_dj');
         const divConf = document.getElementById('div_firmo_confidencialidad');
         const djSelect = document.getElementById('firmo_dj');
         const confSelect = document.getElementById('firmo_confidencialidad');
 
-        if (val === 'SI') {
-            divDj.classList.remove('hidden');
-            divConf.classList.remove('hidden');
-        } else {
-            divDj.classList.add('hidden');
-            divConf.classList.add('hidden');
-            if(djSelect) djSelect.value = 'NO';
-            if(confSelect) confSelect.value = 'NO';
+        if (divDj && divConf) {
+            if (val === 'SI') {
+                divDj.classList.remove('hidden');
+                divConf.classList.remove('hidden');
+            } else {
+                divDj.classList.add('hidden');
+                divConf.classList.add('hidden');
+                if(djSelect) djSelect.value = 'NO';
+                if(confSelect) confSelect.value = 'NO';
+            }
         }
     }
 
+    // Controla visibilidad de la sección de DNI (Componente 3)
     function toggleSeccionDni(tipoDoc) {
         const seccion = document.getElementById('seccion_detalle_dni');
         if (!seccion) return;
+        
         if (tipoDoc === 'DNI') {
             seccion.classList.remove('hidden');
+            const dniVal = document.getElementById('tipo_dni_input').value;
+            if(dniVal) selectDniType(dniVal);
         } else {
             seccion.classList.add('hidden');
         }
     }
 
+    // Controla selección visual de tipo de DNI (Componente 3)
     function selectDniType(tipo) {
         const input = document.getElementById('tipo_dni_input');
         const cardElectronico = document.getElementById('card_electronico');
@@ -319,38 +166,43 @@
         const bloqueVersion = document.getElementById('bloque_version_dnie');
         const bloqueFirma = document.getElementById('bloque_firma_digital');
 
-        input.value = tipo;
-        bloqueOpciones.classList.remove('hidden');
+        if(input) input.value = tipo;
+        if(bloqueOpciones) bloqueOpciones.classList.remove('hidden');
 
         if (tipo === 'ELECTRONICO') {
-            cardElectronico.classList.add('border-teal-600', 'bg-teal-50');
-            cardElectronico.classList.remove('border-slate-200', 'bg-white');
-            cardAzul.classList.remove('border-teal-600', 'bg-teal-50');
-            cardAzul.classList.add('border-slate-200', 'bg-white');
-            bloqueVersion.classList.remove('hidden');
-            bloqueFirma.classList.remove('hidden');
+            if(cardElectronico) {
+                cardElectronico.classList.add('border-teal-600', 'bg-teal-50');
+                cardElectronico.classList.remove('border-slate-200', 'bg-white');
+            }
+            if(cardAzul) {
+                cardAzul.classList.remove('border-teal-600', 'bg-teal-50');
+                cardAzul.classList.add('border-slate-200', 'bg-white');
+            }
+            if(bloqueVersion) bloqueVersion.classList.remove('hidden');
+            if(bloqueFirma) bloqueFirma.classList.remove('hidden');
         } else {
-            cardAzul.classList.add('border-teal-600', 'bg-teal-50');
-            cardAzul.classList.remove('border-slate-200', 'bg-white');
-            cardElectronico.classList.remove('border-teal-600', 'bg-teal-50');
-            cardElectronico.classList.add('border-slate-200', 'bg-white');
-            bloqueVersion.classList.add('hidden');
-            bloqueFirma.classList.add('hidden');
+            if(cardAzul) {
+                cardAzul.classList.add('border-teal-600', 'bg-teal-50');
+                cardAzul.classList.remove('border-slate-200', 'bg-white');
+            }
+            if(cardElectronico) {
+                cardElectronico.classList.remove('border-teal-600', 'bg-teal-50');
+                cardElectronico.classList.add('border-slate-200', 'bg-white');
+            }
+            if(bloqueVersion) bloqueVersion.classList.add('hidden');
+            if(bloqueFirma) bloqueFirma.classList.add('hidden');
         }
     }
 
+    // Controla visibilidad de entidad capacitadora (Componente 4)
     function toggleEntidadCapacitadora(val) {
         const wrapper = document.getElementById('wrapper_entidad_capacitadora');
-        val === 'SI' ? wrapper.classList.remove('hidden') : wrapper.classList.add('hidden');
-    }
-
-    function checkNationality(tipoDoc) {
-        const dniInput = document.getElementById('tipo_dni_input');
-        if (dniInput && dniInput.value) {
-            selectDniType(dniInput.value);
+        if(wrapper) {
+            val === 'SI' ? wrapper.classList.remove('hidden') : wrapper.classList.add('hidden');
         }
     }
 
+    // Preview de imagen de evidencia (Componente 7)
     function previewImage(event) {
         const input = event.target;
         const preview = document.getElementById('img-preview');
@@ -360,46 +212,59 @@
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                icon.classList.add('hidden');
-                fileName.innerText = "NUEVA: " + input.files[0].name.substring(0, 15).toUpperCase() + "...";
+                if(preview) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                if(icon) icon.classList.add('hidden');
+                if(fileName) fileName.innerText = "NUEVA: " + input.files[0].name.substring(0, 15).toUpperCase() + "...";
             }
             reader.readAsDataURL(input.files[0]);
         }
     }
 
+    // Inicialización
     document.addEventListener('DOMContentLoaded', function() {
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // Inicializar estados según valores guardados
         const selectCapacitacion = document.getElementById('recibio_capacitacion');
         if (selectCapacitacion) toggleEntidadCapacitadora(selectCapacitacion.value);
 
         const selectSihce = document.getElementById('cuenta_sihce');
         if (selectSihce) toggleSihceAndDocs(selectSihce.value);
 
-        const dniVal = document.getElementById('tipo_dni_input').value;
-        if(dniVal) selectDniType(dniVal);
+        const dniInput = document.getElementById('tipo_dni_input');
+        if(dniInput && dniInput.value) selectDniType(dniInput.value);
         
-        const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]');
+        // Listener para el tipo de documento del profesional en Componente 2
+        // IMPORTANTE: Como usas prefix='rrhh', el name es contenido[rrhh][tipo_doc]
+        const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]'); 
+        
         if (selectTipoDoc) {
             toggleSeccionDni(selectTipoDoc.value);
             selectTipoDoc.addEventListener('change', function() {
                 toggleSeccionDni(this.value);
             });
         }
-        
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
-    document.getElementById('form-monitoreo-triaje').onsubmit = function() {
-        const btn = document.getElementById('btn-submit-action');
-        const icon = document.getElementById('icon-save-loader');
-        
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-        
-        icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
-        
-        return true;
-    };
+    // Animación Submit
+    const form = document.getElementById('form-monitoreo-triaje');
+    if(form){
+        form.onsubmit = function() {
+            const btn = document.getElementById('btn-submit-action');
+            const icon = document.getElementById('icon-save-loader');
+            
+            if(btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            if(icon) {
+                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+            }
+            return true;
+        };
+    }
 </script>
 @endsection

@@ -83,6 +83,9 @@ class FarmaciaESPController extends Controller
                 }
             });
 
+            if ($request->has('comentario_esp')) {
+                $datos['comentario_esp'] = mb_strtoupper($request->input('comentario_esp'), 'UTF-8');
+            }
             // ---------------------------------------------------------
             // 2. SINCRONIZACIÓN DE PROFESIONALES
             // ---------------------------------------------------------
@@ -96,6 +99,7 @@ class FarmaciaESPController extends Controller
                         'nombres'          => mb_strtoupper(trim($datos['profesional']['nombres']), 'UTF-8'),
                         'email'            => isset($datos['profesional']['email']) ? strtolower(trim($datos['profesional']['email'])) : null,
                         'telefono'         => $datos['profesional']['telefono'] ?? null,
+                        'cargo'            => $datos['profesional']['cargo'] ?? null,
                     ]
                 );
             }
