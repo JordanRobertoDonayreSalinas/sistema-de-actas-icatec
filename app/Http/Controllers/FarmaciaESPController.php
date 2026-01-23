@@ -5,118 +5,177 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\CabeceraMonitoreo;
 use App\Models\MonitoreoModulos;
+use App\Models\EquipoComputo; // <--- [1] IMPORTANTE: FALTABA ESTE MODELO
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Profesional;
 
 class FarmaciaESPController extends Controller
 {
-    /**
-     * Muestra el formulario de "Admisión y Citas" específico para CSMC.
-     * Ruta: GET /usuario/monitoreo/{id}/farmacia-especializada
-     */
     public function index($id)
     {
-        // 1. Obtener la cabecera del monitoreo
         $monitoreo = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Validación de seguridad
         if ($monitoreo->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
-        // 3. Buscar datos existentes (Clave: farmacia_esp)
-        $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+        // [2] AGREGADO: CONSULTA DE EQUIPOS
+        // Recuperamos los equipos asociados a este monitoreo y a este módulo específico
+        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo', 'farmacia_esp')
+                                ->get();
+
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                     ->where('modulo_nombre', 'farmacia_esp')
                                     ->first();
 
-        // 4. Decodificar JSON
-        $data = $registro ? json_decode($registro->contenido, true) : [];
+        // 3. Si no existe, creamos una instancia vacía para evitar errores en los componentes
+        if (!$detalle) {
+            $detalle = new MonitoreoModulos();
+            $detalle->contenido = []; // Inicializamos como array vacío
+        }
 
-        return view('usuario.monitoreo.modulos_especializados.farmacia', compact('monitoreo', 'data'));
+        // 4. Preparar data suelta (por si la usas en inputs manuales fuera de componentes)
+        $data = is_array($detalle->contenido) 
+                ? $detalle->contenido 
+                : json_decode($detalle->contenido, true);
+        
+        if (!is_array($data)) $data = [];
+
+        // [3] AGREGADO: PASAR $equipos A LA VISTA
+        return view('usuario.monitoreo.modulos_especializados.farmacia', compact('monitoreo', 'data', 'equipos', 'detalle'));
     }
 
-    /**
-     * Guarda la información del módulo.
-     * Ruta: POST /usuario/monitoreo/{id}/farmacia-especializada
-     */
     public function store(Request $request, $id)
     {
-        // DEBUG: Si sigue sin guardar, descomenta la siguiente línea para ver qué llega
-        // dd($request->all());
-
         try {
             DB::beginTransaction();
 
-            // 1. Validar que exista la cabecera
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
+            $modulo = 'farmacia_esp'; // Definimos el nombre del módulo para usarlo abajo
 
-            // 2. Buscar si ya existe el registro de este módulo
-            $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                        ->where('modulo_nombre', 'farmacia_esp')
-                                        ->first();
+            // ---------------------------------------------------------
+            // 1. OBTENER Y NORMALIZAR DATOS (TODO A MAYÚSCULAS)
+            // ---------------------------------------------------------
+            $datos = $request->input('contenido', []);
 
-            $contenidoActual = [];
+            // Usamos array_walk_recursive para recorrer todo el árbol JSON (incluyendo hijos)
+            array_walk_recursive($datos, function (&$value, $key) {
+                // Solo procesamos cadenas de texto
+                if (is_string($value)) {
+                    // EXCEPCIÓN A: El campo 'email' se queda tal cual (o lo forzamos a minúsculas luego)
+                    if ($key === 'email') {
+                        return; 
+                    }
+                    
+                    // EXCEPCIÓN B: Rutas de imágenes (detectamos por extensión o carpeta)
+                    // Esto protege 'foto_evidencia' si viniera como texto, aunque se procesa aparte
+                    if (str_contains($value, 'evidencias_monitoreo/') || preg_match('/\.(jpg|jpeg|png)$/i', $value)) {
+                        return;
+                    }
 
-            // 3. Si no existe, creamos la instancia y asignamos claves forzosamente
-            if (!$registro) {
-                $registro = new MonitoreoModulos();
-                $registro->cabecera_monitoreo_id = $id;
-                $registro->modulo_nombre = 'farmacia_esp';
-            } else {
-                // Si existe, recuperamos su contenido actual para no perder la foto
-                $contenidoActual = json_decode($registro->contenido, true) ?? [];
+                    // TODO LO DEMÁS -> A MAYÚSCULAS
+                    $value = mb_strtoupper(trim($value), 'UTF-8');
+                }
+            });
+
+            // ---------------------------------------------------------
+            // 2. SINCRONIZACIÓN DE PROFESIONALES
+            // ---------------------------------------------------------
+            if (isset($datos['profesional']) && !empty($datos['profesional']['doc'])) {
+                Profesional::updateOrCreate(
+                    ['doc' => trim($datos['profesional']['doc'])],
+                    [
+                        'tipo_doc'         => $datos['profesional']['tipo_doc'] ?? 'DNI',
+                        'apellido_paterno' => mb_strtoupper(trim($datos['profesional']['apellido_paterno']), 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper(trim($datos['profesional']['apellido_materno']), 'UTF-8'),
+                        'nombres'          => mb_strtoupper(trim($datos['profesional']['nombres']), 'UTF-8'),
+                        'email'            => isset($datos['profesional']['email']) ? strtolower(trim($datos['profesional']['email'])) : null,
+                        'telefono'         => $datos['profesional']['telefono'] ?? null,
+                    ]
+                );
             }
-
-            // 4. Recoger datos del formulario (Quitamos token y archivo físico)
-            $nuevosDatos = $request->except(['_token', 'foto_evidencia']);
-
-            // 5. Procesar Imagen
-            if ($request->hasFile('foto_evidencia')) {
-                // Validación estricta de imagen
-                $request->validate([
-                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240' // 10MB Máx
-                ]);
-
-                // Borrar anterior si existe
-                if (!empty($contenidoActual['foto_evidencia'])) {
-                    if (Storage::disk('public')->exists($contenidoActual['foto_evidencia'])) {
-                        Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
+            // ---------------------------------------------------------
+            // A. GESTIÓN DE EQUIPOS (TABLA EXTERNA)
+            // ---------------------------------------------------------
+            // 1. Borramos los equipos anteriores de este módulo para evitar duplicados
+            EquipoComputo::where('cabecera_monitoreo_id', $id)
+                         ->where('modulo', $modulo)
+                         ->delete();
+            
+            // 2. Insertamos los nuevos si vienen en el request
+            if ($request->has('equipos') && is_array($request->equipos)) {
+                foreach ($request->equipos as $eq) {
+                    // Solo guardamos si tiene descripción
+                    if (!empty($eq['descripcion'])) {
+                        EquipoComputo::create([
+                            'cabecera_monitoreo_id' => $id,
+                            'modulo'      => $modulo,
+                            'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
+                            'cantidad'    => (int)($eq['cantidad'] ?? 1),
+                            'estado'      => $eq['estado'] ?? 'OPERATIVO',
+                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
+                            'propio'      => $eq['propio'] ?? 'SERVICIO',
+                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
+                        ]);
                     }
                 }
-
-                // Guardar nueva
-                $path = $request->file('foto_evidencia')->store('evidencias_csmc', 'public');
-                $nuevosDatos['foto_evidencia'] = $path;
-            } else {
-                // Mantener anterior si no se subió nueva
-                if (!empty($contenidoActual['foto_evidencia'])) {
-                    $nuevosDatos['foto_evidencia'] = $contenidoActual['foto_evidencia'];
+            }
+            
+            // ---------------------------------------------------------
+            // 5. GESTIÓN DE ARCHIVOS (FOTOS)
+            // ---------------------------------------------------------
+            $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo_nombre', $modulo)
+                                ->first();
+            $fotosFinales = [];
+            // Recuperar fotos existentes del JSON previo
+            if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+                $prev = $registroPrevio->contenido['foto_evidencia'];
+                $fotosFinales = is_array($prev) ? $prev : [$prev];
+            }
+            if ($request->hasFile('foto_evidencia')) {
+                // --- NUEVO: BORRADO FÍSICO DE ARCHIVOS ANTERIORES ---
+                if (count($fotosFinales) > 0) {
+                    foreach ($fotosFinales as $pathViejo) {
+                        // Verificamos si existe en el disco 'public' y lo borramos
+                        if (Storage::disk('public')->exists($pathViejo)) {
+                            Storage::disk('public')->delete($pathViejo);
+                        }
+                    }
+                }
+                // -----------------------------------------------------
+                // Subir nuevas fotos
+                $fotosFinales = [];
+                foreach ($request->file('foto_evidencia') as $file) {
+                    // Guardamos en la carpeta pública
+                    $path = $file->store('evidencias_monitoreo', 'public');
+                    $fotosFinales[] = $path;
                 }
             }
+            // Asignamos el array final al JSON
+            $datos['foto_evidencia'] = $fotosFinales;
 
-            // 6. Guardar JSON
-            // JSON_UNESCAPED_UNICODE asegura que las tildes se guarden bien
-            $registro->contenido = json_encode($nuevosDatos, JSON_UNESCAPED_UNICODE);
-            
-            $registro->save();
+            // ---------------------------------------------------------
+            // 6. GUARDAR JSON FINAL EN BASE DE DATOS
+            // ---------------------------------------------------------
+            MonitoreoModulos::updateOrCreate(
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
+                ['contenido' => $datos]
+            );
 
             DB::commit();
-
-            return redirect()
-                ->route('usuario.monitoreo.modulos', $id)
-                ->with('success', 'Módulo de Farmacia CSMC guardado correctamente.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)
+                             ->with('success', 'Módulo Farmacia ESP sincronizado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Esto imprimirá el error en tu archivo de log (storage/logs/laravel.log)
-            Log::error("Error guardando Farmacia CSMC: " . $e->getMessage());
-            
-            return back()
-                ->with('error', 'Error al guardar: ' . $e->getMessage())
-                ->withInput();
+            Log::error("Error Módulo Farmacia ESP (Store) - Acta {$id}: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
         }
     }
 }
