@@ -104,6 +104,8 @@
                 </div>
             </div>
 
+            {{-- <x-comentarios_fotos_esp /> --}}
+
             {{-- 8. EVIDENCIA FOTOGRÁFICA --}}
             <x-fotos files="files" old-files="oldFiles" />
             
