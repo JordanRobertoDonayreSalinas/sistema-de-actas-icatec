@@ -15,6 +15,8 @@ use App\Http\Controllers\CitaESPpdfController;
 use App\Http\Controllers\MonitoreoController;
 use App\Http\Controllers\EditMonitoreoController;
 use App\Http\Controllers\GestionAdministrativaController;
+use App\Http\Controllers\GestionAdministrativaESPController;
+use App\Http\Controllers\GestionAdministrativaESPpdfController;
 use App\Http\Controllers\GestionAdministrativaPdfController;
 use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\LaboratorioPdfController;
@@ -206,9 +208,9 @@ Route::middleware(['auth'])->group(function () {
 
             // 1. Gestión Administrativa (Reutiliza el estándar o crear GestionAdminESP)
             Route::prefix('modulo/gestion-administrativa-especializada')->name('gestion_admin_esp.')->group(function () {
-                Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
-                Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+                Route::get('/{id}', [GestionAdministrativaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [GestionAdministrativaESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [GestionAdministrativaESPpdfController::class, 'generar'])->name('pdf');
             });
 
             // 2. Citas (CSMC)

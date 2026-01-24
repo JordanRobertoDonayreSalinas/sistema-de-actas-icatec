@@ -15,7 +15,7 @@
                 </div>
                 <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">06. Farmacia</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">
-                    <i data-lucide="clipboard-pulse" class="inline-block w-4 h-4 mr-1 text-teal-500"></i> {{ $monitoreo->establecimiento->nombre }}
+                    <i data-lucide="hospital" class="inline-block w-4 h-4 mr-1 text-teal-500"></i>{{ $monitoreo->establecimiento->nombre }}
                 </p>
             </div>
             <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm">
