@@ -57,6 +57,8 @@ use App\Http\Controllers\FarmaciaESPController;
 use App\Http\Controllers\FarmaciaESPpdfController;
 use App\Http\Controllers\TerapiaESPController;
 use App\Http\Controllers\TerapiaESPpdfController;
+use App\Http\Controllers\EnfermeriaESPController;
+use App\Http\Controllers\EnfermeriaESPpdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -178,9 +180,9 @@ Route::middleware(['auth'])->group(function () {
                 // 4.5 Enfermería
                 Route::prefix('enfermeria')->name('sm_enfermeria.')->group(function() {
                     // TODO: Crear SmEnfermeriaController (Usando Triaje temporalmente)
-                    Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
-                    Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [EnfermeriaESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [EnfermeriaESPController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [EnfermeriaESPpdfController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.6 Servicio Social
