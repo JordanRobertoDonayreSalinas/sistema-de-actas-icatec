@@ -417,6 +417,8 @@ Route::middleware(['auth'])->group(function () {
             Route::prefix('modulo/psicologia-especializada')->name('psicologia.')->group(function () {
                 Route::get('/{id}', [PsicologiaESPController::class, 'index'])->name('index');
                 Route::post('/{id}', [PsicologiaESPController::class, 'store'])->name('store');
+                Route::get('/monitoreo/modulo/psicologia/{id}/pdf', [PsicologiaESPpdfController::class, 'generar'])
+                ->name('usuario.monitoreo.sm_psicologia.pdf');
             });
         });
     });

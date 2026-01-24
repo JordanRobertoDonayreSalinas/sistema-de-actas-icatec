@@ -34,33 +34,37 @@ class PsicologiaESPController extends Controller
     try {
         DB::beginTransaction();
 
-        $monitoreo = CabeceraMonitoreo::findOrFail($id);
-
-        // 1. GESTIÓN DEL REGISTRO EN mon_monitoreo_modulos
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                     ->where('modulo_nombre', 'sm_psicologia')
                                     ->first() ?? new MonitoreoModulos();
 
-        $registro->cabecera_monitoreo_id = $id;
-        $registro->modulo_nombre = 'sm_psicologia';
-        $registro->comentario_esp = $request->comentario_esp;
+        // 1. Preparamos el array de contenido
+        $contenido = $request->input('contenido', []);
 
-        // Foto de evidencia final
+        // AGREGAMOS EL COMENTARIO AL ARRAY (Para no tocar el modelo)
+        $contenido['comentario_especialista'] = $request->input('comentario_esp');
+
+        // 2. Procesar foto y guardarla en el array de contenido
         if ($request->hasFile('foto_esp_file')) {
-            if ($registro->foto_url_esp) Storage::disk('public')->delete($registro->foto_url_esp);
-            $registro->foto_url_esp = $request->file('foto_esp_file')->store('evidencias_psicologia', 'public');
+            // Borrar foto previa si existe en el JSON
+            if (isset($registro->contenido['foto_final_path'])) {
+                Storage::disk('public')->delete($registro->contenido['foto_final_path']);
+            }
+            $path = $request->file('foto_esp_file')->store('evidencias_psicologia', 'public');
+            $contenido['foto_final_path'] = $path;
+        } else {
+            // Mantener la foto anterior si no se sube una nueva
+            $contenido['foto_final_path'] = $registro->contenido['foto_final_path'] ?? null;
         }
 
-        // Capturamos el contenido y lo guardamos en la tabla modular
-        $contenido = $request->input('contenido', []);
-        $registro->contenido = $contenido;
+        $registro->cabecera_monitoreo_id = $id;
+        $registro->modulo_nombre = 'sm_psicologia';
+        $registro->contenido = $contenido; // Aquí se guarda todo lo nuevo
         $registro->save();
 
-        // 2. GESTIÓN DE EQUIPOS EN mon_equipos_computo (Tabla Independiente)
-        // Extraemos el inventario del array principal
-        $inventario = isset($contenido['inventario']) ? $contenido['inventario'] : [];
-
-        if (is_array($inventario) && count($inventario) > 0) {
+        // 3. GESTIÓN DE EQUIPOS (Igual que antes)
+        $inventario = $contenido['inventario'] ?? [];
+        if (!empty($inventario)) {
             DB::table('mon_equipos_computo')
                 ->where('cabecera_id', $id)
                 ->where('modulo', 'sm_psicologia')
@@ -84,14 +88,13 @@ class PsicologiaESPController extends Controller
         }
 
         DB::commit();
-        // Redirección al panel de Nivel 2
         return redirect()->route('usuario.monitoreo.salud_mental_group.index', $id)
-                         ->with('success', 'Módulo de Psicología guardado con éxito.');
+                         ->with('success', 'Psicología guardada exitosamente.');
 
     } catch (\Exception $e) {
         DB::rollBack();
-        Log::error("Error Fatal Guardando Psicología: " . $e->getMessage());
-        return back()->with('error', 'Error crítico: ' . $e->getMessage())->withInput();
+        Log::error("Error en Psicología: " . $e->getMessage());
+        return back()->with('error', 'Error: ' . $e->getMessage())->withInput();
     }
 }
 }
