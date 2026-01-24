@@ -3,15 +3,36 @@
 
 @section('content')
 
-{{-- SCRIPTS DE ALPINE --}}
+{{-- SCRIPTS DE ALPINE (Lógica exclusiva para esta vista) --}}
 <script>
-    function triajeForm() {
+    // CAMBIO REALIZADO: Nombre de función actualizado a citasForm
+    function citasForm() {
         return {
             saving: false,
-            // Inicializamos con los datos del servidor
+            
+            // 1. VARIABLES DE ESTADO (Inicializadas con datos del backend)
+            // Si no hay datos (registro nuevo), asumimos valores por defecto: NO para SIHCE, DNI para documento.
+            sihce: '{{ $dataMap->contenido['profesional']['cuenta_sihce'] ?? '' }}',
+            tipoDoc: '{{ $dataMap->contenido['profesional']['tipo_doc'] ?? 'DNI' }}',
+
+            // Datos para el componente de capacitación
             form: {
                 capacitacion: @json($valCapacitacion)
             },
+
+            // 2. DETECTOR DE CAMBIOS
+            // Esta función escucha cualquier cambio en el formulario y actualiza las variables si coincide el ID
+            updateVisibility(event) {
+                // ID del select en el componente esp_2_1_docAdmin: 'sihce_' + prefix
+                if (event.target.id === 'sihce_profesional') {
+                    this.sihce = event.target.value;
+                }
+                // ID del select en el componente esp_2_datosProfesional: 'tipo_' + prefix
+                if (event.target.id === 'tipo_profesional') {
+                    this.tipoDoc = event.target.value;
+                }
+            },
+
             async guardarTodo() {
                 this.saving = true;
                 this.$refs.formHtml.submit();
@@ -20,7 +41,8 @@
     }
 </script>
 
-<div class="py-12 bg-[#f8fafc] min-h-screen" x-data="triajeForm()">
+{{-- CAMBIO REALIZADO: x-data inicializado con citasForm() --}}
+<div class="py-12 bg-[#f8fafc] min-h-screen" x-data="citasForm()">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
         {{-- ENCABEZADO --}}
@@ -44,12 +66,14 @@
         </div>
 
         {{-- FORMULARIO --}}
+        {{-- Agregamos @change para ejecutar updateVisibility cada vez que se modifique un input --}}
         <form 
             action="{{ route('usuario.monitoreo.citas_esp.store', $acta->id) }}" 
             method="POST" 
             enctype="multipart/form-data" 
             x-ref="formHtml"
             @submit.prevent="guardarTodo" 
+            @change="updateVisibility($event)"
             class="space-y-8"
         >
             @csrf
@@ -58,25 +82,52 @@
             <x-esp_1_detalleDeConsultorio :detalle="$dataMap" />
             
             {{-- 2. DATOS PROFESIONAL --}}
-            {{-- Usamos el prefijo 'profesional' para que se guarde en contenido[profesional] --}}
+            {{-- Aquí está el select de TIPO DOC (id="tipo_profesional") --}}
             <x-esp_2_datosProfesional prefix="profesional" :detalle="$dataMap" />
+            
+            {{-- 2.1 DOCUMENTACIÓN ADMIN --}}
+            {{-- Aquí está el select de SIHCE (id="sihce_profesional") --}}
+            <x-esp_2_1_docAdmin prefix="profesional" :detalle="$dataMap" />
 
             {{-- 3. DNI Y FIRMA --}}
-            <x-esp_3_detalleDni :detalle="$dataMap" color="indigo" />
+            {{-- CONDICIÓN: Se oculta si Tipo Doc NO es DNI (ej. es C.E.) --}}
+            <div x-show="tipoDoc === 'DNI'" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                 x-transition:enter-end="opacity-100 transform translate-y-0">
+                <x-esp_3_detalleDni :detalle="$dataMap" color="indigo" />
+            </div>
 
             {{-- 4. CAPACITACIÓN --}}
-            {{-- Truco: Inputs Hidden para enviar datos de Alpine al servidor --}}
-            <input type="hidden" name="capacitacion[recibieron_cap]" :value="form.capacitacion.recibieron_cap">
-            <input type="hidden" name="capacitacion[institucion_cap]" :value="form.capacitacion.institucion_cap">
-            
-            <x-esp_4_detalleCap model="form.capacitacion" />
+            {{-- CONDICIÓN: Se oculta si SIHCE es NO --}}
+            <div x-show="sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                 x-transition:enter-end="opacity-100 transform translate-y-0">
+                
+                <input type="hidden" name="capacitacion[recibieron_cap]" :value="form.capacitacion.recibieron_cap">
+                <input type="hidden" name="capacitacion[institucion_cap]" :value="form.capacitacion.institucion_cap">
+
+                <x-esp_4_detalleCap model="form.capacitacion" />
+            </div>
 
             {{-- 5. INVENTARIO (EQUIPOS) --}}
-            {{-- Pasamos la lista de equipos ($valInventario) y un identificador de módulo --}}
-            <x-esp_5_equipos :equipos="$valInventario" modulo="citas_esp" />
+            {{-- Este siempre es visible --}}
+            @php
+                $equiposComoObjetos = collect($valInventario)->map(function ($item) {
+                    return (object) $item;
+                });
+            @endphp
+            <x-esp_5_equipos :equipos="$equiposComoObjetos" modulo="citas_esp" />
             
             {{-- 6. SOPORTE --}}
-            <x-esp_6_soporte :detalle="$dataMap" />
+            {{-- CONDICIÓN: Se oculta si SIHCE es NO (misma regla que capacitación) --}}
+            <div x-show="sihce === 'SI'"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                 x-transition:enter-end="opacity-100 transform translate-y-0">
+                <x-esp_6_soporte :detalle="$dataMap" />
+            </div>
 
             {{-- 7. COMENTARIOS Y FOTOS --}}
             <x-esp_7_comentariosEvid :comentario="$dataMap" />

@@ -16,16 +16,24 @@ class CitaESPpdfController extends Controller
         // 1. Cargar datos generales
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user'])->findOrFail($id);
 
-        // 2. Cargar el JSON centralizado
+        // 2. Cargar el JSON guardado
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->where('modulo_nombre', 'citas_esp')
                             ->first();
 
-        $data = $registro ? json_decode($registro->contenido, true) : [];
+        // Obtener datos de forma segura
+        $data = $registro ? $registro->contenido : [];
+        if (is_string($data)) {
+            $data = json_decode($data, true);
+        }
+        if (!is_array($data)) {
+            $data = [];
+        }
+
         $acta->fecha_validacion = $registro ? $registro->updated_at : null;
 
         // ---------------------------------------------------------
-        // 3. MAPEO DE DATOS (JSON -> Objetos para la Vista)
+        // 3. MAPEO DE DATOS
         // ---------------------------------------------------------
 
         // A. PROFESIONAL
@@ -39,65 +47,68 @@ class CitaESPpdfController extends Controller
         $profObj->cargo            = $pData['cargo'] ?? '';
         $profObj->telefono         = $pData['telefono'] ?? '';
         $profObj->email            = $pData['email'] ?? '';
+        $profObj->cuenta_sihce     = $pData['utiliza_sihce'] ?? ''; 
 
-        // B. INICIO DE LABORES (Componente 1)
+        // B. INICIO DE LABORES
         $dbInicioLabores = new stdClass();
-        $cont = $data['contenido'] ?? [];
+        $initData = $data['inicio_labores'] ?? [];
         
-        $dbInicioLabores->fecha_registro     = $cont['fecha'] ?? null;
-        $dbInicioLabores->turno              = $cont['turno'] ?? null;
-        $dbInicioLabores->cant_consultorios  = $cont['num_ambientes'] ?? null;
-        $dbInicioLabores->nombre_consultorio = $cont['denominacion_ambiente'] ?? null;
-        // Mapeamos el comentario del Componente 7 aquí porque el PDF lo muestra como "Comentarios Generales"
-        $dbInicioLabores->comentarios        = $data['comentarios_esp']['comentario_esp'] ?? null;
+        $dbInicioLabores->fecha_registro     = $initData['fecha_registro'] ?? ($data['fecha_registro'] ?? null);
+        $dbInicioLabores->turno              = $initData['turno'] ?? ($data['turno'] ?? null);
+        $dbInicioLabores->cant_consultorios  = $initData['consultorios'] ?? ($data['num_consultorios'] ?? null);
+        $dbInicioLabores->nombre_consultorio = $initData['nombre_consultorio'] ?? ($data['denominacion_consultorio'] ?? null);
+        $dbInicioLabores->comentarios        = $initData['comentarios'] ?? ($data['comentarios_generales'] ?? null);
 
-        // C. CAPACITACIÓN (Componente 4)
+        // C. CAPACITACIÓN
         $dbCapacitacion = new stdClass();
-        $cData = $data['capacitacion'] ?? [];
-        $dbCapacitacion->recibieron_cap  = $cData['recibieron_cap'] ?? 'NO';
-        $dbCapacitacion->institucion_cap = $cData['institucion_cap'] ?? '-';
-        $dbCapacitacion->profesional     = $profObj; // Vinculamos el profesional
+        $dbCapacitacion->recibieron_cap  = $data['recibio_capacitacion'] ?? 'NO';
+        $dbCapacitacion->institucion_cap = $data['inst_capacitacion'] ?? '-';
+        $dbCapacitacion->profesional     = $profObj; 
 
-        // D. DNI (Componente 3)
+        // D. DNI
         $dbDni = new stdClass();
-        $dbDni->tip_dni     = $cont['tipo_dni_fisico'] ?? null;
-        $dbDni->version_dni = $cont['dnie_version'] ?? null;
-        $dbDni->firma_sihce = $cont['dnie_firma_sihce'] ?? null;
-        $dbDni->comentarios = $cont['dni_observacion'] ?? null;
+        $dniData = $data['seccion_dni'] ?? [];
+        $dbDni->tip_dni     = $dniData['tipo_dni'] ?? null;
+        $dbDni->version_dni = $dniData['version_dnie'] ?? null;
+        $dbDni->firma_sihce = $dniData['firma_sihce'] ?? null;
+        $dbDni->comentarios = $dniData['comentarios'] ?? null;
 
-        // E. INVENTARIO (Componente 5)
+        // E. INVENTARIO
         $invArray = $data['inventario'] ?? [];
         $dbInventario = collect($invArray)->map(function($item) {
+            $item = (array)$item; 
             $obj = new stdClass();
             $obj->descripcion = $item['descripcion'] ?? '';
             $obj->cantidad    = $item['cantidad'] ?? 1;
             $obj->estado      = $item['estado'] ?? '';
-            $obj->propio      = $item['propio'] ?? ''; // Propiedad
-            $obj->nro_serie   = $item['nro_serie'] ?? '';
+            $obj->propio      = $item['propiedad'] ?? ($item['propio'] ?? ''); 
+            $obj->nro_serie   = $item['codigo'] ?? ($item['nro_serie'] ?? '');
             $obj->observacion = $item['observacion'] ?? '';
             return $obj;
         });
 
-        // F. DIFICULTADES (Componente 6)
+        // F. DIFICULTADES
         $dbDificultad = new stdClass();
-        $difData = $data['contenido']['dificultades'] ?? [];
-        $dbDificultad->insti_comunica = $difData['comunica'] ?? null;
-        $dbDificultad->medio_comunica = $difData['medio'] ?? null;
+        $dbDificultad->insti_comunica = $data['comunica_a'] ?? null;
+        $dbDificultad->medio_comunica = $data['medio_soporte'] ?? null;
 
-        // G. FOTOS (Componente 7)
-        // Pasamos la URL directa para manejarla en la vista
-        $fotoUrl = $data['comentarios_esp']['foto_url_esp'] ?? null;
+        // G. FOTOS
+        $fotosArray = $data['foto_evidencia'] ?? [];
+        $fotoUrl = (is_array($fotosArray) && count($fotosArray) > 0) ? $fotosArray[0] : null;
 
         // 4. Generar PDF
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.citas_pdf', compact(
-            'acta', 
-            'dbCapacitacion', 
-            'dbInventario', 
-            'dbDificultad', 
-            'dbInicioLabores',
-            'dbDni',
-            'fotoUrl' // Pasamos la variable nueva
-        ));
+        // CORRECCIÓN: Pasamos 'prof' directamente en el array, eliminamos el ->with()
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.citas_pdf', [
+            'acta'            => $acta,
+            'dbCapacitacion'  => $dbCapacitacion,
+            'dbInventario'    => $dbInventario,
+            'dbDificultad'    => $dbDificultad,
+            'dbInicioLabores' => $dbInicioLabores,
+            'dbDni'           => $dbDni,
+            'fotoUrl'         => $fotoUrl,
+            'profObj'         => $profObj,
+            'prof'            => $profObj // <--- Alias añadido aquí directamente
+        ]);
 
         $pdf->setOption('isPhpEnabled', true);
         $pdf->setPaper('a4', 'portrait');
