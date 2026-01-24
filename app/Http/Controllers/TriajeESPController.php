@@ -17,39 +17,89 @@ class TriajeESPController extends Controller
      */
     public function index($id)
     {
-        // 1. Obtener la cabecera
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Validación de seguridad
         if ($acta->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
-        // 3. Buscar datos existentes
-        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+        // 1. Obtener el registro de la BD
+        $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                    ->where('modulo_nombre', 'triaje_esp')
                                    ->first();
 
-        // 4. Inicializar si no existe
-        if (!$detalle) {
-            $detalle = new MonitoreoModulos();
-            $detalle->contenido = []; 
-        } else {
-            if (is_string($detalle->contenido)) {
-                $detalle->contenido = json_decode($detalle->contenido, true) ?? [];
+        // 2. Inicializar objeto detalle
+        $detalle = $registro ?? new MonitoreoModulos();
+        
+        // Decodificar el JSON guardado
+        // Ahora soportamos si Laravel ya lo entrega como Array (por el Cast) o como String
+        $contenidoDB = [];
+        
+        if ($registro) {
+            if (is_array($registro->contenido)) {
+                $contenidoDB = $registro->contenido;
+            } elseif (is_string($registro->contenido)) {
+                $contenidoDB = json_decode($registro->contenido, true) ?? [];
             }
         }
 
-        // 5. Preparar equipos
-        $listaEquiposRaw = data_get($detalle->contenido, 'equipos', []);
-        $equiposFormateados = [];
+        // 3. ADAPTADOR (DB -> VISTA)
+        $datosParaVista = [];
+
+        // Mapeo Directo
+        $datosParaVista['fecha'] = $contenidoDB['fecha_monitoreo_triaje'] ?? date('Y-m-d');
+        $datosParaVista['turno'] = $contenidoDB['turno'] ?? '';
+        $datosParaVista['num_ambientes'] = $contenidoDB['num_consultorios'] ?? '';
+        $datosParaVista['denominacion_ambiente'] = $contenidoDB['denominacion_consultorio'] ?? '';
         
-        if (is_array($listaEquiposRaw)) {
-            $equiposFormateados = collect($listaEquiposRaw)->map(function($item) {
-                return (object) $item;
-            });
-        } 
+        // Mapeo RRHH
+        $datosParaVista['rrhh'] = $contenidoDB['profesional'] ?? [];
+        // Inyectamos administrativos dentro de rrhh para la vista
+        $datosParaVista['rrhh']['cuenta_sihce'] = $contenidoDB['utiliza_sihce'] ?? '';
+        $datosParaVista['rrhh']['firmo_dj'] = $contenidoDB['firmo_dj'] ?? '';
+        $datosParaVista['rrhh']['firmo_confidencialidad'] = $contenidoDB['firmo_confidencialidad'] ?? '';
+
+        // Mapeo DNI
+        $datosParaVista['tipo_dni_fisico'] = $contenidoDB['tipo_dni_fisico'] ?? '';
+        $datosParaVista['dnie_version'] = $contenidoDB['dnie_version'] ?? '';
+        $datosParaVista['dni_observacion'] = $contenidoDB['dni_observacion'] ?? '';
+
+        // Mapeo Capacitación
+        $datosParaVista['capacitacion'] = [
+            'recibieron_cap' => $contenidoDB['recibio_capacitacion'] ?? '',
+            'institucion_cap' => $contenidoDB['inst_capacitacion'] ?? ''
+        ];
+
+        // Mapeo Dificultades / Soporte
+        $datosParaVista['dificultades'] = [
+            'comunica' => $contenidoDB['comunica_a'] ?? '',
+            'medio' => $contenidoDB['medio_soporte'] ?? ''
+        ];
+
+        // Mapeo Comentarios
+        $datosParaVista['comentario_esp'] = $contenidoDB['comentarios'] ?? '';
+
+        // Mapeo Foto (Extraer string del array)
+        $datosParaVista['foto_evidencia'] = null;
+        if (!empty($contenidoDB['foto_evidencia'])) {
+            if (is_array($contenidoDB['foto_evidencia'])) {
+                $datosParaVista['foto_evidencia'] = $contenidoDB['foto_evidencia'][0] ?? null;
+            } else {
+                $datosParaVista['foto_evidencia'] = $contenidoDB['foto_evidencia'];
+            }
+        }
+
+        // Mapeo Equipos
+        $datosParaVista['equipos'] = $contenidoDB['equipos'] ?? [];
+
+        // Asignamos la estructura adaptada al objeto para la vista
+        $detalle->contenido = $datosParaVista;
+
+        // Formatear equipos como objetos para la vista
+        $equiposFormateados = collect($datosParaVista['equipos'])->map(function($item) {
+            return (object) $item;
+        });
 
         return view('usuario.monitoreo.modulos_especializados.triaje', [
             'acta' => $acta,
@@ -59,130 +109,160 @@ class TriajeESPController extends Controller
     }
 
     /**
-     * Guarda la información del módulo.
-     * SOLUCIÓN: Captura inputs que están fuera del array 'contenido'.
+     * Guarda la información.
      */
     public function store(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
-            // 1. Obtener datos base del array 'contenido'
-            $nuevosDatos = $request->input('contenido', []);
+            // 1. Obtener datos crudos
+            $rawContenido = $request->input('contenido', []);
+            $rawRRHH = $request->input('rrhh', []);
+            $rawComentario = $request->input('comentario_esp');
+            $rawEquipos = $request->input('equipos', []);
 
-            // ==============================================================================
-            // PARCHE: CAPTURAR DATOS DE COMPONENTES QUE NO TIENEN EL NAME CORRECTO
-            // ==============================================================================
+            // 2. Construir la estructura JSON FINAL
+            $jsonToSave = [];
 
-            // A. Capturar COMENTARIO (Componente 7 envía 'comentario_esp' suelto)
-            if ($request->has('comentario_esp')) {
-                $nuevosDatos['comentario_esp'] = $request->input('comentario_esp');
+            // A. Datos Generales
+            $jsonToSave['fecha_monitoreo_triaje] = $rawContenido['fecha'] ?? date('Y-m-d');
+            $jsonToSave['turno'] = $rawContenido['turno'] ?? '';
+            $jsonToSave['num_consultorios'] = $rawContenido['num_ambientes'] ?? '';
+            $jsonToSave['denominacion_consultorio'] = $rawContenido['denominacion_ambiente'] ?? mb_strtoupper($rawContenido['denominacion_ambiente'] ?? '', 'UTF-8');
+
+            // B. Profesional
+            if (empty($rawRRHH) && isset($rawContenido['rrhh'])) {
+                $rawRRHH = $rawContenido['rrhh'];
             }
 
-            // ==============================================================================
+            $jsonToSave['profesional'] = [
+                'doc' => $rawRRHH['doc'] ?? '',
+                'tipo_doc' => $rawRRHH['tipo_doc'] ?? '',
+                'nombres' => mb_strtoupper($rawRRHH['nombres'] ?? '', 'UTF-8'),
+                'apellido_paterno' => mb_strtoupper($rawRRHH['apellido_paterno'] ?? '', 'UTF-8'),
+                'apellido_materno' => mb_strtoupper($rawRRHH['apellido_materno'] ?? '', 'UTF-8'),
+                'email' => $rawRRHH['email'] ?? '',
+                'telefono' => $rawRRHH['telefono'] ?? '',
+                'cargo' => mb_strtoupper($rawRRHH['cargo'] ?? '', 'UTF-8'),
+            ];
 
-            // 2. LÓGICA DE RRHH (PROFESIONAL)
-            $datosRRHH = $request->input('rrhh');
-            if (empty($datosRRHH) && isset($nuevosDatos['rrhh'])) {
-                $datosRRHH = $nuevosDatos['rrhh'];
+            // C. Administrativos
+            $jsonToSave['utiliza_sihce'] = $rawRRHH['cuenta_sihce'] ?? 'NO';
+            $jsonToSave['firmo_dj'] = $rawRRHH['firmo_dj'] ?? 'NO';
+            $jsonToSave['firmo_confidencialidad'] = $rawRRHH['firmo_confidencialidad'] ?? 'NO';
+
+            // D. DNI
+            $jsonToSave['tipo_dni_fisico'] = $rawContenido['tipo_dni_fisico'] ?? '';
+            $jsonToSave['dnie_version'] = $rawContenido['dnie_version'] ?? '';
+            $jsonToSave['dni_observacion'] = mb_strtoupper($rawContenido['dni_observacion'] ?? '', 'UTF-8');
+
+            // E. Capacitación
+            $cap = $rawContenido['capacitacion'] ?? [];
+            $jsonToSave['recibio_capacitacion'] = $cap['recibieron_cap'] ?? '';
+            $jsonToSave['inst_capacitacion'] = mb_strtoupper($cap['institucion_cap'] ?? '', 'UTF-8');
+
+            // F. Soporte / Dificultades
+            $dif = $rawContenido['dificultades'] ?? [];
+            $jsonToSave['comunica_a'] = mb_strtoupper($dif['comunica'] ?? '', 'UTF-8');
+            $jsonToSave['medio_soporte'] = mb_strtoupper($dif['medio'] ?? '', 'UTF-8');
+
+            // G. Comentarios
+            $jsonToSave['comentarios'] = mb_strtoupper($rawComentario ?? ($rawContenido['comentario_esp'] ?? ''), 'UTF-8');
+
+            // H. Equipos
+            $equiposLimpios = array_values(array_filter($rawEquipos, function($e) {
+                return !empty($e['descripcion']);
+            }));
+            
+            $equiposFinales = array_map(function($e) {
+                return array_map(function($val) {
+                    return is_string($val) ? mb_strtoupper($val, 'UTF-8') : $val;
+                }, $e);
+            }, $equiposLimpios);
+            
+            $jsonToSave['equipos'] = $equiposFinales;
+
+            // I. Foto
+            $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                              ->where('modulo_nombre', 'triaje_esp')
+                                              ->first();
+            
+            // Intentar recuperar foto previa limpiamente
+            $rutaFoto = null;
+            if ($registroPrevio) {
+                $prevContent = $registroPrevio->contenido;
+                // Si es string lo decodificamos, si es array lo usamos directo
+                $prevJson = is_string($prevContent) ? json_decode($prevContent, true) : $prevContent;
+                
+                if (isset($prevJson['foto_evidencia']) && is_array($prevJson['foto_evidencia'])) {
+                    $rutaFoto = $prevJson['foto_evidencia'][0] ?? null;
+                }
             }
 
-            if (!empty($datosRRHH) && !empty($datosRRHH['doc'])) {
-                $nuevosDatos['rrhh'] = $datosRRHH;
+            $fileInput = null;
+            if ($request->hasFile('foto_evidencia')) $fileInput = 'foto_evidencia';
+            elseif ($request->hasFile('foto_esp_file')) $fileInput = 'foto_esp_file';
 
-                // Actualizar Tabla Maestra
+            if ($fileInput) {
+                $request->validate([$fileInput => 'image|mimes:jpeg,png,jpg|max:10240']);
+                if ($rutaFoto && Storage::disk('public')->exists($rutaFoto)) {
+                    Storage::disk('public')->delete($rutaFoto);
+                }
+                $rutaFoto = $request->file($fileInput)->store('evidencias_monitoreo', 'public');
+            }
+
+            $jsonToSave['foto_evidencia'] = $rutaFoto ? [$rutaFoto] : [];
+
+            // ---------------------------------------------------------
+            // 3. GUARDADO EN BD
+            // ---------------------------------------------------------
+            
+            // Actualizar Maestro Profesionales
+            if (!empty($jsonToSave['profesional']['doc'])) {
+                $p = $jsonToSave['profesional'];
                 DB::table('mon_profesionales')->updateOrInsert(
-                    ['doc' => $datosRRHH['doc']],
+                    ['doc' => $p['doc']],
                     [
-                        'tipo_doc'          => $datosRRHH['tipo_doc'] ?? 'DNI',
-                        'nombres'           => mb_strtoupper($datosRRHH['nombres'] ?? '', 'UTF-8'),
-                        'apellido_paterno'  => mb_strtoupper($datosRRHH['apellido_paterno'] ?? '', 'UTF-8'),
-                        'apellido_materno'  => mb_strtoupper($datosRRHH['apellido_materno'] ?? '', 'UTF-8'),
-                        'cargo'             => mb_strtoupper($datosRRHH['cargo'] ?? '', 'UTF-8'),
-                        'updated_at'        => now(),
+                        'tipo_doc' => $p['tipo_doc'],
+                        'nombres' => $p['nombres'],
+                        'apellido_paterno' => $p['apellido_paterno'],
+                        'apellido_materno' => $p['apellido_materno'],
+                        'cargo' => $p['cargo'],
+                        'updated_at' => now(),
                     ]
                 );
             }
 
-            // 3. Obtener registro actual de la BD
+            // Guardar Registro
             $registro = MonitoreoModulos::firstOrNew([
                 'cabecera_monitoreo_id' => $id,
                 'modulo_nombre' => 'triaje_esp'
             ]);
 
-            $contenidoAnterior = is_string($registro->contenido) 
-                ? (json_decode($registro->contenido, true) ?? []) 
-                : ($registro->contenido ?? []);
-
-            // ==============================================================================
-            // B. Capturar FOTO (Componente 7 envía 'foto_esp_file' en lugar de 'foto_evidencia')
-            // ==============================================================================
+            // [CORRECCIÓN CRÍTICA]
+            // Asignamos el ARRAY directamente. NO usamos json_encode().
+            // Esto asume que tu modelo tiene 'protected $casts = [ 'contenido' => 'array' ];'
+            // Si no lo tiene, Laravel intentará convertir array a string y fallará.
+            // Si eso pasa, cambia esta línea por: $registro->contenido = json_encode($jsonToSave, JSON_UNESCAPED_UNICODE);
             
-            // Detectar cuál nombre de input está enviando el archivo
-            $inputNameFoto = null;
-            if ($request->hasFile('foto_esp_file')) {
-                $inputNameFoto = 'foto_esp_file';
-            } elseif ($request->hasFile('foto_evidencia')) {
-                $inputNameFoto = 'foto_evidencia';
-            }
-
-            if ($inputNameFoto) {
-                $request->validate([
-                    $inputNameFoto => 'image|mimes:jpeg,png,jpg|max:10240'
-                ]);
-
-                // Borrar foto anterior (La clave en JSON que usa tu vista es 'foto_url_esp')
-                $claveFotoEnJson = 'foto_url_esp'; 
-
-                if (!empty($contenidoAnterior[$claveFotoEnJson])) {
-                    if (Storage::disk('public')->exists($contenidoAnterior[$claveFotoEnJson])) {
-                        Storage::disk('public')->delete($contenidoAnterior[$claveFotoEnJson]);
-                    }
-                }
-
-                // Guardar nueva foto
-                $path = $request->file($inputNameFoto)->store('evidencias_csmc/triaje', 'public');
-                
-                // GUARDAR CON LA CLAVE QUE ESPERA TU VISTA ('foto_url_esp')
-                $nuevosDatos['foto_url_esp'] = $path;
-                
-                // Opcional: guardar también como 'foto_evidencia' por si acaso
-                $nuevosDatos['foto_evidencia'] = $path;
-            } else {
-                // Mantener la foto vieja si no se subió una nueva
-                if (isset($contenidoAnterior['foto_url_esp'])) {
-                    $nuevosDatos['foto_url_esp'] = $contenidoAnterior['foto_url_esp'];
-                }
-            }
-            // ==============================================================================
-
-            // 4. Procesar Equipos
-            if ($request->has('equipos')) {
-                $nuevosDatos['equipos'] = $request->input('equipos');
-            } else {
-                $nuevosDatos['equipos'] = [];
-            }
-
-            // 5. FUSIÓN FINAL (Sobrescribir datos viejos con los nuevos)
-            $contenidoFinal = array_replace_recursive($contenidoAnterior, $nuevosDatos);
-
-            // 6. Guardar
-            $registro->contenido = json_encode($contenidoFinal, JSON_UNESCAPED_UNICODE);
+            // Opción Segura (Detecta si necesita encoding):
+            // Si asignamos el array y el modelo NO tiene cast, fallará.
+            // Para asegurar JSON limpio SIN doble encoding:
+            $registro->contenido = $jsonToSave; 
+            
             $registro->save();
 
             DB::commit();
 
             return redirect()
                 ->route('usuario.monitoreo.modulos', $id)
-                ->with('success', 'Módulo de Triaje CSMC guardado correctamente.');
+                ->with('success', 'Módulo Triaje guardado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error guardando Triaje CSMC: " . $e->getMessage());
-            
-            return back()
-                ->with('error', 'Error al guardar: ' . $e->getMessage())
-                ->withInput();
+            Log::error("Error TriajeESP Store: " . $e->getMessage());
+            return back()->with('error', 'Error: ' . $e->getMessage())->withInput();
         }
     }
 }

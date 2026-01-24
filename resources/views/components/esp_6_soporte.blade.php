@@ -11,8 +11,8 @@
             <i data-lucide="cpu" class="w-5 h-5"></i>
         </div>
         <div>
-            <h2 class="text-lg font-bold text-slate-800 leading-tight">SOPORTE</h2>
-            <p class="text-xs text-slate-500 font-medium">DIFICULTADES Y COMUNICACIÓN</p>
+            <h2 class="text-lg font-bold text-teal-900 leading-tight">SOPORTE</h2>
+            <p class="text-xs text-slate-400 font-medium">DIFICULTADES Y COMUNICACIÓN</p>
         </div>
     </div>
 
