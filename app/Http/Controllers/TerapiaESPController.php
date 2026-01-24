@@ -5,114 +5,298 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\CabeceraMonitoreo;
 use App\Models\MonitoreoModulos;
+use App\Models\EquipoComputo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Profesional;
 
 class TerapiaESPController extends Controller
 {
-    /**
-     * Muestra el formulario de "Terapia" específico para CSMC.
-     * Ruta: GET /usuario/monitoreo/{id}/terapia-especializada
-     */
     public function index($id)
     {
-        // 1. Obtener la cabecera del monitoreo
         $monitoreo = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Validación de seguridad
         if ($monitoreo->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
-        // 3. Buscar datos existentes (Clave: terapia)
-        $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'terapia')
+        // Recuperar equipos
+        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo', 'sm_terapias')
+                                ->get();
+
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                    ->where('modulo_nombre', 'sm_terapias')
                                     ->first();
 
-        // 4. Decodificar JSON
-        $data = $registro ? json_decode($registro->contenido, true) : [];
+        // Si no existe, creamos una instancia vacía
+        if (!$detalle) {
+            $detalle = new MonitoreoModulos();
+            $detalle->contenido = [];
+        }
 
-        return view('usuario.monitoreo.modulos_especializados.terapia', compact('monitoreo', 'data'));
+        // TRANSFORMACIÓN DE DATOS (BD -> VISTA)
+        if ($detalle && !empty($detalle->contenido)) {
+            $dbData = $detalle->contenido;
+            
+            $defaults = [
+                'dificultades' => ['comunica' => null, 'medio' => null],
+                'profesional' => [],
+                'detalle_dni' => [],
+                'detalle_capacitacion' => []
+            ];
+
+            $viewData = array_replace_recursive($defaults, $dbData);
+
+            // 1. Datos Generales
+            $viewData['fecha'] = $dbData['fecha'] ?? null;
+            $consultorio = $dbData['detalle_consultorio'] ?? [];
+            $viewData['turno'] = $consultorio['turno'] ?? null;
+            $viewData['num_ambientes'] = $consultorio['num_ambientes'] ?? null;
+            $viewData['denominacion_ambiente'] = $consultorio['denominacion_ambiente'] ?? null;
+
+            // 2. Profesional (Array directo)
+            $viewData['profesional'] = $dbData['profesional'] ?? [];
+
+            // 3. Detalle DNI (Aplanamos para los inputs)
+            $dni = $dbData['detalle_dni'] ?? [];
+            $viewData['tipo_dni_fisico']  = $dni['tipo_dni_fisico'] ?? null;
+            $viewData['dnie_version']     = $dni['dnie_version'] ?? null;
+            $viewData['dnie_firma_sihce'] = $dni['dnie_firma_sihce'] ?? null;
+            $viewData['dni_observacion']  = $dni['dni_observacion'] ?? null;
+
+            // 4. Capacitación (Adaptador para Componente 4)
+            $cap = $dbData['detalle_capacitacion'] ?? [];
+            $viewData['recibio_capacitacion'] = $cap['recibio_capacitacion'] ?? null;
+            $viewData['inst_capacitacion']    = $cap['inst_capacitacion'] ?? null;
+            // Traducción para Componente AlpineJS
+            $viewData['recibieron_cap']       = $cap['recibio_capacitacion'] ?? null;
+            $viewData['institucion_cap']      = $cap['inst_capacitacion'] ?? null;
+
+            // 5. Dificultades / Soporte (Adaptador para Componente 6)
+            $diff = $dbData['dificultades'] ?? [];
+            $viewData['dificultades'] = $diff;
+            // Inyección de propiedades directas para Componente 6
+            $detalle->dificultad_comunica_a = $diff['comunica'] ?? null;
+            $detalle->dificultad_medio_uso  = $diff['medio'] ?? null;
+
+            // 6. Evidencia y Comentarios
+            $viewData['comentario_esp'] = $dbData['comentario_esp'] ?? null;
+            $viewData['foto_evidencia'] = $dbData['foto_evidencia'] ?? [];
+            
+            // Traducción para Componente 7 (Foto única visual)
+            $evidencia = $viewData['foto_evidencia'];
+            $viewData['foto_url_esp'] = is_array($evidencia) ? ($evidencia[0] ?? null) : $evidencia;
+
+            // Asignamos la data aplanada a memoria para la vista
+            $detalle->contenido = $viewData;
+        }
+
+        $data = is_array($detalle->contenido) ? $detalle->contenido : [];
+
+        return view('usuario.monitoreo.modulos_especializados.terapia', compact('monitoreo', 'data', 'equipos', 'detalle'));
     }
 
-    /**
-     * Guarda la información del módulo.
-     * Ruta: POST /usuario/monitoreo/{id}/terapia-especializada
-     */
     public function store(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
-            // 1. Validar que exista la cabecera
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
+            $modulo = 'sm_terapias';
 
-            // 2. Buscar si ya existe el registro de este módulo
-            $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                        ->where('modulo_nombre', 'terapia')
-                                        ->first();
+            // 1. RECIBIMOS LOS DATOS (Estructura Plana del Formulario)
+            $input = $request->input('contenido', []);
 
-            $contenidoActual = [];
-
-            // 3. Si no existe, creamos la instancia y asignamos claves forzosamente
-            if (!$registro) {
-                $registro = new MonitoreoModulos();
-                $registro->cabecera_monitoreo_id = $id;
-                $registro->modulo_nombre = 'terapia';
-            } else {
-                // Si existe, recuperamos su contenido actual para no perder la foto
-                $contenidoActual = json_decode($registro->contenido, true) ?? [];
+            // ---------------------------------------------------------
+            // FUSIÓN DE COMPONENTES EXTERNOS (Capacitación y Dificultades)
+            // ---------------------------------------------------------
+            if ($request->has('capacitacion')) {
+                $cap = $request->input('capacitacion');
+                $input['recibio_capacitacion'] = $cap['recibieron_cap'] ?? null;
+                $input['inst_capacitacion']    = $cap['institucion_cap'] ?? null;
+            }
+            if ($request->has('dificultades')) {
+                $input['dificultades'] = $request->input('dificultades');
             }
 
-            // 4. Recoger datos del formulario (Quitamos token y archivo físico)
-            $nuevosDatos = $request->except(['_token', 'foto_evidencia']);
+            // ---------------------------------------------------------
+            // REGLAS DE NEGOCIO (Limpieza de Datos)
+            // ---------------------------------------------------------
+            
+            // Regla SIHCE = NO
+            $usaSihce = $input['profesional']['cuenta_sihce'] ?? 'NO';
+            if ($usaSihce === 'NO') {
+                $input['recibio_capacitacion'] = null;
+                $input['inst_capacitacion']    = null;
+                $input['dificultades']         = ['comunica' => null, 'medio' => null];
+                $input['profesional']['firmo_dj'] = null;
+                $input['profesional']['firmo_confidencialidad'] = null;
+            }
 
-            // 5. Procesar Imagen
-            if ($request->hasFile('foto_evidencia')) {
-                // Validación estricta de imagen
-                $request->validate([
-                    'foto_evidencia' => 'image|mimes:jpeg,png,jpg|max:10240' // 10MB Máx
-                ]);
+            // Regla NO Capacitación
+            if (($input['recibio_capacitacion'] ?? '') === 'NO') {
+                $input['inst_capacitacion'] = null;
+            }
 
-                // Borrar anterior si existe
-                if (!empty($contenidoActual['foto_evidencia'])) {
-                    if (Storage::disk('public')->exists($contenidoActual['foto_evidencia'])) {
-                        Storage::disk('public')->delete($contenidoActual['foto_evidencia']);
+            // Regla Documento != DNI
+            $tipoDoc = $input['profesional']['tipo_doc'] ?? '';
+            if ($tipoDoc !== 'DNI') {
+                $input['tipo_dni_fisico']  = null;
+                $input['dnie_version']     = null;
+                $input['dnie_firma_sihce'] = null;
+                $input['dni_observacion']  = null;
+            }
+
+            // Regla DNI Azul
+            if (($input['tipo_dni_fisico'] ?? '') === 'AZUL') {
+                $input['dnie_version']     = null;
+                $input['dnie_firma_sihce'] = null;
+            }
+
+            // ---------------------------------------------------------
+            // CONSTRUCCIÓN DE LA ESTRUCTURA JERÁRQUICA (JSON ESTRUCTURADO)
+            // ---------------------------------------------------------
+            $structuredData = [
+                "fecha" => $input['fecha'] ?? date('Y-m-d'),
+                
+                "detalle_consultorio" => [
+                    "turno" => $input['turno'] ?? null,
+                    "num_ambientes" => $input['num_ambientes'] ?? null,
+                    "denominacion_ambiente" => $input['denominacion_ambiente'] ?? null
+                ],
+                
+                "profesional" => [
+                    "doc" => $input['profesional']['doc'] ?? null,
+                    "tipo_doc" => $input['profesional']['tipo_doc'] ?? null,
+                    "nombres" => $input['profesional']['nombres'] ?? null,
+                    "apellido_paterno" => $input['profesional']['apellido_paterno'] ?? null,
+                    "apellido_materno" => $input['profesional']['apellido_materno'] ?? null,
+                    "email" => $input['profesional']['email'] ?? null,
+                    "telefono" => $input['profesional']['telefono'] ?? null,
+                    "cargo" => $input['profesional']['cargo'] ?? null,
+                    "cuenta_sihce" => $input['profesional']['cuenta_sihce'] ?? null,
+                    "firmo_dj" => $input['profesional']['firmo_dj'] ?? null,
+                    "firmo_confidencialidad" => $input['profesional']['firmo_confidencialidad'] ?? null
+                ],
+                
+                "detalle_dni" => [
+                    "tipo_dni_fisico" => $input['tipo_dni_fisico'] ?? null,
+                    "dnie_version" => $input['dnie_version'] ?? null,
+                    "dnie_firma_sihce" => $input['dnie_firma_sihce'] ?? null,
+                    "dni_observacion" => $input['dni_observacion'] ?? null
+                ],
+                
+                "dificultades" => [
+                    "comunica" => $input['dificultades']['comunica'] ?? null,
+                    "medio" => $input['dificultades']['medio'] ?? null
+                ],
+                
+                "detalle_capacitacion" => [
+                    "recibio_capacitacion" => $input['recibio_capacitacion'] ?? null,
+                    "inst_capacitacion" => $input['inst_capacitacion'] ?? null
+                ],
+                
+                "comentario_esp" => $request->input('comentario_esp') ?? ($input['comentario_esp'] ?? null),
+                "foto_evidencia" => [] // Se llenará más abajo
+            ];
+
+            // ---------------------------------------------------------
+            // NORMALIZACIÓN DE TEXTO (Mayúsculas)
+            // ---------------------------------------------------------
+            array_walk_recursive($structuredData, function (&$value, $key) {
+                if (is_string($value)) {
+                    if ($key === 'email' || str_contains($value, 'evidencias_')) return; 
+                    $value = mb_strtoupper(trim($value), 'UTF-8');
+                }
+            });
+
+            // ---------------------------------------------------------
+            // SINCRONIZACIÓN DE PROFESIONALES (Tabla Externa)
+            // ---------------------------------------------------------
+            if (!empty($structuredData['profesional']['doc'])) {
+                Profesional::updateOrCreate(
+                    ['doc' => trim($structuredData['profesional']['doc'])],
+                    [
+                        'tipo_doc'         => $structuredData['profesional']['tipo_doc'] ?? 'DNI',
+                        'apellido_paterno' => $structuredData['profesional']['apellido_paterno'],
+                        'apellido_materno' => $structuredData['profesional']['apellido_materno'],
+                        'nombres'          => $structuredData['profesional']['nombres'],
+                        'email'            => strtolower($structuredData['profesional']['email']),
+                        'telefono'         => $structuredData['profesional']['telefono'],
+                        'cargo'            => $structuredData['profesional']['cargo'],
+                    ]
+                );
+            }
+
+            // ---------------------------------------------------------
+            // GESTIÓN DE EQUIPOS (Tabla Externa)
+            // ---------------------------------------------------------
+            EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
+            if ($request->has('equipos') && is_array($request->equipos)) {
+                foreach ($request->equipos as $eq) {
+                    if (!empty($eq['descripcion'])) {
+                        EquipoComputo::create([
+                            'cabecera_monitoreo_id' => $id,
+                            'modulo'      => $modulo,
+                            'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
+                            'cantidad'    => (int)($eq['cantidad'] ?? 1),
+                            'estado'      => $eq['estado'] ?? 'OPERATIVO',
+                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
+                            'propio'      => $eq['propio'] ?? 'SERVICIO',
+                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
+                        ]);
                     }
                 }
-
-                // Guardar nueva
-                $path = $request->file('foto_evidencia')->store('evidencias_csmc', 'public');
-                $nuevosDatos['foto_evidencia'] = $path;
-            } else {
-                // Mantener anterior si no se subió nueva
-                if (!empty($contenidoActual['foto_evidencia'])) {
-                    $nuevosDatos['foto_evidencia'] = $contenidoActual['foto_evidencia'];
-                }
             }
 
-            // 6. Guardar JSON
-            // JSON_UNESCAPED_UNICODE asegura que las tildes se guarden bien
-            $registro->contenido = json_encode($nuevosDatos, JSON_UNESCAPED_UNICODE);
+            // ---------------------------------------------------------
+            // GESTIÓN DE FOTOS
+            // ---------------------------------------------------------
+            $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                ->where('modulo_nombre', $modulo)
+                                ->first();
+            $fotosFinales = [];
             
-            $registro->save();
+            if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+                $prev = $registroPrevio->contenido['foto_evidencia'];
+                $fotosFinales = is_array($prev) ? $prev : [$prev];
+            }
+            
+            if ($request->hasFile('foto_esp_file')) {
+                // Borrar foto anterior
+                if (count($fotosFinales) > 0) {
+                    foreach ($fotosFinales as $pathViejo) {
+                        if (Storage::disk('public')->exists($pathViejo)) {
+                            Storage::disk('public')->delete($pathViejo);
+                        }
+                    }
+                }
+                $file = $request->file('foto_esp_file');
+                $path = $file->store('evidencias_esp', 'public');
+                $fotosFinales = [$path];
+            }
+            $structuredData['foto_evidencia'] = $fotosFinales;
+
+            // ---------------------------------------------------------
+            // GUARDAR
+            // ---------------------------------------------------------
+            MonitoreoModulos::updateOrCreate(
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
+                ['contenido' => $structuredData]
+            );
 
             DB::commit();
-
-            return redirect()
-                ->route('usuario.monitoreo.modulos', $id)
-                ->with('success', 'Módulo de Terapia CSMC guardado correctamente.');
+            return redirect()->route('usuario.monitoreo.salud_mental_group.index', $id)
+                             ->with('success', 'Módulo Terapia ESP sincronizado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error guardando Terapia CSMC: " . $e->getMessage());
-            
-            return back()
-                ->with('error', 'Error al guardar: ' . $e->getMessage())
-                ->withInput();
+            Log::error("Error Módulo Terapia ESP (Store) - Acta {$id}: " . $e->getMessage());
+            return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
         }
     }
 }
