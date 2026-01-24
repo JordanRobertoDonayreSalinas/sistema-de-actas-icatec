@@ -50,7 +50,7 @@
                 <i data-lucide="graduation-cap" class="w-7 h-7"></i>
             </div>
             <div>
-                <h3 class="text-slate-800 font-black text-lg uppercase tracking-tight mb-1 transition-colors duration-300">
+                <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight mb-1 transition-colors duration-300">
                     Detalle de Capacitación
                 </h3>
                 <p class="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
