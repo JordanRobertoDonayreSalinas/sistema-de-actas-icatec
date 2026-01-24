@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Acta;
+use App\Models\CabeceraMonitoreo;
 use App\Models\MonitoreoModulos;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MedicinaEspecializadoController extends Controller
 {
     public function index($actaId)
     {
         // 1. Recuperar el Acta
-        $acta = Acta::findOrFail($actaId);
+        $acta = CabeceraMonitoreo::findOrFail($actaId);
 
         // 2. BUSCAR O CREAR EL DETALLE
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $actaId)
@@ -75,5 +76,80 @@ class MedicinaEspecializadoController extends Controller
         return redirect()
             ->route('usuario.monitoreo.salud_mental_group.index', $actaId)
             ->with('success', 'Ficha guardada correctamente.');
+    }
+
+    public function generar($id)
+    {
+        // 1. Recuperar datos
+        $acta = CabeceraMonitoreo::findOrFail($id);
+
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+            ->where('modulo_nombre', 'sm_medicina_general')
+            ->first();
+
+        // Evitar error si no hay detalle guardado aún
+        if (!$detalle) {
+            return back()->with('error', 'Primero debe guardar la ficha antes de generar el PDF.');
+        }
+
+        // 2. Procesar la Imagen de Evidencia (Si existe)
+        // DomPDF necesita base64 o ruta absoluta para mostrar imágenes
+        $imagenesData = [];
+
+        // Buscamos la ruta en tu estructura JSON: comentarios -> foto
+        $rutaFoto = $detalle->contenido['comentarios']['foto'] ?? null;
+
+        if ($rutaFoto) {
+            // Generamos la ruta completa en el disco
+            $path = public_path('storage/' . $rutaFoto);
+
+            if (file_exists($path)) {
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                // Convertimos a Base64 para incrustar en el PDF
+                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                $imagenesData[] = $base64;
+            }
+        }
+
+        // 3. Generar PDF
+        // Asegúrate de que la ruta de la vista coincida con tu carpeta real
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.medicina_especializado_pdf', [
+            'acta' => $acta,
+            'detalle' => $detalle,
+            'imagenesData' => $imagenesData
+        ]);
+
+        // B. Configuramos papel
+        $pdf->setPaper('A4', 'portrait');
+
+        // C. Renderizamos en memoria
+        $pdf->render();
+
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->getCanvas();
+
+        // Configuración de fuente
+        $fontMetrics = $dom_pdf->getFontMetrics();
+        $font = $fontMetrics->get_font("Helvetica", "bold");
+
+        // --- CAMBIOS DE AJUSTE FINO ---
+        $size = 8; // Igualamos a 8pt del CSS para que se vean idénticos
+        $color = [0.392, 0.455, 0.545];
+
+        $w = $canvas->get_width();
+        $h = $canvas->get_height();
+
+        // Coordenadas:
+        $x = $w - 75;
+
+        // AQUÍ ESTÁ EL TRUCO VERTICAL:
+        // Antes tenías ($h - 43). Al poner ($h - 49), "restamos más",
+        // lo que hace que el texto SUBA unos milímetros en la hoja.
+        $y = $h - 49;
+
+        $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
+
+        return $pdf->stream('Acta_Medicina_General_' . $acta->numero_acta . '.pdf');
     }
 }

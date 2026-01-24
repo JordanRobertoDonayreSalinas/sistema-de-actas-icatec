@@ -1,10 +1,5 @@
 @props(['detalle' => null])
 
-{{-- 
-    CAMBIO CLAVE: 
-    Movimos las clases de estilo (bg-white, shadow, border) al contenedor PADRE.
-    Ahora el título y el contenido viven dentro de la misma "caja".
---}}
 <section id="bloque-dificultades"
     {{ $attributes->merge(['class' => 'bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden mt-6']) }}>
 
@@ -34,19 +29,19 @@
                 @foreach (['MINSA', 'DIRESA', 'OTROS', 'UNIDAD EJECUTORA', 'JEFE DE ESTABLECIMIENTO'] as $opcion)
                     <label class="cursor-pointer group relative">
                         <input type="radio" name="contenido[dificultades][comunica]" value="{{ $opcion }}"
-                            class="peer sr-only"
-                            {{ ($detalle->dificultad_comunica_a ?? '') == $opcion ? 'checked' : '' }}>
+                            class="peer sr-only" {{-- CORRECCIÓN: Leer desde contenido['dificultades']['comunica'] --}}
+                            {{ ($detalle->contenido['dificultades']['comunica'] ?? '') == $opcion ? 'checked' : '' }}>
 
                         <div
-                            class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:shadow-sm h-full flex items-center justify-center">
-                            <span class="block text-[11.5px] font-bold text-slate-600 peer-checked:text-indigo-700">
+                            class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:shadow-sm h-full flex items-center justify-center">
+                            <span class="block text-[11.5px] font-bold text-slate-600 peer-checked:text-teal-700">
                                 {{ $opcion }}
                             </span>
                         </div>
 
                         {{-- Icono Check Minimalista --}}
                         <div
-                            class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-all transform scale-50 peer-checked:scale-100 shadow-sm z-10">
+                            class="absolute -top-1.5 -right-1.5 bg-teal-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-all transform scale-50 peer-checked:scale-100 shadow-sm z-10">
                             <i data-lucide="check" class="w-2 h-2"></i>
                         </div>
                     </label>
@@ -67,18 +62,18 @@
                 @foreach (['WHATSAPP', 'CELULAR', 'CORREO', 'OTROS'] as $opcion)
                     <label class="cursor-pointer group relative">
                         <input type="radio" name="contenido[dificultades][medio]" value="{{ $opcion }}"
-                            class="peer sr-only"
-                            {{ ($detalle->dificultad_medio_uso ?? '') == $opcion ? 'checked' : '' }}>
+                            class="peer sr-only" {{-- CORRECCIÓN: Leer desde contenido['dificultades']['medio'] --}}
+                            {{ ($detalle->contenido['dificultades']['medio'] ?? '') == $opcion ? 'checked' : '' }}>
 
                         <div
-                            class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:shadow-sm h-full flex items-center justify-center">
-                            <span class="block text-[11.5px] font-bold text-slate-600 peer-checked:text-indigo-700">
+                            class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:shadow-sm h-full flex items-center justify-center">
+                            <span class="block text-[11.5px] font-bold text-slate-600 peer-checked:text-teal-700">
                                 {{ $opcion }}
                             </span>
                         </div>
 
                         <div
-                            class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-all transform scale-50 peer-checked:scale-100 shadow-sm z-10">
+                            class="absolute -top-1.5 -right-1.5 bg-teal-600 text-white rounded-full p-0.5 opacity-0 peer-checked:opacity-100 transition-all transform scale-50 peer-checked:scale-100 shadow-sm z-10">
                             <i data-lucide="check" class="w-2 h-2"></i>
                         </div>
                     </label>

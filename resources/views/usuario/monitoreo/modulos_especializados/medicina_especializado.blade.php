@@ -1,26 +1,33 @@
 @extends('layouts.usuario')
-@section('title', 'Consulta Externa - Medicina')
+@section('title', 'Salud Mental - Medicina General')
 
 @section('content')
     <div class="py-10 bg-[#F8F9FC] min-h-screen">
         <div class="max-w-6xl mx-auto px-4">
 
-            {{-- CABECERA --}}
+            {{-- ENCABEZADO SUPERIOR --}}
             <div class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">02. Triaje</h2>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span
+                            class="px-3 py-1 bg-teal-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo
+                            Especializado</span>
+                        <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta:
+                            #{{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">04.1 MEDICINA GENERAL</h2>
                     <p class="text-slate-500 font-bold uppercase text-xs mt-1">
+                        <i data-lucide="clipboard-pulse" class="inline-block w-4 h-4 mr-1 text-teal-500"></i>
                         {{ $acta->establecimiento->nombre }}
                     </p>
                 </div>
                 <a href="{{ route('usuario.monitoreo.salud_mental_group.index', $acta->id) }}"
                     class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Panel
                 </a>
             </div>
 
             {{-- FORMULARIO --}}
-            {{-- IMPORTANTE: Agregamos el id="formFicha" y el evento onsubmit --}}
             <form id="formFicha" action="{{ route('usuario.monitoreo.sm_medicina_general.store', $acta->id) }}"
                 method="POST" enctype="multipart/form-data" onsubmit="sincronizarDatos(event)">
                 @csrf
@@ -30,34 +37,163 @@
 
                 <div class="space-y-6">
 
-                    {{-- 1. DETALLE CONSULTORIO (Funciona directo) --}}
+                    {{-- 1. DETALLE CONSULTORIO --}}
                     <x-esp_1_detalleDeConsultorio :detalle="$detalle" />
 
-                    {{-- 2. DATOS PROFESIONAL (Funciona directo) --}}
+                    {{-- 2. DATOS PROFESIONAL --}}
                     <x-esp_2_datosProfesional :detalle="$detalle" prefix="profesional" />
 
-                    <esp_2_1_docAdmin.blade :detalle="$detalle" prefix="profesional" />
+                    {{-- 2.1 DOC ADMINISTRATIVO (Aquí está el switch de SIHCE) --}}
+                    <x-esp_2_1_docAdmin :detalle="$detalle" prefix="doc_administrativo" />
 
-                    {{-- 3. DNI (Funciona directo) --}}
+                    {{-- 3. DNI --}}
                     <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
-                    {{-- DETALLES DE CAPACITACIÓN --}}
+                    {{-- 4. DETALLES DE CAPACITACIÓN (SE OCULTA SI SIHCE = NO) --}}
                     <div id="wrapper_capacitacion">
-                        {{-- 2. Pasamos solo la parte de 'capacitacion' para que Alpine lea bien los datos --}}
                         <x-esp_4_detalleCap :model="json_encode($detalle->contenido['capacitacion'] ?? [])" />
                     </div>
 
-                    {{-- EQUIPAMIENTO --}}
+                    {{-- 5. MATERIALES --}}
+                    <div id="wrapper_materiales">
+                        <div x-data='{ entidad: @json(data_get($detalle->contenido, 'materiales', (object) [])) }'
+                            class="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
+
+                            <div
+                                class="absolute top-0 right-0 w-24 h-24 bg-teal-50 rounded-full -mr-12 -mt-12 opacity-60 pointer-events-none">
+                            </div>
+
+                            <div class="flex items-center gap-4 mb-8 relative z-10">
+                                <div
+                                    class="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-slate-100 border border-slate-100">
+                                    <i data-lucide="package-search" class="text-teal-600 w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Materiales</h3>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Verificación
+                                        de insumos</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-8 relative z-10">
+                                <div class="pt-2">
+                                    <label
+                                        class="block text-sm font-bold text-slate-800 mb-6 uppercase tracking-tight border-b border-slate-100 pb-2">
+                                        Al iniciar cuenta con:
+                                    </label>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {{-- 1. FUA --}}
+                                        <div
+                                            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow hover:border-teal-100">
+                                            <span
+                                                class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">FUA</span>
+                                            <div class="space-y-3">
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="ELECTRONICA" x-model="entidad.fua"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">Electronica</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="MANUAL" x-model="entidad.fua"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">Manual</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- 2. REFERENCIA --}}
+                                        <div
+                                            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow hover:border-teal-100">
+                                            <span
+                                                class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">Referencia</span>
+                                            <div class="space-y-3">
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="SIHCE" x-model="entidad.referencia"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">SIHCE</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="REFCON" x-model="entidad.referencia"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">REFCON</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- 3. RECETA --}}
+                                        <div
+                                            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow hover:border-teal-100">
+                                            <span
+                                                class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">Receta</span>
+                                            <div class="space-y-3">
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="SIHCE" x-model="entidad.receta"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">SIHCE</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="MANUAL" x-model="entidad.receta"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">Manual</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {{-- 4. ORDEN LABORATORIO --}}
+                                        <div
+                                            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow hover:border-teal-100">
+                                            <span
+                                                class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">Orden
+                                                Laboratorio</span>
+                                            <div class="space-y-3">
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="SIHCE" x-model="entidad.orden_lab"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">SIHCE</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <input type="radio" value="MANUAL" x-model="entidad.orden_lab"
+                                                        style="accent-color: #0d9488;"
+                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
+                                                    <span
+                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">Manual</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 6. EQUIPAMIENTO --}}
                     @php
                         $equiposComoObjetos = collect($equipos)->map(function ($item) {
                             return (object) $item;
                         });
                     @endphp
-
                     <x-esp_5_equipos :equipos="$equiposComoObjetos" modulo="sm_medicina_general" />
 
-                    {{-- 7. SOPORTE (Funciona directo) --}}
-                    <x-esp_6_soporte :detalle="$detalle" />
+                    {{-- 7. SOPORTE (SE OCULTA SI SIHCE = NO) --}}
+                    {{-- IMPORTANTE: Se agregó este wrapper para poder ocultarlo con JS --}}
+                    <div id="wrapper_soporte">
+                        <x-esp_6_soporte :detalle="$detalle" />
+                    </div>
 
                     {{-- 8. COMENTARIOS --}}
                     @php
@@ -73,22 +209,35 @@
 
                 </div>
 
-                {{-- BOTÓN GUARDAR --}}
-                <div class="mt-10 flex justify-end">
-                    <button type="submit"
-                        class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-                        <i data-lucide="save" class="w-5 h-5 mr-2"></i> GUARDAR FICHA
+                {{-- BOTÓN GRANDE DE GUARDADO --}}
+                <div class="pt-10 pb-5 mt-6">
+                    <button type="submit" id="btn-submit-action"
+                        class="w-full group bg-teal-600 text-white p-8 rounded-[3rem] font-black shadow-2xl shadow-teal-200 flex items-center justify-between hover:bg-teal-700 transition-all duration-500 active:scale-[0.98] cursor-pointer">
+                        <div class="flex items-center gap-8 pointer-events-none">
+                            <div
+                                class="h-16 w-16 bg-white/20 rounded-3xl flex items-center justify-center group-hover:rotate-12 transition-all shadow-lg border border-white/30">
+                                <i data-lucide="save" id="icon-save-loader" class="w-8 h-8 text-white"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
+                                <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">
+                                    Sincronizar Módulo Salud Mental - Medicina General</p>
+                            </div>
+                        </div>
+                        <div
+                            class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-teal-600 transition-all duration-500">
+                            <i data-lucide="chevron-right" class="w-7 h-7"></i>
+                        </div>
                     </button>
                 </div>
-
             </form>
         </div>
     </div>
 
-    {{-- SCRIPT MAGICO PARA CAPTURAR DATOS SIN NAME --}}
+    {{-- SCRIPT: SINCRONIZACIÓN Y VALIDACIÓN SIHCE --}}
     <script>
+        // 1. Sincronizar datos de Alpine al enviar (Esta parte estaba bien, la dejamos igual)
         function sincronizarDatos(e) {
-            // Función auxiliar para crear inputs hidden
             const createHidden = (name, value) => {
                 if (!value) return;
                 const input = document.createElement('input');
@@ -98,62 +247,75 @@
                 document.getElementById('inputs_ocultos_container').appendChild(input);
             };
 
-            // Limpiar contenedor previo
             document.getElementById('inputs_ocultos_container').innerHTML = '';
 
-            // ---------------------------------------------------------
-            // 1. CAPTURAR CAPACITACIÓN
-            // ---------------------------------------------------------
+            // CAPTURAR CAPACITACIÓN (Solo si es visible)
             const capWrap = document.getElementById('wrapper_capacitacion');
-            if (capWrap) {
-                // Buscar radio seleccionado (SI/NO)
+            if (capWrap && capWrap.style.display !== 'none') {
                 const radioCap = capWrap.querySelector('input[type="radio"]:checked');
                 if (radioCap) createHidden('contenido[capacitacion][recibieron_cap]', radioCap.value);
-
-                // Buscar Select
                 const selectCap = capWrap.querySelector('select');
                 if (selectCap && selectCap.value) createHidden('contenido[capacitacion][institucion_cap]', selectCap.value);
             }
 
-            // ---------------------------------------------------------
-            // 2. CAPTURAR MATERIALES
-            // ---------------------------------------------------------
+            // CAPTURAR MATERIALES
             const matWrap = document.getElementById('wrapper_materiales');
             if (matWrap) {
-                // El componente materiales tiene bloques (divs) para cada sección.
-                // Los buscamos por su clase de tarjeta
                 const tarjetas = matWrap.querySelectorAll('.bg-slate-50.p-5');
-
-                // Tarjeta 1: FUA
                 if (tarjetas[0]) {
                     const checked = tarjetas[0].querySelector('input[type="radio"]:checked');
                     if (checked) createHidden('contenido[materiales][fua]', checked.value);
                 }
-
-                // Tarjeta 2: REFERENCIA
                 if (tarjetas[1]) {
                     const checked = tarjetas[1].querySelector('input[type="radio"]:checked');
                     if (checked) createHidden('contenido[materiales][referencia]', checked.value);
                 }
-
-                // Tarjeta 3: RECETA (Si existe)
                 if (tarjetas[2]) {
                     const checked = tarjetas[2].querySelector('input[type="radio"]:checked');
-                    // Detectamos si es Receta o Lab leyendo el título
                     const titulo = tarjetas[2].querySelector('span').innerText.toUpperCase();
                     if (titulo.includes('RECETA') && checked) {
                         createHidden('contenido[materiales][receta]', checked.value);
-                    } else if (titulo.includes('LABORATORIO') && checked) {
-                        createHidden('contenido[materiales][orden_lab]', checked.value);
                     }
                 }
-
-                // Tarjeta 4: LABORATORIO (Si existe aparte)
                 if (tarjetas[3]) {
                     const checked = tarjetas[3].querySelector('input[type="radio"]:checked');
                     if (checked) createHidden('contenido[materiales][orden_lab]', checked.value);
                 }
             }
         }
+
+        // 2. Lógica de Visibilidad (SIHCE = NO -> Ocultar Capacitación y Soporte)
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputName = 'contenido[doc_administrativo][cuenta_sihce]';
+            const sections = ['wrapper_capacitacion', 'wrapper_soporte'];
+
+            function toggleSections() {
+                // CORRECCIÓN: Buscamos un SELECT, no un input radio
+                const select = document.querySelector(`select[name="${inputName}"]`);
+
+                if (!select) return; // Seguridad por si no encuentra el elemento
+
+                // Verificamos si el valor seleccionado es "NO"
+                const isNo = select.value === 'NO';
+
+                sections.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        // Si es NO, ocultamos. Si es SI, mostramos.
+                        el.style.display = isNo ? 'none' : 'block';
+                    }
+                });
+            }
+
+            // Escuchar cambios en todo el documento
+            document.body.addEventListener('change', (e) => {
+                if (e.target.name === inputName) {
+                    toggleSections();
+                }
+            });
+
+            // Ejecutar al cargar la página para verificar el estado inicial
+            toggleSections();
+        });
     </script>
 @endsection
