@@ -28,7 +28,7 @@
               method="POST" 
               enctype="multipart/form-data" 
               class="space-y-6" 
-              id="form-monitoreo-triaje">
+              id="form-monitoreo-farmacia-esp">
             @csrf
             
             {{-- DETALLES DEL AMBIENTE --}}
@@ -43,14 +43,88 @@
             {{-- DETALLE DNI Y FIRMA DIGITAL --}}
             <x-esp_3_detalleDni :detalle="$detalle" color="teal" />
 
-            {{-- DETALLES DE CAPACITACIÓN --}}
-            <x-esp_4_detalleCap :model="json_encode($detalle->contenido ?? [])" />
+            {{-- CAPACITACION --}}
+            <div id="wrapper_capacitacion_externo">
+                <x-esp_4_detalleCap :model="json_encode($detalle->contenido ?? [])" />
+            </div>
             
             {{-- EQUIPAMIENTO --}}  
             <x-esp_5_equipos :equipos="$equipos" modulo="farmacia_esp" />
 
+            {{-- GESTIÓN DE STOCK --}}
+            <div class="bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-xl shadow-slate-200/40 transition-all duration-700 mb-10 group/card relative">
+                
+                {{-- ENCABEZADO --}}
+                <div class="bg-slate-50/50 border-b border-slate-100 px-10 py-6 flex flex-col lg:flex-row justify-between items-center gap-6 transition-all duration-700">
+                    <div class="flex items-center gap-5">
+                        <div class="h-14 w-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-teal-600 border border-slate-100 transition-all duration-700">
+                            <i data-lucide="package" class="w-7 h-7"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight mb-1">GESTIÓN DE STOCK</h3>
+                            <p class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Control de inventario y almacenamiento</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- CONTENIDO --}}
+                <div class="p-10 pl-16">
+                    <div class="grid grid-cols-1 gap-6">
+                        @foreach([
+                            'sis_gestion' => ['pregunta' => '¿Cuenta con sistema de gestión para el control de inventario?', 'icon' => 'database'],
+                            'stock_actual' => ['pregunta' => '¿El stock físico coincide con el reporte del sistema?', 'icon' => 'check-square'],
+                            'fua_sismed' => ['pregunta' => '¿Realiza la digitación oportuna en el SISMED?', 'icon' => 'clipboard-list'],
+                            'inventario_anual' => ['pregunta' => '¿Ha realizado el inventario anual de medicamentos e insumos?', 'icon' => 'calendar-check']
+                        ] as $key => $info)
+
+                        <div class="group flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-200 transition-all duration-300 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-500/5 hover:bg-white">
+                            
+                            {{-- Pregunta e Icono --}}
+                            <div class="flex items-center gap-5 mb-4 md:mb-0">
+                                <div class="hidden md:flex h-12 w-12 rounded-2xl bg-white text-slate-400 group-hover:bg-teal-50 group-hover:text-teal-600 items-center justify-center transition-colors shadow-sm border border-slate-100">
+                                    <i data-lucide="{{ $info['icon'] }}" class="w-6 h-6"></i>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 uppercase tracking-tight leading-relaxed max-w-lg">
+                                    {{ $info['pregunta'] }}
+                                </span>
+                            </div>
+
+                            {{-- Opciones SÍ / NO --}}
+                            <div class="flex gap-4">
+                                {{-- Botón SÍ --}}
+                                <label class="relative cursor-pointer flex-1 md:flex-none">
+                                    {{-- CORRECCIÓN AQUÍ: Usamos data_get para leer el valor anidado seguramente --}}
+                                    <input type="radio" name="contenido[preguntas][{{ $key }}]" value="SI" 
+                                        {{ data_get($detalle->contenido, "preguntas.$key") === 'SI' ? 'checked' : '' }} 
+                                        class="peer sr-only">
+                                    <div class="px-8 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-400 font-black text-[10px] uppercase tracking-widest transition-all
+                                        peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 peer-checked:ring-4 peer-checked:ring-emerald-500/10 hover:border-slate-300">
+                                        SÍ
+                                    </div>
+                                </label>
+
+                                {{-- Botón NO --}}
+                                <label class="relative cursor-pointer flex-1 md:flex-none">
+                                    {{-- CORRECCIÓN AQUÍ: Usamos data_get para leer el valor anidado seguramente --}}
+                                    <input type="radio" name="contenido[preguntas][{{ $key }}]" value="NO" 
+                                        {{ data_get($detalle->contenido, "preguntas.$key") === 'NO' ? 'checked' : '' }} 
+                                        class="peer sr-only">
+                                    <div class="px-8 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-400 font-black text-[10px] uppercase tracking-widest transition-all
+                                        peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700 peer-checked:ring-4 peer-checked:ring-rose-500/10 hover:border-slate-300">
+                                        NO
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             {{-- SOPORTE--}}
-            <x-esp_6_soporte :detalle="$detalle" />
+            <div id="wrapper_soporte_externo">
+                <x-esp_6_soporte :detalle="$detalle" />
+            </div>
             
             {{-- COMENTARIOS Y EVIDENCIA FOTOGRAFICA --}}
             <x-esp_7_comentariosEvid :comentario="(object) ($detalle->contenido ?? [])" />
@@ -77,124 +151,91 @@
         </form>
     </div>
 </div>
-
 <script>
-    function toggleSihceAndDocs(val) {
-        const divDj = document.getElementById('div_firmo_dj');
-        const divConf = document.getElementById('div_firmo_confidencialidad');
-        const djSelect = document.getElementById('firmo_dj');
-        const confSelect = document.getElementById('firmo_confidencialidad');
-
-        if (val === 'SI') {
-            divDj.classList.remove('hidden');
-            divConf.classList.remove('hidden');
-        } else {
-            divDj.classList.add('hidden');
-            divConf.classList.add('hidden');
-            if(djSelect) djSelect.value = 'NO';
-            if(confSelect) confSelect.value = 'NO';
-        }
-    }
-
-    function toggleSeccionDni(tipoDoc) {
-        const seccion = document.getElementById('seccion_detalle_dni');
-        if (!seccion) return;
-        if (tipoDoc === 'DNI') {
-            seccion.classList.remove('hidden');
-        } else {
-            seccion.classList.add('hidden');
-        }
-    }
-
-    function selectDniType(tipo) {
-        const input = document.getElementById('tipo_dni_input');
-        const cardElectronico = document.getElementById('card_electronico');
-        const cardAzul = document.getElementById('card_azul');
-        const bloqueOpciones = document.getElementById('bloque_opciones_dni');
-        const bloqueVersion = document.getElementById('bloque_version_dnie');
-        const bloqueFirma = document.getElementById('bloque_firma_digital');
-
-        input.value = tipo;
-        bloqueOpciones.classList.remove('hidden');
-
-        if (tipo === 'ELECTRONICO') {
-            cardElectronico.classList.add('border-teal-600', 'bg-teal-50');
-            cardElectronico.classList.remove('border-slate-200', 'bg-white');
-            cardAzul.classList.remove('border-teal-600', 'bg-teal-50');
-            cardAzul.classList.add('border-slate-200', 'bg-white');
-            bloqueVersion.classList.remove('hidden');
-            bloqueFirma.classList.remove('hidden');
-        } else {
-            cardAzul.classList.add('border-teal-600', 'bg-teal-50');
-            cardAzul.classList.remove('border-slate-200', 'bg-white');
-            cardElectronico.classList.remove('border-teal-600', 'bg-teal-50');
-            cardElectronico.classList.add('border-slate-200', 'bg-white');
-            bloqueVersion.classList.add('hidden');
-            bloqueFirma.classList.add('hidden');
-        }
-    }
-
-    function toggleEntidadCapacitadora(val) {
-        const wrapper = document.getElementById('wrapper_entidad_capacitadora');
-        val === 'SI' ? wrapper.classList.remove('hidden') : wrapper.classList.add('hidden');
-    }
-
-    function checkNationality(tipoDoc) {
-        const dniInput = document.getElementById('tipo_dni_input');
-        if (dniInput && dniInput.value) {
-            selectDniType(dniInput.value);
-        }
-    }
-
-    function previewImage(event) {
-        const input = event.target;
-        const preview = document.getElementById('img-preview');
-        const icon = document.getElementById('upload-icon');
-        const fileName = document.getElementById('file-name-display');
-        
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                icon.classList.add('hidden');
-                fileName.innerText = "NUEVA: " + input.files[0].name.substring(0, 15).toUpperCase() + "...";
-            }
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
+    // Inicializar iconos al cargar
     document.addEventListener('DOMContentLoaded', function() {
-        const selectCapacitacion = document.getElementById('recibio_capacitacion');
-        if (selectCapacitacion) toggleEntidadCapacitadora(selectCapacitacion.value);
-
-        const selectSihce = document.getElementById('cuenta_sihce');
-        if (selectSihce) toggleSihceAndDocs(selectSihce.value);
-
-        const dniVal = document.getElementById('tipo_dni_input').value;
-        if(dniVal) selectDniType(dniVal);
-        
-        const selectTipoDoc = document.querySelector('select[name="contenido[rrhh][tipo_doc]"]');
-        if (selectTipoDoc) {
-            toggleSeccionDni(selectTipoDoc.value);
-            selectTipoDoc.addEventListener('change', function() {
-                toggleSeccionDni(this.value);
-            });
-        }
-        
+        // Inicializar iconos
         if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // --- LÓGICA EXTERNA PARA CONTROLAR COMPONENTES ---
+        // Buscamos el select que está DENTRO del componente 2.1
+        // Como usas prefix="profesional", el ID generado automáticamente es "sihce_profesional"
+        const selectSihceComponente = document.getElementById('sihce_profesional');
+        
+        // Referencias a los bloques que acabamos de crear en el Paso 1
+        const bloqueCap = document.getElementById('wrapper_capacitacion_externo');
+        const bloqueSop = document.getElementById('wrapper_soporte_externo');
+
+        // Función que aplica la visibilidad
+        function aplicarReglasExternas() {
+            if (!selectSihceComponente) return;
+            
+            const valor = selectSihceComponente.value;
+            
+            if (valor === 'NO') {
+                if(bloqueCap) bloqueCap.classList.add('hidden');
+                if(bloqueSop) bloqueSop.classList.add('hidden');
+            } else {
+                if(bloqueCap) bloqueCap.classList.remove('hidden');
+                if(bloqueSop) bloqueSop.classList.remove('hidden');
+            }
+        }
+
+        if (selectSihceComponente) {
+            // 1. Ejecutar al cargar la página (para respetar lo guardado en BD)
+            aplicarReglasExternas();
+
+            // 2. Agregar un "oído" (listener) al evento change
+            selectSihceComponente.addEventListener('change', aplicarReglasExternas);
+        }
     });
 
-    document.getElementById('form-monitoreo-triaje').onsubmit = function() {
+    // Efecto de carga al enviar el formulario (Bloquea el botón)
+    document.getElementById('form-monitoreo-farmacia-esp').onsubmit = function() {
+        const form = this;
         const btn = document.getElementById('btn-submit-action');
         const icon = document.getElementById('icon-save-loader');
+        const wrapper = document.getElementById('wrapper_capacitacion_externo');
+        if (wrapper) {
+            // A. Obtener valor de "Recibió Capacitación" (SI/NO)
+            // Buscamos los radios dentro del componente y vemos cuál está marcado
+            const radioSi = wrapper.querySelector('input[type="radio"][value="SI"]');
+            const radioNo = wrapper.querySelector('input[type="radio"][value="NO"]');
+            
+            let valorCap = '';
+            if (radioSi && radioSi.checked) valorCap = 'SI';
+            if (radioNo && radioNo.checked) valorCap = 'NO';
+
+            // B. Obtener valor de "Institución"
+            const selectInst = wrapper.querySelector('select');
+            const valorInst = selectInst ? selectInst.value : '';
+
+            // C. Crear inputs ocultos para enviarlos al controlador
+            // Usamos los nombres que tu controlador espera: capacitacion[recibieron_cap]
+            
+            const inputCap = document.createElement('input');
+            inputCap.type = 'hidden';
+            inputCap.name = 'capacitacion[recibieron_cap]';
+            inputCap.value = valorCap;
+            form.appendChild(inputCap);
+
+            const inputInst = document.createElement('input');
+            inputInst.type = 'hidden';
+            inputInst.name = 'capacitacion[institucion_cap]';
+            inputInst.value = valorInst;
+            form.appendChild(inputInst);
+        }
+        if(btn) {
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
         
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-        
-        icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+        if(icon) {
+            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+        }
         
         return true;
     };
+
 </script>
 @endsection

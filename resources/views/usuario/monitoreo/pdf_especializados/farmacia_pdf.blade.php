@@ -4,68 +4,183 @@
     <meta charset="UTF-8">
     <title>Farmacia Especializada - Acta {{ $monitoreo->numero_acta }}</title>
     <style>
-        /* AJUSTAMOS EL MARGEN INFERIOR A 2CM PARA QUE QUEPA EL PIE DE PÁGINA */
-        @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }
-        body { font-family: 'Helvetica', sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 16px; text-transform: uppercase; color: #4f46e5; font-weight: bold; }
-        .section-title { background-color: #f1f5f9; padding: 6px 10px; font-weight: bold; text-transform: uppercase; border-left: 4px solid #4f46e5; margin-top: 15px; margin-bottom: 5px; font-size: 10px; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 5px; }
-        th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: middle; word-wrap: break-word; }
-        th { background-color: #f8fafc; color: #475569; font-size: 8.5px; text-transform: uppercase; }
-        .bg-label { background-color: #f8fafc; font-weight: bold; width: 30%;  text-transform: uppercase;}
+        /* MARGENES DE PÁGINA */
+        @page { margin: 1cm 1.5cm 2cm 1.5cm; }
+        
+        /* TIPOGRAFÍA GLOBAL */
+        body { 
+            font-family: 'Helvetica', sans-serif; 
+            font-size: 10px; 
+            color: #334155; /* Slate 700 */
+            line-height: 1.5; 
+        }
+
+        /* ENCABEZADO */
+        .header { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            border-bottom: 2px solid #0f766e; /* Teal 700 to match web view */
+            padding-bottom: 15px; 
+        }
+        .header h1 { 
+            font-family: 'Helvetica', sans-serif !important;
+            font-weight: bold !important; /* Cambiado de 800 a bold */
+            margin: 0 0 5px 0; 
+            font-size: 18px; 
+            text-transform: uppercase; 
+            color: #0f766e !important; /* Color Teal forzado */
+            letter-spacing: -0.5px;
+        }
+        .header-meta {
+            font-family: 'Helvetica', sans-serif !important;
+            font-weight: bold !important;
+            color: #64748b !important; /* Color Teal forzado (antes era gris) */
+            font-size: 9px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* TÍTULOS DE SECCIÓN */
+        .section-title { 
+            background-color: #f0fdfa; /* Teal 50 */
+            color: #0f766e; /* Teal 700 */
+            padding: 8px 12px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            border-left: 4px solid #14b8a6; /* Teal 500 */
+            border-radius: 4px;
+            margin-top: 20px; 
+            margin-bottom: 10px; 
+            font-size: 11px; 
+            letter-spacing: 0.5px;
+        }
+
+        /* TABLAS */
+        table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0; 
+            margin-bottom: 10px; 
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        th, td { 
+            padding: 8px 10px; 
+            text-align: left; 
+            vertical-align: middle; 
+            word-wrap: break-word;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+        /* Eliminar bordes duplicados */
+        tr:last-child td { border-bottom: none; }
+        th:last-child, td:last-child { border-right: none; }
+
+        th { 
+            background-color: #f1f5f9; /* Slate 100 */
+            color: #475569; /* Slate 600 */
+            font-size: 9px; 
+            font-weight: 700;
+            text-transform: uppercase; 
+        }
+
+        /* ESTILOS PARA CELDAS TIPO ETIQUETA (Izquierda) */
+        .bg-label { 
+            background-color: #f8fafc; /* Slate 50 */
+            color: #64748b;
+            font-weight: 700; 
+            width: 35%;  
+            text-transform: uppercase;
+            font-size: 9px;
+        }
+
         .uppercase { text-transform: uppercase; }
         .text-center { text-align: center; }
 
-        /* Evidencia fotográfica: Contenedor AJUSTABLE */
+        /* Evidencia fotográfica */
         .foto-container { 
-            margin: 15px auto;  /* 'auto' a los lados CENTRA el cuadro en la página */
-            padding: 10px; 
-            border: 1px solid #e2e8f0; 
-            background-color: #ffffff; 
+            margin: 20px auto; 
+            padding: 8px; 
+            border: 1px solid #cbd5e1; 
+            background-color: #fff; 
+            border-radius: 8px;
             text-align: center; 
-            display: table; /* Hace que el div se comporte como una tabla (se encoge al contenido) */
-            width: auto;    /* Le dice que no use el 100%, sino solo lo necesario */
+            display: table;
+            width: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        /* Estilo para la IMAGEN ÚNICA (Ajustado) */
         .foto { 
             display: block; 
             margin: 0 auto; 
-            max-width: 100%;      /* No desbordar el ancho */
-            max-height: 300px;    /* <--- HE REDUCIDO ESTO (Antes 500px, ahora 350px) */
-            width: auto;          /* Mantiene la proporción correcta */
-            height: auto;         /* Mantiene la proporción correcta */
-            object-fit: contain;  /* Asegura que se vea completa dentro del recuadro */
-            background-color: #ffffff; 
-            border: 1px solid #e2e8f0; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            max-width: 100%;      
+            max-height: 300px;
+            border-radius: 4px;
         }
 
-        /* Evidencia fotográfica: múltiples imágenes en grid con recuadro uniforme */
-        .foto-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin: 10px 0; padding: 10px; border: 2px solid #4f46e5; background-color: #f9fafc; }
-        .foto-grid-item { width: calc(50% - 6px); }
-        .foto-grid-item img { width: 100%; height: 150px; object-fit: contain; background-color: #ffffff; border: 1px solid #e2e8f0; display: block; }
-        .materiales-list { padding: 8px; }
-        .materiales-item { display: inline-block; padding: 3px 8px; background-color: #e0e7ff; border-radius: 4px; margin: 2px; font-size: 9px; }
-        /* Estilos para recuadros de firma */
-        .firma-section { margin-top: 15px; }
-        .firma-container { width: 50%; display: table; table-layout: fixed; margin: 0 25%;}
-        .firma-box { display: table-cell; width: 50%; text-align: center; padding: 0 28px; vertical-align: top; border: 1px solid #e2e8f0; border-radius: 14px; }
-        .firma-linea { border-bottom: 1px solid #000; height: 150px; margin-bottom: 8px; }
-        .firma-label { font-size: 10px; margin: 5px 0; }
-        .firma-nombre { font-weight: bold; text-transform: uppercase; font-size: 12px; }
-        .firma-fecha { font-size: 8px; margin-top: 3px; }
+        /* Grid de fotos */
+        .foto-grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: space-between; 
+            gap: 10px; 
+            margin: 15px 0; 
+            padding: 15px; 
+            border: 1px solid #cbd5e1; 
+            background-color: #f8fafc; 
+            border-radius: 12px;
+        }
+        
+        /* Materiales (Lists) */
+        .materiales-list { padding: 10px; }
+        .materiales-item { 
+            display: inline-block; 
+            padding: 4px 10px; 
+            background-color: #e0f2fe; /* Sky 100 */
+            color: #0369a1; /* Sky 700 */
+            border-radius: 12px; 
+            margin: 3px; 
+            font-size: 9px; 
+            font-weight: 600;
+            border: 1px solid #bae6fd;
+        }
 
-        /* Recuadro para indicar ausencia de evidencia fotográfica */
+        /* Firmas */
+        .firma-section { margin-top: 30px; page-break-inside: avoid; }
+        .firma-container { width: 60%; margin: 0 auto; }
+        .firma-box { 
+            text-align: center; 
+            padding: 0 35px; 
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+        .firma-linea { 
+            border-bottom: 1px solid #94a3b8; 
+            height: 120px; 
+            margin-bottom: 10px; 
+            width: 100%;
+        }
+        .firma-label { font-size: 9px; color: #64748b; margin: 2px 0; }
+        .firma-nombre { 
+            font-family: 'Helvetica', sans-serif !important;
+            font-weight: bold !important; /* Cambiado de 800 a bold */
+            text-transform: uppercase; 
+            font-size: 11px; 
+            color: #1e293b !important; /* Color Teal forzado (antes gris oscuro) */
+            margin-bottom: 2px;
+        }
+
+        /* Recuadro SIN EVIDENCIA */
         .no-evidence-box {
-            border: 2px dashed #cbd5e1; /* Borde gris discontinuo */
-            border-radius: 20px;        /* Bordes redondeados */
-            padding: 30px;              /* Espacio interno */
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;        
+            padding: 25px;              
             text-align: center;
-            color: #64748b;             /* Color de texto gris suave */
+            color: #94a3b8;             
             font-style: italic;
-            background-color: #f8fafc;  /* Fondo muy claro */
-            margin: 15px 0;
+            background-color: #f8fafc;  
+            margin: 20px 0;
+            font-size: 11px;
         }
         
     </style>
@@ -79,14 +194,13 @@
         // PREPARAMOS LOS DATOS DEL PROFESIONAL UNA SOLA VEZ
         // --------------------------------------------------------
         
-        // A. Obtener datos crudos
+        // A. Obtener datos crudos (NUEVA ESTRUCTURA)
         $rawTipoDoc = $modulo->contenido['profesional']['tipo_doc'] ?? '---';
         $rawNumDoc  = $modulo->contenido['profesional']['doc'] ?? '---';
         
-        // B. Aplicar lógica de recorte para C.E. (Quitar los 2 primeros caracteres)
-        $docFinal = $rawNumDoc; // Valor por defecto
+        $docFinal = $rawNumDoc; 
                
-        // C. Preparar Nombre Completo (También lo reutilizaremos)
+        // C. Preparar Nombre Completo
         $pNom = $modulo->contenido['profesional']['nombres'] ?? '';
         $pPat = $modulo->contenido['profesional']['apellido_paterno'] ?? '';
         $pMat = $modulo->contenido['profesional']['apellido_materno'] ?? '';
@@ -99,15 +213,15 @@
 
     <div class="header">
         <h1>Módulo 06: Farmacia </h1>
-        <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
+        <div class="header-meta">
             ACTA N° {{ str_pad($monitoreo->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $monitoreo->establecimiento->codigo }} - {{ strtoupper($monitoreo->establecimiento->nombre) }} | 
             FECHA: 
             @php
-                // 1. Buscamos la fecha específica del módulo
-                $fechaRaw = $modulo->contenido['fecha_monitoreo_medicina'] ?? null;
+                // 1. Buscamos la fecha específica del módulo (NUEVA ESTRUCTURA)
+                $fechaRaw = $modulo->contenido['fecha'] ?? null;
                 
-                // 2. Si existe, la formateamos. Si no, usamos la fecha general del acta
+                // 2. Si existe, la formateamos
                 if ($fechaRaw) {
                     echo \Carbon\Carbon::parse($fechaRaw)->format('d/m/Y');
                 } else {
@@ -121,17 +235,16 @@
     <table>
         <tr>
             <td class="bg-label">Cantidad</td>
-            <td>{{ $modulo->contenido['num_consultorios'] ?? '0' }}</td>
+            <td>{{ $modulo->contenido['detalle_consultorio']['num_ambientes'] ?? '0' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Consultorio Entrevistado</td>
-            <td class="uppercase">{{ $modulo->contenido['denominacion_consultorio'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['detalle_consultorio']['denominacion_ambiente'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Turno</td>
-            <td class="uppercase">{{ $modulo->contenido['turno'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['detalle_consultorio']['turno'] ?? '---' }}</td>
         </tr>
-        
     </table>
 
     <div class="section-title">{{ $n++ }}. Datos del profesional</div>
@@ -158,97 +271,65 @@
         </tr>
         <tr>
             <td class="bg-label">¿Utiliza SIHCE?</td>
-            <td class="uppercase">{{ $modulo->contenido['utiliza_sihce'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['profesional']['cuenta_sihce'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Profesion</td>
             <td class="uppercase">{{ $modulo->contenido['profesional']['cargo'] ?? '---' }}</td>
         </tr>
-        {{-- DOC ADMIN: Se muestra si SIHCE NO es 'NO' (o sea SI o vacío) --}}
-        @if(($modulo->contenido['utiliza_sihce'] ?? '') != 'NO')
+        @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
             <tr>
                 <td class="bg-label">¿Firmó Declaración Jurada?</td>
-                <td class="uppercase">{{ $modulo->contenido['firmo_dj'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['profesional']['firmo_dj'] ?? '---' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">¿Firmó Compromiso de Confidencialidad?</td>
-                <td class="uppercase">{{ $modulo->contenido['firmo_confidencialidad'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['profesional']['firmo_confidencialidad'] ?? '---' }}</td>
             </tr>
         @endif
     </table>
     
     {{-- SECCIÓN 3: DNI Y FIRMA (CONDICIONAL) --}}
-    {{-- Solo se muestra si Tipo Doc ES "DNI" --}}
     @if(($modulo->contenido['profesional']['tipo_doc'] ?? '') == 'DNI')
     <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
     <table>
         <tr>
             <td class="bg-label">Tipo de DNI</td>
-            <td class="uppercase">{{ $modulo->contenido['tipo_dni_fisico'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['detalle_dni']['tipo_dni_fisico'] ?? '---' }}</td>
         </tr>
-        {{-- Si es AZUL, ocultamos estos campos --}}
-        @if(($modulo->contenido['tipo_dni_fisico'] ?? '') != 'AZUL')
+        @if(($modulo->contenido['detalle_dni']['tipo_dni_fisico'] ?? '') != 'AZUL')
             <tr>
                 <td class="bg-label">Versión DNIe</td>
-                <td class="uppercase">{{ $modulo->contenido['dnie_version'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['detalle_dni']['dnie_version'] ?? '---' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">¿Firma digitalmente en SIHCE?</td>
-                <td class="uppercase">{{ $modulo->contenido['dnie_firma_sihce'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['detalle_dni']['dnie_firma_sihce'] ?? '---' }}</td>
             </tr>
         @endif
         <tr>
             <td class="bg-label">Observaciones</td>
-            <td class="uppercase">{{ $modulo->contenido['dni_observacion'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['detalle_dni']['dni_observacion'] ?? '---' }}</td>
         </tr>
     </table>
     @endif
 
     {{-- SECCIÓN 4: CAPACITACIÓN (CONDICIONAL SIHCE) --}}
-    @if(($modulo->contenido['utiliza_sihce'] ?? '') != 'NO')
+    @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
     <div class="section-title">{{ $n++ }}. Detalles de Capacitación</div>
     <table>
         <tr>
             <td class="bg-label">¿Recibió Capacitación?</td>
-            <td>{{ $modulo->contenido['recibio_capacitacion'] ?? '---' }}</td>
+            <td>{{ $modulo->contenido['detalle_capacitacion']['recibio_capacitacion'] ?? '---' }}</td>
         </tr>
-        {{-- Sub-condición: Solo mostrar institución si SÍ recibió capacitación --}}
-        @if(($modulo->contenido['recibio_capacitacion'] ?? '') != 'NO')
+        @if(($modulo->contenido['detalle_capacitacion']['recibio_capacitacion'] ?? '') != 'NO')
             <tr>
                 <td class="bg-label">¿De parte de quién?</td>
-                <td>{{ $modulo->contenido['inst_capacitacion'] ?? '---' }}</td>
+                <td>{{ $modulo->contenido['detalle_capacitacion']['inst_capacitacion'] ?? '---' }}</td>
             </tr>
         @endif
     </table>
     @endif
-
-    <div class="section-title">{{ $n++ }}. Materiales</div>
-    <div class="materiales-list">
-        @php
-            $materiales = $modulo->contenido['materiales'] ?? [];
-            $materialesMapping = [
-                'historia_clinica' => 'Historia Clínica',
-                'fua' => 'FUA',
-                'receta' => 'Receta',
-                'orden_laboratorio' => 'Orden de Laboratorio',
-                'hoja_referencia' => 'Hoja de Referencia',
-                'otros' => 'Otros'
-            ];
-            $materialesSeleccionados = [];
-            foreach ($materialesMapping as $key => $label) {
-                if (isset($materiales[$key]) && $materiales[$key]) {
-                    $materialesSeleccionados[] = $label;
-                }
-            }
-        @endphp
-        @if(count($materialesSeleccionados) > 0)
-            @foreach($materialesSeleccionados as $material)
-                <span class="materiales-item">{{ $material }}</span>
-            @endforeach
-        @else
-            <span style="color: #94a3b8; font-style: italic;">SIN MATERIALES REGISTRADOS</span>
-        @endif
-    </div>
 
     <div class="section-title">{{ $n++ }}. Equipamiento del Consultorio</div>
     @php
@@ -284,25 +365,65 @@
     @else
         <div style="color: #94a3b8; font-style: italic; padding: 8px;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
+    
+    {{-- SECCIÓN 5: GESTIÓN DE STOCK (NUEVO) --}}
+    <div class="section-title">{{ $n++ }}. Gestión de Stock</div>
+    <table>
+        <thead>
+            <tr>
+                <th width="80%">Pregunta</th>
+                <th width="20%">Respuesta</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $preguntasLabels = [
+                    'sis_gestion'       => '¿Cuenta con sistema de gestión para el control de inventario?',
+                    'stock_actual'      => '¿El stock físico coincide con el reporte del sistema?',
+                    'fua_sismed'        => '¿Realiza la digitación oportuna en el SISMED?',
+                    'inventario_anual'  => '¿Ha realizado el inventario anual de medicamentos e insumos?'
+                ];
+                $preguntasData = $modulo->contenido['preguntas'] ?? [];
+            @endphp
+            @foreach($preguntasLabels as $key => $label)
+            @php
+                $valor = $preguntasData[$key] ?? '---';
+                if ($valor === 'SI') {
+                    $color = '#16a34a'; // Verde
+                } elseif ($valor === '---' || empty($valor)) {
+                    $color = '#64748b'; // Gris (Neutro para vacíos)
+                } else {
+                    $color = '#dc2626'; // Rojo (Para NO y otros)
+                }
+            @endphp
+            <tr>
+                <td class="uppercase">{{ $label }}</td>
+                <td class="uppercase text-center bg-label" style="color: {{ $color }}; font-weight: bold;">
+                    {{ $valor }}
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 
-    {{-- SECCIÓN 7: SOPORTE (CONDICIONAL SIHCE) --}}
-    @if(($modulo->contenido['utiliza_sihce'] ?? '') != 'NO')
+    {{-- SECCIÓN 6: SOPORTE (CONDICIONAL SIHCE) --}}
+    @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
     <div class="section-title">{{ $n++ }}. Soporte</div>
     <table>
         <tr>
             <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
-            <td class="uppercase">{{ $modulo->contenido['comunica_a'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['dificultades']['comunica'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">MEDIO QUE UTILIZA</td>
-            <td>{{ $modulo->contenido['medio_soporte'] ?? '---' }}</td>
+            <td>{{ $modulo->contenido['dificultades']['medio'] ?? '---' }}</td>
         </tr>
     </table>
     @endif
 
     <div class="section-title">{{ $n++ }}. Comentarios</div>
     <div style="border: 1px solid #e2e8f0; padding: 10px; min-height: 40px;" class="uppercase">
-        {{ $modulo->contenido['comentarios'] ?? 'SIN COMENTARIOS.' }}
+        {{ $modulo->contenido['comentario_esp'] ?? 'SIN COMENTARIOS.' }}
     </div>
 
     {{-- 8. EVIDENCIA FOTOGRÁFICA --}}
@@ -339,13 +460,13 @@
         @endif
 
     @else
-        {{-- ESTA ES LA PARTE QUE AGREGA EL RECUADRO "SIN EVIDENCIA" --}}
+        {{-- RECUADRO "SIN EVIDENCIA" --}}
         <div class="no-evidence-box">
             No se adjuntó evidencia fotográfica.
         </div>
     @endif
 
-    {{-- 10. FIRMAS (Ahora están fuera del IF para que siempre salgan) --}}
+    {{-- 10. FIRMAS --}}
     <div class="firma-section">
         <div class="section-title">{{ $n++ }}. Firma</div>
         <div class="firma-container">
