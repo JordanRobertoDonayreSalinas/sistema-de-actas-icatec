@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\AsistentaSocialEspecializadoController;
+use App\Http\Controllers\ASocialESPController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\CitaESPController;
 use App\Http\Controllers\CitaESPpdfController;
@@ -186,9 +187,9 @@ Route::middleware(['auth'])->group(function () {
                 // 4.6 Servicio Social
                 Route::prefix('servicio-social')->name('sm_servicio_social.')->group(function () {
                     // TODO: Crear SmServicioSocialController (Usando GestionAdmin temporalmente)
-                    Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [ASocialESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [ASocialESPController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [ASocialESPController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.7 Terapias (Lenguaje / Ocupacional)
