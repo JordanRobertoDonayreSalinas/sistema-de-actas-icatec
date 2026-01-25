@@ -207,7 +207,7 @@
             <td>{{ $rrhh['telefono'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Cargo</td>
+            <td class="bg-label">Profesion</td>
             <td class="uppercase">{{ $rrhh['cargo'] ?? '---' }}</td>
         </tr>
     </table>
@@ -258,7 +258,7 @@
 
     {{-- 5. CAPACITACIÓN --}}
     @if(($rrhh['cuenta_sihce'] ?? '') != 'NO')
-    <div class="section-title">{{ $n++ }}. CAPACITACIÓN</div>
+    <div class="section-title">{{ $n++ }}. DETALLES DE CAPACITACIÓN</div>
     <table>
         <tr>
             <td class="bg-label">¿Recibió Capacitación?</td>
