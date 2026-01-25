@@ -157,7 +157,7 @@
     @endphp
 
     <div class="header">
-        <h1>Módulo 04: Toma de Muestra</h1>
+        <h1>Módulo 05: Toma de Muestra</h1>
         <div class="header-meta">
             ACTA N° {{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
@@ -173,7 +173,7 @@
             <td>{{ $datos['num_ambientes'] ?? '0' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Denominación Ambiente</td>
+            <td class="bg-label">Consultorio Entrevistado</td>
             <td class="uppercase">{{ $datos['denominacion_ambiente'] ?? '---' }}</td>
         </tr>
         <tr>
@@ -197,10 +197,7 @@
             <td class="bg-label">N° Documento</td>
             <td>{{ $rawNumDoc }}</td>
         </tr>
-        <tr>
-            <td class="bg-label">Cargo</td>
-            <td class="uppercase">{{ $rrhh['cargo'] ?? '---' }}</td>
-        </tr>
+        
         <tr>
             <td class="bg-label">Correo</td>
             <td>{{ $rrhh['email'] ?? '---' }}</td>
@@ -208,6 +205,10 @@
         <tr>
             <td class="bg-label">Celular</td>
             <td>{{ $rrhh['telefono'] ?? '---' }}</td>
+        </tr>
+        <tr>
+            <td class="bg-label">Cargo</td>
+            <td class="uppercase">{{ $rrhh['cargo'] ?? '---' }}</td>
         </tr>
     </table>
 
@@ -301,7 +302,7 @@
                     <td class="uppercase">
                         {{ $eq['cod_patrimonial'] ?? ($eq['nro_serie'] ?? '---') }}
                     </td>
-                    <td class="uppercase">{{ $eq['observaciones'] ?? '' }}</td>
+                    <td class="uppercase">{{ $eq['observacion'] ?? '' }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -363,7 +364,7 @@
             <div class="firma-linea"></div>
             <div class="firma-nombre">{{ strtoupper($profNombreCompleto) }}</div>
             <div class="firma-label">{{ $rawTipoDoc }}: {{ $rawNumDoc }}</div>
-            <div class="firma-label">FIRMA DEL PROFESIONAL</div>
+            <div class="firma-label">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
         </div>
     </div>
 </body>

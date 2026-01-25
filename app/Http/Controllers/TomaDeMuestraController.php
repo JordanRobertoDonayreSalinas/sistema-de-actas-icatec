@@ -35,7 +35,7 @@ class TomaDeMuestraController extends Controller
         }
 
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                   ->where('modulo_nombre', 'toma_muestra_esp')
+                                   ->where('modulo_nombre', 'toma_muestra')
                                    ->first();
 
         $detalle = $registro ?? new MonitoreoModulos();
@@ -179,7 +179,7 @@ class TomaDeMuestraController extends Controller
 
             // 8. FOTO
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                              ->where('modulo_nombre', 'toma_muestra_esp')
+                                              ->where('modulo_nombre', 'toma_muestra')
                                               ->first();
             
             $rutaFoto = null;
@@ -218,7 +218,7 @@ class TomaDeMuestraController extends Controller
 
             $registro = MonitoreoModulos::firstOrNew([
                 'cabecera_monitoreo_id' => $id,
-                'modulo_nombre' => 'toma_muestra_esp'
+                'modulo_nombre' => 'toma_muestra'
             ]);
 
             $registro->contenido = $jsonToSave;

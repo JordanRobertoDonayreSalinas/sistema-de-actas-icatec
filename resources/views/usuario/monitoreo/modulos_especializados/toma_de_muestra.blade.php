@@ -24,7 +24,7 @@
         </div>
 
         {{-- FORMULARIO PRINCIPAL --}}
-        <form action="{{ route('usuario.monitoreo.toma_muestra_esp.store', $acta->id) }}" 
+        <form action="{{ route('usuario.monitoreo.toma_muestra.store', $acta->id) }}" 
               method="POST" 
               enctype="multipart/form-data" 
               class="space-y-6" 

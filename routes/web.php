@@ -234,7 +234,7 @@ Route::middleware(['auth'])->group(function () {
             });
 
             // 5. Toma de Muestra (CSMC)
-            Route::prefix('modulo/toma-muestra-esp')->name('toma_muestra_esp.')->group(function () {
+            Route::prefix('modulo/toma-muestra')->name('toma_muestra.')->group(function () {
                 
                 Route::get('/{id}', [TomaDeMuestraController::class, 'index'])->name('index');
                 Route::post('/{id}', [TomaDeMuestraController::class, 'store'])->name('store');

@@ -102,7 +102,7 @@ class TomaDeMuestraPdfController extends Controller
         $size = 8;
         $color = array(0.58, 0.64, 0.72); 
 
-        $canvas->page_text(42, $h - 40, "SISTEMA DE ACTAS ICATEC", $font, $size, $color);
+        $canvas->page_text(42, $h - 40, "SISTEMA DE ACTAS", $font, $size, $color);
         $textPag = "PAG. {PAGE_NUM} / {PAGE_COUNT}";
         $widthPag = $fontMetrics->getTextWidth("PAG. 00 / 00", $font, $size); 
         $canvas->page_text($w - 42 - $widthPag, $h - 40, $textPag, $font, $size, $color);
