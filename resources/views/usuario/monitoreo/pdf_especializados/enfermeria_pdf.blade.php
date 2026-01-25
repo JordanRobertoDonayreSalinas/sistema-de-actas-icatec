@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte de Citas - CSMC</title>
+    <title>Reporte de Enfermeria - CSMC</title>
     <style>
         /* --- CONFIGURACIÓN GENERAL --- */
         body { 

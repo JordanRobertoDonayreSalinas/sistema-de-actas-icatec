@@ -3,13 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\CabeceraMonitoreo;
-use App\Models\MonitoreoModulos;
-use stdClass;
-use Carbon\Carbon;
 
-class CitaESPpdfController extends Controller
+class EnfermeriaESPpdfController extends Controller
 {
     public function generar($id)
     {
@@ -18,7 +13,7 @@ class CitaESPpdfController extends Controller
 
         // 2. Cargar el JSON guardado
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', 'citas_esp')
+                            ->where('modulo_nombre', 'enfermeria_esp')
                             ->first();
 
         // Obtener datos de forma segura
@@ -98,7 +93,7 @@ class CitaESPpdfController extends Controller
 
         // 4. Generar PDF
         // CORRECCIÓN: Pasamos 'prof' directamente en el array, eliminamos el ->with()
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.citas_pdf', [
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.enfermeria_pdf', [
             'acta'            => $acta,
             'dbCapacitacion'  => $dbCapacitacion,
             'dbInventario'    => $dbInventario,
@@ -113,6 +108,6 @@ class CitaESPpdfController extends Controller
         $pdf->setOption('isPhpEnabled', true);
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Reporte_Citas_' . $acta->id . '.pdf');
+        return $pdf->stream('Reporte_Enfermeria_' . $acta->id . '.pdf');
     }
 }
