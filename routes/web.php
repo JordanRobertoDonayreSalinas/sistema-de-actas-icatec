@@ -62,6 +62,9 @@ use App\Http\Controllers\TerapiaESPController;
 use App\Http\Controllers\TerapiaESPpdfController;
 use App\Http\Controllers\EnfermeriaESPController;
 use App\Http\Controllers\EnfermeriaESPpdfController;
+use App\Http\Controllers\TomaDeMuestraController;
+use App\Http\Controllers\TomaDeMuestraPdfController;
+
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -230,11 +233,13 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
-            // 5. Toma de Muestra (CSMC) - Reutiliza Laboratorio o crear TomaMuestraESP
-            Route::prefix('modulo/toma-muestra')->name('toma_muestra.')->group(function () {
-                Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
-                Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
+            // 5. Toma de Muestra (CSMC)
+            Route::prefix('modulo/toma-muestra-esp')->name('toma_muestra_esp.')->group(function () {
+                
+                Route::get('/{id}', [TomaDeMuestraController::class, 'index'])->name('index');
+                Route::post('/{id}', [TomaDeMuestraController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [TomaDeMuestraPdfController::class, 'generar'])->name('pdf');
+
             });
 
             // 6. Farmacia (CSMC)

@@ -10,31 +10,20 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class TriajeESPController extends Controller
+class TomaDeMuestraController extends Controller
 {
-    /**
-     * Helper para extraer la ruta de la foto de forma segura.
-     * Busca en la estructura nueva y en la antigua para evitar pérdidas de datos.
-     */
+    // Helper para recuperar la foto sin perderla al editar
     private function getFotoPath($contenidoDB)
     {
-        // 1. Intentar recuperar de la estructura NUEVA (anidada)
-        // data_get es un helper de Laravel que evita errores si las claves no existen
         $fotoNew = data_get($contenidoDB, 'comentarios_y_evidencias.foto_evidencia');
-        
         if (!empty($fotoNew)) {
-            // Si es array (formato nuevo), devolvemos el primer elemento. Si es string, el string.
             return is_array($fotoNew) ? ($fotoNew[0] ?? null) : $fotoNew;
         }
-
-        // 2. Intentar recuperar de la estructura ANTIGUA (raíz)
         $fotoOld = data_get($contenidoDB, 'foto_evidencia');
-        
         if (!empty($fotoOld)) {
             return is_array($fotoOld) ? ($fotoOld[0] ?? null) : $fotoOld;
         }
-
-        return null; // No hay foto
+        return null;
     }
 
     public function index($id)
@@ -42,24 +31,22 @@ class TriajeESPController extends Controller
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
         if ($acta->tipo_origen !== 'ESPECIALIZADA') {
-            return redirect()->route('usuario.monitoreo.modulos', $id)
-                ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)->with('error', 'Módulo incorrecto.');
         }
 
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                   ->where('modulo_nombre', 'triaje_esp')
+                                   ->where('modulo_nombre', 'toma_muestra_esp')
                                    ->first();
 
         $detalle = $registro ?? new MonitoreoModulos();
         
-        // Decodificar JSON de forma segura
         $contenidoDB = [];
         if ($registro && $registro->contenido) {
             $contenidoDB = is_string($registro->contenido) ? json_decode($registro->contenido, true) : $registro->contenido;
         }
         $contenidoDB = $contenidoDB ?? [];
 
-        // --- MAPEO DE DATOS PARA LA VISTA ---
+        // --- MAPEO DE DATOS ---
         $datosParaVista = [];
 
         // 1. Consultorio
@@ -69,7 +56,7 @@ class TriajeESPController extends Controller
         $datosParaVista['num_ambientes']         = $grupoDetalle['num_consultorios'] ?? '';
         $datosParaVista['denominacion_ambiente'] = $grupoDetalle['denominacion'] ?? '';
         
-        // 2. Profesional y Doc
+        // 2. Profesional
         $grupoRRHH = $contenidoDB['datos_del_profesional'] ?? ($contenidoDB['rrhh'] ?? []);
         $datosParaVista['rrhh'] = $grupoRRHH;
 
@@ -105,21 +92,16 @@ class TriajeESPController extends Controller
         // 8. Comentarios y Foto
         $grupoEvidencia = $contenidoDB['comentarios_y_evidencias'] ?? [];
         $comentarioTexto = $grupoEvidencia['comentarios'] ?? ($contenidoDB['comentario_esp'] ?? '');
-        
-        // RECUPERACIÓN SEGURA DE LA FOTO
         $fotoPath = $this->getFotoPath($contenidoDB);
 
-        // --- ASIGNACIÓN AL OBJETO PARA LA VISTA ---
+        // ASIGNACIONES
         $detalle->contenido = $datosParaVista;
-        
-        // Inyectamos propiedades directas para que los componentes las encuentren fácilmente
         $detalle->comentario_esp = $comentarioTexto;
         $detalle->foto_url_esp   = $fotoPath;
 
-        // Convertir equipos a objetos para compatibilidad con la vista
         $equiposFormateados = collect($datosParaVista['equipos'])->map(fn($item) => (object)$item);
 
-        return view('usuario.monitoreo.modulos_especializados.triaje', [
+        return view('usuario.monitoreo.modulos_especializados.toma_de_muestra', [
             'acta' => $acta,
             'detalle' => $detalle,
             'equipos' => $equiposFormateados
@@ -131,19 +113,17 @@ class TriajeESPController extends Controller
         try {
             DB::beginTransaction();
 
-            // Captura de datos básicos
             $raw = $request->input('contenido', []);
             $rawRRHH = $request->input('rrhh', []) ?: ($raw['rrhh'] ?? []);
             $rawEquipos = $request->input('equipos', []);
             $rawComentario = $request->input('comentario_esp') ?: ($raw['comentario_esp'] ?? '');
             
-            // Datos condicionales (Soporte)
             $inputComunica = $request->input('comunica_a') ?? ($raw['dificultades']['comunica'] ?? '');
             $inputMedio    = $request->input('medio_soporte') ?? ($raw['dificultades']['medio'] ?? '');
 
             $jsonToSave = [];
 
-            // SECCIÓN 1: DETALLES DEL CONSULTORIO
+            // 1. Consultorio
             $jsonToSave['detalle_del_consultorio'] = [
                 'fecha_monitoreo' => $raw['fecha'] ?? date('Y-m-d'),
                 'turno'           => $raw['turno'] ?? '',
@@ -151,7 +131,7 @@ class TriajeESPController extends Controller
                 'denominacion'    => mb_strtoupper($raw['denominacion_ambiente'] ?? '', 'UTF-8'),
             ];
 
-            // SECCIÓN 2: DATOS DEL PROFESIONAL
+            // 2. Profesional
             $jsonToSave['datos_del_profesional'] = [
                 'doc'              => $rawRRHH['doc'] ?? '',
                 'tipo_doc'         => $rawRRHH['tipo_doc'] ?? 'DNI',
@@ -163,14 +143,14 @@ class TriajeESPController extends Controller
                 'cargo'            => mb_strtoupper($rawRRHH['cargo'] ?? '', 'UTF-8'),
             ];
 
-            // SECCIÓN 3: DOCUMENTACIÓN
+            // 3. Documentación
             $jsonToSave['documentacion_administrativa'] = [
                 'utiliza_sihce'         => $rawRRHH['cuenta_sihce'] ?? 'NO',
                 'firmo_dj'              => $rawRRHH['firmo_dj'] ?? 'NO',
                 'firmo_confidencialidad'=> $rawRRHH['firmo_confidencialidad'] ?? 'NO',
             ];
 
-            // SECCIÓN 4: DNI
+            // 4. DNI
             $jsonToSave['detalle_de_dni_y_firma_digital'] = [
                 'tipo_dni'            => $raw['tipo_dni_fisico'] ?? ($rawRRHH['tipo_dni_fisico'] ?? ''),
                 'version_dnie'        => $raw['dnie_version'] ?? ($rawRRHH['dnie_version'] ?? ''),
@@ -178,56 +158,49 @@ class TriajeESPController extends Controller
                 'observaciones_dni'   => mb_strtoupper($raw['dni_observacion'] ?? ($rawRRHH['dni_observacion'] ?? ''), 'UTF-8'),
             ];
 
-            // SECCIÓN 5: CAPACITACIÓN
+            // 5. Capacitación
             $cap = $raw['capacitacion'] ?? [];
             $jsonToSave['detalles_de_capacitacion'] = [
                 'recibio_capacitacion' => $cap['recibieron_cap'] ?? '',
                 'inst_que_lo_capacito' => mb_strtoupper($cap['institucion_cap'] ?? '', 'UTF-8'),
             ];
 
-            // SECCIÓN 6: SOPORTE
+            // 6. Soporte
             $jsonToSave['soporte'] = [
                 'inst_a_quien_comunica' => mb_strtoupper($inputComunica, 'UTF-8'),
                 'medio_que_utiliza'     => mb_strtoupper($inputMedio, 'UTF-8'),
             ];
 
-            // SECCIÓN 7: EQUIPOS
+            // 7. Equipos
             $equiposLimpios = array_values(array_filter($rawEquipos, fn($e) => !empty($e['descripcion'])));
             $jsonToSave['equipos_de_computo'] = array_map(function($e) {
                 return array_map(fn($v) => is_string($v) ? mb_strtoupper($v, 'UTF-8') : $v, $e);
             }, $equiposLimpios);
 
-            // SECCIÓN 8: COMENTARIOS Y FOTOS (LÓGICA CRÍTICA)
-            
-            // 8.1. Buscar registro previo para obtener la foto actual
+            // 8. FOTO
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                              ->where('modulo_nombre', 'triaje_esp')
+                                              ->where('modulo_nombre', 'toma_muestra_esp')
                                               ->first();
             
             $rutaFoto = null;
             if ($registroPrevio) {
                 $prevJson = is_string($registroPrevio->contenido) ? json_decode($registroPrevio->contenido, true) : $registroPrevio->contenido;
-                // Usar el helper para encontrar la foto, sin importar dónde esté guardada
                 $rutaFoto = $this->getFotoPath($prevJson ?? []);
             }
 
-            // 8.2. Procesar nueva imagen si existe
             if ($request->hasFile('foto_esp_file')) {
-                // Si ya había una foto, la borramos para no acumular basura
                 if ($rutaFoto && Storage::disk('public')->exists($rutaFoto)) {
                     Storage::disk('public')->delete($rutaFoto);
                 }
-                // Guardamos la nueva foto
                 $rutaFoto = $request->file('foto_esp_file')->store('evidencias_monitoreo', 'public');
             }
 
-            // 8.3. Guardar en la estructura (Array simple)
             $jsonToSave['comentarios_y_evidencias'] = [
                 'comentarios'    => mb_strtoupper($rawComentario, 'UTF-8'),
-                'foto_evidencia' => $rutaFoto ? [$rutaFoto] : [] 
+                'foto_evidencia' => $rutaFoto ? [$rutaFoto] : []
             ];
 
-            // ACTUALIZACIÓN MAESTRO PROFESIONALES
+            // Update Maestro
             if (!empty($jsonToSave['datos_del_profesional']['doc'])) {
                 $p = $jsonToSave['datos_del_profesional'];
                 DB::table('mon_profesionales')->updateOrInsert(
@@ -243,10 +216,9 @@ class TriajeESPController extends Controller
                 );
             }
 
-            // GUARDADO FINAL EN BD
             $registro = MonitoreoModulos::firstOrNew([
                 'cabecera_monitoreo_id' => $id,
-                'modulo_nombre' => 'triaje_esp'
+                'modulo_nombre' => 'toma_muestra_esp'
             ]);
 
             $registro->contenido = $jsonToSave;
@@ -256,11 +228,11 @@ class TriajeESPController extends Controller
 
             return redirect()
                 ->route('usuario.monitoreo.modulos', $id)
-                ->with('success', 'Módulo Triaje guardado correctamente.');
+                ->with('success', 'Módulo Toma de Muestra guardado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error TriajeESP Store: " . $e->getMessage());
+            Log::error("Error TomaMuestra Store: " . $e->getMessage());
             return back()->with('error', 'Error: ' . $e->getMessage())->withInput();
         }
     }
