@@ -56,15 +56,8 @@ use App\Http\Controllers\FuaElectronicoPdfController;
 use App\Http\Controllers\MedicinaEspecializadoController;
 use App\Http\Controllers\UrgenciasController;
 use App\Http\Controllers\UrgenciasPdfController;
-use App\Http\Controllers\FarmaciaESPController;
-use App\Http\Controllers\FarmaciaESPpdfController;
-use App\Http\Controllers\TerapiaESPController;
-use App\Http\Controllers\TerapiaESPpdfController;
-use App\Http\Controllers\EnfermeriaESPController;
-use App\Http\Controllers\EnfermeriaESPpdfController;
-use App\Http\Controllers\TomaDeMuestraController;
-use App\Http\Controllers\TomaDeMuestraPdfController;
-
+use App\Http\Controllers\PsicologiaESPController;
+use App\Http\Controllers\PsicologiaESPpdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -160,7 +153,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.2 Psiquiatría
-                Route::prefix('psiquiatria')->name('sm_psiquiatria.')->group(function () {
+                Route::prefix('psiquiatria')->name('sm_psiquiatria.')->group(function() {
                     // TODO: Crear SmPsiquiatriaController (Usando ConsultaMedicina temporalmente)
                     Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
                     Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
@@ -168,7 +161,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.3 Medicina Familiar y Comunitaria
-                Route::prefix('medicina-familiar')->name('sm_med_familiar.')->group(function () {
+                Route::prefix('medicina-familiar')->name('sm_med_familiar.')->group(function() {
                     // TODO: Crear SmMedFamiliarController (Usando ConsultaMedicina temporalmente)
                     Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
                     Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
@@ -176,7 +169,7 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.4 Psicología
-                Route::prefix('psicologia')->name('sm_psicologia.')->group(function () {
+                Route::prefix('psicologia')->name('sm_psicologia.')->group(function() {
                     // Usamos el controlador de Psicología existente
                     Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
                     Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
@@ -393,6 +386,20 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
+
+            // Módulo Especializado: Farmacia CSMC
+            Route::prefix('modulo/farmacia-especializada')->name('farmacia_esp.')->group(function () {
+                Route::get('/{id}', [FarmaciaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [FarmaciaESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [FarmaciaESPpdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo Especializado: Terapia CSMC
+            Route::prefix('modulo/terapia')->name('terapia.')->group(function () {
+                Route::get('/{id}', [TerapiaESPController::class, 'index'])->name('index');
+                Route::post('/{id}', [TerapiaESPController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [TerapiaESPpdfController::class, 'generar'])->name('pdf');
+            });
         });
     });
 
