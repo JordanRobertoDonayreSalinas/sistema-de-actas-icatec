@@ -15,7 +15,7 @@
                         <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta:
                             #{{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">04.1 MEDICINA GENERAL</h2>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">04.6 SERVICIO SOCIAL</h2>
                     <p class="text-slate-500 font-bold uppercase text-xs mt-1">
                         <i data-lucide="clipboard-pulse" class="inline-block w-4 h-4 mr-1 text-teal-500"></i>
                         {{ $acta->establecimiento->nombre }}
@@ -28,7 +28,7 @@
             </div>
 
             {{-- FORMULARIO --}}
-            <form id="formFicha" action="{{ route('usuario.monitoreo.sm_medicina_general.store', $acta->id) }}"
+            <form id="formFicha" action="{{ route('usuario.monitoreo.sm_servicio_social.store', $acta->id) }}"
                 method="POST" enctype="multipart/form-data" onsubmit="sincronizarDatos(event)">
                 @csrf
 
@@ -128,53 +128,6 @@
                                                 </label>
                                             </div>
                                         </div>
-
-                                        {{-- 3. RECETA --}}
-                                        <div
-                                            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow hover:border-teal-100">
-                                            <span
-                                                class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">Receta</span>
-                                            <div class="space-y-3">
-                                                <label class="flex items-center gap-3 cursor-pointer group">
-                                                    <input type="radio" value="SIHCE" x-model="entidad.receta"
-                                                        style="accent-color: #0d9488;"
-                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
-                                                    <span
-                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">SIHCE</span>
-                                                </label>
-                                                <label class="flex items-center gap-3 cursor-pointer group">
-                                                    <input type="radio" value="MANUAL" x-model="entidad.receta"
-                                                        style="accent-color: #0d9488;"
-                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
-                                                    <span
-                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">Manual</span>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        {{-- 4. ORDEN LABORATORIO --}}
-                                        <div
-                                            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:shadow-md transition-shadow hover:border-teal-100">
-                                            <span
-                                                class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">Orden
-                                                Laboratorio</span>
-                                            <div class="space-y-3">
-                                                <label class="flex items-center gap-3 cursor-pointer group">
-                                                    <input type="radio" value="SIHCE" x-model="entidad.orden_lab"
-                                                        style="accent-color: #0d9488;"
-                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
-                                                    <span
-                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">SIHCE</span>
-                                                </label>
-                                                <label class="flex items-center gap-3 cursor-pointer group">
-                                                    <input type="radio" value="MANUAL" x-model="entidad.orden_lab"
-                                                        style="accent-color: #0d9488;"
-                                                        class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-slate-300 bg-white">
-                                                    <span
-                                                        class="text-xs font-bold text-slate-600 group-hover:text-teal-600 transition-colors uppercase">Manual</span>
-                                                </label>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -187,7 +140,7 @@
                             return (object) $item;
                         });
                     @endphp
-                    <x-esp_5_equipos :equipos="$equiposComoObjetos" modulo="sm_medicina_general" />
+                    <x-esp_5_equipos :equipos="$equiposComoObjetos" modulo="sm_servicio_social" />
 
                     {{-- 7. SOPORTE (SE OCULTA SI SIHCE = NO) --}}
                     {{-- IMPORTANTE: Se agregó este wrapper para poder ocultarlo con JS --}}
@@ -221,7 +174,7 @@
                             <div class="text-left">
                                 <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
                                 <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">
-                                    Sincronizar Módulo Salud Mental - Medicina General</p>
+                                    Sincronizar Módulo Salud Mental - Servicio Social</p>
                             </div>
                         </div>
                         <div
