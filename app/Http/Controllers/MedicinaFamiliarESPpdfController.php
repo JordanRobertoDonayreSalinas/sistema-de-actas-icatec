@@ -27,7 +27,17 @@ class MedicinaFamiliarESPpdfController extends Controller
         
         // 3. Procesar imágenes (Convertir a Base64)
         $imagenesData = [];
-        $fotos = $modulo->contenido['foto_evidencia'] ?? [];
+        
+        // --- CORRECCIÓN AQUÍ: BUSCAR EN ESTRUCTURA NUEVA PRIMERO ---
+        // 1. Intentamos leer de la nueva ubicación
+        $fotos = $modulo->contenido['comentarios_y_evidencias']['foto_evidencia'] ?? null;
+
+        // 2. Si está vacío, intentamos leer de la ubicación antigua (compatibilidad)
+        if (empty($fotos)) {
+            $fotos = $modulo->contenido['foto_evidencia'] ?? [];
+        }
+
+        // Aseguramos que sea un array
         if (is_string($fotos)) $fotos = [$fotos];
 
         foreach ($fotos as $path) {
@@ -37,14 +47,17 @@ class MedicinaFamiliarESPpdfController extends Controller
                 // Obtenemos la ruta absoluta del archivo en el servidor
                 $rutaAbsoluta = storage_path("app/public/{$path}");
                 
-                // Obtenemos el tipo de archivo (jpg, png, etc.)
-                $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
-                
-                // Leemos el contenido del archivo y lo convertimos a Base64
-                $data = file_get_contents($rutaAbsoluta);
-                $base64 = 'data:image/' . $extension . ';base64,' . base64_encode($data);
-                
-                $imagenesData[] = $base64;
+                // Validación extra: asegurarse que el archivo físico existe
+                if (file_exists($rutaAbsoluta)) {
+                    // Obtenemos el tipo de archivo (jpg, png, etc.)
+                    $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
+                    
+                    // Leemos el contenido del archivo y lo convertimos a Base64
+                    $data = file_get_contents($rutaAbsoluta);
+                    $base64 = 'data:image/' . $extension . ';base64,' . base64_encode($data);
+                    
+                    $imagenesData[] = $base64;
+                }
             }
         }
 
