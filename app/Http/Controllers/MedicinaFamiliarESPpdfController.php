@@ -10,19 +10,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-class PsicologiaESPpdfController extends Controller
+class MedicinaFamiliarESPpdfController extends Controller
 {
     /**
-     * Genera el PDF del módulo "psicologia Especializada".
+     * Genera el PDF del módulo "Medicina Familiar Especializada".
      */
     public function generar($id)
     {
         // 1. Obtener datos de la cabecera (Establecimiento, Equipo, Usuario)
         $monitoreo = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'user'])->findOrFail($id);
 
-        // 2. Obtener los datos guardados del módulo específico ('sm_psicologia')
+        // 2. Obtener los datos guardados del módulo específico ('sm_med_familiar')
         $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                  ->where('modulo_nombre', 'sm_psicologia')
+                                  ->where('modulo_nombre', 'sm_med_familiar')
                                   ->firstOrFail();
         
         // 3. Procesar imágenes (Convertir a Base64)
@@ -50,7 +50,7 @@ class PsicologiaESPpdfController extends Controller
 
         // 4. Generar PDF
         $usuarioLogeado = Auth::user();
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.psicologia_pdf', compact('monitoreo', 'modulo', 'imagenesData', 'usuarioLogeado'));
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.medicina_familiar_pdf', compact('monitoreo', 'modulo', 'imagenesData', 'usuarioLogeado'));
         
         // Configuramos el papel
         $pdf->setPaper('a4', 'portrait');
@@ -91,6 +91,6 @@ class PsicologiaESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_psicologia_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("CSMC_sm_med_familiar_ESP_Acta_{$id}.pdf");
     }
 }

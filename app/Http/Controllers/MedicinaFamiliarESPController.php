@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Profesional;
 
-class PsicologiaESPController extends Controller
+class MedicinaFamiliarESPController extends Controller
 {
     public function index($id)
     {
@@ -25,11 +25,11 @@ class PsicologiaESPController extends Controller
 
         // Recuperar equipos
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', 'sm_psicologia')
+                                ->where('modulo', 'sm_med_familiar')
                                 ->get();
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'sm_psicologia')
+                                    ->where('modulo_nombre', 'sm_med_familiar')
                                     ->first();
 
         // Si no existe, creamos una instancia vacía
@@ -97,7 +97,7 @@ class PsicologiaESPController extends Controller
 
         $data = is_array($detalle->contenido) ? $detalle->contenido : [];
 
-        return view('usuario.monitoreo.modulos_especializados.psicologia', compact('monitoreo', 'data', 'equipos', 'detalle'));
+        return view('usuario.monitoreo.modulos_especializados.medicina_familiar', compact('monitoreo', 'data', 'equipos', 'detalle'));
     }
 
     public function store(Request $request, $id)
@@ -106,7 +106,7 @@ class PsicologiaESPController extends Controller
             DB::beginTransaction();
 
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            $modulo = 'sm_psicologia';
+            $modulo = 'sm_med_familiar';
 
             // 1. RECIBIMOS LOS DATOS (Estructura Plana del Formulario)
             $input = $request->input('contenido', []);
@@ -291,11 +291,11 @@ class PsicologiaESPController extends Controller
 
             DB::commit();
             return redirect()->route('usuario.monitoreo.salud_mental_group.index', $id)
-                             ->with('success', 'Módulo psicologia ESP sincronizado correctamente.');
+                             ->with('success', 'Módulo Medicina Familiar ESP sincronizado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error Módulo psicologia ESP (Store) - Acta {$id}: " . $e->getMessage());
+            Log::error("Error Módulo Medicina Familiar ESP (Store) - Acta {$id}: " . $e->getMessage());
             return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
         }
     }
