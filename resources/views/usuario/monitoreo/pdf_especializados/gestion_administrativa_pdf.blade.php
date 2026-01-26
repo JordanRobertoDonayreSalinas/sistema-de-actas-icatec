@@ -181,19 +181,19 @@
         // --------------------------------------------------------
         
         // A. Obtener datos crudos (NUEVA ESTRUCTURA)
-        $rawTipoDoc = $modulo->contenido['profesional']['tipo_doc'] ?? '---';
-        $rawNumDoc  = $modulo->contenido['profesional']['doc'] ?? '---';
+        $rawTipoDoc = $modulo->contenido['datos_del_profesional']['tipo_doc'] ?? '---';
+        $rawNumDoc  = $modulo->contenido['datos_del_profesional']['doc'] ?? '---';
         
         $docFinal = $rawNumDoc; 
                
         // C. Preparar Nombre Completo
-        $pNom = $modulo->contenido['profesional']['nombres'] ?? '';
-        $pPat = $modulo->contenido['profesional']['apellido_paterno'] ?? '';
-        $pMat = $modulo->contenido['profesional']['apellido_materno'] ?? '';
+        $pNom = $modulo->contenido['datos_del_profesional']['nombres'] ?? '';
+        $pPat = $modulo->contenido['datos_del_profesional']['apellido_paterno'] ?? '';
+        $pMat = $modulo->contenido['datos_del_profesional']['apellido_materno'] ?? '';
         $profNombreCompleto = trim($pPat . ' ' . $pMat . ' ' . $pNom);
         
         if(empty($profNombreCompleto)) {
-            $profNombreCompleto = $modulo->contenido['profesional']['apellidos_nombres'] ?? '---';
+            $profNombreCompleto = '---';
         }
     @endphp
 
@@ -205,7 +205,7 @@
             FECHA: 
             @php
                 // 1. Buscamos la fecha específica del módulo (NUEVA ESTRUCTURA)
-                $fechaRaw = $modulo->contenido['fecha'] ?? null;
+                $fechaRaw = $modulo->contenido['detalle_del_consultorio']['fecha_monitoreo'] ?? null;
                 
                 // 2. Si existe, la formateamos
                 if ($fechaRaw) {
@@ -221,7 +221,7 @@
     <table>
         <tr>
             <td class="bg-label">Turno</td>
-            <td class="uppercase">{{ $modulo->contenido['turno'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['detalle_del_consultorio']['turno'] ?? '---' }}</td>
         </tr>
     </table>
 
@@ -241,69 +241,73 @@
         </tr>
         <tr>
             <td class="bg-label">Correo</td>
-            <td>{{ $modulo->contenido['profesional']['email'] ?? '---' }}</td>
+            <td>{{ $modulo->contenido['datos_del_profesional']['email'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Celular</td>
-            <td>{{ $modulo->contenido['profesional']['telefono'] ?? '---' }}</td>
-        </tr>
-        <tr>
-            <td class="bg-label">¿Utiliza SIHCE?</td>
-            <td class="uppercase">{{ $modulo->contenido['profesional']['cuenta_sihce'] ?? '---' }}</td>
+            <td>{{ $modulo->contenido['datos_del_profesional']['telefono'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">Profesion</td>
-            <td class="uppercase">{{ $modulo->contenido['profesional']['cargo'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['datos_del_profesional']['cargo'] ?? '---' }}</td>
         </tr>
-        @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
+    </table>
+    
+    <div class="section-title">{{ $n++ }}. Documentación Administrativa</div>
+    <table>
+        <tr>
+            <td class="bg-label">¿Utiliza SIHCE?</td>
+            <td class="uppercase">{{ $modulo->contenido['documentacion_administrativa']['utiliza_sihce'] ?? '---' }}</td>
+        </tr>
+        @if(($modulo->contenido['documentacion_administrativa']['utiliza_sihce'] ?? '') != 'NO')
             <tr>
                 <td class="bg-label">¿Firmó Declaración Jurada?</td>
-                <td class="uppercase">{{ $modulo->contenido['profesional']['firmo_dj'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['documentacion_administrativa']['firmo_dj'] ?? '---' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">¿Firmó Compromiso de Confidencialidad?</td>
-                <td class="uppercase">{{ $modulo->contenido['profesional']['firmo_confidencialidad'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['documentacion_administrativa']['firmo_confidencialidad'] ?? '---' }}</td>
             </tr>
         @endif
     </table>
-    
+
     {{-- SECCIÓN 3: DNI Y FIRMA (CONDICIONAL) --}}
-    @if(($modulo->contenido['profesional']['tipo_doc'] ?? '') == 'DNI')
+    @if(($modulo->contenido['datos_del_profesional']['tipo_doc'] ?? '') == 'DNI')
     <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
     <table>
         <tr>
             <td class="bg-label">Tipo de DNI</td>
-            <td class="uppercase">{{ $modulo->contenido['detalle_dni']['tipo_dni_fisico'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['detalle_de_dni_y_firma_digital']['tipo_dni'] ?? '---' }}</td>
         </tr>
-        @if(($modulo->contenido['detalle_dni']['tipo_dni_fisico'] ?? '') != 'AZUL')
+        @if(($modulo->contenido['detalle_de_dni_y_firma_digital']['tipo_dni'] ?? '') != 'AZUL')
             <tr>
                 <td class="bg-label">Versión DNIe</td>
-                <td class="uppercase">{{ $modulo->contenido['detalle_dni']['dnie_version'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['detalle_de_dni_y_firma_digital']['version_dnie'] ?? '---' }}</td>
             </tr>
             <tr>
                 <td class="bg-label">¿Firma digitalmente en SIHCE?</td>
-                <td class="uppercase">{{ $modulo->contenido['detalle_dni']['dnie_firma_sihce'] ?? '---' }}</td>
+                <td class="uppercase">{{ $modulo->contenido['detalle_de_dni_y_firma_digital']['firma_digital_sihce'] ?? '---' }}</td>
             </tr>
         @endif
         <tr>
             <td class="bg-label">Observaciones</td>
-            <td class="uppercase">{{ $modulo->contenido['detalle_dni']['dni_observacion'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['detalle_de_dni_y_firma_digital']['observaciones_dni'] ?? '---' }}</td>
         </tr>
     </table>
     @endif
 
     {{-- SECCIÓN 4: CAPACITACIÓN (CONDICIONAL SIHCE) --}}
-    @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
+    @if(($modulo->contenido['documentacion_administrativa']['utiliza_sihce'] ?? '') != 'NO')
     <div class="section-title">{{ $n++ }}. Detalles de Capacitación</div>
     <table>
         <tr>
             <td class="bg-label">¿Recibió Capacitación?</td>
-            <td>{{ $modulo->contenido['detalle_capacitacion']['recibio_capacitacion'] ?? '---' }}</td>
+            <td>{{ $modulo->contenido['detalles_de_capacitacion']['recibio_capacitacion'] ?? '---' }}</td>
         </tr>
-        @if(($modulo->contenido['detalle_capacitacion']['recibio_capacitacion'] ?? '') != 'NO')
+        @if(($modulo->contenido['detalles_de_capacitacion']['recibio_capacitacion'] ?? '') != 'NO')
             <tr>
                 <td class="bg-label">¿De parte de quién?</td>
-                <td>{{ $modulo->contenido['detalle_capacitacion']['inst_capacitacion'] ?? '---' }}</td>
+                <td>{{ $modulo->contenido['detalles_de_capacitacion']['inst_que_lo_capacito'] ?? '---' }}</td>
             </tr>
         @endif
     </table>
@@ -345,14 +349,14 @@
     @endif
 
     {{-- SECCIÓN: PROGRAMACIÓN SIHCE (CONDICIONAL) --}}
-    @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
+    @if(($modulo->contenido['documentacion_administrativa']['utiliza_sihce'] ?? '') != 'NO')
     <div class="section-title">{{ $n++ }}. Programación Actual SIHCE</div>
     <table>
         <tr>
             <td class="bg-label">Fecha Límite de Programación</td>
             <td class="uppercase">
                 @php
-                    $fechaProg = $modulo->contenido['fecha_programacion'] ?? null;
+                    $fechaProg = $modulo->contenido['detalle_del_consultorio']['fecha_programacion'] ?? null;
                     if ($fechaProg) {
                         echo \Carbon\Carbon::parse($fechaProg . '-01')->format('m/Y');
                     } else {
@@ -365,23 +369,23 @@
     @endif
 
     {{-- SECCIÓN: SOPORTE (CONDICIONAL SIHCE) --}}
-    @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
+    @if(($modulo->contenido['documentacion_administrativa']['utiliza_sihce'] ?? '') != 'NO')
     <div class="section-title">{{ $n++ }}. Soporte</div>
     <table>
         <tr>
             <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
-            <td class="uppercase">{{ $modulo->contenido['dificultades']['comunica'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['soporte']['inst_a_quien_comunica'] ?? '---' }}</td>
         </tr>
         <tr>
             <td class="bg-label">MEDIO QUE UTILIZA</td>
-            <td>{{ $modulo->contenido['dificultades']['medio'] ?? '---' }}</td>
+            <td>{{ $modulo->contenido['soporte']['medio_que_utiliza'] ?? '---' }}</td>
         </tr>
     </table>
     @endif
 
     <div class="section-title">{{ $n++ }}. Comentarios</div>
     <div style="border: 1px solid #e2e8f0; padding: 10px; min-height: 40px;" class="uppercase">
-        {{ $modulo->contenido['comentario_esp'] ?? 'SIN COMENTARIOS.' }}
+        {{ $modulo->contenido['comentarios_y_evidencias']['comentarios'] ?? 'SIN COMENTARIOS.' }}
     </div>
 
     {{-- EVIDENCIA FOTOGRÁFICA --}}
