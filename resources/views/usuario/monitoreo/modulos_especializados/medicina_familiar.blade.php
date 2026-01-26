@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Módulo: Psicologia Especializada')
+@section('title', 'Módulo: Medicina Familiar Especializada')
 
 @section('content')
 <div class="py-12 bg-slate-50 min-h-screen">
@@ -13,7 +13,7 @@
                     <span class="px-3 py-1 bg-teal-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo Especializado</span>
                     <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta: #{{ str_pad($monitoreo->numero_acta ?? $monitoreo->id, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
-                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">4.7 Psicologia Especializada</h2>
+                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">4.7 Medicina Familiar Especializada</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">
                     <i data-lucide="hospital" class="inline-block w-4 h-4 mr-1 text-teal-500"></i>{{ $monitoreo->establecimiento->nombre }}
                 </p>
@@ -24,11 +24,11 @@
         </div>
 
         {{-- FORMULARIO --}}
-        <form action="{{ route('usuario.monitoreo.sm_psicologia.store', $monitoreo->id) }}" 
+        <form action="{{ route('usuario.monitoreo.sm_med_familiar.store', $monitoreo->id) }}" 
               method="POST" 
               enctype="multipart/form-data" 
               class="space-y-6" 
-              id="form-monitoreo-psicologia-esp">
+              id="form-monitoreo-medicina-familiar-esp">
             @csrf
             
             {{-- DETALLES DEL AMBIENTE --}}
@@ -49,7 +49,7 @@
             </div>
             
             {{-- EQUIPAMIENTO --}}  
-            <x-esp_5_equipos :equipos="$equipos" modulo="sm_psicologia" />
+            <x-esp_5_equipos :equipos="$equipos" modulo="sm_med_familiar" />
 
             {{-- SOPORTE--}}
             <div id="wrapper_soporte_externo">
@@ -69,7 +69,7 @@
                         </div>
                         <div class="text-left">
                             <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
-                            <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo psicologia Especializada</p>
+                            <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo Medicina Familiar Especializada</p>
                         </div>
                     </div>
                     <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-teal-600 transition-all duration-500">
@@ -121,7 +121,7 @@
     });
 
     // Efecto de carga al enviar el formulario (Bloquea el botón)
-    document.getElementById('form-monitoreo-psicologia-esp').onsubmit = function() {
+    document.getElementById('form-monitoreo-medicina-familiar-esp').onsubmit = function() {
         const form = this;
         const btn = document.getElementById('btn-submit-action');
         const icon = document.getElementById('icon-save-loader');
