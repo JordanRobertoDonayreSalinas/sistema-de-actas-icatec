@@ -63,6 +63,11 @@ use App\Http\Controllers\PsiquiatriaESPController;
 use App\Http\Controllers\PsiquiatriaESPpdfController;
 use App\Http\Controllers\PsicologiaESPController;
 use App\Http\Controllers\PsicologiaESPpdfController;
+use App\Http\Controllers\TomaDeMuestraController;
+use App\Http\Controllers\TomaDeMuestrapdfController;
+use App\Http\Controllers\MedicinaFamiliarESPController;
+use App\Http\Controllers\MedicinaFamiliarESPpdfController;
+
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
