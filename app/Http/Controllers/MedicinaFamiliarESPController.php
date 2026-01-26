@@ -25,11 +25,11 @@ class MedicinaFamiliarESPController extends Controller
 
         // Recuperar equipos
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', 'med_familiar')
+                                ->where('modulo', 'sm_med_familiar')
                                 ->get();
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'med_familiar')
+                                    ->where('modulo_nombre', 'sm_med_familiar')
                                     ->first();
 
         // Si no existe, creamos una instancia vacía
@@ -122,7 +122,7 @@ class MedicinaFamiliarESPController extends Controller
             DB::beginTransaction();
 
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            $modulo = 'med_familiar';
+            $modulo = 'sm_med_familiar';
 
             // 1. RECIBIMOS LOS DATOS (Estructura Plana del Formulario)
             $input = $request->input('contenido', []);
