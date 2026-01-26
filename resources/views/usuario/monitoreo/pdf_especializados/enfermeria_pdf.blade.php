@@ -178,7 +178,7 @@
             <td class="value-cell" colspan="3">{{ $dbInicioLabores->cant_consultorios ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="label-cell">CONSULTORIO:</td>
+            <td class="label-cell">CONSULTORIO ENTREVISTADO:</td>
             <td class="value-cell" colspan="3">{{ $dbInicioLabores->nombre_consultorio ?? '-' }}</td>
         </tr>
         <tr>
@@ -191,13 +191,13 @@
     <div class="section-header">{{ $i++ }}. DATOS DEL PROFESIONAL</div>
     <table class="details-table">
         <tr>
-            <td class="label-cell">NOMBRES Y APELLIDOS:</td>
+            <td class="label-cell">APELLIDOS Y NOMBRES:</td>
             <td class="value-cell" colspan="3">
                 {{ $profObj->apellido_paterno }} {{ $profObj->apellido_materno }}, {{ $profObj->nombres }}
             </td>
         </tr>
         <tr>
-            <td class="label-cell">CARGO:</td>
+            <td class="label-cell">PROFESION:</td>
             <td class="value-cell">{{ $profObj->cargo ?? '-' }}</td>
             <td class="label-cell">DOCUMENTO:</td>
             <td class="value-cell">{{ $profObj->tipo_doc ?? '' }}: {{ $profObj->doc ?? '-' }}</td>
