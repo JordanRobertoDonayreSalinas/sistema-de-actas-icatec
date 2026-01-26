@@ -4,56 +4,103 @@
     <meta charset="UTF-8">
     <title>Declaración Jurada</title>
     <style>
-        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.4; color: #000; margin: 2cm 2.5cm; }
-        .titulo { text-align: center; font-weight: bold; text-transform: uppercase; margin-bottom: 30px; font-size: 14pt; text-decoration: underline; }
-        .contenido { text-align: justify; margin-bottom: 15px; }
-        .datos-personales { margin: 20px 0; padding-left: 20px; }
-        .datos-personales p { margin: 5px 0; font-weight: bold; }
-        .modulos-box { border: 1px solid #000; padding: 10px; margin: 15px 0; font-size: 9pt; }
-        .modulos-lista { display: table; width: 100%; }
-        .modulo-item { display: table-cell; width: 33%; padding: 2px; }
-        .firmas { margin-top: 100px; text-align: center; }
-        .firma-linea { border-top: 1px solid #000; width: 250px; margin: 0 auto 5px auto; }
+        body { 
+            font-family: Arial, Helvetica, sans-serif; 
+            font-size: 10pt; 
+            line-height: 1.4; 
+            color: #000; 
+            margin: 1.5cm 2cm; 
+        }
+        .titulo { 
+            text-align: center; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            margin-bottom: 20px; 
+            font-size: 12pt; 
+            letter-spacing: 0.5px;
+            color: #000;
+        }
+        .contenido { 
+            text-align: justify; 
+            margin-bottom: 8px; 
+            line-height: 1.3;
+            color: #000;
+        }
+        .underline {
+            text-decoration: underline;
+            font-weight: bold;
+            color: #000;
+            text-transform: uppercase;
+        }
+        .fecha-lugar {
+            text-decoration: underline;
+            font-weight: bold;
+            color: #000;
+        }
     </style>
 </head>
 <body>
 
-    <div class="titulo">DECLARACIÓN JURADA DE USUARIO</div>
+    <div class="titulo">DECLARACIÓN JURADA</div>
 
     <div class="contenido">
-        <p>Yo,</p>
-        <div class="datos-personales">
-            <p>NOMBRE COMPLETO: {{ $doc->profesional_apellido_paterno }} {{ $doc->profesional_apellido_materno }} {{ $doc->profesional_nombre }}</p>
-            <p>DOCUMENTO DE IDENTIDAD (DNI/CEX): {{ $doc->profesional_doc }}</p>
-            <p>CARGO / FUNCIÓN: {{ $doc->cargo_rol }}</p>
-            <p>ESTABLECIMIENTO: {{ $doc->establecimiento->nombre_establecimiento }}</p>
-        </div>
-        <p>Por medio del presente documento, DECLARO BAJO JURAMENTO:</p>
+        <p style="margin-bottom: 20px;">
+            Yo, <span class="underline">{{ strtoupper($doc->profesional_apellido_paterno . ' ' . $doc->profesional_apellido_materno . ' ' . $doc->profesional_nombre) }}</span> identificado con {{ $doc->profesional_tipo_doc == 'DNI' ? 'Documento Nacional de Identidad' : 'Carnet de Extranjería' }} N° 
+            <span class="underline">{{ $doc->profesional_doc }}</span> en calidad de responsable del banco de datos personales del Establecimiento 
+            <span class="underline">{{ $doc->establecimiento ? strtoupper($doc->establecimiento->codigo . ' - ' . $doc->establecimiento->nombre) : '' }}</span>
         
-        <ol>
-            <li>Que he recibido capacitación y/o inducción básica para el manejo de los sistemas informáticos solicitados.</li>
-            <li>Que los datos consignados en este formulario son verdaderos y actualizados.</li>
-            <li>Que asumo total responsabilidad por las acciones realizadas con mi código de usuario en los siguientes módulos o sistemas para los cuales solicito acceso:</li>
-        </ol>
-    </div>
-
-    <div class="modulos-box">
-        <strong>SISTEMAS / MÓDULOS SOLICITADOS:</strong>
-        <p style="margin-top: 5px; text-transform: uppercase;">
-            {{ $doc->sistemas_acceso }}
+            en el marco de la Ley N° 29733, Ley de Protección de Datos Personales, su reglamento, 
+            directiva de seguridad, así como la Resolución Ministerial Nº 004-2016-PCM, que aprueba el uso 
+            obligatorio de la Norma Técnica Peruana "NTP ISO/IEC 27001:2014 Tecnología de la 
+            Información. Técnicas de Seguridad. Sistemas de Gestión de Seguridad de la Información. 
+            Requisitos. 2da Edición", en todas las entidades integrantes del sistema nacional de informática 
+            y la Resolución Ministerial N° 68a-2020/MINSA, que aprueba la Directiva Administrativa N° 294-MINSA/2020/OGTI, "Directiva Administrativa que establece el tratamiento de los datos 
+            personales relacionados con la salud o datos personales en salud".
+        </p>
+        
+        <p style="margin-bottom: 12px;">
+            Declaro que como responsable del banco de datos personales a mi cargo, al acceso a los sistemas 
+            de información asistenciales que el Ministerio de Salud brinda para el cumplimiento de nuestras 
+            funciones, que he recibido los lineamientos de seguridad de la información para la gestión de 
+            accesos del sistema de información administrativo <span class="underline">{{ strtoupper($doc->sistemas_acceso) }}</span>, que se 
+            deben cumplir y que son de mi entera responsabilidad su cumplimiento, así como de su difusión, 
+            para que el personal tenga conocimiento del mismo, bajo responsabilidad.
+        </p>
+        
+        <p style="margin-bottom: 12px;">
+            Asimismo, declaro conocer que la presente declaración se encuentra sujeta al principio de 
+            presunción de veracidad y al principio de privilegio de controles posteriores, establecidos en el 
+            TUO de la Ley de Procedimiento Administrativo General, aprobado mediante Decreto Supremo 
+            N° 004-2019-JUS.
         </p>
     </div>
 
-    <div class="contenido">
-        <p>Asimismo, autorizo a la DIRESA ICA y a la Oficina de TI a auditar mis accesos y transacciones realizadas en el sistema para fines de control y seguridad.</p>
-        <p>Firmo en señal de conformidad, en la ciudad de Ica, a los {{ \Carbon\Carbon::parse($doc->fecha)->day }} días del mes de {{ \Carbon\Carbon::parse($doc->fecha)->translatedFormat('F') }} del año {{ \Carbon\Carbon::parse($doc->fecha)->year }}.</p>
-    </div>
+    <p style="margin-top: 20px; margin-bottom: 20px;">
+        @php
+            $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            $fecha = \Carbon\Carbon::parse($doc->fecha);
+            $mes = $meses[$fecha->month - 1];
+        @endphp
+        <span class="fecha-lugar">Ica, {{ $fecha->format('d') }} de {{ $mes }} del {{ $fecha->year }}</span>
+    </p>
 
-    <div class="firmas">
-        <div class="firma-linea"></div>
-        <strong>{{ $doc->profesional_nombre }} {{ $doc->profesional_apellido_paterno }}</strong><br>
-        DNI: {{ $doc->profesional_doc }}<br>
-        <span style="font-size: 8pt;">(Firma y Huella Digital)</span>
+    <div style="margin-top: 30px; text-align: center;">
+        <p style="margin-bottom: 8px; color: #000; text-align: left;">Firma:</p>
+        
+        <div style="border: 1px solid #000; width: 300px; height: 150px; margin: 0 auto; padding: 15px; position: relative;">
+            <!-- Línea para la firma -->
+            <div style="position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 80%; border-top: 1px solid #666;"></div>
+            
+            <!-- Nombre completo -->
+            <p style="position: absolute; bottom: 30px; left: 0; right: 0; text-align: center; font-weight: bold; font-size: 10pt; margin: 0; color: #000;">
+                {{ strtoupper($doc->profesional_apellido_paterno . ' ' . $doc->profesional_apellido_materno . ' ' . $doc->profesional_nombre) }}
+            </p>
+            
+            <!-- Tipo y número de documento -->
+            <p style="position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 9pt; margin: 0; color: #666;">
+                {{ $doc->profesional_tipo_doc }}: {{ $doc->profesional_doc }}
+            </p>
+        </div>
     </div>
 
 </body>
