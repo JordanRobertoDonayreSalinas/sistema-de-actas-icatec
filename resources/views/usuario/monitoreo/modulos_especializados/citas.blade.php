@@ -5,13 +5,11 @@
 
 {{-- SCRIPTS DE ALPINE (Lógica exclusiva para esta vista) --}}
 <script>
-    // CAMBIO REALIZADO: Nombre de función actualizado a citasForm
     function citasForm() {
         return {
             saving: false,
             
             // 1. VARIABLES DE ESTADO (Inicializadas con datos del backend)
-            // Si no hay datos (registro nuevo), asumimos valores por defecto: NO para SIHCE, DNI para documento.
             sihce: '{{ $dataMap->contenido['profesional']['cuenta_sihce'] ?? '' }}',
             tipoDoc: '{{ $dataMap->contenido['profesional']['tipo_doc'] ?? 'DNI' }}',
 
@@ -20,8 +18,31 @@
                 capacitacion: @json($valCapacitacion)
             },
 
+            // --- AGREGAMOS EL BLOQUE INIT (IGUAL QUE ENFERMERÍA) ---
+            init() {
+                // Esperamos un momento a que el DOM esté listo
+                this.$nextTick(() => {
+                    // 1. Sincronizar SIHCE
+                    const selectSihce = document.getElementById('sihce_profesional');
+                    
+                    // Si la variable de Alpine está vacía (carga inicial limpia) pero el select existe
+                    if (selectSihce && this.sihce === '') {
+                        this.sihce = selectSihce.value; // Forzamos a Alpine a tomar el valor visual ("SI")
+                    } else if (selectSihce && this.sihce !== '') {
+                        // Si ya hay datos guardados, aseguramos que el select visual coincida
+                        selectSihce.value = this.sihce;
+                    }
+
+                    // 2. Sincronizar Tipo Doc (Para mostrar/ocultar DNI)
+                    const selectTipo = document.getElementById('tipo_profesional');
+                    if (selectTipo && this.tipoDoc === '') {
+                        this.tipoDoc = selectTipo.value;
+                    }
+                });
+            },
+            // -------------------------------------------------------
+
             // 2. DETECTOR DE CAMBIOS
-            // Esta función escucha cualquier cambio en el formulario y actualiza las variables si coincide el ID
             updateVisibility(event) {
                 // ID del select en el componente esp_2_1_docAdmin: 'sihce_' + prefix
                 if (event.target.id === 'sihce_profesional') {
@@ -49,11 +70,11 @@
         <div class="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="flex items-center gap-6">
                 <div class="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
-                    <span class="text-2xl font-black text-indigo-600">03</span>
+                    <span class="text-2xl font-black text-teal-600">02</span>
                 </div>
                 <div>
                     <div class="flex items-center gap-3 mb-1">
-                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
+                        <span class="px-3 py-1 bg-teal-100 text-teal-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
                         <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
                     <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Citas</h2>

@@ -7,12 +7,31 @@ use App\Models\CabeceraMonitoreo;
 use App\Models\MonitoreoModulos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Models\Profesional;
 use stdClass;
 
-
 class EnfermeriaESPController extends Controller
 {
+    /**
+     * Helper para obtener la ruta de la foto de forma segura.
+     * Busca en la estructura nueva y en la antigua.
+     */
+    private function getFotoPath($data)
+    {
+        // 1. Intentar recuperar de la estructura NUEVA (anidada)
+        if (!empty($data['comentarios_y_evidencias']['foto_evidencia'][0])) {
+            return $data['comentarios_y_evidencias']['foto_evidencia'][0];
+        }
+
+        // 2. Intentar recuperar de la estructura ANTIGUA (raíz)
+        if (!empty($data['foto_evidencia'][0])) {
+            return $data['foto_evidencia'][0];
+        }
+
+        return null; // No hay foto
+    }
+
     public function index($id) 
     {
         // 1. Validar Cabecera
@@ -23,77 +42,86 @@ class EnfermeriaESPController extends Controller
                 ->with('error', 'Módulo incorrecto.');
         }
 
-        // 2. Recuperar el JSON guardado
+        // 2. Recuperar el registro
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'enfermeria_esp')
+                                    ->where('modulo_nombre', 'sm_enfermeria')
                                     ->first();
 
-        // --- CORRECCIÓN DEL ERROR DE JSON_DECODE ---
-        // Si $registro->contenido ya es un array (por el cast del modelo), lo usamos directo.
-        // Si es null, usamos array vacío.
+        // Obtener contenido de forma segura
         $data = $registro ? $registro->contenido : [];
-        
-        // Blindaje extra: Si por alguna razón sigue llegando como string (datos viejos), lo decodificamos.
         if (is_string($data)) {
             $data = json_decode($data, true);
         }
+        $data = $data ?? [];
 
         // 3. MAPEO DE DATOS (JSON -> VISTA)
         $dataMap = new stdClass();
         
-        // Mapeo del contenido general
+        // A. Consultorio
+        $detConsultorio = $data['detalle_del_consultorio'] ?? [];
         $dataMap->contenido = [
-            'fecha'                 => $data['fecha_registro'] ?? null,
-            'turno'                 => $data['turno'] ?? null,
-            'num_ambientes'         => $data['num_consultorios'] ?? null,
-            'denominacion_ambiente' => $data['denominacion_consultorio'] ?? null,
-            'tipo_dni_fisico'       => $data['seccion_dni']['tipo_dni'] ?? null,
-            'dnie_version'          => $data['seccion_dni']['version_dnie'] ?? null,
-            'dnie_firma_sihce'      => $data['seccion_dni']['firma_sihce'] ?? null,
-            'dni_observacion'       => $data['seccion_dni']['comentarios'] ?? null,
-            'dificultades' => [
-                'comunica' => $data['comunica_a'] ?? null,
-                'medio'    => $data['medio_soporte'] ?? null
-            ]
+            'fecha'                 => $detConsultorio['fecha_monitoreo'] ?? ($data['fecha_registro'] ?? date('Y-m-d')),
+            'turno'                 => $detConsultorio['turno'] ?? ($data['turno'] ?? null),
+            'num_ambientes'         => $detConsultorio['num_consultorios'] ?? ($data['num_consultorios'] ?? null),
+            'denominacion_ambiente' => $detConsultorio['denominacion'] ?? ($data['denominacion_consultorio'] ?? null),
         ];
 
-        // Mapeo del Profesional
-        if (isset($data['profesional'])) {
-            $profTemp = $data['profesional'];
-            // Aseguramos que las claves coincidan con lo que espera la vista
-            $profTemp['cuenta_sihce'] = $data['profesional']['utiliza_sihce'] ?? ($data['profesional']['cuenta_sihce'] ?? ''); 
-            $profTemp['firmo_dj'] = $data['firmo_dj'] ?? ($data['profesional']['firmo_dj'] ?? '');
-            $profTemp['firmo_confidencialidad'] = $data['firmo_confidencialidad'] ?? ($data['profesional']['firmo_confidencialidad'] ?? '');
-            
-            $dataMap->contenido['profesional'] = $profTemp;
-        }
+        // B. DNI
+        $detDni = $data['detalle_de_dni_y_firma_digital'] ?? ($data['seccion_dni'] ?? []);
+        $dataMap->contenido['tipo_dni_fisico']  = $detDni['tipo_dni'] ?? null;
+        $dataMap->contenido['dnie_version']     = $detDni['version_dnie'] ?? null;
+        $dataMap->contenido['dnie_firma_sihce'] = $detDni['firma_digital_sihce'] ?? ($detDni['firma_sihce'] ?? null);
+        $dataMap->contenido['dni_observacion']  = $detDni['observaciones_dni'] ?? ($detDni['comentarios'] ?? null);
 
-        // Variables sueltas para componentes específicos
-        $dataMap->dificultad_comunica_a = $data['comunica_a'] ?? null;
-        $dataMap->dificultad_medio_uso  = $data['medio_soporte'] ?? null;
-        $dataMap->comentario_esp = $data['comentarios_generales'] ?? ($data['comentarios'] ?? null);
-        $dataMap->foto_url_esp = isset($data['foto_evidencia'][0]) ? $data['foto_evidencia'][0] : null;
+        // --- C. SOPORTE (Lógica Idéntica a TRIAJE) ---
+        // Definimos el grupo de soporte buscando en 'soporte' (nuevo) o 'dificultades' (viejo)
+        $grupoSoporte = $data['soporte'] ?? ($data['dificultades'] ?? []);
+        
+        // Mapeamos exactamente como lo hace Triaje
+        $dataMap->contenido['dificultades'] = [
+            'comunica' => $grupoSoporte['inst_a_quien_comunica'] ?? ($grupoSoporte['comunica'] ?? ''),
+            'medio'    => $grupoSoporte['medio_que_utiliza']     ?? ($grupoSoporte['medio'] ?? '')
+        ];
 
-        // Alpine JS Data - Capacitación
+        // Adicional: Inyectamos las propiedades directas por si el componente las busca así (backup de compatibilidad)
+        $dataMap->dificultad_comunica_a = $dataMap->contenido['dificultades']['comunica'];
+        $dataMap->dificultad_medio_uso  = $dataMap->contenido['dificultades']['medio'];
+        // ---------------------------------------------
+
+        // D. Profesional
+        $profData = $data['datos_del_profesional'] ?? ($data['profesional'] ?? []);
+        $docAdmin = $data['documentacion_administrativa'] ?? ($data['profesional'] ?? []); 
+
+        $profTemp = $profData;
+        $profTemp['cuenta_sihce']           = $docAdmin['utiliza_sihce'] ?? ($docAdmin['cuenta_sihce'] ?? ''); 
+        $profTemp['firmo_dj']               = $docAdmin['firmo_dj'] ?? ($data['firmo_dj'] ?? '');
+        $profTemp['firmo_confidencialidad'] = $docAdmin['firmo_confidencialidad'] ?? ($data['firmo_confidencialidad'] ?? '');
+        
+        $dataMap->contenido['profesional'] = $profTemp;
+
+        // E. Variables sueltas
+        $comEvidencia = $data['comentarios_y_evidencias'] ?? [];
+        $dataMap->comentario_esp = $comEvidencia['comentarios'] ?? ($data['comentarios_generales'] ?? ($data['comentarios'] ?? null));
+        $dataMap->foto_url_esp = $this->getFotoPath($data);
+
+        // F. Capacitación
+        $detCap = $data['detalles_de_capacitacion'] ?? [];
         $valCapacitacion = [
-            'recibieron_cap'  => $data['recibio_capacitacion'] ?? 'NO',
-            'institucion_cap' => $data['inst_capacitacion'] ?? null
+            'recibieron_cap'  => $detCap['recibio_capacitacion'] ?? ($data['recibio_capacitacion'] ?? 'NO'),
+            'institucion_cap' => $detCap['inst_que_lo_capacito'] ?? ($data['inst_capacitacion'] ?? null)
         ];
         
-        // Mapeo de Inventario (Soluciona el error $propio vs propiedad)
-        $rawInventario = $data['inventario'] ?? [];
+        // G. Inventario
+        $rawInventario = $data['equipos_de_computo'] ?? ($data['inventario'] ?? []);
         $valInventario = [];
         
         foreach($rawInventario as $item) {
-            // A veces el cast devuelve objetos, a veces arrays. Forzamos array para lectura segura.
             $itemArray = (array)$item; 
-            
             $obj = new stdClass();
             $obj->descripcion = $itemArray['descripcion'] ?? '';
             $obj->cantidad    = $itemArray['cantidad'] ?? 1;
             $obj->estado      = $itemArray['estado'] ?? 'OPERATIVO';
-            // Le damos a la vista lo que pide ('propio') leyendo de la BD ('propiedad')
-            $obj->propio      = $itemArray['propiedad'] ?? ($itemArray['propio'] ?? 'COMPARTIDO'); 
+            $obj->propio      = $itemArray['propio'] ?? ($itemArray['propiedad'] ?? 'COMPARTIDO'); 
             $obj->nro_serie   = $itemArray['nro_serie'] ?? ($itemArray['codigo'] ?? ''); 
             $obj->observacion = $itemArray['observacion'] ?? '';
             $valInventario[] = $obj;
@@ -107,140 +135,145 @@ class EnfermeriaESPController extends Controller
     public function store(Request $request, $id)
     {
         try {
+            DB::beginTransaction();
+
+            // 1. OBTENER DATOS PREVIOS (Para gestión de foto)
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                              ->where('modulo_nombre', 'enfermeria_esp')
+                                              ->where('modulo_nombre', 'sm_enfermeria')
                                               ->first();
             
-            // Aquí también quitamos el json_decode si ya viene como array, o usamos un helper seguro
-            $contenidoPrevio = $registroPrevio ? $registroPrevio->contenido : [];
-            if(is_string($contenidoPrevio)) $contenidoPrevio = json_decode($contenidoPrevio, true);
+            $contenidoPrevio = $registroPrevio ? (is_string($registroPrevio->contenido) ? json_decode($registroPrevio->contenido, true) : $registroPrevio->contenido) : [];
 
-            // 1. GESTIÓN DE FOTO (Array)
-            $rutaFotoAnterior = isset($contenidoPrevio['foto_evidencia'][0]) ? $contenidoPrevio['foto_evidencia'][0] : null;
+            // 2. GESTIÓN DE FOTO
+            $rutaFotoAnterior = $this->getFotoPath($contenidoPrevio ?? []);
             $rutaFotoFinal = $rutaFotoAnterior;
 
             if ($request->hasFile('foto_esp_file')) {
+                // Borrar anterior si existe
                 if ($rutaFotoAnterior && Storage::disk('public')->exists($rutaFotoAnterior)) {
                     Storage::disk('public')->delete($rutaFotoAnterior);
                 }
+                // Guardar nueva
                 $rutaFotoFinal = $request->file('foto_esp_file')->store('evidencias_esp', 'public');
             }
             $arrayFotos = $rutaFotoFinal ? [$rutaFotoFinal] : [];
 
-            // 2. SINCRONIZACIÓN PROFESIONAL
+            // 3. CAPTURA DE INPUTS
+            $rawCont = $request->input('contenido', []);
             $rawProf = $request->input('contenido.profesional', []);
-            $profesionalDB = null;
+            $rawCap  = $request->input('capacitacion', []);
+            $rawEquipos = $request->input('equipos', []);
+            $comentario = $request->input('comentario_esp');
 
+            // 4. ACTUALIZACIÓN MAESTRO PROFESIONALES
             if (!empty($rawProf['doc'])) {
-                $profesionalDB = Profesional::updateOrCreate(
+                Profesional::updateOrCreate(
                     ['doc' => trim($rawProf['doc'])],
                     [
                         'tipo_doc'         => $rawProf['tipo_doc'] ?? 'DNI',
-                        'apellido_paterno' => mb_strtoupper(trim($rawProf['apellido_paterno'] ?? ''), 'UTF-8'),
-                        'apellido_materno' => mb_strtoupper(trim($rawProf['apellido_materno'] ?? ''), 'UTF-8'),
-                        'nombres'          => mb_strtoupper(trim($rawProf['nombres'] ?? ''), 'UTF-8'),
-                        'email'            => !empty($rawProf['email']) ? strtolower(trim($rawProf['email'])) : null,
+                        'nombres'          => mb_strtoupper($rawProf['nombres'] ?? '', 'UTF-8'),
+                        'apellido_paterno' => mb_strtoupper($rawProf['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper($rawProf['apellido_materno'] ?? '', 'UTF-8'),
+                        'email'            => strtolower($rawProf['email'] ?? ''),
                         'telefono'         => $rawProf['telefono'] ?? null,
-                        'cargo'            => $rawProf['cargo'] ?? null,
+                        'cargo'            => mb_strtoupper($rawProf['cargo'] ?? '', 'UTF-8'),
                     ]
                 );
             }
 
-            // 3. TRANSFORMACIÓN DE INVENTARIO
-            $rawEquipos = $request->input('equipos', []);
-            $inventarioMapeado = [];
+            // 5. CONSTRUCCIÓN DEL JSON (ESTRUCTURA NUEVA ESTANDARIZADA)
+            $jsonToSave = [];
 
-            foreach($rawEquipos as $keyId => $item) {
-                // Separar serie
-                $fullSerie = $item['nro_serie'] ?? '';
-                $tipoCodigo = 'S';
-                $codigo = $fullSerie;
-                
-                if(str_contains($fullSerie, ':')) {
-                    $parts = explode(':', $fullSerie, 2);
-                    $tipoCodigo = $parts[0];
-                    $codigo = $tipoCodigo . ' ' . ($parts[1] ?? '');
+            // 5.1 Consultorio
+            $jsonToSave['detalle_del_consultorio'] = [
+                'fecha_monitoreo'  => $rawCont['fecha'] ?? date('Y-m-d'),
+                'turno'            => $rawCont['turno'] ?? '',
+                'num_consultorios' => $rawCont['num_ambientes'] ?? '',
+                'denominacion'     => mb_strtoupper($rawCont['denominacion_ambiente'] ?? '', 'UTF-8'),
+            ];
+
+            // 5.2 Profesional
+            $jsonToSave['datos_del_profesional'] = [
+                'doc'              => $rawProf['doc'] ?? '',
+                'tipo_doc'         => $rawProf['tipo_doc'] ?? 'DNI',
+                'nombres'          => mb_strtoupper($rawProf['nombres'] ?? '', 'UTF-8'),
+                'apellido_paterno' => mb_strtoupper($rawProf['apellido_paterno'] ?? '', 'UTF-8'),
+                'apellido_materno' => mb_strtoupper($rawProf['apellido_materno'] ?? '', 'UTF-8'),
+                'email'            => strtolower($rawProf['email'] ?? ''),
+                'telefono'         => $rawProf['telefono'] ?? '',
+                'cargo'            => mb_strtoupper($rawProf['cargo'] ?? '', 'UTF-8'),
+            ];
+
+            // 5.3 Documentación
+            $jsonToSave['documentacion_administrativa'] = [
+                'utiliza_sihce'          => $rawProf['cuenta_sihce'] ?? 'NO',
+                'firmo_dj'               => $rawProf['firmo_dj'] ?? 'NO',
+                'firmo_confidencialidad' => $rawProf['firmo_confidencialidad'] ?? 'NO',
+            ];
+
+            // 5.4 DNI
+            $jsonToSave['detalle_de_dni_y_firma_digital'] = [
+                'tipo_dni'            => $rawCont['tipo_dni_fisico'] ?? '',
+                'version_dnie'        => $rawCont['dnie_version'] ?? '',
+                'firma_digital_sihce' => $rawCont['dnie_firma_sihce'] ?? '',
+                'observaciones_dni'   => mb_strtoupper($rawCont['dni_observacion'] ?? '', 'UTF-8'),
+            ];
+
+            // 5.5 Capacitación
+            $jsonToSave['detalles_de_capacitacion'] = [
+                'recibio_capacitacion' => $rawCap['recibieron_cap'] ?? 'NO',
+                'inst_que_lo_capacito' => mb_strtoupper($rawCap['institucion_cap'] ?? '', 'UTF-8'),
+            ];
+
+            // 5.6 Soporte
+            $dificultades = $rawCont['dificultades'] ?? [];
+            $jsonToSave['soporte'] = [
+                'inst_a_quien_comunica' => mb_strtoupper($dificultades['comunica'] ?? '', 'UTF-8'),
+                'medio_que_utiliza'     => mb_strtoupper($dificultades['medio'] ?? '', 'UTF-8'),
+            ];
+
+            // 5.7 Equipos (Inventario)
+            $equiposMapeados = [];
+            if (is_array($rawEquipos)) {
+                foreach($rawEquipos as $item) {
+                    if (!empty($item['descripcion'])) {
+                        $equiposMapeados[] = [
+                            'descripcion' => mb_strtoupper($item['descripcion'], 'UTF-8'),
+                            'cantidad'    => $item['cantidad'] ?? '1',
+                            'estado'      => $item['estado'] ?? 'OPERATIVO',
+                            'propio'      => $item['propio'] ?? 'COMPARTIDO',
+                            'nro_serie'   => mb_strtoupper($item['nro_serie'] ?? '', 'UTF-8'),
+                            'observacion' => mb_strtoupper($item['observacion'] ?? '', 'UTF-8'),
+                        ];
+                    }
                 }
-
-                $inventarioMapeado[] = [
-                    'id'          => (float)$keyId,
-                    'descripcion' => $item['descripcion'] ?? '',
-                    'propiedad'   => $item['propio'] ?? 'COMPARTIDO', 
-                    'estado'      => $item['estado'] ?? 'OPERATIVO',
-                    'tipo_codigo' => $tipoCodigo,
-                    'codigo'      => $codigo, 
-                    'observacion' => $item['observacion'] ?? ''
-                ];
             }
+            $jsonToSave['equipos_de_computo'] = $equiposMapeados;
 
-            // 4. JSON FINAL
-            $cont = $request->input('contenido', []);
-            $cap  = $request->input('capacitacion', []);
-            $dif  = $cont['dificultades'] ?? [];
-            $com  = $request->input('comentario_esp');
-
-            $contenidoParaJson = [
-                'profesional' => [
-                    'tipo_doc'         => $profesionalDB ? $profesionalDB->tipo_doc : ($rawProf['tipo_doc'] ?? ''),
-                    'doc'              => $profesionalDB ? $profesionalDB->doc : ($rawProf['doc'] ?? ''),
-                    'nombres'          => $profesionalDB ? $profesionalDB->nombres : '',
-                    'apellido_paterno' => $profesionalDB ? $profesionalDB->apellido_paterno : '',
-                    'apellido_materno' => $profesionalDB ? $profesionalDB->apellido_materno : '',
-                    'email'            => $profesionalDB ? $profesionalDB->email : '',
-                    'cargo'            => $profesionalDB ? $profesionalDB->cargo : '',
-                    'telefono'         => $profesionalDB ? $profesionalDB->telefono : '',
-                    'utiliza_sihce'    => $rawProf['cuenta_sihce'] ?? '',
-                    'id'               => $profesionalDB ? $profesionalDB->id : null,
-                    'created_at'       => $profesionalDB ? $profesionalDB->created_at : null,
-                    'updated_at'       => $profesionalDB ? $profesionalDB->updated_at : null,
-                ],
-                'inicio_labores' => [
-                    'fecha_registro'     => $cont['fecha'] ?? date('Y-m-d'),
-                    'consultorios'       => $cont['num_ambientes'] ?? '',
-                    'nombre_consultorio' => $cont['denominacion_ambiente'] ?? '',
-                    'turno'              => $cont['turno'] ?? '',
-                    'comentarios'        => mb_strtoupper($com, 'UTF-8')
-                ],
-                // Campos Raíz
-                'fecha_registro'           => $cont['fecha'] ?? date('Y-m-d'),
-                'comentarios_generales'    => mb_strtoupper($com, 'UTF-8'),
-                'num_consultorios'         => $cont['num_ambientes'] ?? '',
-                'denominacion_consultorio' => $cont['denominacion_ambiente'] ?? '',
-                'turno'                    => $cont['turno'] ?? '',
-                'recibio_capacitacion'     => $cap['recibieron_cap'] ?? '',
-                'inst_capacitacion'        => $cap['institucion_cap'] ?? null,
-                'firmo_dj'                 => $rawProf['firmo_dj'] ?? '',
-                'firmo_confidencialidad'   => $rawProf['firmo_confidencialidad'] ?? '',
-                'comunica_a'               => $dif['comunica'] ?? '',
-                'medio_soporte'            => $dif['medio'] ?? '',
-                // Arrays
-                'inventario' => $inventarioMapeado,
-                'seccion_dni' => [
-                    'tipo_dni'     => $cont['tipo_dni_fisico'] ?? '',
-                    'version_dnie' => $cont['dnie_version'] ?? '',
-                    'firma_sihce'  => $cont['dnie_firma_sihce'] ?? '',
-                    'comentarios'  => str($cont['dni_observacion'])->upper() ?? ''
-                ],
-                'comentarios' => null,
+            // 5.8 Comentarios y Fotos
+            $jsonToSave['comentarios_y_evidencias'] = [
+                'comentarios'    => mb_strtoupper($comentario ?? '', 'UTF-8'),
                 'foto_evidencia' => $arrayFotos
             ];
 
-            // --- CORRECCIÓN: GUARDADO DIRECTO DEL ARRAY ---
-            // Como tu modelo ya debe tener 'casts' => ['contenido' => 'array'], 
-            // pasamos el array directamente. Laravel se encarga de convertirlo a JSON.
+            // 6. GUARDADO FINAL
             MonitoreoModulos::updateOrCreate(
-                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => 'enfermeria_esp'],
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => 'sm_enfermeria'],
                 [
-                    'contenido'        => $contenidoParaJson,
+                    'contenido'        => $jsonToSave,
                     'pdf_firmado_path' => null
                 ]
             );
 
+            DB::commit();
+
+            // REDIRECT ESPECÍFICO DE SUBMÓDULO
             return redirect()
                 ->route('usuario.monitoreo.salud_mental_group.index', $id)
-                ->with('success', 'Información guardada correctamente.');
+                ->with('success', 'Módulo Enfermería guardado correctamente.');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Error: ' . $e->getMessage())->withInput();
         }
     }
