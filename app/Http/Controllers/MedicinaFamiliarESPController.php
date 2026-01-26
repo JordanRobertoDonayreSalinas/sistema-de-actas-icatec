@@ -25,11 +25,11 @@ class MedicinaFamiliarESPController extends Controller
 
         // Recuperar equipos
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', 'sm_med_familiar')
+                                ->where('modulo', 'med_familiar')
                                 ->get();
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'sm_med_familiar')
+                                    ->where('modulo_nombre', 'med_familiar')
                                     ->first();
 
         // Si no existe, creamos una instancia vacía
@@ -59,8 +59,9 @@ class MedicinaFamiliarESPController extends Controller
             $consultorio = $dbData['detalle_del_consultorio'] ?? [];
             $viewData['fecha'] = $consultorio['fecha_monitoreo'] ?? null;
             $viewData['turno'] = $consultorio['turno'] ?? null;
-            $viewData['num_ambientes'] = $consultorio['num_ambientes'] ?? null;
-            $viewData['denominacion_ambiente'] = $consultorio['denominacion_ambiente'] ?? null;
+            // CORREGIDO (Busca la llave nueva que acabas de guardar)
+            $viewData['num_consultorios'] = $consultorio['num_consultorios'] ?? ($consultorio['num_ambientes'] ?? null);
+            $viewData['denominacion']     = $consultorio['denominacion'] ?? ($consultorio['denominacion_ambiente'] ?? null);
 
             // 2. Profesional (Array directo)
             $profesional = $dbData['datos_del_profesional'] ?? [];
@@ -118,10 +119,10 @@ class MedicinaFamiliarESPController extends Controller
     public function store(Request $request, $id)
     {
         try {
-             DB::beginTransaction();
+            DB::beginTransaction();
 
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            $modulo = 'sm_med_familiar';
+            $modulo = 'med_familiar';
 
             // 1. RECIBIMOS LOS DATOS (Estructura Plana del Formulario)
             $input = $request->input('contenido', []);
@@ -140,7 +141,6 @@ class MedicinaFamiliarESPController extends Controller
             if ($request->has('dificultades')) {
                 $input['dificultades'] = $request->input('dificultades');
             }
-
 
             // ---------------------------------------------------------
             // REGLAS DE NEGOCIO (Limpieza de Datos)
@@ -196,13 +196,13 @@ class MedicinaFamiliarESPController extends Controller
                     }
                 }
             }
-
+            
             $structuredData = [
                 "detalle_del_consultorio" => [
                     "fecha_monitoreo" => $input['fecha'] ?? date('Y-m-d'),
                     "turno" => $input['turno'] ?? null,
-                    "num_ambientes" => $input['num_ambientes'] ?? null,
-                    "denominacion_ambiente" => $input['denominacion_ambiente'] ?? null
+                    "num_consultorios" => $input['num_ambientes'] ?? null,
+                    "denominacion" => $input['denominacion_ambiente'] ?? null
                 ],
                 
                 "datos_del_profesional" => [

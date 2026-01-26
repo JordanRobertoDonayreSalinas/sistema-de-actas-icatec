@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Psiquiatria Especializada - Acta {{ $monitoreo->numero_acta }}</title>
+    <title>Psiquiatría Especializada - Acta {{ $monitoreo->numero_acta }}</title>
     <style>
         /* MARGENES DE PÁGINA */
         @page { margin: 1cm 1.5cm 2cm 1.5cm; }
@@ -198,7 +198,7 @@
     @endphp
 
     <div class="header">
-        <h1>Módulo 4.7: Psiquiatria Especializada</h1>
+        <h1>Módulo 4.7: Psiquiatría Especializada</h1>
         <div class="header-meta">
             ACTA N° {{ str_pad($monitoreo->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $monitoreo->establecimiento->codigo }} - {{ strtoupper($monitoreo->establecimiento->nombre) }} | 
@@ -221,11 +221,11 @@
     <table>
         <tr>
             <td class="bg-label">Cantidad</td>
-            <td>{{ $modulo->contenido['detalle_del_consultorio']['num_ambientes'] ?? '0' }}</td>
+            {{ $modulo->contenido['detalle_del_consultorio']['num_consultorios'] ?? ($modulo->contenido['detalle_del_consultorio']['num_ambientes'] ?? '0') }}
         </tr>
         <tr>
             <td class="bg-label">Consultorio Entrevistado</td>
-            <td class="uppercase">{{ $modulo->contenido['detalle_del_consultorio']['denominacion_ambiente'] ?? '---' }}</td>
+            {{ $modulo->contenido['detalle_del_consultorio']['denominacion'] ?? ($modulo->contenido['detalle_del_consultorio']['denominacion_ambiente'] ?? '---') }}
         </tr>
         <tr>
             <td class="bg-label">Turno</td>

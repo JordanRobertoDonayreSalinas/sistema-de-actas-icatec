@@ -221,11 +221,11 @@
     <table>
         <tr>
             <td class="bg-label">Cantidad</td>
-            <td>{{ $modulo->contenido['detalle_del_consultorio']['num_ambientes'] ?? '0' }}</td>
+            {{ $modulo->contenido['detalle_del_consultorio']['num_consultorios'] ?? ($modulo->contenido['detalle_del_consultorio']['num_ambientes'] ?? '0') }}
         </tr>
         <tr>
             <td class="bg-label">Consultorio Entrevistado</td>
-            <td class="uppercase">{{ $modulo->contenido['detalle_del_consultorio']['denominacion_ambiente'] ?? '---' }}</td>
+            {{ $modulo->contenido['detalle_del_consultorio']['denominacion'] ?? ($modulo->contenido['detalle_del_consultorio']['denominacion_ambiente'] ?? '---') }}
         </tr>
         <tr>
             <td class="bg-label">Turno</td>
@@ -322,7 +322,7 @@
     <div class="section-title">{{ $n++ }}. Equipamiento del Consultorio</div>
     @php
         $equipos = \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $monitoreo->id)
-                    ->where('modulo', 'sm_med_familiar')
+                    ->where('modulo', 'med_familiar')
                     ->get();
     @endphp
     @if($equipos->count() > 0)

@@ -221,11 +221,11 @@
     <table>
         <tr>
             <td class="bg-label">Cantidad</td>
-            <td>{{ $modulo->contenido['detalle_del_consultorio']['num_ambientes'] ?? '0' }}</td>
+            {{ $modulo->contenido['detalle_del_consultorio']['num_consultorios'] ?? ($modulo->contenido['detalle_del_consultorio']['num_ambientes'] ?? '0') }}
         </tr>
         <tr>
             <td class="bg-label">Consultorio Entrevistado</td>
-            <td class="uppercase">{{ $modulo->contenido['detalle_del_consultorio']['denominacion_ambiente'] ?? '---' }}</td>
+            {{ $modulo->contenido['detalle_del_consultorio']['denominacion'] ?? ($modulo->contenido['detalle_del_consultorio']['denominacion_ambiente'] ?? '---') }}
         </tr>
         <tr>
             <td class="bg-label">Turno</td>
