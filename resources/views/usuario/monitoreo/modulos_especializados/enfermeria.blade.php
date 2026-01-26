@@ -1,33 +1,49 @@
 @extends('layouts.usuario')
-@section('title', 'Módulo 02: Enfermeria')
+@section('title', 'Módulo 05: Enfermeria')
 
 @section('content')
 
 {{-- SCRIPTS DE ALPINE (Lógica exclusiva para esta vista) --}}
 <script>
-    // CAMBIO REALIZADO: Nombre de función actualizado a enfermeriaForm
     function enfermeriaForm() {
         return {
             saving: false,
             
-            // 1. VARIABLES DE ESTADO (Inicializadas con datos del backend)
-            // Si no hay datos (registro nuevo), asumimos valores por defecto: NO para SIHCE, DNI para documento.
+            // 1. VARIABLES DE ESTADO
             sihce: '{{ $dataMap->contenido['profesional']['cuenta_sihce'] ?? '' }}',
             tipoDoc: '{{ $dataMap->contenido['profesional']['tipo_doc'] ?? 'DNI' }}',
 
-            // Datos para el componente de capacitación
             form: {
                 capacitacion: @json($valCapacitacion)
             },
 
-            // 2. DETECTOR DE CAMBIOS
-            // Esta función escucha cualquier cambio en el formulario y actualiza las variables si coincide el ID
+            // --- AGREGAMOS ESTE BLOQUE INIT ---
+            init() {
+                // Esperamos un "tick" para asegurar que el DOM (los inputs) se hayan renderizado
+                this.$nextTick(() => {
+                    // 1. Sincronizar SIHCE
+                    const selectSihce = document.getElementById('sihce_profesional');
+                    // Si la variable de Alpine está vacía (carga inicial sin datos) pero el select existe
+                    if (selectSihce && this.sihce === '') {
+                        this.sihce = selectSihce.value; // Forzamos a Alpine a tomar el valor visual ("SI")
+                    } else if (selectSihce && this.sihce !== '') {
+                        // Si ya hay datos en BD, aseguramos que el select visual coincida (opcional, por seguridad)
+                        selectSihce.value = this.sihce;
+                    }
+
+                    // 2. Sincronizar Tipo Doc (Para mostrar/ocultar DNI)
+                    const selectTipo = document.getElementById('tipo_profesional');
+                    if (selectTipo && this.tipoDoc === '') {
+                        this.tipoDoc = selectTipo.value;
+                    }
+                });
+            },
+            // ----------------------------------
+
             updateVisibility(event) {
-                // ID del select en el componente esp_2_1_docAdmin: 'sihce_' + prefix
                 if (event.target.id === 'sihce_profesional') {
                     this.sihce = event.target.value;
                 }
-                // ID del select en el componente esp_2_datosProfesional: 'tipo_' + prefix
                 if (event.target.id === 'tipo_profesional') {
                     this.tipoDoc = event.target.value;
                 }
@@ -49,7 +65,7 @@
         <div class="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="flex items-center gap-6">
                 <div class="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
-                    <span class="text-2xl font-black text-indigo-600">03</span>
+                    <span class="text-2xl font-black text-indigo-600">05</span>
                 </div>
                 <div>
                     <div class="flex items-center gap-3 mb-1">
@@ -60,7 +76,7 @@
                 </div>
             </div>
             
-            <a href="{{ route('usuario.monitoreo.modulos', $acta->id) }}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-colors">
+            <a href="{{ route('usuario.monitoreo.salud_mental_group.index', $acta->id) }}" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-500 font-black text-xs uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-colors">
                 Volver
             </a>
         </div>

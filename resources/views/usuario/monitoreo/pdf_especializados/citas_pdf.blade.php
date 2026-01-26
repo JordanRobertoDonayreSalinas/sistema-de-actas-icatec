@@ -21,11 +21,13 @@
         .main-header { 
             text-align: center; 
             margin-bottom: 20px; 
-            border-bottom: 2px solid #4f46e5; 
+            /* CAMBIO: Color Teal */
+            border-bottom: 2px solid #0d9488; 
             padding-bottom: 10px; 
         }
         .main-header h1 { 
-            color: #4f46e5; 
+            /* CAMBIO: Color Teal */
+            color: #0d9488; 
             margin: 0; 
             font-size: 16px; 
             text-transform: uppercase; 
@@ -38,13 +40,15 @@
 
         /* --- TÍTULOS DE SECCIÓN --- */
         .section-header {
-            background-color: #f3f4f6; 
-            border-left: 5px solid #4f46e5; 
+            /* CAMBIO: Fondo menta suave (Teal-50) */
+            background-color: #f0fdfa; 
+            /* CAMBIO: Borde Teal */
+            border-left: 5px solid #0d9488; 
             padding: 6px 10px;
             font-weight: bold;
             font-size: 11px;
             text-transform: uppercase;
-            color: #1f2937;
+            color: #134e4a; /* Teal muy oscuro para el texto */
             margin-top: 15px;
             margin-bottom: 5px; 
         }
@@ -80,7 +84,8 @@
             margin-top: 5px;
         }
         .inventory-table th {
-            background-color: #4f46e5;
+            /* CAMBIO: Fondo Teal sólido */
+            background-color: #0d9488;
             color: white;
             padding: 5px;
             font-size: 9px;
@@ -99,7 +104,7 @@
             border-radius: 10px;
             padding: 5px;
             background-color: #fff;
-            width: 65%; /* Reducido para que no ocupe todo el ancho */
+            width: 65%; 
             margin: 10px auto;
             text-align: center;
         }
@@ -118,8 +123,8 @@
             text-align: center;
         }
         .signature-box {
-            border: 1px solid #9ca3af; /* Gris medio */
-            border-radius: 15px;       /* Bordes redondeados como la foto */
+            border: 1px solid #9ca3af; 
+            border-radius: 15px;       
             padding: 30px 40px 15px 40px;
             display: inline-block;
             min-width: 300px;
@@ -360,11 +365,18 @@
             $size = 8;
             $color = array(0.3, 0.3, 0.3);
 
+            // Texto Izquierdo
             $pdf->page_text(40, $y, "SISTEMA DE MONITOREO - MÓDULO DE CITAS", $font, $size, $color);
 
+            // Texto Derecho (Paginación)
             $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
-            $width = $fontMetrics->get_text_width($text, $font, $size);
-            $x = $pdf->get_width() - $width - 30;
+            
+            // CORRECCIÓN: Usamos un texto 'dummy' para calcular el ancho real aproximado
+            // ya que "{PAGE_NUM}" es mucho más ancho que "1", lo que desalineaba el texto.
+            $anchoTexto = $fontMetrics->get_text_width("PAG: 88 / 88", $font, $size);
+            
+            // 42 puntos es aprox 1.5cm (tu margen derecho), así queda alineado con el contenido
+            $x = $pdf->get_width() - $anchoTexto - 42; 
             
             $pdf->page_text($x, $y, $text, $font, $size, $color);
         }
