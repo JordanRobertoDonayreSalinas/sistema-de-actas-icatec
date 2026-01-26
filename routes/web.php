@@ -9,7 +9,6 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\AsistentaSocialEspecializadoController;
-use App\Http\Controllers\ASocialESPController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\CitaESPController;
 use App\Http\Controllers\CitaESPpdfController;
@@ -56,8 +55,16 @@ use App\Http\Controllers\FuaElectronicoPdfController;
 use App\Http\Controllers\MedicinaEspecializadoController;
 use App\Http\Controllers\UrgenciasController;
 use App\Http\Controllers\UrgenciasPdfController;
+use App\Http\Controllers\FarmaciaESPController;
+use App\Http\Controllers\FarmaciaESPpdfController;
+use App\Http\Controllers\TerapiaESPController;
+use App\Http\Controllers\TerapiaESPpdfController;
+use App\Http\Controllers\PsiquiatriaESPController;
+use App\Http\Controllers\PsiquiatriaESPpdfController;
 use App\Http\Controllers\PsicologiaESPController;
 use App\Http\Controllers\PsicologiaESPpdfController;
+use App\Http\Controllers\MedicinaFamiliarESPController;
+use App\Http\Controllers\MedicinaFamiliarESPpdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -153,43 +160,43 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 // 4.2 Psiquiatría
-                Route::prefix('psiquiatria')->name('sm_psiquiatria.')->group(function() {
+                Route::prefix('psiquiatria')->name('sm_psiquiatria.')->group(function () {
                     // TODO: Crear SmPsiquiatriaController (Usando ConsultaMedicina temporalmente)
-                    Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [PsiquiatriaESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [PsiquiatriaESPController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [PsiquiatriaESPpdfController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.3 Medicina Familiar y Comunitaria
-                Route::prefix('medicina-familiar')->name('sm_med_familiar.')->group(function() {
+                Route::prefix('medicina-familiar')->name('sm_med_familiar.')->group(function () {
                     // TODO: Crear SmMedFamiliarController (Usando ConsultaMedicina temporalmente)
-                    Route::get('/{id}', [ConsultaMedicinaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [ConsultaMedicinaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [ConsultaMedicinaPdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [MedicinaFamiliarESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [MedicinaFamiliarESPController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [MedicinaFamiliarESPpdfController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.4 Psicología
-                Route::prefix('psicologia')->name('sm_psicologia.')->group(function() {
+                Route::prefix('psicologia')->name('sm_psicologia.')->group(function () {
                     // Usamos el controlador de Psicología existente
-                    Route::get('/{id}', [PsicologiaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [PsicologiaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [PsicologiaPdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [PsicologiaESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [PsicologiaESPController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [PsicologiaESPPdfController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.5 Enfermería
                 Route::prefix('enfermeria')->name('sm_enfermeria.')->group(function () {
                     // TODO: Crear SmEnfermeriaController (Usando Triaje temporalmente)
-                    Route::get('/{id}', [EnfermeriaESPController::class, 'index'])->name('index');
-                    Route::post('/{id}', [EnfermeriaESPController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [EnfermeriaESPpdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [TriajeController::class, 'index'])->name('index');
+                    Route::post('/{id}', [TriajeController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [TriajePdfController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.6 Servicio Social
                 Route::prefix('servicio-social')->name('sm_servicio_social.')->group(function () {
                     // TODO: Crear SmServicioSocialController (Usando GestionAdmin temporalmente)
-                    Route::get('/{id}', [ASocialESPController::class, 'index'])->name('index');
-                    Route::post('/{id}', [ASocialESPController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [ASocialESPController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.7 Terapias (Lenguaje / Ocupacional)
@@ -226,13 +233,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
-            // 5. Toma de Muestra (CSMC)
+            // 5. Toma de Muestra (CSMC) - Reutiliza Laboratorio o crear TomaMuestraESP
             Route::prefix('modulo/toma-muestra')->name('toma_muestra.')->group(function () {
-                
-                Route::get('/{id}', [TomaDeMuestraController::class, 'index'])->name('index');
-                Route::post('/{id}', [TomaDeMuestraController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [TomaDeMuestraPdfController::class, 'generar'])->name('pdf');
-
+                Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
+                Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
             });
 
             // 6. Farmacia (CSMC)
@@ -386,20 +391,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
-
-            // Módulo Especializado: Farmacia CSMC
-            Route::prefix('modulo/farmacia-especializada')->name('farmacia_esp.')->group(function () {
-                Route::get('/{id}', [FarmaciaESPController::class, 'index'])->name('index');
-                Route::post('/{id}', [FarmaciaESPController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [FarmaciaESPpdfController::class, 'generar'])->name('pdf');
-            });
-
-            // Módulo Especializado: Terapia CSMC
-            Route::prefix('modulo/terapia')->name('terapia.')->group(function () {
-                Route::get('/{id}', [TerapiaESPController::class, 'index'])->name('index');
-                Route::post('/{id}', [TerapiaESPController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [TerapiaESPpdfController::class, 'generar'])->name('pdf');
-            });
         });
     });
 
