@@ -9,7 +9,6 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\AsistentaSocialEspecializadoController;
-use App\Http\Controllers\ASocialESPController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\CitaESPController;
 use App\Http\Controllers\CitaESPpdfController;
@@ -58,16 +57,12 @@ use App\Http\Controllers\UrgenciasController;
 use App\Http\Controllers\UrgenciasPdfController;
 use App\Http\Controllers\FarmaciaESPController;
 use App\Http\Controllers\FarmaciaESPpdfController;
-use App\Http\Controllers\MedicinaFamiliarESPController;
-use App\Http\Controllers\MedicinaFamiliarESPpdfController;
 use App\Http\Controllers\TerapiaESPController;
 use App\Http\Controllers\TerapiaESPpdfController;
 use App\Http\Controllers\PsiquiatriaESPController;
 use App\Http\Controllers\PsiquiatriaESPpdfController;
 use App\Http\Controllers\PsicologiaESPController;
 use App\Http\Controllers\PsicologiaESPpdfController;
-use App\Http\Controllers\EnfermeriaESPController;
-use App\Http\Controllers\EnfermeriaESPpdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -197,9 +192,9 @@ Route::middleware(['auth'])->group(function () {
                 // 4.6 Servicio Social
                 Route::prefix('servicio-social')->name('sm_servicio_social.')->group(function () {
                     // TODO: Crear SmServicioSocialController (Usando GestionAdmin temporalmente)
-                    Route::get('/{id}', [ASocialESPController::class, 'index'])->name('index');
-                    Route::post('/{id}', [ASocialESPController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [ASocialESPController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
+                    Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.7 Terapias (Lenguaje / Ocupacional)
@@ -236,7 +231,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
-            // 5. Toma de Muestra (CSMC)
+                        // 5. Toma de Muestra (CSMC)
             Route::prefix('modulo/toma-muestra')->name('toma_muestra.')->group(function () {
                 Route::get('/{id}', [TomaDeMuestraController::class, 'index'])->name('index');
                 Route::post('/{id}', [TomaDeMuestraController::class, 'store'])->name('store');
