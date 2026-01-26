@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Terapia Especializada - Acta {{ $monitoreo->numero_acta }}</title>
+    <title>Gestión Administrativa Especializada - Acta {{ $monitoreo->numero_acta }}</title>
     <style>
         /* MARGENES DE PÁGINA */
         @page { margin: 1cm 1.5cm 2cm 1.5cm; }
@@ -198,7 +198,7 @@
     @endphp
 
     <div class="header">
-        <h1>Módulo 4.7: Terapia Especializada</h1>
+        <h1>Módulo 01: Gestión Administrativa</h1>
         <div class="header-meta">
             ACTA N° {{ str_pad($monitoreo->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $monitoreo->establecimiento->codigo }} - {{ strtoupper($monitoreo->establecimiento->nombre) }} | 
@@ -220,16 +220,8 @@
     <div class="section-title">{{ $n++ }}. DETALLES DEL CONSULTORIO</div>
     <table>
         <tr>
-            <td class="bg-label">Cantidad</td>
-            <td>{{ $modulo->contenido['detalle_consultorio']['num_ambientes'] ?? '0' }}</td>
-        </tr>
-        <tr>
-            <td class="bg-label">Consultorio Entrevistado</td>
-            <td class="uppercase">{{ $modulo->contenido['detalle_consultorio']['denominacion_ambiente'] ?? '---' }}</td>
-        </tr>
-        <tr>
             <td class="bg-label">Turno</td>
-            <td class="uppercase">{{ $modulo->contenido['detalle_consultorio']['turno'] ?? '---' }}</td>
+            <td class="uppercase">{{ $modulo->contenido['turno'] ?? '---' }}</td>
         </tr>
     </table>
 
@@ -320,7 +312,7 @@
     <div class="section-title">{{ $n++ }}. Equipamiento del Consultorio</div>
     @php
         $equipos = \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $monitoreo->id)
-                    ->where('modulo', 'sm_terapias')
+                    ->where('modulo', 'gestion_admin_esp')
                     ->get();
     @endphp
     @if($equipos->count() > 0)
@@ -350,6 +342,26 @@
         </table>
     @else
         <div style="color: #94a3b8; font-style: italic; padding: 8px;">SIN EQUIPAMIENTO REGISTRADO</div>
+    @endif
+
+    {{-- SECCIÓN: PROGRAMACIÓN SIHCE (CONDICIONAL) --}}
+    @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
+    <div class="section-title">{{ $n++ }}. Programación Actual SIHCE</div>
+    <table>
+        <tr>
+            <td class="bg-label">Fecha Límite de Programación</td>
+            <td class="uppercase">
+                @php
+                    $fechaProg = $modulo->contenido['fecha_programacion'] ?? null;
+                    if ($fechaProg) {
+                        echo \Carbon\Carbon::parse($fechaProg . '-01')->format('m/Y');
+                    } else {
+                        echo '---';
+                    }
+                @endphp
+            </td>
+        </tr>
+    </table>
     @endif
 
     {{-- SECCIÓN: SOPORTE (CONDICIONAL SIHCE) --}}

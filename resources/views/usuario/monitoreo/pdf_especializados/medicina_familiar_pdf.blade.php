@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Terapia Especializada - Acta {{ $monitoreo->numero_acta }}</title>
+    <title>Medicina Familiar Especializada - Acta {{ $monitoreo->numero_acta }}</title>
     <style>
         /* MARGENES DE PÁGINA */
         @page { margin: 1cm 1.5cm 2cm 1.5cm; }
@@ -198,7 +198,7 @@
     @endphp
 
     <div class="header">
-        <h1>Módulo 4.7: Terapia Especializada</h1>
+        <h1>Módulo 4.7: Medicina Familiar Especializada</h1>
         <div class="header-meta">
             ACTA N° {{ str_pad($monitoreo->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $monitoreo->establecimiento->codigo }} - {{ strtoupper($monitoreo->establecimiento->nombre) }} | 
@@ -320,7 +320,7 @@
     <div class="section-title">{{ $n++ }}. Equipamiento del Consultorio</div>
     @php
         $equipos = \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $monitoreo->id)
-                    ->where('modulo', 'sm_terapias')
+                    ->where('modulo', 'sm_med_familiar')
                     ->get();
     @endphp
     @if($equipos->count() > 0)

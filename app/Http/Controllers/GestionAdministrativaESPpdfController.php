@@ -10,19 +10,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-class TerapiaESPpdfController extends Controller
+class GestionAdministrativaESPpdfController extends Controller
 {
     /**
-     * Genera el PDF del módulo "Terapia Especializada".
+     * Genera el PDF del módulo "Gestión Administrativa Especializada".
      */
     public function generar($id)
     {
         // 1. Obtener datos de la cabecera (Establecimiento, Equipo, Usuario)
         $monitoreo = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'user'])->findOrFail($id);
 
-        // 2. Obtener los datos guardados del módulo específico ('sm_terapias')
+        // 2. Obtener los datos guardados del módulo específico ('gestion_admin_esp')
         $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                  ->where('modulo_nombre', 'sm_terapias')
+                                  ->where('modulo_nombre', 'gestion_admin_esp')
                                   ->firstOrFail();
         
         // 3. Procesar imágenes (Convertir a Base64)
@@ -50,7 +50,7 @@ class TerapiaESPpdfController extends Controller
 
         // 4. Generar PDF
         $usuarioLogeado = Auth::user();
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.terapia_pdf', compact('monitoreo', 'modulo', 'imagenesData', 'usuarioLogeado'));
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.gestion_administrativa_pdf', compact('monitoreo', 'modulo', 'imagenesData', 'usuarioLogeado'));
         
         // Configuramos el papel
         $pdf->setPaper('a4', 'portrait');
@@ -91,6 +91,6 @@ class TerapiaESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_Terapia_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("CSMC_Gestion_Admin_ESP_Acta_{$id}.pdf");
     }
 }

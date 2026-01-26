@@ -13,29 +13,67 @@ class MedicinaEspecializadoController extends Controller
         // 1. Recuperar el Acta
         $acta = Acta::findOrFail($actaId);
 
-        // 2. DEFINIR LA VARIABLE $detalle (Esto es lo que te faltaba)
-        // Buscamos si ya existe un guardado previo para este módulo, o creamos uno vacío en memoria
+        // 2. BUSCAR O CREAR EL DETALLE
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $actaId)
-            ->where('modulo_nombre', 'medicina_especializado') // Asegúrate de usar el mismo nombre al guardar
+            ->where('modulo_nombre', 'sm_medicina_general')
             ->firstOrNew();
 
-        // [Opcional] Inicializar contenido como array vacío para evitar errores si es nuevo
+        // Si es nuevo, inicializamos contenido como array vacío
         if ($detalle->contenido === null) {
             $detalle->contenido = [];
         }
 
-        // 3. Equipos
-        $equipos = []; // Tu lógica de equipos aquí
-
+        // 3. RECUPERAR EQUIPOS DESDE LA BD
+        $equipos = $detalle->contenido['equipos'] ?? [];
 
         // 4. RETORNO DE LA VISTA
-        // ¡IMPORTANTE!: Agregar 'detalle' al compact
+        // Pasamos 'detalle' (para los inputs normales) y 'equipos' (para la tabla dinámica)
         return view('usuario.monitoreo.modulos_especializados.medicina_especializado', compact('acta', 'equipos', 'detalle'));
     }
 
     public function store(Request $request, $actaId)
     {
-        // Aquí iría tu lógica para guardar (recuerda usar 'medicina_especializado' como nombre del módulo)
-        // ...
+        // 1. Recoger 'contenido' (Datos de componentes normales)
+        $contenido = $request->input('contenido', []);
+
+        // 2. FUSIONAR EQUIPOS (Componente 5 - JS)
+        if ($request->has('equipos')) {
+            $contenido['equipos'] = array_values($request->input('equipos'));
+        }
+
+        // 3. FUSIONAR COMENTARIOS (Componente 7)
+        if ($request->has('comentario_esp')) {
+            $contenido['comentarios']['texto'] = $request->input('comentario_esp');
+        }
+
+        // 4. FUSIONAR FOTO (Componente 7 - Archivo)
+        if ($request->hasFile('foto_esp_file')) {
+            $path = $request->file('foto_esp_file')->store('evidencias_esp', 'public');
+            $contenido['comentarios']['foto'] = $path;
+        } else {
+            // Mantener foto anterior si existe
+            $anterior = MonitoreoModulos::where('cabecera_monitoreo_id', $actaId)
+                ->where('modulo_nombre', 'sm_medicina_general')->first();
+
+            if ($anterior && isset($anterior->contenido['comentarios']['foto'])) {
+                $contenido['comentarios']['foto'] = $anterior->contenido['comentarios']['foto'];
+            }
+        }
+
+        // 5. GUARDAR
+        MonitoreoModulos::updateOrCreate(
+            [
+                'cabecera_monitoreo_id' => $actaId,
+                'modulo_nombre' => 'sm_medicina_general'
+            ],
+            [
+                'contenido' => $contenido
+            ]
+        );
+
+        // 6. REDIRECCIÓN CORREGIDA
+        return redirect()
+            ->route('usuario.monitoreo.salud_mental_group.index', $actaId)
+            ->with('success', 'Ficha guardada correctamente.');
     }
 }

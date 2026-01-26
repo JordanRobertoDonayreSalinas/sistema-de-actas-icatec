@@ -2,34 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\CabeceraMonitoreo;
 use App\Models\MonitoreoModulos;
+use App\Models\Profesional;
 use App\Models\EquipoComputo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use App\Models\Profesional;
 
-class TerapiaESPController extends Controller
+class GestionAdministrativaESPController extends Controller
 {
+    /**
+     * Muestra la vista principal del Módulo 01.
+     */
     public function index($id)
     {
-        $monitoreo = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
+        $acta = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
+        $modulo = 'gestion_admin_esp';
 
-        if ($monitoreo->tipo_origen !== 'ESPECIALIZADA') {
+        if ($acta->tipo_origen !== 'ESPECIALIZADA') {
             return redirect()->route('usuario.monitoreo.modulos', $id)
                 ->with('error', 'Este módulo no corresponde al tipo de establecimiento.');
         }
 
         // Recuperar equipos
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', 'sm_terapias')
+                                ->where('modulo', $modulo)
                                 ->get();
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'sm_terapias')
+                                    ->where('modulo_nombre', $modulo)
                                     ->first();
 
         // Si no existe, creamos una instancia vacía
@@ -39,6 +42,7 @@ class TerapiaESPController extends Controller
         }
 
         // TRANSFORMACIÓN DE DATOS (BD -> VISTA)
+        // Convertimos la estructura jerárquica (JSON guardado) a plana para que la vista la entienda
         if ($detalle && !empty($detalle->contenido)) {
             $dbData = $detalle->contenido;
             
@@ -53,10 +57,7 @@ class TerapiaESPController extends Controller
 
             // 1. Datos Generales
             $viewData['fecha'] = $dbData['fecha'] ?? null;
-            $consultorio = $dbData['detalle_consultorio'] ?? [];
-            $viewData['turno'] = $consultorio['turno'] ?? null;
-            $viewData['num_ambientes'] = $consultorio['num_ambientes'] ?? null;
-            $viewData['denominacion_ambiente'] = $consultorio['denominacion_ambiente'] ?? null;
+            $viewData['turno'] = $dbData['turno'] ?? null;
 
             // 2. Profesional (Array directo)
             $viewData['profesional'] = $dbData['profesional'] ?? [];
@@ -83,7 +84,10 @@ class TerapiaESPController extends Controller
             $detalle->dificultad_comunica_a = $diff['comunica'] ?? null;
             $detalle->dificultad_medio_uso  = $diff['medio'] ?? null;
 
-            // 6. Evidencia y Comentarios
+            // 6. Programación SIHCE
+            $viewData['fecha_programacion'] = $dbData['fecha_programacion'] ?? null;
+
+            // 7. Evidencia y Comentarios
             $viewData['comentario_esp'] = $dbData['comentario_esp'] ?? null;
             $viewData['foto_evidencia'] = $dbData['foto_evidencia'] ?? [];
             
@@ -95,18 +99,19 @@ class TerapiaESPController extends Controller
             $detalle->contenido = $viewData;
         }
 
-        $data = is_array($detalle->contenido) ? $detalle->contenido : [];
-
-        return view('usuario.monitoreo.modulos_especializados.terapia', compact('monitoreo', 'data', 'equipos', 'detalle'));
+        return view('usuario.monitoreo.modulos_especializados.gestion_administrativa', compact('acta', 'detalle', 'equipos'));
     }
 
+    /**
+     * Guarda los datos del módulo y sincroniza las tablas relacionadas.
+     */
     public function store(Request $request, $id)
     {
         try {
             DB::beginTransaction();
 
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            $modulo = 'sm_terapias';
+            $modulo = 'gestion_admin_esp';
 
             // 1. RECIBIMOS LOS DATOS (Estructura Plana del Formulario)
             $input = $request->input('contenido', []);
@@ -114,13 +119,12 @@ class TerapiaESPController extends Controller
             // ---------------------------------------------------------
             // FUSIÓN DE COMPONENTES EXTERNOS (Capacitación y Dificultades)
             // ---------------------------------------------------------
-            if ($request->has('capacitacion')) {
-                $cap = $request->input('capacitacion');
-                $input['recibio_capacitacion'] = $cap['recibieron_cap'] ?? null;
-                $input['inst_capacitacion']    = $cap['institucion_cap'] ?? null;
-            }
-            if ($request->has('dificultades')) {
-                $input['dificultades'] = $request->input('dificultades');
+            // Componente 4 (Capacitación) - Ya viene en contenido[] desde el JavaScript
+            // No necesitamos hacer nada adicional aquí
+
+            // Componente 6 (Dificultades) - Viene como contenido[dificultades]
+            if (!isset($input['dificultades'])) {
+                $input['dificultades'] = ['comunica' => null, 'medio' => null];
             }
 
             // ---------------------------------------------------------
@@ -131,15 +135,16 @@ class TerapiaESPController extends Controller
             $usaSihce = $input['profesional']['cuenta_sihce'] ?? 'NO';
             if ($usaSihce === 'NO') {
                 $input['recibio_capacitacion'] = null;
-                $input['inst_capacitacion']    = null;
-                $input['dificultades']         = ['comunica' => null, 'medio' => null];
+                $input['inst_que_lo_capacito'] = null;
+                $input['dificultades'] = ['comunica' => null, 'medio' => null];
                 $input['profesional']['firmo_dj'] = null;
                 $input['profesional']['firmo_confidencialidad'] = null;
+                $input['fecha_programacion'] = null;
             }
 
             // Regla NO Capacitación
             if (($input['recibio_capacitacion'] ?? '') === 'NO') {
-                $input['inst_capacitacion'] = null;
+                $input['inst_que_lo_capacito'] = null;
             }
 
             // Regla Documento != DNI
@@ -162,12 +167,7 @@ class TerapiaESPController extends Controller
             // ---------------------------------------------------------
             $structuredData = [
                 "fecha" => $input['fecha'] ?? date('Y-m-d'),
-                
-                "detalle_consultorio" => [
-                    "turno" => $input['turno'] ?? null,
-                    "num_ambientes" => $input['num_ambientes'] ?? null,
-                    "denominacion_ambiente" => $input['denominacion_ambiente'] ?? null
-                ],
+                "turno" => $input['turno'] ?? null,
                 
                 "profesional" => [
                     "doc" => $input['profesional']['doc'] ?? null,
@@ -197,9 +197,10 @@ class TerapiaESPController extends Controller
                 
                 "detalle_capacitacion" => [
                     "recibio_capacitacion" => $input['recibio_capacitacion'] ?? null,
-                    "inst_capacitacion" => $input['inst_capacitacion'] ?? null
+                    "inst_capacitacion" => $input['inst_que_lo_capacito'] ?? null
                 ],
                 
+                "fecha_programacion" => $input['fecha_programacion'] ?? null,
                 "comentario_esp" => $request->input('comentario_esp') ?? ($input['comentario_esp'] ?? null),
                 "foto_evidencia" => [] // Se llenará más abajo
             ];
@@ -261,6 +262,7 @@ class TerapiaESPController extends Controller
                                 ->first();
             $fotosFinales = [];
             
+            // Si ya existía data, buscamos la foto en la estructura nueva o la antigua
             if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
                 $prev = $registroPrevio->contenido['foto_evidencia'];
                 $fotosFinales = is_array($prev) ? $prev : [$prev];
@@ -286,16 +288,16 @@ class TerapiaESPController extends Controller
             // ---------------------------------------------------------
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
-                ['contenido' => $structuredData]
+                ['contenido' => $structuredData] // Guardamos el JSON estructurado
             );
 
             DB::commit();
-            return redirect()->route('usuario.monitoreo.salud_mental_group.index', $id)
-                             ->with('success', 'Módulo Terapia ESP sincronizado correctamente.');
+            return redirect()->route('usuario.monitoreo.modulos', $id)
+                             ->with('success', 'Módulo Gestión Administrativa ESP sincronizado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error Módulo Terapia ESP (Store) - Acta {$id}: " . $e->getMessage());
+            Log::error("Error Módulo Gestión Administrativa ESP (Store) - Acta {$id}: " . $e->getMessage());
             return back()->withErrors(['error' => 'Error al guardar: ' . $e->getMessage()])->withInput();
         }
     }

@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Módulo: Farmacia CSMC')
+@section('title', 'Módulo: Medicina Familiar Especializada')
 
 @section('content')
 <div class="py-12 bg-slate-50 min-h-screen">
@@ -13,22 +13,22 @@
                     <span class="px-3 py-1 bg-teal-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo Especializado</span>
                     <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta: #{{ str_pad($monitoreo->numero_acta ?? $monitoreo->id, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
-                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">06. Farmacia</h2>
+                <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">4.7 Medicina Familiar Especializada</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">
                     <i data-lucide="hospital" class="inline-block w-4 h-4 mr-1 text-teal-500"></i>{{ $monitoreo->establecimiento->nombre }}
                 </p>
             </div>
-            <a href="{{ route('usuario.monitoreo.modulos', $monitoreo->id) }}" class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver al Panel
+            <a href="{{ route('usuario.monitoreo.salud_mental_group.index', $monitoreo->id) }}" class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-600 font-black text-xs hover:bg-slate-50 transition-all uppercase shadow-sm">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Volver a Salud Mental
             </a>
         </div>
 
         {{-- FORMULARIO --}}
-        <form action="{{ route('usuario.monitoreo.farmacia_esp.store', $monitoreo->id) }}" 
+        <form action="{{ route('usuario.monitoreo.sm_med_familiar.store', $monitoreo->id) }}" 
               method="POST" 
               enctype="multipart/form-data" 
               class="space-y-6" 
-              id="form-monitoreo-farmacia-esp">
+              id="form-monitoreo-medicina-familiar-esp">
             @csrf
             
             {{-- DETALLES DEL AMBIENTE --}}
@@ -49,77 +49,7 @@
             </div>
             
             {{-- EQUIPAMIENTO --}}  
-            <x-esp_5_equipos :equipos="$equipos" modulo="farmacia_esp" />
-
-            {{-- GESTIÓN DE STOCK --}}
-            <div class="bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-xl shadow-slate-200/40 transition-all duration-700 mb-10 group/card relative">
-                
-                {{-- ENCABEZADO --}}
-                <div class="bg-slate-50/50 border-b border-slate-100 px-10 py-6 flex flex-col lg:flex-row justify-between items-center gap-6 transition-all duration-700">
-                    <div class="flex items-center gap-5">
-                        <div class="h-14 w-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-teal-600 border border-slate-100 transition-all duration-700">
-                            <i data-lucide="package" class="w-7 h-7"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-teal-900 font-black text-lg uppercase tracking-tight mb-1">GESTIÓN DE STOCK</h3>
-                            <p class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Control de inventario y almacenamiento</p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- CONTENIDO --}}
-                <div class="p-10 pl-16">
-                    <div class="grid grid-cols-1 gap-6">
-                        @foreach([
-                            'sis_gestion' => ['pregunta' => '¿Cuenta con sistema de gestión para el control de inventario?', 'icon' => 'database'],
-                            'stock_actual' => ['pregunta' => '¿El stock físico coincide con el reporte del sistema?', 'icon' => 'check-square'],
-                            'fua_sismed' => ['pregunta' => '¿Realiza la digitación oportuna en el SISMED?', 'icon' => 'clipboard-list'],
-                            'inventario_anual' => ['pregunta' => '¿Ha realizado el inventario anual de medicamentos e insumos?', 'icon' => 'calendar-check']
-                        ] as $key => $info)
-
-                        <div class="group flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-200 transition-all duration-300 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-500/5 hover:bg-white">
-                            
-                            {{-- Pregunta e Icono --}}
-                            <div class="flex items-center gap-5 mb-4 md:mb-0">
-                                <div class="hidden md:flex h-12 w-12 rounded-2xl bg-white text-slate-400 group-hover:bg-teal-50 group-hover:text-teal-600 items-center justify-center transition-colors shadow-sm border border-slate-100">
-                                    <i data-lucide="{{ $info['icon'] }}" class="w-6 h-6"></i>
-                                </div>
-                                <span class="text-xs font-bold text-slate-700 uppercase tracking-tight leading-relaxed max-w-lg">
-                                    {{ $info['pregunta'] }}
-                                </span>
-                            </div>
-
-                            {{-- Opciones SÍ / NO --}}
-                            <div class="flex gap-4">
-                                {{-- Botón SÍ --}}
-                                <label class="relative cursor-pointer flex-1 md:flex-none">
-                                    {{-- CORRECCIÓN AQUÍ: Usamos data_get para leer el valor anidado seguramente --}}
-                                    <input type="radio" name="contenido[preguntas][{{ $key }}]" value="SI" 
-                                        {{ data_get($detalle->contenido, "preguntas.$key") === 'SI' ? 'checked' : '' }} 
-                                        class="peer sr-only">
-                                    <div class="px-8 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-400 font-black text-[10px] uppercase tracking-widest transition-all
-                                        peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 peer-checked:ring-4 peer-checked:ring-emerald-500/10 hover:border-slate-300">
-                                        SÍ
-                                    </div>
-                                </label>
-
-                                {{-- Botón NO --}}
-                                <label class="relative cursor-pointer flex-1 md:flex-none">
-                                    {{-- CORRECCIÓN AQUÍ: Usamos data_get para leer el valor anidado seguramente --}}
-                                    <input type="radio" name="contenido[preguntas][{{ $key }}]" value="NO" 
-                                        {{ data_get($detalle->contenido, "preguntas.$key") === 'NO' ? 'checked' : '' }} 
-                                        class="peer sr-only">
-                                    <div class="px-8 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-400 font-black text-[10px] uppercase tracking-widest transition-all
-                                        peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700 peer-checked:ring-4 peer-checked:ring-rose-500/10 hover:border-slate-300">
-                                        NO
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
+            <x-esp_5_equipos :equipos="$equipos" modulo="sm_med_familiar" />
 
             {{-- SOPORTE--}}
             <div id="wrapper_soporte_externo">
@@ -139,7 +69,7 @@
                         </div>
                         <div class="text-left">
                             <p class="text-xl uppercase tracking-[0.3em] leading-none">Confirmar Registro</p>
-                            <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo Farmacia Especializada</p>
+                            <p class="text-[10px] text-teal-200 font-bold uppercase mt-3 tracking-widest">Sincronizar Módulo Medicina Familiar Especializada</p>
                         </div>
                     </div>
                     <div class="h-14 w-14 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white group-hover:text-teal-600 transition-all duration-500">
@@ -191,7 +121,7 @@
     });
 
     // Efecto de carga al enviar el formulario (Bloquea el botón)
-    document.getElementById('form-monitoreo-farmacia-esp').onsubmit = function() {
+    document.getElementById('form-monitoreo-medicina-familiar-esp').onsubmit = function() {
         const form = this;
         const btn = document.getElementById('btn-submit-action');
         const icon = document.getElementById('icon-save-loader');

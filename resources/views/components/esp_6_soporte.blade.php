@@ -6,18 +6,18 @@
     Ahora el título y el contenido viven dentro de la misma "caja".
 --}}
 <section id="bloque-dificultades"
-    {{ $attributes->merge(['class' => 'bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-6']) }}>
+    {{ $attributes->merge(['class' => 'bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden mt-6']) }}>
 
     {{-- 1. Encabezado Integrado --}}
-    {{-- Le puse un fondo gris muy tenue (bg-slate-50) para diferenciarlo sutilmente del cuerpo --}}
     <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-slate-50/50">
-        <div class="p-2 bg-red-50 text-red-600 rounded-lg border border-red-100 shadow-sm">
-            <i data-lucide="life-buoy" class="w-5 h-5"></i>
+        {{-- Contenedor del icono con colores teal (verde azulado) --}}
+        <div class="p-2 bg-teal-50 text-teal-600 rounded-lg border border-teal-100 shadow-sm">
+            {{-- "cpu" es ideal para soporte tecnológico. Otras opciones: "monitor-wrench" o "terminal" --}}
+            <i data-lucide="cpu" class="w-5 h-5"></i>
         </div>
         <div>
-            <h2 class="text-lg font-bold text-slate-800 leading-tight">Soporte</h2>
-            {{-- Agregué un subtítulo pequeño para darle más "cuerpo" al diseño --}}
-            <p class="text-xs text-slate-500 font-medium">Registro de incidencias y canales de comunicación</p>
+            <h2 class="text-lg font-bold text-teal-900 leading-tight">SOPORTE</h2>
+            <p class="text-xs text-slate-400 font-medium">DIFICULTADES Y COMUNICACIÓN</p>
         </div>
     </div>
 
@@ -28,7 +28,7 @@
         <div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                1. Ante Dificultades ¿A quién comunica?
+                Ante Dificultades ¿A quién comunica?
             </p>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 @foreach (['MINSA', 'DIRESA', 'OTROS', 'UNIDAD EJECUTORA', 'JEFE DE ESTABLECIMIENTO'] as $opcion)
@@ -39,7 +39,7 @@
 
                         <div
                             class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:shadow-sm h-full flex items-center justify-center">
-                            <span class="block text-[10px] font-bold text-slate-600 peer-checked:text-indigo-700">
+                            <span class="block text-[11.5px] font-bold text-slate-600 peer-checked:text-indigo-700">
                                 {{ $opcion }}
                             </span>
                         </div>
@@ -61,7 +61,7 @@
         <div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                2. ¿Qué medio utiliza?
+                ¿Qué medio utiliza?
             </p>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 @foreach (['WHATSAPP', 'CELULAR', 'CORREO', 'OTROS'] as $opcion)
@@ -72,7 +72,7 @@
 
                         <div
                             class="text-center py-2.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:shadow-sm h-full flex items-center justify-center">
-                            <span class="block text-[10px] font-bold text-slate-600 peer-checked:text-indigo-700">
+                            <span class="block text-[11.5px] font-bold text-slate-600 peer-checked:text-indigo-700">
                                 {{ $opcion }}
                             </span>
                         </div>
