@@ -27,6 +27,7 @@ use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\PartoController;
 use App\Http\Controllers\PrenatalController;
 use App\Http\Controllers\ConsolidadoPdfController;
+use App\Http\Controllers\ConsolidadoESPPdfController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\TriajeController;
 use App\Http\Controllers\TriajePdfController;
@@ -402,6 +403,9 @@ Route::middleware(['auth'])->group(function () {
     // Acta Consolidada (Global)
     Route::get('monitoreo/{id}/consolidado/pdf', [ConsolidadoPdfController::class, 'generar'])
         ->name('usuario.monitoreo.pdf');
+    // Acta Consolidada Especializada    
+    Route::get('monitoreo/{id}/consolidado_esp/pdf', [ConsolidadoESPPdfController::class, 'generar'])
+        ->name('usuario.monitoreoESP.pdf');
 
     // --- GRUPO ADMINISTRADOR ---
     Route::prefix('admin')->name('admin.')->group(function () {
