@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
 use App\Models\MonitoreoModulos;
-use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
-class MedicinaEspecializadoController extends Controller
+class ASocialESPController extends Controller
 {
     public function index($actaId)
     {
@@ -16,7 +16,7 @@ class MedicinaEspecializadoController extends Controller
 
         // 2. BUSCAR O CREAR EL DETALLE
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $actaId)
-            ->where('modulo_nombre', 'sm_medicina_general')
+            ->where('modulo_nombre', 'sm_servicio_social')
             ->firstOrNew();
 
         // Si es nuevo, inicializamos contenido como array vacío
@@ -29,7 +29,7 @@ class MedicinaEspecializadoController extends Controller
 
         // 4. RETORNO DE LA VISTA
         // Pasamos 'detalle' (para los inputs normales) y 'equipos' (para la tabla dinámica)
-        return view('usuario.monitoreo.modulos_especializados.medicina_especializado', compact('acta', 'equipos', 'detalle'));
+        return view('usuario.monitoreo.modulos_especializados.asocial_especializado', compact('acta', 'equipos', 'detalle'));
     }
 
     public function store(Request $request, $actaId)
@@ -54,7 +54,7 @@ class MedicinaEspecializadoController extends Controller
         } else {
             // Mantener foto anterior si existe
             $anterior = MonitoreoModulos::where('cabecera_monitoreo_id', $actaId)
-                ->where('modulo_nombre', 'sm_medicina_general')->first();
+                ->where('modulo_nombre', 'sm_servicio_social')->first();
 
             if ($anterior && isset($anterior->contenido['comentarios']['foto'])) {
                 $contenido['comentarios']['foto'] = $anterior->contenido['comentarios']['foto'];
@@ -65,7 +65,7 @@ class MedicinaEspecializadoController extends Controller
         MonitoreoModulos::updateOrCreate(
             [
                 'cabecera_monitoreo_id' => $actaId,
-                'modulo_nombre' => 'sm_medicina_general'
+                'modulo_nombre' => 'sm_servicio_social'
             ],
             [
                 'contenido' => $contenido
@@ -84,7 +84,7 @@ class MedicinaEspecializadoController extends Controller
         $acta = CabeceraMonitoreo::findOrFail($id);
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-            ->where('modulo_nombre', 'sm_medicina_general')
+            ->where('modulo_nombre', 'sm_servicio_social')
             ->first();
 
         // Evitar error si no hay detalle guardado aún
@@ -114,7 +114,7 @@ class MedicinaEspecializadoController extends Controller
 
         // 3. Generar PDF
         // Asegúrate de que la ruta de la vista coincida con tu carpeta real
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.medicina_especializado_pdf', [
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.asocial_especializado_pdf', [
             'acta' => $acta,
             'detalle' => $detalle,
             'imagenesData' => $imagenesData
@@ -150,6 +150,6 @@ class MedicinaEspecializadoController extends Controller
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('Acta_Medicina_General_' . $acta->numero_acta . '.pdf');
+        return $pdf->stream('Acta_Asistenta_Social_' . $acta->numero_acta . '.pdf');
     }
 }

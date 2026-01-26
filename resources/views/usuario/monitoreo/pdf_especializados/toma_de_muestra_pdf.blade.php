@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Triaje - Acta {{ $acta->numero_acta ?? $acta->id }}</title>
+    <title>Toma de Muestra - Acta {{ $acta->numero_acta ?? $acta->id }}</title>
     <style>
         /* MARGENES DE PÁGINA */
         @page { margin: 1cm 1.5cm 2cm 1.5cm; }
@@ -11,7 +11,7 @@
         body { 
             font-family: 'Helvetica', sans-serif; 
             font-size: 10px; 
-            color: #334155; /* Slate 700 */
+            color: #334155; 
             line-height: 1.4; 
         }
 
@@ -19,7 +19,7 @@
         .header { 
             text-align: center; 
             margin-bottom: 20px; 
-            border-bottom: 2px solid #0f766e; /* Teal 700 */
+            border-bottom: 2px solid #0f766e; 
             padding-bottom: 10px; 
         }
         .header h1 { 
@@ -40,12 +40,12 @@
 
         /* TÍTULOS DE SECCIÓN */
         .section-title { 
-            background-color: #f0fdfa; /* Teal 50 */
-            color: #0f766e; /* Teal 700 */
+            background-color: #f0fdfa; 
+            color: #0f766e; 
             padding: 6px 10px; 
             font-weight: bold; 
             text-transform: uppercase; 
-            border-left: 4px solid #14b8a6; /* Teal 500 */
+            border-left: 4px solid #14b8a6; 
             border-radius: 4px;
             margin-top: 15px; 
             margin-bottom: 8px; 
@@ -74,8 +74,8 @@
         th:last-child, td:last-child { border-right: none; }
 
         th { 
-            background-color: #f1f5f9; /* Slate 100 */
-            color: #475569; /* Slate 600 */
+            background-color: #f1f5f9; 
+            color: #475569; 
             font-weight: 700;
             text-transform: uppercase; 
         }
@@ -110,7 +110,6 @@
             border-radius: 4px;
         }
 
-        /* RECUADRO SIN EVIDENCIA */
         .no-evidence-box {
             border: 2px dashed #cbd5e1;
             border-radius: 8px;        
@@ -122,10 +121,10 @@
             margin: 15px 0;
         }
 
-        /* FIRMAS - MODIFICADO */
+        /* FIRMAS */
         .firma-section { margin-top: 40px; page-break-inside: avoid; }
         .firma-box { 
-            width: 45%; /* Más delgado (antes 60%) */
+            width: 45%; /* Delgado */
             margin: 0 auto;
             text-align: center; 
             padding: 20px; 
@@ -147,21 +146,18 @@
         $n = 1;
         $rrhh = $datos['rrhh'] ?? [];
         
-        // Preparar nombre
         $pNom = $rrhh['nombres'] ?? '';
         $pPat = $rrhh['apellido_paterno'] ?? '';
         $pMat = $rrhh['apellido_materno'] ?? '';
         $profNombreCompleto = trim($pPat . ' ' . $pMat . ' ' . $pNom);
         $profNombreCompleto = empty($profNombreCompleto) ? '---' : $profNombreCompleto;
 
-        // Documento
         $rawTipoDoc = $rrhh['tipo_doc'] ?? '---';
         $rawNumDoc  = $rrhh['doc'] ?? '---';
     @endphp
 
-    {{-- HEADER --}}
     <div class="header">
-        <h1>Módulo 02: Triaje</h1>
+        <h1>Módulo 05: Toma de Muestra</h1>
         <div class="header-meta">
             ACTA N° {{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
@@ -211,7 +207,7 @@
             <td>{{ $rrhh['telefono'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">Cargo</td>
+            <td class="bg-label">Profesion</td>
             <td class="uppercase">{{ $rrhh['cargo'] ?? '---' }}</td>
         </tr>
     </table>
@@ -223,8 +219,6 @@
             <td class="bg-label">¿Utiliza SIHCE?</td>
             <td class="uppercase">{{ $rrhh['cuenta_sihce'] ?? 'NO' }}</td>
         </tr>
-        
-        {{-- Solo mostramos estas filas si SIHCE es diferente de NO --}}
         @if(($rrhh['cuenta_sihce'] ?? '') != 'NO')
             <tr>
                 <td class="bg-label">¿Firmó Declaración Jurada?</td>
@@ -264,7 +258,7 @@
 
     {{-- 5. CAPACITACIÓN --}}
     @if(($rrhh['cuenta_sihce'] ?? '') != 'NO')
-    <div class="section-title">{{ $n++ }}. CAPACITACIÓN</div>
+    <div class="section-title">{{ $n++ }}. DETALLES DE CAPACITACIÓN</div>
     <table>
         <tr>
             <td class="bg-label">¿Recibió Capacitación?</td>
@@ -366,8 +360,7 @@
         <div class="section-title">{{ $n++ }}. FIRMA</div>
         
         <div class="firma-box">
-            {{-- Div vacío para dar espacio vertical (HACE EL RECUADRO MÁS ALTO) --}}
-            <div style="height: 70px;"></div>
+            <div style="height: 70px;"></div> {{-- Altura extra --}}
             <div class="firma-linea"></div>
             <div class="firma-nombre">{{ strtoupper($profNombreCompleto) }}</div>
             <div class="firma-label">{{ $rawTipoDoc }}: {{ $rawNumDoc }}</div>

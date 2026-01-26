@@ -1,12 +1,12 @@
 @extends('layouts.usuario')
-@section('title', 'Módulo 02: Citas')
+@section('title', 'Módulo 02: Enfermeria')
 
 @section('content')
 
 {{-- SCRIPTS DE ALPINE (Lógica exclusiva para esta vista) --}}
 <script>
-    // CAMBIO REALIZADO: Nombre de función actualizado a citasForm
-    function citasForm() {
+    // CAMBIO REALIZADO: Nombre de función actualizado a enfermeriaForm
+    function enfermeriaForm() {
         return {
             saving: false,
             
@@ -41,8 +41,8 @@
     }
 </script>
 
-{{-- CAMBIO REALIZADO: x-data inicializado con citasForm() --}}
-<div class="py-12 bg-[#f8fafc] min-h-screen" x-data="citasForm()">
+{{-- CAMBIO REALIZADO: x-data inicializado con enfermeriaForm() --}}
+<div class="py-12 bg-[#f8fafc] min-h-screen" x-data="enfermeriaForm()">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         
         {{-- ENCABEZADO --}}
@@ -56,7 +56,7 @@
                         <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
                         <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Citas</h2>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Enfermería</h2>
                 </div>
             </div>
             
@@ -68,7 +68,7 @@
         {{-- FORMULARIO --}}
         {{-- Agregamos @change para ejecutar updateVisibility cada vez que se modifique un input --}}
         <form 
-            action="{{ route('usuario.monitoreo.citas_esp.store', $acta->id) }}" 
+            action="{{ route('usuario.monitoreo.sm_enfermeria.store', $acta->id) }}" 
             method="POST" 
             enctype="multipart/form-data" 
             x-ref="formHtml"
@@ -118,7 +118,7 @@
                     return (object) $item;
                 });
             @endphp
-            <x-esp_5_equipos :equipos="$equiposComoObjetos" modulo="citas_esp" />
+            <x-esp_5_equipos :equipos="$equiposComoObjetos" modulo="enfermeria_esp" />
             
             {{-- 6. SOPORTE --}}
             {{-- CONDICIÓN: Se oculta si SIHCE es NO (misma regla que capacitación) --}}

@@ -10,9 +10,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Profesional;
 use stdClass;
 
-class CitaESPController extends Controller
+
+class EnfermeriaESPController extends Controller
 {
-    public function index($id)
+    public function index($id) 
     {
         // 1. Validar Cabecera
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
@@ -24,7 +25,7 @@ class CitaESPController extends Controller
 
         // 2. Recuperar el JSON guardado
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                    ->where('modulo_nombre', 'citas_esp')
+                                    ->where('modulo_nombre', 'enfermeria_esp')
                                     ->first();
 
         // --- CORRECCIÓN DEL ERROR DE JSON_DECODE ---
@@ -98,7 +99,7 @@ class CitaESPController extends Controller
             $valInventario[] = $obj;
         }
 
-        return view('usuario.monitoreo.modulos_especializados.citas', compact(
+        return view('usuario.monitoreo.modulos_especializados.enfermeria', compact(
             'acta', 'dataMap', 'valCapacitacion', 'valInventario'
         ));
     }
@@ -107,7 +108,7 @@ class CitaESPController extends Controller
     {
         try {
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                              ->where('modulo_nombre', 'citas_esp')
+                                              ->where('modulo_nombre', 'enfermeria_esp')
                                               ->first();
             
             // Aquí también quitamos el json_decode si ya viene como array, o usamos un helper seguro
@@ -228,7 +229,7 @@ class CitaESPController extends Controller
             // Como tu modelo ya debe tener 'casts' => ['contenido' => 'array'], 
             // pasamos el array directamente. Laravel se encarga de convertirlo a JSON.
             MonitoreoModulos::updateOrCreate(
-                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => 'citas_esp'],
+                ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => 'enfermeria_esp'],
                 [
                     'contenido'        => $contenidoParaJson,
                     'pdf_firmado_path' => null
@@ -236,7 +237,7 @@ class CitaESPController extends Controller
             );
 
             return redirect()
-                ->route('usuario.monitoreo.modulos', $id)
+                ->route('usuario.monitoreo.salud_mental_group.index', $id)
                 ->with('success', 'Información guardada correctamente.');
 
         } catch (\Exception $e) {
