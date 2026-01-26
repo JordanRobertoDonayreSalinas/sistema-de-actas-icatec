@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Módulo: Farmacia CSMC')
+@section('title', 'Módulo: Gestion Administrativa CSMC')
 
 @section('content')
 <div class="py-12 bg-slate-50 min-h-screen">
