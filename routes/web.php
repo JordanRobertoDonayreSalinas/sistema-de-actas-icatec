@@ -75,7 +75,7 @@ use App\Http\Controllers\TomaDeMuestrapdfController;
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
     'create' => 'crear-acta',
-    'edit'   => 'editar-acta',
+    'edit' => 'editar-acta',
 ]);
 
 // --- AUTENTICACIÓN PÚBLICA ---
@@ -120,6 +120,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [DocumentoAdministrativoController::class, 'index'])->name('index');
             Route::get('/crear', [DocumentoAdministrativoController::class, 'create'])->name('create');
             Route::post('/guardar', [DocumentoAdministrativoController::class, 'store'])->name('store');
+            Route::get('/{id}/editar', [DocumentoAdministrativoController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [DocumentoAdministrativoController::class, 'update'])->name('update');
             Route::get('/{id}/pdf', [DocumentoAdministrativoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-firmado', [DocumentoAdministrativoController::class, 'subirFirmado'])->name('subir-firmado');
         });
@@ -239,7 +241,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
-                        // 5. Toma de Muestra (CSMC)
+            // 5. Toma de Muestra (CSMC)
             Route::prefix('modulo/toma-muestra')->name('toma_muestra.')->group(function () {
                 Route::get('/{id}', [TomaDeMuestraController::class, 'index'])->name('index');
                 Route::post('/{id}', [TomaDeMuestraController::class, 'store'])->name('store');

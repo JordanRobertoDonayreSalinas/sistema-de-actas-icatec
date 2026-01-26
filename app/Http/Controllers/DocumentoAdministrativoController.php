@@ -26,29 +26,29 @@ class DocumentoAdministrativoController extends Controller
         // 1. Filtro General (Busca por DNI, Nombre o Apellido del Profesional)
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('profesional_doc', 'like', "%{$search}%")
-                  ->orWhere('profesional_nombre', 'like', "%{$search}%")
-                  ->orWhere('profesional_apellido_paterno', 'like', "%{$search}%")
-                  ->orWhere('profesional_apellido_materno', 'like', "%{$search}%");
+                    ->orWhere('profesional_nombre', 'like', "%{$search}%")
+                    ->orWhere('profesional_apellido_paterno', 'like', "%{$search}%")
+                    ->orWhere('profesional_apellido_materno', 'like', "%{$search}%");
             });
         }
 
         // 2. Filtros de Ubicación (Relación con Establecimiento)
         if ($request->filled('provincia')) {
-            $query->whereHas('establecimiento', function($q) use ($request) {
+            $query->whereHas('establecimiento', function ($q) use ($request) {
                 $q->where('provincia', $request->provincia);
             });
         }
 
         if ($request->filled('distrito')) {
-            $query->whereHas('establecimiento', function($q) use ($request) {
+            $query->whereHas('establecimiento', function ($q) use ($request) {
                 $q->where('distrito', $request->distrito);
             });
         }
 
         if ($request->filled('establecimiento_nombre')) {
-            $query->whereHas('establecimiento', function($q) use ($request) {
+            $query->whereHas('establecimiento', function ($q) use ($request) {
                 $q->where('nombre_establecimiento', 'like', "%{$request->establecimiento_nombre}%");
             });
         }
@@ -57,11 +57,11 @@ class DocumentoAdministrativoController extends Controller
         if ($request->filled('estado')) {
             if ($request->estado == 'firmada') {
                 $query->whereNotNull('pdf_firmado_compromiso')
-                      ->whereNotNull('pdf_firmado_declaracion');
+                    ->whereNotNull('pdf_firmado_declaracion');
             } elseif ($request->estado == 'pendiente') {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->whereNull('pdf_firmado_compromiso')
-                      ->orWhereNull('pdf_firmado_declaracion');
+                        ->orWhereNull('pdf_firmado_declaracion');
                 });
             }
         }
@@ -74,29 +74,29 @@ class DocumentoAdministrativoController extends Controller
 
         // Estadísticas (Respetando los filtros de fecha actuales)
         $totalDocs = $documentos->total();
-        
+
         $countCompletados = DocumentoAdministrativo::whereBetween('fecha', [$fecha_inicio, $fecha_fin])
-                            ->whereNotNull('pdf_firmado_compromiso')
-                            ->whereNotNull('pdf_firmado_declaracion')
-                            ->count();
-                            
+            ->whereNotNull('pdf_firmado_compromiso')
+            ->whereNotNull('pdf_firmado_declaracion')
+            ->count();
+
         $countPendientes = $totalDocs - $countCompletados;
 
         // Listas para los Selects de Filtros (Carga optimizada)
         $provincias = Establecimiento::select('provincia')->distinct()->orderBy('provincia')->pluck('provincia');
-        
+
         // Si hay provincia seleccionada, cargamos solo sus distritos, si no, todos
         $distritosQuery = Establecimiento::select('distrito')->distinct()->orderBy('distrito');
-        if($request->filled('provincia')) {
+        if ($request->filled('provincia')) {
             $distritosQuery->where('provincia', $request->provincia);
         }
         $distritos = $distritosQuery->pluck('distrito');
 
         return view('usuario.documentos_administrativos.index', compact(
-            'documentos', 
-            'fecha_inicio', 
-            'fecha_fin', 
-            'countCompletados', 
+            'documentos',
+            'fecha_inicio',
+            'fecha_fin',
+            'countCompletados',
             'countPendientes',
             'provincias',
             'distritos'
@@ -105,7 +105,7 @@ class DocumentoAdministrativoController extends Controller
 
     public function create()
     {
-        $detalle = (object)['contenido' => []];
+        $detalle = (object) ['contenido' => []];
         return view('usuario.documentos_administrativos.create', compact('detalle'));
     }
 
@@ -132,21 +132,80 @@ class DocumentoAdministrativoController extends Controller
         $doc->tipo_formato = 'AMBOS'; // Forzado según tu requerimiento anterior
         $doc->sistemas_acceso = implode(', ', $request->sistemas_acceso);
         $doc->correo_electronico = $datosProf['email'] ?? null;
-        
+
         $doc->profesional_tipo_doc = $datosProf['tipo_doc'];
         $doc->profesional_doc = $datosProf['doc'];
         $doc->profesional_nombre = mb_strtoupper($datosProf['nombres'], 'UTF-8');
         $doc->profesional_apellido_paterno = mb_strtoupper($datosProf['apellido_paterno'], 'UTF-8');
         $doc->profesional_apellido_materno = mb_strtoupper($datosProf['apellido_materno'], 'UTF-8');
-        
+
         $doc->area_oficina = mb_strtoupper($request->area_oficina, 'UTF-8');
         $doc->cargo_rol = mb_strtoupper($request->cargo_rol, 'UTF-8');
-        
+
         $doc->user_id = Auth::id();
         $doc->save();
 
         return redirect()->route('usuario.documentos.index')
             ->with('success', 'Registro creado con éxito. Puede generar ambos documentos.');
+    }
+
+    public function edit($id)
+    {
+        $doc = DocumentoAdministrativo::with('establecimiento')->findOrFail($id);
+
+        // Preparar el objeto detalle con los datos del profesional para el componente
+        $detalle = (object) [
+            'contenido' => [
+                'solicitante' => [
+                    'tipo_doc' => $doc->profesional_tipo_doc,
+                    'doc' => $doc->profesional_doc,
+                    'nombres' => $doc->profesional_nombre,
+                    'apellido_paterno' => $doc->profesional_apellido_paterno,
+                    'apellido_materno' => $doc->profesional_apellido_materno,
+                    'email' => $doc->correo_electronico,
+                ]
+            ]
+        ];
+
+        return view('usuario.documentos_administrativos.edit', compact('doc', 'detalle'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'establecimiento_id' => 'required|exists:establecimientos,id',
+            'fecha' => 'required|date',
+            'sistemas_acceso' => 'required|array',
+            'area_oficina' => 'required',
+            'cargo_rol' => 'required',
+            'contenido.solicitante.doc' => 'required',
+            'contenido.solicitante.tipo_doc' => 'required',
+            'contenido.solicitante.nombres' => 'required',
+            'contenido.solicitante.apellido_paterno' => 'required',
+            'contenido.solicitante.apellido_materno' => 'required',
+        ]);
+
+        $doc = DocumentoAdministrativo::findOrFail($id);
+        $datosProf = $request->input('contenido.solicitante');
+
+        $doc->establecimiento_id = $request->establecimiento_id;
+        $doc->fecha = $request->fecha;
+        $doc->sistemas_acceso = implode(', ', $request->sistemas_acceso);
+        $doc->correo_electronico = $datosProf['email'] ?? null;
+
+        $doc->profesional_tipo_doc = $datosProf['tipo_doc'];
+        $doc->profesional_doc = $datosProf['doc'];
+        $doc->profesional_nombre = mb_strtoupper($datosProf['nombres'], 'UTF-8');
+        $doc->profesional_apellido_paterno = mb_strtoupper($datosProf['apellido_paterno'], 'UTF-8');
+        $doc->profesional_apellido_materno = mb_strtoupper($datosProf['apellido_materno'], 'UTF-8');
+
+        $doc->area_oficina = mb_strtoupper($request->area_oficina, 'UTF-8');
+        $doc->cargo_rol = mb_strtoupper($request->cargo_rol, 'UTF-8');
+
+        $doc->save();
+
+        return redirect()->route('usuario.documentos.index')
+            ->with('success', 'Documento actualizado exitosamente.');
     }
 
     public function generarPDF(Request $request, $id)
