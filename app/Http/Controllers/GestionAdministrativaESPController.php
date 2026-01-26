@@ -51,7 +51,8 @@ class GestionAdministrativaESPController extends Controller
                 'datos_del_profesional' => [],
                 'detalle_de_dni_y_firma_digital' => [],
                 'detalles_de_capacitacion' => [],
-                'detalle_del_consultorio' => []
+                'detalle_del_consultorio' => [],
+                'gestion_admin_esp' => []
             ];
 
             $viewData = array_replace_recursive($defaults, $dbData);
@@ -62,7 +63,10 @@ class GestionAdministrativaESPController extends Controller
             $viewData['turno'] = $consultorio['turno'] ?? null;
             $viewData['num_consultorios'] = $consultorio['num_consultorios'] ?? null;
             $viewData['denominacion'] = $consultorio['denominacion'] ?? null;
-            $viewData['fecha_programacion'] = $consultorio['fecha_programacion'] ?? null;
+            
+            // 1.1 Gestión Administrativa ESP
+            $gestionAdmin = $dbData['gestion_admin_esp'] ?? [];
+            $viewData['fecha_programacion'] = $gestionAdmin['fecha_programacion'] ?? null;
 
             // 2. Profesional (Array directo)
             $profesional = $dbData['datos_del_profesional'] ?? [];
@@ -201,7 +205,10 @@ class GestionAdministrativaESPController extends Controller
                     "fecha_monitoreo" => $input['fecha'] ?? date('Y-m-d'),
                     "turno" => $input['turno'] ?? null,
                     "num_consultorios" => $input['num_consultorios'] ?? null,
-                    "denominacion" => $input['denominacion'] ?? null,
+                    "denominacion" => $input['denominacion'] ?? null
+                ],
+                
+                "gestion_admin_esp" => [
                     "fecha_programacion" => $input['fecha_programacion'] ?? null
                 ],
                 

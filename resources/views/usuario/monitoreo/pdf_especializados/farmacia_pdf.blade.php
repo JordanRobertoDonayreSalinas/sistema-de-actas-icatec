@@ -385,7 +385,7 @@
                     'fua_sismed'        => '¿Realiza la digitación oportuna en el SISMED?',
                     'inventario_anual'  => '¿Ha realizado el inventario anual de medicamentos e insumos?'
                 ];
-                $preguntasData = $modulo->contenido['preguntas_farmacia'] ?? [];
+                $preguntasData = $modulo->contenido['farmacia_esp'] ?? [];
             @endphp
             @foreach($preguntasLabels as $key => $label)
             @php

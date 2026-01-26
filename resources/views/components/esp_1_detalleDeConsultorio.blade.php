@@ -75,7 +75,9 @@
             <input type="number" 
                    name="contenido[num_ambientes]" 
                    value="{{ $ambientes }}" 
-                   min="0"
+                   min="1"
+                   onkeydown="return event.keyCode !== 69 && event.keyCode !== 189"
+                   oninput="this.value = Math.abs(this.value)" 
                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-teal-500 transition-all text-center"
                    placeholder="EJ: 1">
         </div>

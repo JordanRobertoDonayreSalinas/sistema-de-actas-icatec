@@ -51,7 +51,7 @@ class FarmaciaESPController extends Controller
                 'detalle_de_dni_y_firma_digital' => [],
                 'detalles_de_capacitacion' => [],
                 'detalle_del_consultorio' => [],
-                'preguntas_farmacia' => []
+                'farmacia_esp' => []
             ];
 
             $viewData = array_replace_recursive($defaults, $dbData);
@@ -81,7 +81,7 @@ class FarmaciaESPController extends Controller
             $viewData['dni_observacion']  = $dni['observaciones_dni'] ?? null;
 
             // 5. Preguntas de Farmacia
-            $preguntas = $dbData['preguntas_farmacia'] ?? [];
+            $preguntas = $dbData['farmacia_esp'] ?? [];
             $viewData['sis_gestion'] = $preguntas['sis_gestion'] ?? null;
             $viewData['stock_actual'] = $preguntas['stock_actual'] ?? null;
             $viewData['fua_sismed'] = $preguntas['fua_sismed'] ?? null;
@@ -242,7 +242,7 @@ class FarmaciaESPController extends Controller
                     "observaciones_dni" => $input['dni_observacion'] ?? null
                 ],
                 
-                "preguntas_farmacia" => [
+                "farmacia_esp" => [
                     "sis_gestion" => $sis_gestion,
                     "stock_actual" => $stock_actual,
                     "fua_sismed" => $fua_sismed,

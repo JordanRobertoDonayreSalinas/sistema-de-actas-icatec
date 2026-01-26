@@ -356,7 +356,7 @@
             <td class="bg-label">Fecha Límite de Programación</td>
             <td class="uppercase">
                 @php
-                    $fechaProg = $modulo->contenido['detalle_del_consultorio']['fecha_programacion'] ?? null;
+                    $fechaProg = $modulo->contenido['gestion_admin_esp']['fecha_programacion'] ?? null;
                     if ($fechaProg) {
                         echo \Carbon\Carbon::parse($fechaProg . '-01')->format('m/Y');
                     } else {
