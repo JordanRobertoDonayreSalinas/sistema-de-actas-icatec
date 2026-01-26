@@ -63,9 +63,14 @@ use App\Http\Controllers\PsiquiatriaESPController;
 use App\Http\Controllers\PsiquiatriaESPpdfController;
 use App\Http\Controllers\PsicologiaESPController;
 use App\Http\Controllers\PsicologiaESPpdfController;
+<<<<<<<<< Temporary merge branch 1
+use App\Http\Controllers\TomaDeMuestraController;
+use App\Http\Controllers\TomaDeMuestraPdfController;
+=========
 use App\Http\Controllers\EnfermeriaESPController;
 use App\Http\Controllers\EnfermeriaESPpdfController;
 
+>>>>>>>>> Temporary merge branch 2
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
