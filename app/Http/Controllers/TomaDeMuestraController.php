@@ -34,6 +34,7 @@ class TomaDeMuestraController extends Controller
             return redirect()->route('usuario.monitoreo.modulos', $id)->with('error', 'Módulo incorrecto.');
         }
 
+        // CORRECCIÓN: Usamos 'toma_muestra' para coincidir con rutas y convención
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                    ->where('modulo_nombre', 'toma_muestra')
                                    ->first();
@@ -178,6 +179,7 @@ class TomaDeMuestraController extends Controller
             }, $equiposLimpios);
 
             // 8. FOTO
+            // CORRECCIÓN: 'toma_muestra'
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                                               ->where('modulo_nombre', 'toma_muestra')
                                               ->first();
@@ -216,6 +218,7 @@ class TomaDeMuestraController extends Controller
                 );
             }
 
+            // CORRECCIÓN: 'toma_muestra'
             $registro = MonitoreoModulos::firstOrNew([
                 'cabecera_monitoreo_id' => $id,
                 'modulo_nombre' => 'toma_muestra'

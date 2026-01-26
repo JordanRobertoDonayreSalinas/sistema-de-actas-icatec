@@ -65,6 +65,8 @@ use App\Http\Controllers\PsicologiaESPController;
 use App\Http\Controllers\PsicologiaESPpdfController;
 use App\Http\Controllers\MedicinaFamiliarESPController;
 use App\Http\Controllers\MedicinaFamiliarESPpdfController;
+use App\Http\Controllers\TomaDeMuestraController;
+use App\Http\Controllers\TomaDeMuestrapdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -233,11 +235,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [TriajeESPpdfController::class, 'generar'])->name('pdf');
             });
 
-            // 5. Toma de Muestra (CSMC) - Reutiliza Laboratorio o crear TomaMuestraESP
+                        // 5. Toma de Muestra (CSMC)
             Route::prefix('modulo/toma-muestra')->name('toma_muestra.')->group(function () {
-                Route::get('/{id}', [LaboratorioController::class, 'index'])->name('index');
-                Route::post('/{id}', [LaboratorioController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [LaboratorioPdfController::class, 'generar'])->name('pdf');
+                Route::get('/{id}', [TomaDeMuestraController::class, 'index'])->name('index');
+                Route::post('/{id}', [TomaDeMuestraController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [TomaDeMuestraPdfController::class, 'generar'])->name('pdf');
             });
 
             // 6. Farmacia (CSMC)

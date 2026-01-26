@@ -17,7 +17,7 @@ class TomaDeMuestraPdfController extends Controller
         $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'user'])->findOrFail($id);
 
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                  ->where('modulo_nombre', 'toma_muestra_esp')
+                                  ->where('modulo_nombre', 'toma_muestra')
                                   ->firstOrFail();
         
         $contenido = is_string($registro->contenido) ? json_decode($registro->contenido, true) : $registro->contenido;
@@ -111,6 +111,6 @@ class TomaDeMuestraPdfController extends Controller
             $pdf->line(42, $pdf->get_height() - 50, $pdf->get_width() - 42, $pdf->get_height() - 50, array(0.88, 0.91, 0.94), 1);
         ');
         
-        return $pdf->stream("Toma_Muestra_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("Toma_Muestra_Acta_{$id}.pdf");
     }
 }
