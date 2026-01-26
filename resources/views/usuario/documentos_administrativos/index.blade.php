@@ -114,7 +114,7 @@
                     <div
                         class="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10 text-center min-w-[140px]">
                         <span class="block text-3xl font-black tracking-tighter">{{ $documentos->total() }}</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest opacity-70">Total Registros</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest opacity-70">Total</span>
                     </div>
                     {{-- KPI Completados --}}
                     <div
@@ -122,15 +122,15 @@
                         <span
                             class="block text-3xl font-black text-emerald-300 tracking-tighter">{{ $countCompletados ?? 0 }}</span>
                         <span
-                            class="text-[10px] font-bold uppercase tracking-widest text-emerald-100 opacity-70">Completados</span>
+                            class="text-[10px] font-bold uppercase tracking-widest text-emerald-100 opacity-70">Firmadas</span>
                     </div>
                     {{-- KPI Pendientes --}}
                     <div
                         class="bg-amber-500/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-amber-500/30 text-center min-w-[140px]">
                         <span
                             class="block text-3xl font-black text-amber-300 tracking-tighter">{{ $countPendientes ?? 0 }}</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-amber-100 opacity-70">En
-                            Proceso</span>
+                        <span
+                            class="text-[10px] font-bold uppercase tracking-widest text-amber-100 opacity-70">Pendientes</span>
                     </div>
                 </div>
 
@@ -200,14 +200,16 @@
                                     <option value="">PROVINCIA: TODAS</option>
                                     @foreach($provincias as $prov)
                                         <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>
-                                            {{ $prov }}</option>
+                                            {{ $prov }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <select name="distrito" class="input-modern w-full px-4 uppercase">
                                     <option value="">DISTRITO: TODOS</option>
                                     @foreach($distritos as $dist)
                                         <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>
-                                            {{ $dist }}</option>
+                                            {{ $dist }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -232,7 +234,7 @@
                                     <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>COMPLETADOS
                                         (100%)</option>
                                     <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>
-                                        PENDIENTES / EN PROCESO</option>
+                                        PENDIENTES</option>
                                 </select>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
@@ -321,12 +323,9 @@
 
                                 {{-- Fecha --}}
                                 <td class="px-4 py-4 text-center align-middle">
-                                    <div
-                                        class="inline-flex flex-col bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100">
+                                    <div class="inline-flex bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
                                         <span
-                                            class="font-black text-slate-700 text-xs">{{ \Carbon\Carbon::parse($doc->fecha)->format('d') }}</span>
-                                        <span
-                                            class="text-[9px] font-bold text-slate-400 uppercase">{{ \Carbon\Carbon::parse($doc->fecha)->format('M y') }}</span>
+                                            class="font-bold text-slate-700 text-xs">{{ \Carbon\Carbon::parse($doc->fecha)->format('d/m/Y') }}</span>
                                     </div>
                                 </td>
 
@@ -459,15 +458,15 @@
             Swal.fire({
                 title: '<h2 class="text-lg font-black text-slate-800 tracking-tight uppercase text-center">Gestión de Archivos</h2>',
                 html: `
-                        <div class="mt-2 text-left">
-                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4 text-center shadow-sm">
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo de Documento</p>
-                                <p class="text-sm font-black ${colorTipo} leading-tight uppercase tracking-tight">${tituloTipo}</p>
-                            </div>
-                            <p class="text-center text-[10px] text-slate-400 font-bold uppercase mb-4 tracking-wide">Profesional: <span class="text-slate-700">${profesional}</span></p>
-                            <div class="text-[10px] text-slate-500 mb-2 font-bold uppercase tracking-wide ml-1">Seleccione el PDF firmado:</div>
-                        </div>
-                    `,
+                                            <div class="mt-2 text-left">
+                                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4 text-center shadow-sm">
+                                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo de Documento</p>
+                                                    <p class="text-sm font-black ${colorTipo} leading-tight uppercase tracking-tight">${tituloTipo}</p>
+                                                </div>
+                                                <p class="text-center text-[10px] text-slate-400 font-bold uppercase mb-4 tracking-wide">Profesional: <span class="text-slate-700">${profesional}</span></p>
+                                                <div class="text-[10px] text-slate-500 mb-2 font-bold uppercase tracking-wide ml-1">Seleccione el PDF firmado:</div>
+                                            </div>
+                                        `,
                 input: 'file',
                 inputAttributes: { 'accept': 'application/pdf', 'aria-label': 'Seleccionar PDF', 'class': 'swal2-file-input text-xs' },
                 showCancelButton: true,
