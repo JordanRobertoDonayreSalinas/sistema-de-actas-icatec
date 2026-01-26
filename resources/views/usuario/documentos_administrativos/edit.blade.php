@@ -30,14 +30,11 @@
         }
         .ui-state-active { background: #4f46e5 !important; color: white !important; border: none !important; }
         
-        /* Checkbox Cards */
-        .checkbox-card:checked + div { 
-            background-color: #eef2ff; 
-            border-color: #6366f1; 
-            color: #4338ca; 
-            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1); 
+        /* Checkbox Cards - Updated for peer-checked pattern */
+        .peer:checked ~ .check-icon { 
+            transform: scale(1); 
+            opacity: 1; 
         }
-        .checkbox-card:checked + div .check-icon { transform: scale(1); opacity: 1; }
         
         /* Inputs */
         .input-nice { 
@@ -165,26 +162,42 @@
             <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200/60 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-pink-500 to-orange-500"></div>
 
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                     <h3 class="text-slate-800 font-black text-xs uppercase tracking-widest flex items-center gap-3">
                         <span class="bg-pink-100 text-pink-600 w-8 h-8 rounded-xl flex items-center justify-center text-sm shadow-sm border border-pink-200/50">3</span>
                         Selección de Módulos
                     </h3>
-                    <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-4 py-2 rounded-xl uppercase tracking-wide border border-indigo-100">
-                        Seleccione uno o varios accesos
-                    </span>
+                    <div class="flex items-center gap-3">
+                        <span id="contador-modulos" class="text-[10px] font-black text-slate-400 bg-slate-100 px-4 py-2 rounded-xl uppercase tracking-wide border border-slate-200">
+                            <span class="text-indigo-600" id="count-selected">0</span> seleccionados
+                        </span>
+                        <span class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-4 py-2 rounded-xl uppercase tracking-wide border border-indigo-100">
+                            Seleccione uno o varios
+                        </span>
+                    </div>
                 </div>
                 
-                <div class="pl-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div class="pl-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     @php
                         $modulos = [
-                            'Gestion Administrativa', 'Citas', 'Triaje', 
-                            'Consulta Externa: Medicina', 'Consulta Externa: Odontologia', 
-                            'Consulta Externa: Nutricion', 'Consulta Externa: Psicologia',
-                            'Cred', 'Inmunizaciones', 'Atencion Prenatal', 
-                            'Planificacion Familiar', 'Parto', 'Puerperio', 
-                            'Fua Electronico', 'Farmacia', 'Refcon',
-                            'Laboratorio', 'Urgencias y Emergencias'
+                            ['nombre' => 'Gestion Administrativa', 'icono' => 'folder-cog'],
+                            ['nombre' => 'Citas', 'icono' => 'calendar-check'],
+                            ['nombre' => 'Triaje', 'icono' => 'stethoscope'],
+                            ['nombre' => 'Consulta Externa: Medicina', 'icono' => 'user-round-check'],
+                            ['nombre' => 'Consulta Externa: Odontologia', 'icono' => 'smile'],
+                            ['nombre' => 'Consulta Externa: Nutricion', 'icono' => 'apple'],
+                            ['nombre' => 'Consulta Externa: Psicologia', 'icono' => 'brain'],
+                            ['nombre' => 'Cred', 'icono' => 'baby'],
+                            ['nombre' => 'Inmunizaciones', 'icono' => 'syringe'],
+                            ['nombre' => 'Atencion Prenatal', 'icono' => 'heart-pulse'],
+                            ['nombre' => 'Planificacion Familiar', 'icono' => 'users'],
+                            ['nombre' => 'Parto', 'icono' => 'heart-handshake'],
+                            ['nombre' => 'Puerperio', 'icono' => 'bed'],
+                            ['nombre' => 'Fua Electronico', 'icono' => 'file-text'],
+                            ['nombre' => 'Farmacia', 'icono' => 'pill'],
+                            ['nombre' => 'Refcon', 'icono' => 'arrow-right-left'],
+                            ['nombre' => 'Laboratorio', 'icono' => 'flask-conical'],
+                            ['nombre' => 'Urgencias y Emergencias', 'icono' => 'ambulance']
                         ];
                         
                         // Convertir los sistemas de acceso guardados en un array
@@ -192,26 +205,40 @@
                     @endphp
 
                     @foreach($modulos as $modulo)
-                    <label class="cursor-pointer group relative">
-                        <input type="checkbox" name="sistemas_acceso[]" value="{{ $modulo }}" 
-                               {{ in_array($modulo, $sistemasSeleccionados) ? 'checked' : '' }}
-                               class="checkbox-card absolute opacity-0 w-0 h-0">
+                    <label class="cursor-pointer group relative block modulo-checkbox">
+                        <input type="checkbox" name="sistemas_acceso[]" value="{{ $modulo['nombre'] }}" 
+                               {{ in_array($modulo['nombre'], $sistemasSeleccionados) ? 'checked' : '' }}
+                               class="checkbox-card peer absolute opacity-0 w-0 h-0" onchange="actualizarContador()">
                         
-                        <div class="h-full min-h-[90px] p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 group-hover:border-indigo-200 group-hover:bg-white transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
-                            <span class="text-[10px] font-black uppercase text-slate-600 group-hover:text-indigo-800 leading-snug z-10 pr-6">
-                                {{ $modulo }}
-                            </span>
-                            <div class="absolute bottom-3 right-3 z-10">
-                                <div class="check-icon w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white opacity-0 transform scale-50 transition-all duration-300 shadow-lg shadow-indigo-200">
-                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <div class="h-full min-h-[90px] px-4 py-3.5 rounded-xl border-2 border-slate-200/80 bg-white hover:border-indigo-300 hover:shadow-md hover:scale-[1.02] transition-all duration-200 flex flex-col gap-2 relative overflow-hidden peer-checked:border-indigo-500 peer-checked:bg-gradient-to-br peer-checked:from-indigo-50 peer-checked:to-purple-50/30 peer-checked:shadow-lg peer-checked:shadow-indigo-100/50 peer-checked:scale-[1.02]">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-shrink-0 w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 transition-colors group-has-[:checked]:bg-indigo-100 group-has-[:checked]:text-indigo-600">
+                                    <i data-lucide="{{ $modulo['icono'] }}" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center transition-all group-has-[:checked]:border-indigo-600 group-has-[:checked]:bg-indigo-600 group-has-[:checked]:scale-110">
+                                    <i data-lucide="check" class="w-3 h-3 text-white opacity-0 transition-opacity group-has-[:checked]:opacity-100"></i>
                                 </div>
                             </div>
-                            <div class="absolute -bottom-6 -right-6 w-20 h-20 bg-gradient-to-br from-slate-200/40 to-transparent rounded-full z-0 group-hover:from-indigo-100/50 transition-colors"></div>
+                            <span class="text-[10px] font-bold uppercase text-slate-700 leading-tight transition-colors group-has-[:checked]:text-indigo-900">
+                                {{ $modulo['nombre'] }}
+                            </span>
                         </div>
                     </label>
                     @endforeach
                 </div>
             </div>
+
+            @push('scripts')
+            <script>
+                function actualizarContador() {
+                    const checkboxes = document.querySelectorAll('.modulo-checkbox input[type="checkbox"]');
+                    const count = Array.from(checkboxes).filter(cb => cb.checked).length;
+                    document.getElementById('count-selected').textContent = count;
+                }
+                // Actualizar contador al cargar la página
+                document.addEventListener('DOMContentLoaded', actualizarContador);
+            </script>
+            @endpush
 
             {{-- BOTONES --}}
             <div class="flex flex-col sm:flex-row justify-end items-center gap-4 pt-6 pb-12">
