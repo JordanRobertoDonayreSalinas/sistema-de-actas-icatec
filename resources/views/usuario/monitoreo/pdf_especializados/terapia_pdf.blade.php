@@ -256,12 +256,15 @@
             <td>{{ $modulo->contenido['profesional']['telefono'] ?? '---' }}</td>
         </tr>
         <tr>
-            <td class="bg-label">¿Utiliza SIHCE?</td>
-            <td class="uppercase">{{ $modulo->contenido['profesional']['cuenta_sihce'] ?? '---' }}</td>
-        </tr>
-        <tr>
             <td class="bg-label">Profesion</td>
             <td class="uppercase">{{ $modulo->contenido['profesional']['cargo'] ?? '---' }}</td>
+        </tr>
+    </table>
+    <div class="section-title">{{ $n++ }}. Documentación Administrativa</div>
+    <table>
+        <tr>
+            <td class="bg-label">¿Utiliza SIHCE?</td>
+            <td class="uppercase">{{ $modulo->contenido['profesional']['cuenta_sihce'] ?? '---' }}</td>
         </tr>
         @if(($modulo->contenido['profesional']['cuenta_sihce'] ?? '') != 'NO')
             <tr>
@@ -274,7 +277,6 @@
             </tr>
         @endif
     </table>
-    
     {{-- SECCIÓN 3: DNI Y FIRMA (CONDICIONAL) --}}
     @if(($modulo->contenido['profesional']['tipo_doc'] ?? '') == 'DNI')
     <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
