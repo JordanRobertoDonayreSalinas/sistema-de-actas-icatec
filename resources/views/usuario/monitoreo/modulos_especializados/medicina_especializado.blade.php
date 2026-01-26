@@ -236,7 +236,6 @@
 
     {{-- SCRIPT: SINCRONIZACIÓN Y VALIDACIÓN SIHCE --}}
     <script>
-        // 1. Sincronizar datos de Alpine al enviar (Esta parte estaba bien, la dejamos igual)
         function sincronizarDatos(e) {
             const createHidden = (name, value) => {
                 if (!value) return;
@@ -249,7 +248,7 @@
 
             document.getElementById('inputs_ocultos_container').innerHTML = '';
 
-            // CAPTURAR CAPACITACIÓN (Solo si es visible)
+            // CAPTURAR CAPACITACIÓN
             const capWrap = document.getElementById('wrapper_capacitacion');
             if (capWrap && capWrap.style.display !== 'none') {
                 const radioCap = capWrap.querySelector('input[type="radio"]:checked');
@@ -258,25 +257,30 @@
                 if (selectCap && selectCap.value) createHidden('contenido[capacitacion][institucion_cap]', selectCap.value);
             }
 
-            // CAPTURAR MATERIALES
+            // CAPTURAR MATERIALES (¡ESTE BLOQUE DEBE ESTAR DESCOMENTADO!)
             const matWrap = document.getElementById('wrapper_materiales');
             if (matWrap) {
                 const tarjetas = matWrap.querySelectorAll('.bg-slate-50.p-5');
+                // 1. FUA
                 if (tarjetas[0]) {
                     const checked = tarjetas[0].querySelector('input[type="radio"]:checked');
                     if (checked) createHidden('contenido[materiales][fua]', checked.value);
                 }
+                // 2. Referencia
                 if (tarjetas[1]) {
                     const checked = tarjetas[1].querySelector('input[type="radio"]:checked');
                     if (checked) createHidden('contenido[materiales][referencia]', checked.value);
                 }
+                // 3. Receta
                 if (tarjetas[2]) {
                     const checked = tarjetas[2].querySelector('input[type="radio"]:checked');
                     const titulo = tarjetas[2].querySelector('span').innerText.toUpperCase();
+                    // Verificamos título por seguridad, o tomamos directamente el input
                     if (titulo.includes('RECETA') && checked) {
                         createHidden('contenido[materiales][receta]', checked.value);
                     }
                 }
+                // 4. Orden Lab
                 if (tarjetas[3]) {
                     const checked = tarjetas[3].querySelector('input[type="radio"]:checked');
                     if (checked) createHidden('contenido[materiales][orden_lab]', checked.value);
@@ -284,37 +288,23 @@
             }
         }
 
-        // 2. Lógica de Visibilidad (SIHCE = NO -> Ocultar Capacitación y Soporte)
+        // Lógica de Visibilidad
         document.addEventListener('DOMContentLoaded', () => {
             const inputName = 'contenido[doc_administrativo][cuenta_sihce]';
             const sections = ['wrapper_capacitacion', 'wrapper_soporte'];
 
             function toggleSections() {
-                // CORRECCIÓN: Buscamos un SELECT, no un input radio
                 const select = document.querySelector(`select[name="${inputName}"]`);
-
-                if (!select) return; // Seguridad por si no encuentra el elemento
-
-                // Verificamos si el valor seleccionado es "NO"
+                if (!select) return;
                 const isNo = select.value === 'NO';
-
                 sections.forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) {
-                        // Si es NO, ocultamos. Si es SI, mostramos.
-                        el.style.display = isNo ? 'none' : 'block';
-                    }
+                    if (el) el.style.display = isNo ? 'none' : 'block';
                 });
             }
-
-            // Escuchar cambios en todo el documento
             document.body.addEventListener('change', (e) => {
-                if (e.target.name === inputName) {
-                    toggleSections();
-                }
+                if (e.target.name === inputName) toggleSections();
             });
-
-            // Ejecutar al cargar la página para verificar el estado inicial
             toggleSections();
         });
     </script>

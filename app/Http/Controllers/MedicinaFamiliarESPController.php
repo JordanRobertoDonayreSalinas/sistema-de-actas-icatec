@@ -38,54 +38,69 @@ class MedicinaFamiliarESPController extends Controller
             $detalle->contenido = [];
         }
 
+        // -------------------------------------------------------------------------
         // TRANSFORMACIÓN DE DATOS (BD -> VISTA)
+        // Convertimos la estructura jerárquica (JSON nuevo) a plana para que la vista la entienda
+        // -------------------------------------------------------------------------
         if ($detalle && !empty($detalle->contenido)) {
             $dbData = $detalle->contenido;
             
             $defaults = [
-                'dificultades' => ['comunica' => null, 'medio' => null],
-                'profesional' => [],
-                'detalle_dni' => [],
-                'detalle_capacitacion' => []
+                'soporte' => ['inst_a_quien_comunica' => null, 'medio_que_utiliza' => null],
+                'datos_del_profesional' => [],
+                'detalle_de_dni_y_firma_digital' => [],
+                'detalles_de_capacitacion' => [],
+                'detalle_del_consultorio' => []
             ];
 
             $viewData = array_replace_recursive($defaults, $dbData);
 
-            // 1. Datos Generales
-            $viewData['fecha'] = $dbData['fecha'] ?? null;
-            $consultorio = $dbData['detalle_consultorio'] ?? [];
+            // 1. Datos Generales del Consultorio
+            $consultorio = $dbData['detalle_del_consultorio'] ?? [];
+            $viewData['fecha'] = $consultorio['fecha_monitoreo'] ?? null;
             $viewData['turno'] = $consultorio['turno'] ?? null;
             $viewData['num_ambientes'] = $consultorio['num_ambientes'] ?? null;
             $viewData['denominacion_ambiente'] = $consultorio['denominacion_ambiente'] ?? null;
 
             // 2. Profesional (Array directo)
-            $viewData['profesional'] = $dbData['profesional'] ?? [];
+            $profesional = $dbData['datos_del_profesional'] ?? [];
+            $viewData['profesional'] = $profesional;
+            
+            // 3. Documentación Administrativa (Fusión con profesional para compatibilidad)
+            $docAdmin = $dbData['documentacion_administrativa'] ?? [];
+            $viewData['profesional']['cuenta_sihce'] = $docAdmin['utiliza_sihce'] ?? null;
+            $viewData['profesional']['firmo_dj'] = $docAdmin['firmo_dj'] ?? null;
+            $viewData['profesional']['firmo_confidencialidad'] = $docAdmin['firmo_confidencialidad'] ?? null;
 
-            // 3. Detalle DNI (Aplanamos para los inputs)
-            $dni = $dbData['detalle_dni'] ?? [];
-            $viewData['tipo_dni_fisico']  = $dni['tipo_dni_fisico'] ?? null;
-            $viewData['dnie_version']     = $dni['dnie_version'] ?? null;
-            $viewData['dnie_firma_sihce'] = $dni['dnie_firma_sihce'] ?? null;
-            $viewData['dni_observacion']  = $dni['dni_observacion'] ?? null;
+            // 4. Detalle DNI (Aplanamos para los inputs)
+            $dni = $dbData['detalle_de_dni_y_firma_digital'] ?? [];
+            $viewData['tipo_dni_fisico']  = $dni['tipo_dni'] ?? null;
+            $viewData['dnie_version']     = $dni['version_dnie'] ?? null;
+            $viewData['dnie_firma_sihce'] = $dni['firma_digital_sihce'] ?? null;
+            $viewData['dni_observacion']  = $dni['observaciones_dni'] ?? null;
 
-            // 4. Capacitación (Adaptador para Componente 4)
-            $cap = $dbData['detalle_capacitacion'] ?? [];
+            // 5. Capacitación (Adaptador para Componente 4)
+            $cap = $dbData['detalles_de_capacitacion'] ?? [];
             $viewData['recibio_capacitacion'] = $cap['recibio_capacitacion'] ?? null;
-            $viewData['inst_capacitacion']    = $cap['inst_capacitacion'] ?? null;
+            $viewData['inst_capacitacion']    = $cap['inst_que_lo_capacito'] ?? null;
             // Traducción para Componente AlpineJS
             $viewData['recibieron_cap']       = $cap['recibio_capacitacion'] ?? null;
-            $viewData['institucion_cap']      = $cap['inst_capacitacion'] ?? null;
+            $viewData['institucion_cap']      = $cap['inst_que_lo_capacito'] ?? null;
 
-            // 5. Dificultades / Soporte (Adaptador para Componente 6)
-            $diff = $dbData['dificultades'] ?? [];
-            $viewData['dificultades'] = $diff;
+            // 6. Soporte (Adaptador para Componente 6)
+            $soporte = $dbData['soporte'] ?? [];
+            $viewData['dificultades'] = [
+                'comunica' => $soporte['inst_a_quien_comunica'] ?? null,
+                'medio' => $soporte['medio_que_utiliza'] ?? null
+            ];
             // Inyección de propiedades directas para Componente 6
-            $detalle->dificultad_comunica_a = $diff['comunica'] ?? null;
-            $detalle->dificultad_medio_uso  = $diff['medio'] ?? null;
+            $detalle->dificultad_comunica_a = $soporte['inst_a_quien_comunica'] ?? null;
+            $detalle->dificultad_medio_uso  = $soporte['medio_que_utiliza'] ?? null;
 
-            // 6. Evidencia y Comentarios
-            $viewData['comentario_esp'] = $dbData['comentario_esp'] ?? null;
-            $viewData['foto_evidencia'] = $dbData['foto_evidencia'] ?? [];
+            // 7. Evidencia y Comentarios
+            $comentarios = $dbData['comentarios_y_evidencias'] ?? [];
+            $viewData['comentario_esp'] = $comentarios['comentarios'] ?? null;
+            $viewData['foto_evidencia'] = $comentarios['foto_evidencia'] ?? [];
             
             // Traducción para Componente 7 (Foto única visual)
             $evidencia = $viewData['foto_evidencia'];
@@ -103,7 +118,7 @@ class MedicinaFamiliarESPController extends Controller
     public function store(Request $request, $id)
     {
         try {
-            DB::beginTransaction();
+             DB::beginTransaction();
 
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
             $modulo = 'sm_med_familiar';
@@ -114,14 +129,18 @@ class MedicinaFamiliarESPController extends Controller
             // ---------------------------------------------------------
             // FUSIÓN DE COMPONENTES EXTERNOS (Capacitación y Dificultades)
             // ---------------------------------------------------------
+            // Componente 4 (Capacitación)
             if ($request->has('capacitacion')) {
                 $cap = $request->input('capacitacion');
                 $input['recibio_capacitacion'] = $cap['recibieron_cap'] ?? null;
                 $input['inst_capacitacion']    = $cap['institucion_cap'] ?? null;
             }
+            
+            // Componente 6 (Dificultades)
             if ($request->has('dificultades')) {
                 $input['dificultades'] = $request->input('dificultades');
             }
+
 
             // ---------------------------------------------------------
             // REGLAS DE NEGOCIO (Limpieza de Datos)
@@ -160,16 +179,33 @@ class MedicinaFamiliarESPController extends Controller
             // ---------------------------------------------------------
             // CONSTRUCCIÓN DE LA ESTRUCTURA JERÁRQUICA (JSON ESTRUCTURADO)
             // ---------------------------------------------------------
+            
+            // Preparar equipos de cómputo
+            $equiposComputo = [];
+            if ($request->has('equipos') && is_array($request->equipos)) {
+                foreach ($request->equipos as $eq) {
+                    if (!empty($eq['descripcion'])) {
+                        $equiposComputo[] = [
+                            "descripcion" => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
+                            "cantidad" => (string)((int)($eq['cantidad'] ?? 1)),
+                            "estado" => $eq['estado'] ?? 'OPERATIVO',
+                            "propio" => $eq['propio'] ?? 'EXCLUSIVO',
+                            "nro_serie" => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
+                            "observacion" => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null
+                        ];
+                    }
+                }
+            }
+
             $structuredData = [
-                "fecha" => $input['fecha'] ?? date('Y-m-d'),
-                
-                "detalle_consultorio" => [
+                "detalle_del_consultorio" => [
+                    "fecha_monitoreo" => $input['fecha'] ?? date('Y-m-d'),
                     "turno" => $input['turno'] ?? null,
                     "num_ambientes" => $input['num_ambientes'] ?? null,
                     "denominacion_ambiente" => $input['denominacion_ambiente'] ?? null
                 ],
                 
-                "profesional" => [
+                "datos_del_profesional" => [
                     "doc" => $input['profesional']['doc'] ?? null,
                     "tipo_doc" => $input['profesional']['tipo_doc'] ?? null,
                     "nombres" => $input['profesional']['nombres'] ?? null,
@@ -177,31 +213,38 @@ class MedicinaFamiliarESPController extends Controller
                     "apellido_materno" => $input['profesional']['apellido_materno'] ?? null,
                     "email" => $input['profesional']['email'] ?? null,
                     "telefono" => $input['profesional']['telefono'] ?? null,
-                    "cargo" => $input['profesional']['cargo'] ?? null,
-                    "cuenta_sihce" => $input['profesional']['cuenta_sihce'] ?? null,
+                    "cargo" => $input['profesional']['cargo'] ?? null
+                ],
+                
+                "documentacion_administrativa" => [
+                    "utiliza_sihce" => $input['profesional']['cuenta_sihce'] ?? null,
                     "firmo_dj" => $input['profesional']['firmo_dj'] ?? null,
                     "firmo_confidencialidad" => $input['profesional']['firmo_confidencialidad'] ?? null
                 ],
                 
-                "detalle_dni" => [
-                    "tipo_dni_fisico" => $input['tipo_dni_fisico'] ?? null,
-                    "dnie_version" => $input['dnie_version'] ?? null,
-                    "dnie_firma_sihce" => $input['dnie_firma_sihce'] ?? null,
-                    "dni_observacion" => $input['dni_observacion'] ?? null
+                "detalle_de_dni_y_firma_digital" => [
+                    "tipo_dni" => $input['tipo_dni_fisico'] ?? null,
+                    "version_dnie" => $input['dnie_version'] ?? null,
+                    "firma_digital_sihce" => $input['dnie_firma_sihce'] ?? null,
+                    "observaciones_dni" => $input['dni_observacion'] ?? null
                 ],
                 
-                "dificultades" => [
-                    "comunica" => $input['dificultades']['comunica'] ?? null,
-                    "medio" => $input['dificultades']['medio'] ?? null
-                ],
-                
-                "detalle_capacitacion" => [
+                "detalles_de_capacitacion" => [
                     "recibio_capacitacion" => $input['recibio_capacitacion'] ?? null,
-                    "inst_capacitacion" => $input['inst_capacitacion'] ?? null
+                    "inst_que_lo_capacito" => $input['inst_capacitacion'] ?? null
                 ],
                 
-                "comentario_esp" => $request->input('comentario_esp') ?? ($input['comentario_esp'] ?? null),
-                "foto_evidencia" => [] // Se llenará más abajo
+                "soporte" => [
+                    "inst_a_quien_comunica" => $input['dificultades']['comunica'] ?? null,
+                    "medio_que_utiliza" => $input['dificultades']['medio'] ?? null
+                ],
+                
+                "equipos_de_computo" => $equiposComputo,
+                
+                "comentarios_y_evidencias" => [
+                    "comentarios" => $request->input('comentario_esp') ?? ($input['comentario_esp'] ?? null),
+                    "foto_evidencia" => [] // Se llenará más abajo
+                ]
             ];
 
             // ---------------------------------------------------------
@@ -217,17 +260,17 @@ class MedicinaFamiliarESPController extends Controller
             // ---------------------------------------------------------
             // SINCRONIZACIÓN DE PROFESIONALES (Tabla Externa)
             // ---------------------------------------------------------
-            if (!empty($structuredData['profesional']['doc'])) {
+            if (!empty($structuredData['datos_del_profesional']['doc'])) {
                 Profesional::updateOrCreate(
-                    ['doc' => trim($structuredData['profesional']['doc'])],
+                    ['doc' => trim($structuredData['datos_del_profesional']['doc'])],
                     [
-                        'tipo_doc'         => $structuredData['profesional']['tipo_doc'] ?? 'DNI',
-                        'apellido_paterno' => $structuredData['profesional']['apellido_paterno'],
-                        'apellido_materno' => $structuredData['profesional']['apellido_materno'],
-                        'nombres'          => $structuredData['profesional']['nombres'],
-                        'email'            => strtolower($structuredData['profesional']['email']),
-                        'telefono'         => $structuredData['profesional']['telefono'],
-                        'cargo'            => $structuredData['profesional']['cargo'],
+                        'tipo_doc'         => $structuredData['datos_del_profesional']['tipo_doc'] ?? 'DNI',
+                        'apellido_paterno' => $structuredData['datos_del_profesional']['apellido_paterno'],
+                        'apellido_materno' => $structuredData['datos_del_profesional']['apellido_materno'],
+                        'nombres'          => $structuredData['datos_del_profesional']['nombres'],
+                        'email'            => strtolower($structuredData['datos_del_profesional']['email']),
+                        'telefono'         => $structuredData['datos_del_profesional']['telefono'],
+                        'cargo'            => $structuredData['datos_del_profesional']['cargo'],
                     ]
                 );
             }
@@ -236,20 +279,18 @@ class MedicinaFamiliarESPController extends Controller
             // GESTIÓN DE EQUIPOS (Tabla Externa)
             // ---------------------------------------------------------
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
-            if ($request->has('equipos') && is_array($request->equipos)) {
-                foreach ($request->equipos as $eq) {
-                    if (!empty($eq['descripcion'])) {
-                        EquipoComputo::create([
-                            'cabecera_monitoreo_id' => $id,
-                            'modulo'      => $modulo,
-                            'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
-                            'cantidad'    => (int)($eq['cantidad'] ?? 1),
-                            'estado'      => $eq['estado'] ?? 'OPERATIVO',
-                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
-                            'propio'      => $eq['propio'] ?? 'SERVICIO',
-                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
-                        ]);
-                    }
+            if (!empty($equiposComputo)) {
+                foreach ($equiposComputo as $eq) {
+                    EquipoComputo::create([
+                        'cabecera_monitoreo_id' => $id,
+                        'modulo'      => $modulo,
+                        'descripcion' => $eq['descripcion'],
+                        'cantidad'    => (int)$eq['cantidad'],
+                        'estado'      => $eq['estado'],
+                        'nro_serie'   => $eq['nro_serie'],
+                        'propio'      => $eq['propio'],
+                        'observacion' => $eq['observacion'],
+                    ]);
                 }
             }
 
@@ -261,7 +302,12 @@ class MedicinaFamiliarESPController extends Controller
                                 ->first();
             $fotosFinales = [];
             
-            if ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+            // Si ya existía data, buscamos la foto en la estructura nueva o la antigua
+            if ($registroPrevio && isset($registroPrevio->contenido['comentarios_y_evidencias']['foto_evidencia'])) {
+                $prev = $registroPrevio->contenido['comentarios_y_evidencias']['foto_evidencia'];
+                $fotosFinales = is_array($prev) ? $prev : [$prev];
+            } elseif ($registroPrevio && isset($registroPrevio->contenido['foto_evidencia'])) {
+                // Compatibilidad con estructura antigua
                 $prev = $registroPrevio->contenido['foto_evidencia'];
                 $fotosFinales = is_array($prev) ? $prev : [$prev];
             }
@@ -276,17 +322,17 @@ class MedicinaFamiliarESPController extends Controller
                     }
                 }
                 $file = $request->file('foto_esp_file');
-                $path = $file->store('evidencias_esp', 'public');
+                $path = $file->store('evidencias_monitoreo', 'public');
                 $fotosFinales = [$path];
             }
-            $structuredData['foto_evidencia'] = $fotosFinales;
+            $structuredData['comentarios_y_evidencias']['foto_evidencia'] = $fotosFinales;
 
             // ---------------------------------------------------------
             // GUARDAR
             // ---------------------------------------------------------
             MonitoreoModulos::updateOrCreate(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $modulo],
-                ['contenido' => $structuredData]
+                ['contenido' => $structuredData] // Guardamos el JSON estructurado
             );
 
             DB::commit();

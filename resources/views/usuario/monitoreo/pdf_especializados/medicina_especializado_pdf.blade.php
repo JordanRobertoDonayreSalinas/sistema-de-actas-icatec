@@ -19,7 +19,8 @@
         .header {
             text-align: center;
             margin-bottom: 20px;
-            border-bottom: 2px solid #4f46e5;
+            /* CAMBIO: De indigo a TEAL (#0d9488) */
+            border-bottom: 2px solid #0d9488;
             padding-bottom: 10px;
         }
 
@@ -27,7 +28,8 @@
             margin: 0;
             font-size: 16px;
             text-transform: uppercase;
-            color: #4f46e5;
+            /* CAMBIO: De indigo a TEAL (#0d9488) */
+            color: #0d9488;
             font-weight: bold;
         }
 
@@ -36,7 +38,8 @@
             padding: 6px 10px;
             font-weight: bold;
             text-transform: uppercase;
-            border-left: 4px solid #4f46e5;
+            /* CAMBIO: De indigo a TEAL (#0d9488) */
+            border-left: 4px solid #0d9488;
             margin-top: 15px;
             margin-bottom: 5px;
             font-size: 10px;
@@ -120,11 +123,13 @@
         .materiales-item {
             display: inline-block;
             padding: 3px 8px;
-            background-color: #e0e7ff;
+            /* CAMBIO: Fondo teal muy suave (#ccfbf1) */
+            background-color: #ccfbf1;
             border-radius: 4px;
             margin: 2px;
             font-size: 9px;
-            border: 1px solid #c7d2fe;
+            /* CAMBIO: Borde teal suave (#99f6e4) */
+            border: 1px solid #99f6e4;
         }
 
         /* FIRMAS */
@@ -210,7 +215,7 @@
 
     {{-- HEADER --}}
     <div class="header">
-        <h1>Sub-Modulo 04.1: Salud Mental - Medicina General</h1>
+        <h1>Salud Mental - Medicina General</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
             ACTA N° {{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }} |
             {{ strtoupper($acta->establecimiento->nombre) }} |
@@ -262,6 +267,14 @@
             <td class="bg-label">Correo</td>
             <td>{{ $prof['email'] ?? '' }}</td>
         </tr>
+
+
+    </table>
+
+
+    {{-- 2. DATOS PROFESIONAL --}}
+    <div class="section-title">{{ $n++ }}. Documentacion Administrativa</div>
+    <table>
         <tr>
             <td class="bg-label">Utiliza SIHCE?</td>
             <td>{{ $c['doc_administrativo']['cuenta_sihce'] ?? '' }}</td>
@@ -274,7 +287,6 @@
             <td class="bg-label">Firmo Compromiso de Confidencialidad?</td>
             <td>{{ $c['doc_administrativo']['firmo_confidencialidad'] ?? '' }}</td>
         </tr>
-
     </table>
 
     {{-- 3. DNI Y FIRMA (CONDICIÓN: Solo si es DNI. Si es CE se oculta) --}}

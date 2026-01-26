@@ -27,7 +27,7 @@ class GestionAdministrativaESPpdfController extends Controller
         
         // 3. Procesar imágenes (Convertir a Base64)
         $imagenesData = [];
-        $fotos = $modulo->contenido['foto_evidencia'] ?? [];
+        $fotos = $modulo->contenido['comentarios_y_evidencias']['foto_evidencia'] ?? [];
         if (is_string($fotos)) $fotos = [$fotos];
 
         foreach ($fotos as $path) {

@@ -63,9 +63,13 @@ use App\Http\Controllers\PsiquiatriaESPController;
 use App\Http\Controllers\PsiquiatriaESPpdfController;
 use App\Http\Controllers\PsicologiaESPController;
 use App\Http\Controllers\PsicologiaESPpdfController;
+use App\Http\Controllers\MedicinaFamiliarESPController;
+use App\Http\Controllers\MedicinaFamiliarESPpdfController;
 use App\Http\Controllers\EnfermeriaESPController;
 use App\Http\Controllers\EnfermeriaESPpdfController;
-
+use App\Http\Controllers\ASocialESPController;
+use App\Http\Controllers\TomaDeMuestraController;
+use App\Http\Controllers\TomaDeMuestrapdfController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -195,9 +199,9 @@ Route::middleware(['auth'])->group(function () {
                 // 4.6 Servicio Social
                 Route::prefix('servicio-social')->name('sm_servicio_social.')->group(function () {
                     // TODO: Crear SmServicioSocialController (Usando GestionAdmin temporalmente)
-                    Route::get('/{id}', [GestionAdministrativaController::class, 'index'])->name('index');
-                    Route::post('/{id}', [GestionAdministrativaController::class, 'store'])->name('store');
-                    Route::get('/{id}/pdf', [GestionAdministrativaPdfController::class, 'generar'])->name('pdf');
+                    Route::get('/{id}', [ASocialESPController::class, 'index'])->name('index');
+                    Route::post('/{id}', [ASocialESPController::class, 'store'])->name('store');
+                    Route::get('/{id}/pdf', [ASocialESPController::class, 'generar'])->name('pdf');
                 });
 
                 // 4.7 Terapias (Lenguaje / Ocupacional)
