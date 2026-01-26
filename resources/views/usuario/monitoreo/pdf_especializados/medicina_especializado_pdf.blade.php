@@ -267,6 +267,14 @@
             <td class="bg-label">Correo</td>
             <td>{{ $prof['email'] ?? '' }}</td>
         </tr>
+
+
+    </table>
+
+
+    {{-- 2. DATOS PROFESIONAL --}}
+    <div class="section-title">{{ $n++ }}. Documentacion Administrativa</div>
+    <table>
         <tr>
             <td class="bg-label">Utiliza SIHCE?</td>
             <td>{{ $c['doc_administrativo']['cuenta_sihce'] ?? '' }}</td>
@@ -279,7 +287,6 @@
             <td class="bg-label">Firmo Compromiso de Confidencialidad?</td>
             <td>{{ $c['doc_administrativo']['firmo_confidencialidad'] ?? '' }}</td>
         </tr>
-
     </table>
 
     {{-- 3. DNI Y FIRMA (CONDICIÓN: Solo si es DNI. Si es CE se oculta) --}}
