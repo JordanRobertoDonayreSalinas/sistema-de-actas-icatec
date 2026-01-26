@@ -178,7 +178,7 @@
 
         {{-- BOTÓN CONSOLIDADO --}}
         <div class="mt-20 mb-10">
-            <a href="{{ route('usuario.monitoreo.pdf', $acta->id) }}" target="_blank" 
+            <a href="{{ route('usuario.monitoreoESP.pdf', $acta->id) }}" target="_blank" 
                class="group w-full bg-teal-950 text-white p-10 rounded-[3rem] shadow-2xl flex items-center justify-between hover:bg-black transition-all duration-500 relative overflow-hidden">
                 <div class="flex items-center gap-10 relative z-10">
                     <div class="h-16 w-16 bg-white/10 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-all duration-500 border border-white/20">
