@@ -59,9 +59,9 @@ class MedicinaFamiliarESPController extends Controller
             $consultorio = $dbData['detalle_del_consultorio'] ?? [];
             $viewData['fecha'] = $consultorio['fecha_monitoreo'] ?? null;
             $viewData['turno'] = $consultorio['turno'] ?? null;
-            // CORREGIDO (Busca la llave nueva que acabas de guardar)
-            $viewData['num_consultorios'] = $consultorio['num_consultorios'] ?? ($consultorio['num_ambientes'] ?? null);
-            $viewData['denominacion']     = $consultorio['denominacion'] ?? ($consultorio['denominacion_ambiente'] ?? null);
+            // Mapeo correcto para que el componente esp_1_detalleDeConsultorio reciba los valores
+            $viewData['num_ambientes'] = $consultorio['num_consultorios'] ?? null;
+            $viewData['denominacion_ambiente'] = $consultorio['denominacion'] ?? null;
 
             // 2. Profesional (Array directo)
             $profesional = $dbData['datos_del_profesional'] ?? [];
