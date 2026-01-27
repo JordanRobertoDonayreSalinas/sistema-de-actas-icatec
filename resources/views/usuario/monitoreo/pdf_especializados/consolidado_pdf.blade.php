@@ -12,14 +12,14 @@
         .header h1 { margin: 0; font-size: 16px; color: #115e59; text-transform: uppercase; }
         .header p { margin: 2px 0; font-size: 10px; color: #555; }
 
-        /* NUEVO: ESTILOS SECCIÓN DE CONTROL */
+        /* SECCIÓN DE CONTROL */
         .control-section { margin-bottom: 30px; }
         .control-title {
             font-size: 11px;
             font-weight: bold;
             color: #1e293b;
             text-transform: uppercase;
-            border-left: 5px solid #0f172a; /* Barra lateral oscura */
+            border-left: 5px solid #0f172a;
             padding-left: 10px;
             margin-bottom: 10px;
         }
@@ -27,9 +27,7 @@
         .control-table th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-align: left; padding: 6px; border: 1px solid #e2e8f0; width: 30%; }
         .control-table td { border: 1px solid #e2e8f0; padding: 6px; color: #0f172a; }
 
-        .team-header {
-            font-size: 10px; font-weight: bold; color: #334155; margin-bottom: 5px; text-transform: uppercase;
-        }
+        .team-header { font-size: 10px; font-weight: bold; color: #334155; margin-bottom: 5px; text-transform: uppercase; }
         
         /* MÓDULOS */
         .module-container { margin-bottom: 20px; page-break-inside: avoid; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
@@ -43,15 +41,16 @@
             border-bottom: 1px solid #ccfbf1; margin-top: 8px; margin-bottom: 4px; text-transform: uppercase;
         }
 
-        /* TABLAS GENERALES */
+        /* TABLAS DATOS */
         table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
         .data-table th, .data-table td { border: 1px solid #e2e8f0; padding: 4px 6px; text-align: left; vertical-align: top; }
-        .data-table th { background-color: #f0fdfa; color: #0f766e; font-weight: bold; font-size: 9px; white-space: nowrap; width: 30%; }
+        .data-table th { background-color: #f0fdfa; color: #0f766e; font-weight: bold; font-size: 9px; width: 60%; } /* Ajusté el ancho para que la pregunta entre bien */
         
+        /* TABLA EQUIPOS */
         .table-equipos { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        .table-equipos th, .table-equipos td { border: 1px solid #e2e8f0; padding: 4px 6px; }
-        .table-equipos th { background-color: #1e293b; color: #fff; text-align: center; font-size: 9px; }
-        .table-equipos td { text-align: center; font-size: 9px; }
+        .table-equipos th, .table-equipos td { border: 1px solid #e2e8f0; padding: 6px; }
+        .table-equipos th { background-color: #1e293b; color: #fff; text-align: center; font-size: 9px; text-transform: uppercase; }
+        .table-equipos td { text-align: center; font-size: 9px; vertical-align: middle; }
         .text-left { text-align: left !important; }
         .text-center { text-align: center !important; }
         .badge { background-color: #e2e8f0; padding: 2px 4px; border-radius: 3px; font-weight: bold; font-size: 8px; }
@@ -66,7 +65,7 @@
         }
         .photo-img { width: 100%; height: 200px; object-fit: cover; border-radius: 5px; }
 
-        /* FIRMAS (AJUSTADO) */
+        /* FIRMAS */
         .signatures-section { margin-top: 30px; page-break-inside: avoid; }
         .signatures-table { width: 100%; border: none; margin-top: 10px; }
         .signatures-table td { border: none; padding: 8px; vertical-align: top; }
@@ -74,10 +73,8 @@
         .signature-box {
             border: 1px solid #94a3b8;
             border-radius: 8px;
-            /* AQUÍ ESTÁ EL CAMBIO: Mayor padding-top para bajar el texto y dejar espacio para firmar */
-            padding: 70px 10px 10px 10px; 
+            padding: 70px 10px 10px 10px;
             text-align: center;
-            /* Altura fija ajustada para mantener proporción */
             height: 60px; 
             background-color: #fff;
         }
@@ -103,17 +100,13 @@
         <p><strong>Fecha de Generación:</strong> {{ date('d/m/Y H:i') }} | <strong>Acta N°:</strong> {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</p>
     </div>
 
-    {{-- ================================================================= --}}
-    {{-- NUEVA SECCIÓN: INFORMACIÓN DE CONTROL (Al inicio)                 --}}
-    {{-- ================================================================= --}}
+    {{-- INFORMACIÓN DE CONTROL --}}
     <div class="control-section">
         <div class="control-title">INFORMACIÓN DE CONTROL</div>
         
-        {{-- Tabla de Control Principal --}}
         <table class="control-table">
             <tr>
                 <th>Fecha de Monitoreo:</th>
-                {{-- Usamos created_at como fecha base, o la fecha actual si no existe --}}
                 <td>{{ $acta->created_at ? $acta->created_at->format('d/m/Y') : date('d/m/Y') }}</td>
             </tr>
             <tr>
@@ -126,7 +119,6 @@
             </tr>
         </table>
 
-        {{-- Tabla Equipo Acompañamiento --}}
         @if(isset($equipoMonitoreo) && count($equipoMonitoreo) > 0)
             <div class="team-header">EQUIPO DE ACOMPAÑAMIENTO:</div>
             <table class="control-table" style="font-size: 9px;">
@@ -140,8 +132,8 @@
                 <tbody>
                     @foreach($equipoMonitoreo as $miembro)
                     <tr>
-                        <td style="text-transform: uppercase;">{{ $miembro->nombre_completo ?? '-' }}</td>
-                        <td>{{ $miembro->dni ?? '-' }}</td>
+                        <td style="text-transform: uppercase;">{{ $miembro->apellido_paterno }} {{ $miembro->apellido_materno }} {{ $miembro->nombres ?? '-' }}</td>
+                        <td>{{ $miembro->doc ?? '-' }}</td>
                         <td style="text-transform: uppercase;">{{ $miembro->cargo ?? '-' }}</td>
                     </tr>
                     @endforeach
@@ -149,12 +141,11 @@
             </table>
         @endif
     </div>
-    {{-- ================================================================= --}}
 
+    {{-- ITERACIÓN DE MÓDULOS --}}
+    {{-- @php $modulosOrdenados = $modulos->sortBy('modulo_nombre'); @endphp --}}
 
-    @php $modulosOrdenados = $modulos->sortBy('modulo_nombre'); @endphp
-
-    @forelse($modulosOrdenados as $modulo)
+    @forelse($modulos as $modulo)
         @php
             $contenido = is_string($modulo->contenido) ? json_decode($modulo->contenido, true) : $modulo->contenido;
             $consultorio = $contenido['detalle_del_consultorio'] ?? [];
@@ -163,13 +154,13 @@
             $dni         = $contenido['detalle_de_dni_y_firma_digital'] ?? [];
             $capacitacion= $contenido['detalles_de_capacitacion'] ?? [];
             $soporte     = $contenido['soporte'] ?? [];
-            $equipos     = $contenido['equipos_de_computo'] ?? [];
             $evidencias  = $contenido['comentarios_y_evidencias'] ?? [];
         @endphp
 
         <div class="module-container">
             <div class="module-header">{{ $modulo->modulo_nombre }}</div>
 
+            {{-- Bloque 1: Consultorio y Profesional --}}
             <table class="data-table" style="margin-bottom: 0;">
                 <tr>
                     <td width="50%" style="border:none; padding: 0 5px 0 0;">
@@ -193,15 +184,16 @@
                 </tr>
             </table>
 
+            {{-- Bloque 2: Admin y DNI --}}
             <div class="section-title">Documentación y Firma Digital</div>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Utiliza SIHCE</th>
-                        <th>Firmó DJ</th>
-                        <th>Firmó Confidencialidad</th>
-                        <th>Firma Digital Activa</th>
-                        <th>Tipo DNI</th>
+                        <th class="text-center" style="width: 20%;">Utiliza SIHCE</th>
+                        <th class="text-center" style="width: 20%;">Firmó DJ</th>
+                        <th class="text-center" style="width: 20%;">Firmó Confidencialidad</th>
+                        <th class="text-center" style="width: 20%;">Firma Digital Activa</th>
+                        <th class="text-center" style="width: 20%;">Tipo DNI</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -219,25 +211,44 @@
                 <strong>Obs. DNI:</strong> {{ $dni['observaciones_dni'] }}
             </div>
             @endif
-            
-            @if(count($equipos) > 0)
-                <div class="section-title">Equipos de Cómputo Reportados</div>
-                <table class="table-equipos">
-                    <thead><tr><th>Descripción</th><th>Cant.</th><th>Estado</th><th>Propiedad</th><th>Serie</th></tr></thead>
-                    <tbody>
-                        @foreach($equipos as $eq)
-                            <tr>
-                                <td class="text-left">{{ $eq['descripcion'] ?? '-' }}</td>
-                                <td>{{ $eq['cantidad'] ?? '1' }}</td>
-                                <td>{{ $eq['estado'] ?? '-' }}</td>
-                                <td>{{ $eq['propio'] ?? ($eq['propiedad'] ?? '-') }}</td>
-                                <td style="font-family: monospace;">{{ $eq['nro_serie'] ?? '-' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
 
+            {{-- >>>> BLOQUE 3 MEJORADO: CAPACITACIÓN Y SOPORTE (Lado a Lado) <<<< --}}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 5px; border: none;">
+                <tr>
+                    {{-- COLUMNA IZQUIERDA: CAPACITACIÓN --}}
+                    <td width="49%" style="vertical-align: top; border: none; padding-right: 5px;">
+                        <div class="section-title">DETALLE DE CAPACITACIÓN</div>
+                        <table class="data-table">
+                            <tr>
+                                <th>¿El personal ha recibido capacitación?</th>
+                                <td class="text-center">{{ $capacitacion['recibio_capacitacion'] ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Entidad que capacitó</th>
+                                <td class="text-center">{{ $capacitacion['inst_que_lo_capacito'] ?? '-' }}</td>
+                            </tr>
+                        </table>
+                    </td>
+
+                    <td width="2%" style="border: none;"></td> {{-- Espaciador --}}
+
+                    {{-- COLUMNA DERECHA: SOPORTE --}}
+                    <td width="49%" style="vertical-align: top; border: none; padding-left: 5px;">
+                        <div class="section-title">SOPORTE</div>
+                        <table class="data-table">
+                            <tr>
+                                <th>Ante Dificultades ¿A quién comunica?</th>
+                                <td class="text-center">{{ $soporte['inst_a_quien_comunica'] ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th>¿Qué medio utiliza?</th>
+                                <td class="text-center">{{ $soporte['medio_que_utiliza'] ?? '-' }}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            
             @if(!empty($evidencias['comentarios']))
                 <div class="section-title">Observaciones / Comentarios</div>
                 <div style="background: #fff; padding: 5px; border: 1px solid #ddd; font-style: italic;">
@@ -250,6 +261,37 @@
             No se han registrado módulos especializados para esta acta.
         </div>
     @endforelse
+
+    {{-- DETALLE DE EQUIPAMIENTO --}}
+    @if(count($equipos) > 0)
+        <div class="module-header" style="margin-top: 25px;">DETALLE DE EQUIPAMIENTO POR MÓDULO</div>
+        <table class="table-equipos">
+            <thead>
+                <tr>
+                    <th width="5%">N°</th>
+                    <th width="25%">MÓDULO</th>
+                    <th width="15%">SERIE/CÓDIGO</th>
+                    <th width="5%">CANT.</th>
+                    <th width="25%">DESCRIPCIÓN DEL EQUIPO</th>
+                    <th width="12%">ESTADO</th>
+                    <th width="13%">PROPIEDAD</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($equipos as $eq)
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td class="text-left" style="font-size: 8px;">{{ $eq->modulo }}</td>
+                    <td style="font-family: monospace;">{{ $eq->nro_serie }}</td>
+                    <td>{{ $eq->cantidad }}</td>
+                    <td class="text-left">{{ $eq->descripcion }}</td>
+                    <td>{{ $eq->estado }}</td>
+                    <td>{{ $eq->propio }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
 
     {{-- PANEL FOTOGRÁFICO --}}
     @if($acta->foto1 || $acta->foto2)
@@ -279,7 +321,7 @@
         </div>
     @endif
 
-    {{-- FIRMAS (Espaciado Ajustado) --}}
+    {{-- FIRMAS DE CONFORMIDAD --}}
     <div class="module-header" style="margin-top: 25px;">FIRMAS DE CONFORMIDAD</div>
     
     <div class="signatures-section">
@@ -303,19 +345,49 @@
             </tr>
         </table>
 
-        <table class="signatures-table">
-            <tr>
-                <td width="25%"></td>
-                <td width="50%">
-                    <div class="signature-box">
-                        <div class="signature-line"></div>
-                        <div class="signature-name">{{ $monitor['nombre'] }}</div> 
-                        <div class="signature-role">DIRESA</div>
-                    </div>
-                </td>
-                <td width="25%"></td>
-            </tr>
-        </table>
+        @if(isset($equipoMonitoreo) && count($equipoMonitoreo) > 0)
+            @if($equipoMonitoreo->count() == 1)
+                @php $miembro = $equipoMonitoreo->first(); @endphp
+                <table class="signatures-table" style="margin-top: 15px;">
+                    <tr>
+                        <td width="25%"></td>
+                        <td width="50%">
+                            <div class="signature-box">
+                                <div class="signature-line"></div>
+                                <div class="signature-name">
+                                    {{ mb_strtoupper($miembro->apellido_paterno . ' ' . $miembro->apellido_materno . ' ' . $miembro->nombres) }}
+                                </div> 
+                                <div class="signature-role">{{ mb_strtoupper($miembro->cargo ?? 'ACOMPAÑANTE') }}</div>
+                            </div>
+                        </td>
+                        <td width="25%"></td>
+                    </tr>
+                </table>
+            @else
+                <table class="signatures-table" style="margin-top: 15px;">
+                    @foreach($equipoMonitoreo->chunk(2) as $row)
+                        <tr>
+                            @foreach($row as $miembro)
+                                <td width="48%">
+                                    <div class="signature-box">
+                                        <div class="signature-line"></div>
+                                        <div class="signature-name">
+                                            {{ mb_strtoupper($miembro->apellido_paterno . ' ' . $miembro->apellido_materno . ' ' . $miembro->nombres) }}
+                                        </div> 
+                                        <div class="signature-role">{{ mb_strtoupper($miembro->cargo ?? 'ACOMPAÑANTE') }}</div>
+                                    </div>
+                                </td>
+                                @if(!$loop->last) <td width="4%"></td> @endif
+                            @endforeach
+                            @if($row->count() == 1)
+                                <td width="4%"></td><td width="48%"></td>
+                            @endif
+                        </tr>
+                        <tr><td colspan="3" style="height: 15px;"></td></tr>
+                    @endforeach
+                </table>
+            @endif
+        @endif
     </div>
 
 </body>
