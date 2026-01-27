@@ -366,7 +366,7 @@
             $color = array(0.3, 0.3, 0.3);
 
             // Texto Izquierdo
-            $pdf->page_text(40, $y, "SISTEMA DE MONITOREO - MÓDULO DE CITAS", $font, $size, $color);
+            $pdf->page_text(40, $y, "SISTEMA DE MONITOREO - MÓDULO DE ENFEMERIA", $font, $size, $color);
 
             // Texto Derecho (Paginación)
             $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
