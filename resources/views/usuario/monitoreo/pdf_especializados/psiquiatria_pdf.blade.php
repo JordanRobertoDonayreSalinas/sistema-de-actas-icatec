@@ -198,7 +198,7 @@
     @endphp
 
     <div class="header">
-        <h1>Módulo 4.7: Psiquiatría Especializada</h1>
+        <h1>Módulo 4.2: Psiquiatría Especializada</h1>
         <div class="header-meta">
             ACTA N° {{ str_pad($monitoreo->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $monitoreo->establecimiento->codigo }} - {{ strtoupper($monitoreo->establecimiento->nombre) }} | 
