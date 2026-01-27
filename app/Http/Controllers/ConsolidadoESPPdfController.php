@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\CabeceraMonitoreo;
-use App\Models\EquipoComputo;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use stdClass;
 
 class ConsolidadoESPPdfController extends Controller
 {
@@ -26,7 +26,27 @@ class ConsolidadoESPPdfController extends Controller
                 : 'IMPLEMENTADOR / MONITOR'
         ];
 
-        // 2. FUSIÓN DE DATOS
+        // --- MAPA MAESTRO DE ORDEN Y TITULOS ---
+        // Este array define QUÉ se muestra y EN QUÉ ORDEN
+        $titulosMap = [
+            'gestion_admin_esp'   => 'MODULO: GESTION ADMINISTRATIVA',
+            'citas_esp'           => 'MODULO: CITAS',
+            'triaje_esp'          => 'MODULO: TRIAJE',
+            'admision_esp'        => 'MODULO: ADMISION',
+
+            'sm_medicina_general' => 'MODULO: SALUD MENTAL / MEDICINA GENERAL',
+            'sm_psiquiatria'      => 'MODULO: SALUD MENTAL / PSIQUIATRIA',
+            'sm_med_familiar'     => 'MODULO: SALUD MENTAL / MEDICINA FAMILIAR Y COMUNITARIA',
+            'sm_psicologia'       => 'MODULO: SALUD MENTAL / PSICOLOGIA',
+            'sm_enfermeria'       => 'MODULO: SALUD MENTAL / ENFERMERIA',
+            'sm_servicio_social'  => 'MODULO: SALUD MENTAL / SERVICIO SOCIAL',
+            'sm_terapias'         => 'MODULO: SALUD MENTAL / TERAPIA DE LENGUAJE OCUPACIONAL',
+
+            'toma_muestra'        => 'MODULO: TOMA DE MUESTRAS',
+            'farmacia_esp'        => 'MODULO: FARMACIA'
+        ];
+
+        // 2. OBTENCIÓN DE DATOS CRUDOS (DESORDENADOS)
         $modulosNuevos = DB::table('mon_detalle_modulos')
             ->where('cabecera_monitoreo_id', $id)
             ->get()
@@ -36,81 +56,76 @@ class ConsolidadoESPPdfController extends Controller
             ->where('cabecera_monitoreo_id', $id)
             ->get();
 
-        $modulos = collect();
+        // Creamos una colección temporal con todo lo que hay en BD
+        $poolDeModulos = collect();
         
-        // Filtramos 'config_modulos'
-        $nombres = $modulosNuevos->keys()
+        // Unificamos nuevos y antiguos
+        $nombresEnBd = $modulosNuevos->keys()
             ->merge($modulosAntiguos->pluck('modulo_nombre'))
-            ->unique()
-            ->reject(function ($nombre) {
-                return $nombre === 'config_modulos';
-            });
+            ->unique();
 
-        foreach($nombres as $nombre) {
+        foreach($nombresEnBd as $nombre) {
             if ($modulosNuevos->has($nombre)) {
-                $modulos->push($modulosNuevos->get($nombre));
+                $poolDeModulos->put($nombre, $modulosNuevos->get($nombre));
             } else {
                 $old = $modulosAntiguos->firstWhere('modulo_nombre', $nombre);
-                if ($old) $modulos->push($old);
+                if ($old) $poolDeModulos->put($nombre, $old);
             }
         }
 
-        // --- RENOMBRADO DE MÓDULOS ---
-        $titulosMap = [
-            'gestion_admin_esp'   => 'MODULO: GESTION ADMINISTRATIVA',
-            'citas_esp'           => 'MODULO: CITAS',
-            'triaje_esp'          => 'MODULO: TRIAJE',
-            'toma_muestra'        => 'MODULO: TOMA DE MUESTRAS',
-            'farmacia_esp'        => 'MODULO: FARMACIA',
-            'sm_medicina_general' => 'MODULO: SALUD MENTAL / MEDICINA GENERAL',
-            'sm_enfermeria'       => 'MODULO: SALUD MENTAL / ENFERMERIA'
-        ];
+        // 3. CONSTRUCCIÓN DE LA LISTA FINAL ORDENADA
+        $modulosFinales = collect();
 
-        $modulos->transform(function($item) use ($titulosMap) {
-            if (array_key_exists($item->modulo_nombre, $titulosMap)) {
-                $item->modulo_nombre = $titulosMap[$item->modulo_nombre];
-            } else {
-                $item->modulo_nombre = mb_strtoupper(str_replace('_', ' ', $item->modulo_nombre), 'UTF-8');
-            }
-            return $item;
-        });
-
-        // 3. Equipos
-        $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)->get();
-        
-        if ($equipos->isEmpty()) {
-            foreach ($modulos as $mod) {
-                $cont = is_string($mod->contenido) ? json_decode($mod->contenido, true) : $mod->contenido;
-                $lista = $cont['equipos_de_computo'] ?? ($cont['equipos_data'] ?? ($cont['inventario'] ?? []));
+        // Iteramos el MAPA (no la BD) para respetar estrictamente tu orden
+        foreach ($titulosMap as $keyBd => $tituloNuevo) {
+            // Si el módulo existe en lo que trajimos de la BD...
+            if ($poolDeModulos->has($keyBd)) {
+                $modulo = $poolDeModulos->get($keyBd);
                 
-                if (is_array($lista) && count($lista) > 0) {
-                    foreach ($lista as $item) {
-                        if (!empty($item['descripcion'])) {
-                            $obj = new \stdClass();
-                            $obj->modulo = $mod->modulo_nombre;
-                            $obj->descripcion = $item['descripcion'];
-                            $obj->cantidad = $item['cantidad'] ?? 1;
-                            $obj->estado = $item['estado'] ?? 'REGULAR';
-                            $obj->propio = $item['propiedad'] ?? ($item['propio'] ?? 'ESTABLECIMIENTO');
-                            $obj->nro_serie = $item['nro_serie'] ?? ($item['codigo'] ?? '-');
-                            $equipos->push($obj);
-                        }
+                // Le cambiamos el nombre aquí mismo
+                $modulo->modulo_nombre = $tituloNuevo;
+                
+                // Lo agregamos a la lista final
+                $modulosFinales->push($modulo);
+            }
+            // Si no existe en la BD, simplemente no hacemos nada (no se agrega)
+        }
+
+        // 4. EXTRACCIÓN DE EQUIPOS
+        // Usamos $modulosFinales, así los equipos también salen en el orden correcto
+        $equipos = collect();
+
+        foreach ($modulosFinales as $mod) {
+            $cont = is_string($mod->contenido) ? json_decode($mod->contenido, true) : $mod->contenido;
+            $lista = $cont['equipos_de_computo'] ?? ($cont['equipos_data'] ?? ($cont['inventario'] ?? []));
+            
+            if (is_array($lista) && count($lista) > 0) {
+                foreach ($lista as $item) {
+                    if (!empty($item['descripcion'])) {
+                        $obj = new stdClass();
+                        $obj->modulo = $mod->modulo_nombre; // Ya tiene el nombre bonito
+                        $obj->descripcion = $item['descripcion'];
+                        $obj->cantidad = $item['cantidad'] ?? 1;
+                        $obj->estado = $item['estado'] ?? 'OPERATIVO';
+                        $obj->propio = $item['propiedad'] ?? ($item['propio'] ?? 'ESTABLECIMIENTO');
+                        $obj->nro_serie = $item['nro_serie'] ?? ($item['codigo'] ?? '-');
+                        $equipos->push($obj);
                     }
                 }
             }
         }
 
-        // 4. Equipo de Acompañamiento
+        // 5. Equipo de Acompañamiento
         $equipoMonitoreo = DB::table('mon_equipo_monitoreo')
             ->where('cabecera_monitoreo_id', $id)
             ->get();
 
-        // 5. Preparar PDF
+        // 6. Preparar PDF
         $data = [
             'acta'            => $acta,
             'jefe'            => $jefe,
             'monitor'         => $monitor,
-            'modulos'         => $modulos,
+            'modulos'         => $modulosFinales, // Pasamos la lista ya ordenada y filtrada
             'equipos'         => $equipos,
             'equipoMonitoreo' => $equipoMonitoreo
         ];
