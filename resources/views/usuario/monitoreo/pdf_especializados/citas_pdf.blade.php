@@ -164,7 +164,7 @@
     <div class="main-header">
         <h1>REPORTE DE MONITOREO - MÓDULO CITAS</h1>
         <p>
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ACTA N° {{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre ?? '-' }} |
             FECHA: {{ $dbInicioLabores->fecha_registro ? \Carbon\Carbon::parse($dbInicioLabores->fecha_registro)->format('d/m/Y') : '-' }}
         </p>

@@ -97,7 +97,7 @@
     <div class="header">
         <h1>Reporte Consolidado de Módulos Especializados</h1>
         <p><strong>Establecimiento:</strong> {{ $acta->establecimiento->nombre ?? 'NO DEFINIDO' }}</p>
-        <p><strong>Fecha de Generación:</strong> {{ date('d/m/Y H:i') }} | <strong>Acta N°:</strong> {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</p>
+        <p><strong>Fecha de Generación:</strong> {{ date('d/m/Y H:i') }} | <strong>Acta N°:</strong> {{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}</p>
     </div>
 
     {{-- INFORMACIÓN DE CONTROL --}}
