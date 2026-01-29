@@ -85,206 +85,200 @@
 @endpush
 
 @section('header-content')
-    <div class="flex flex-col justify-center h-full">
-        <h1 class="text-xl font-black text-slate-800 tracking-tight uppercase">Gestión Documental</h1>
-        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">
-            <span>Inicio</span>
-            <i data-lucide="chevron-right" class="w-3 h-3"></i>
-            <span>Documentos Administrativos</span>
-        </div>
+    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Documentos Administrativos</h1>
+    <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+        <span>Operaciones</span>
+        <span class="text-slate-300">•</span>
+        <span>Documentos Administrativos</span>
     </div>
 @endsection
 
 @section('content')
     <div x-data="{ open: {{ request()->anyFilled(['search', 'tipo_doc_busqueda', 'estado', 'provincia', 'distrito', 'establecimiento_nombre']) ? 'true' : 'false' }} }"
-        class="w-full max-w-7xl mx-auto space-y-8 pb-12">
+        class="w-full">
 
         {{-- 1. TARJETA DE ESTADÍSTICAS (KPIs) --}}
         <div
-            class="bg-gradient-to-r from-indigo-900 to-indigo-700 p-8 rounded-[2.5rem] shadow-2xl shadow-indigo-200 relative overflow-hidden text-white group">
+            class="bg-gradient-to-r from-indigo-900 to-indigo-700 p-5 rounded-2xl shadow-xl mb-6 relative overflow-hidden text-white group">
             {{-- Efectos de fondo --}}
             <div
-                class="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/10 transition-all duration-700">
+                class="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none">
             </div>
-            <div class="absolute left-0 bottom-0 w-64 h-64 bg-purple-500/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
 
-            <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-                <div class="flex flex-wrap justify-center gap-4">
-                    {{-- KPI Total --}}
-                    <div
-                        class="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10 text-center min-w-[140px]">
-                        <span class="block text-3xl font-black tracking-tighter">{{ $documentos->total() }}</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest opacity-70">Total</span>
-                    </div>
-                    {{-- KPI Completados --}}
-                    <div
-                        class="bg-emerald-500/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-emerald-500/30 text-center min-w-[140px]">
-                        <span
-                            class="block text-3xl font-black text-emerald-300 tracking-tighter">{{ $countCompletados ?? 0 }}</span>
-                        <span
-                            class="text-[10px] font-bold uppercase tracking-widest text-emerald-100 opacity-70">Firmadas</span>
-                    </div>
-                    {{-- KPI Pendientes --}}
-                    <div
-                        class="bg-amber-500/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-amber-500/30 text-center min-w-[140px]">
-                        <span
-                            class="block text-3xl font-black text-amber-300 tracking-tighter">{{ $countPendientes ?? 0 }}</span>
-                        <span
-                            class="text-[10px] font-bold uppercase tracking-widest text-amber-100 opacity-70">Pendientes</span>
+            <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+                <div class="flex flex-col gap-4 w-full">
+                    <div class="flex flex-wrap items-center gap-3">
+                        {{-- KPI Total --}}
+                        <div
+                            class="bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg border border-slate-700 flex flex-col items-center min-w-[100px]">
+                            <span class="text-2xl font-bold leading-none">{{ $documentos->total() }}</span>
+                            <span
+                                class="text-[0.65rem] uppercase tracking-widest text-slate-400 font-semibold mt-1">Total</span>
+                        </div>
+                        {{-- KPI Completados --}}
+                        <div
+                            class="bg-white/20 backdrop-blur-md text-white rounded-xl px-5 py-2.5 border border-white/30 flex flex-col items-center min-w-[100px]">
+                            <span class="text-2xl font-bold leading-none">{{ $countCompletados ?? 0 }}</span>
+                            <span
+                                class="text-[0.65rem] uppercase tracking-widest text-indigo-100 font-semibold mt-1">Firmadas</span>
+                        </div>
+                        {{-- KPI Pendientes --}}
+                        <div
+                            class="bg-amber-500 text-white rounded-xl px-5 py-2.5 shadow-lg border border-amber-400 flex flex-col items-center min-w-[100px]">
+                            <span class="text-2xl font-bold leading-none">{{ $countPendientes ?? 0 }}</span>
+                            <span
+                                class="text-[0.65rem] uppercase tracking-widest text-amber-100 font-semibold mt-1">Pendientes</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <button @click="open = !open"
-                        :class="open ? 'bg-white text-indigo-900 shadow-xl' : 'bg-white/10 text-white hover:bg-white/20'"
-                        class="px-6 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wide transition-all flex items-center gap-2 border border-white/10">
-                        <i data-lucide="filter" class="w-4 h-4"></i>
-                        <span x-text="open ? 'Ocultar Filtros' : 'Filtrar Datos'"></span>
+                <div class="flex items-center gap-3 w-full lg:w-auto justify-center lg:justify-end mt-2 lg:mt-0">
+                    <button @click="open = !open" type="button"
+                        class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg border border-white/20 text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm">
+                        <i data-lucide="filter" class="w-4 h-4" x-show="!open"></i>
+                        <i data-lucide="filter-x" class="w-4 h-4" x-show="open" x-cloak></i>
+                        <span x-text="open ? 'Ocultar Filtros' : 'Mostrar Filtros'"></span>
                     </button>
                     <a href="{{ route('usuario.documentos.create') }}"
-                        class="px-8 py-3.5 rounded-2xl bg-indigo-500 text-white shadow-lg hover:bg-indigo-400 hover:shadow-indigo-500/50 transition-all font-bold text-xs uppercase tracking-wide flex items-center gap-2 transform hover:-translate-y-0.5">
-                        <i data-lucide="plus" class="w-5 h-5"></i> Nuevo Registro
+                        class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg bg-white text-indigo-700 hover:bg-indigo-50 border border-transparent">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        <span>Nuevo Registro</span>
                     </a>
                 </div>
             </div>
         </div>
 
         {{-- 2. PANEL DE FILTROS (DISEÑO GRID) --}}
-        <div x-show="open" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-cloak>
-            <form method="GET" action="{{ route('usuario.documentos.index') }}"
-                class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 relative">
+        <form x-show="open" x-cloak x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+            method="GET" action="{{ route('usuario.documentos.index') }}"
+            class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
 
-                <div class="flex flex-col gap-6">
-                    {{-- SECCIÓN 1: BÚSQUEDA PROFESIONAL --}}
+            <div class="flex flex-col gap-6">
+                {{-- SECCIÓN 1: BÚSQUEDA PROFESIONAL --}}
+                <div>
+                    <h3
+                        class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i data-lucide="user-search" class="w-3 h-3"></i> Búsqueda de Profesional
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {{-- Filtro Tipo Documento --}}
+                        <div class="md:col-span-1">
+                            <select name="tipo_doc_busqueda" class="input-modern w-full px-4 cursor-pointer">
+                                <option value="">TODOS</option>
+                                <option value="DNI" {{ request('tipo_doc_busqueda') == 'DNI' ? 'selected' : '' }}>DNI
+                                </option>
+                                <option value="CE" {{ request('tipo_doc_busqueda') == 'CE' ? 'selected' : '' }}>CE
+                                </option>
+                            </select>
+                        </div>
+                        {{-- Input Buscador General --}}
+                        <div class="md:col-span-3 input-icon-wrapper">
+                            <i data-lucide="search" class="input-icon"></i>
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                class="input-modern w-full input-with-icon uppercase"
+                                placeholder="INGRESE DNI, NOMBRES O APELLIDOS DEL PROFESIONAL...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-px w-full bg-slate-100"></div>
+
+                {{-- SECCIÓN 2: UBICACIÓN Y ESTADO --}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                    {{-- Ubicación --}}
                     <div>
                         <h3
-                            class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <i data-lucide="user-search" class="w-3 h-3"></i> Búsqueda de Profesional
+                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-3 h-3"></i> Ubicación (IPRESS)
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {{-- Filtro Tipo Documento --}}
-                            <div class="md:col-span-1">
-                                <select name="tipo_doc_busqueda" class="input-modern w-full px-4 cursor-pointer">
-                                    <option value="">TODOS</option>
-                                    <option value="DNI" {{ request('tipo_doc_busqueda') == 'DNI' ? 'selected' : '' }}>DNI
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <select name="provincia" onchange="this.form.submit()"
+                                class="input-modern w-full px-4 uppercase">
+                                <option value="">PROVINCIA: TODAS</option>
+                                @foreach($provincias as $prov)
+                                    <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>
+                                        {{ $prov }}
                                     </option>
-                                    <option value="CE" {{ request('tipo_doc_busqueda') == 'CE' ? 'selected' : '' }}>CE
+                                @endforeach
+                            </select>
+                            <select name="distrito" class="input-modern w-full px-4 uppercase">
+                                <option value="">DISTRITO: TODOS</option>
+                                @foreach($distritos as $dist)
+                                    <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>
+                                        {{ $dist }}
                                     </option>
-                                </select>
-                            </div>
-                            {{-- Input Buscador General --}}
-                            <div class="md:col-span-3 input-icon-wrapper">
-                                <i data-lucide="search" class="input-icon"></i>
-                                <input type="text" name="search" value="{{ request('search') }}"
-                                    class="input-modern w-full input-with-icon uppercase"
-                                    placeholder="INGRESE DNI, NOMBRES O APELLIDOS DEL PROFESIONAL...">
-                            </div>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="input-icon-wrapper">
+                            <i data-lucide="building-2" class="input-icon"></i>
+                            <input type="text" name="establecimiento_nombre" value="{{ request('establecimiento_nombre') }}"
+                                class="input-modern w-full input-with-icon uppercase"
+                                placeholder="NOMBRE DEL ESTABLECIMIENTO...">
                         </div>
                     </div>
 
-                    <div class="h-px w-full bg-slate-100"></div>
-
-                    {{-- SECCIÓN 2: UBICACIÓN Y ESTADO --}}
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                        {{-- Ubicación --}}
-                        <div>
-                            <h3
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i> Ubicación (IPRESS)
-                            </h3>
-                            <div class="grid grid-cols-2 gap-3 mb-3">
-                                <select name="provincia" onchange="this.form.submit()"
-                                    class="input-modern w-full px-4 uppercase">
-                                    <option value="">PROVINCIA: TODAS</option>
-                                    @foreach($provincias as $prov)
-                                        <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>
-                                            {{ $prov }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <select name="distrito" class="input-modern w-full px-4 uppercase">
-                                    <option value="">DISTRITO: TODOS</option>
-                                    @foreach($distritos as $dist)
-                                        <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>
-                                            {{ $dist }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="input-icon-wrapper">
-                                <i data-lucide="building-2" class="input-icon"></i>
-                                <input type="text" name="establecimiento_nombre"
-                                    value="{{ request('establecimiento_nombre') }}"
-                                    class="input-modern w-full input-with-icon uppercase"
-                                    placeholder="NOMBRE DEL ESTABLECIMIENTO...">
-                            </div>
+                    {{-- Estado y Fecha --}}
+                    <div>
+                        <h3
+                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <i data-lucide="sliders-horizontal" class="w-3 h-3"></i> Estado y Periodo
+                        </h3>
+                        <div class="mb-3">
+                            <select name="estado" class="input-modern w-full px-4 uppercase">
+                                <option value="">ESTADO: TODOS</option>
+                                <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>COMPLETADOS
+                                    (100%)</option>
+                                <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>
+                                    PENDIENTES</option>
+                            </select>
                         </div>
-
-                        {{-- Estado y Fecha --}}
-                        <div>
-                            <h3
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <i data-lucide="sliders-horizontal" class="w-3 h-3"></i> Estado y Periodo
-                            </h3>
-                            <div class="mb-3">
-                                <select name="estado" class="input-modern w-full px-4 uppercase">
-                                    <option value="">ESTADO: TODOS</option>
-                                    <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>COMPLETADOS
-                                        (100%)</option>
-                                    <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>
-                                        PENDIENTES</option>
-                                </select>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="date" name="fecha_inicio" value="{{ $fecha_inicio }}"
-                                    class="input-modern w-full px-4 text-center">
-                                <input type="date" name="fecha_fin" value="{{ $fecha_fin }}"
-                                    class="input-modern w-full px-4 text-center">
-                            </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="date" name="fecha_inicio" value="{{ $fecha_inicio }}"
+                                class="input-modern w-full px-4 text-center">
+                            <input type="date" name="fecha_fin" value="{{ $fecha_fin }}"
+                                class="input-modern w-full px-4 text-center">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {{-- Footer Botones --}}
-                <div class="flex justify-center gap-4 mt-8 pt-6 border-t border-slate-50">
-                    <a href="{{ route('usuario.documentos.index') }}"
-                        class="px-8 py-3 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs uppercase hover:bg-slate-50 hover:text-red-500 transition-colors flex items-center gap-2">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i> Limpiar
-                    </a>
-                    <button type="submit"
-                        class="px-12 py-3 rounded-xl bg-slate-900 text-white font-bold text-xs uppercase shadow-xl hover:bg-slate-800 hover:scale-[1.02] transition-all flex items-center gap-2">
-                        <i data-lucide="search" class="w-4 h-4"></i> Filtrar Resultados
-                    </button>
-                </div>
-            </form>
-        </div>
+            {{-- Footer Botones --}}
+            <div class="flex items-center gap-3 shrink-0">
+                <button type="submit"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 transition-all hover:scale-105"
+                    title="Aplicar Filtros">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </button>
+                <a href="{{ route('usuario.documentos.index') }}"
+                    class="w-11 h-11 flex items-center justify-center rounded-xl bg-slate-400 hover:bg-slate-500 text-white shadow-lg shadow-slate-400/30 transition-all hover:scale-105"
+                    title="Limpiar Filtros">
+                    <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </form>
 
         {{-- 3. TABLA DE RESULTADOS --}}
-        <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200/60 overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
             <div class="overflow-x-auto table-container">
                 <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50/80 border-b border-slate-100">
-                            <th
-                                class="px-6 py-5 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center w-16">
+                    <thead class="bg-slate-800">
+                        <tr>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">
                                 #</th>
-                            <th
-                                class="px-4 py-5 font-black text-slate-400 text-[10px] uppercase tracking-widest w-24 text-center">
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">
                                 Fecha</th>
-                            <th class="px-4 py-5 font-black text-slate-400 text-[10px] uppercase tracking-widest">
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">
                                 Profesional Solicitante</th>
-                            <th class="px-4 py-5 font-black text-slate-400 text-[10px] uppercase tracking-widest">
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">
                                 Establecimiento</th>
-                            <th
-                                class="px-4 py-5 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center w-36">
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">
                                 Estado</th>
-                            <th
-                                class="px-2 py-5 font-black text-indigo-500 text-[10px] uppercase tracking-widest text-center w-28 border-l border-slate-100 bg-indigo-50/10">
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">
                                 Compromiso</th>
-                            <th
-                                class="px-2 py-5 font-black text-purple-500 text-[10px] uppercase tracking-widest text-center w-28 border-l border-slate-100 bg-purple-50/10">
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">
                                 D. Jurada</th>
                         </tr>
                     </thead>
@@ -441,8 +435,10 @@
                 </table>
             </div>
         </div>
+
         @if ($documentos->hasPages())
-        <div class="mt-8 flex justify-center">{{ $documentos->links() }}</div> @endif
+            <div class="mt-4">{{ $documentos->appends(request()->query())->links() }}</div>
+        @endif
     </div>
 @endsection
 
@@ -458,15 +454,15 @@
             Swal.fire({
                 title: '<h2 class="text-lg font-black text-slate-800 tracking-tight uppercase text-center">Gestión de Archivos</h2>',
                 html: `
-                                            <div class="mt-2 text-left">
-                                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4 text-center shadow-sm">
-                                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo de Documento</p>
-                                                    <p class="text-sm font-black ${colorTipo} leading-tight uppercase tracking-tight">${tituloTipo}</p>
-                                                </div>
-                                                <p class="text-center text-[10px] text-slate-400 font-bold uppercase mb-4 tracking-wide">Profesional: <span class="text-slate-700">${profesional}</span></p>
-                                                <div class="text-[10px] text-slate-500 mb-2 font-bold uppercase tracking-wide ml-1">Seleccione el PDF firmado:</div>
-                                            </div>
-                                        `,
+                                                    <div class="mt-2 text-left">
+                                                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4 text-center shadow-sm">
+                                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo de Documento</p>
+                                                            <p class="text-sm font-black ${colorTipo} leading-tight uppercase tracking-tight">${tituloTipo}</p>
+                                                        </div>
+                                                        <p class="text-center text-[10px] text-slate-400 font-bold uppercase mb-4 tracking-wide">Profesional: <span class="text-slate-700">${profesional}</span></p>
+                                                        <div class="text-[10px] text-slate-500 mb-2 font-bold uppercase tracking-wide ml-1">Seleccione el PDF firmado:</div>
+                                                    </div>
+                                                `,
                 input: 'file',
                 inputAttributes: { 'accept': 'application/pdf', 'aria-label': 'Seleccionar PDF', 'class': 'swal2-file-input text-xs' },
                 showCancelButton: true,
