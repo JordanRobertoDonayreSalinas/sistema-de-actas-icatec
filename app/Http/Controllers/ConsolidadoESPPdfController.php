@@ -16,12 +16,12 @@ class ConsolidadoESPPdfController extends Controller
 
         $jefe = [
             'nombre' => mb_strtoupper($acta->responsable ?? 'NO REGISTRADO', 'UTF-8'),
-            'cargo'  => 'JEFE DE ESTABLECIMIENTO'
+            'cargo' => 'JEFE DE ESTABLECIMIENTO'
         ];
-        
+
         $creador = $acta->user;
         $monitor = [
-            'nombre' => $creador 
+            'nombre' => $creador
                 ? mb_strtoupper("{$creador->apellido_paterno} {$creador->apellido_materno} {$creador->name}", 'UTF-8')
                 : 'IMPLEMENTADOR / MONITOR'
         ];
@@ -29,21 +29,21 @@ class ConsolidadoESPPdfController extends Controller
         // --- MAPA MAESTRO DE ORDEN Y TITULOS ---
         // Este array define QUÉ se muestra y EN QUÉ ORDEN
         $titulosMap = [
-            'gestion_admin_esp'   => 'MODULO: GESTION ADMINISTRATIVA',
-            'citas_esp'           => 'MODULO: CITAS',
-            'triaje_esp'          => 'MODULO: TRIAJE',
-            'admision_esp'        => 'MODULO: ADMISION',
+            'gestion_admin_esp' => 'MODULO: GESTION ADMINISTRATIVA',
+            'citas_esp' => 'MODULO: CITAS',
+            'triaje_esp' => 'MODULO: TRIAJE',
+            'admision_esp' => 'MODULO: ADMISION',
 
             'sm_medicina_general' => 'MODULO: SALUD MENTAL / MEDICINA GENERAL',
-            'sm_psiquiatria'      => 'MODULO: SALUD MENTAL / PSIQUIATRIA',
-            'sm_med_familiar'     => 'MODULO: SALUD MENTAL / MEDICINA FAMILIAR Y COMUNITARIA',
-            'sm_psicologia'       => 'MODULO: SALUD MENTAL / PSICOLOGIA',
-            'sm_enfermeria'       => 'MODULO: SALUD MENTAL / ENFERMERIA',
-            'sm_servicio_social'  => 'MODULO: SALUD MENTAL / SERVICIO SOCIAL',
-            'sm_terapias'         => 'MODULO: SALUD MENTAL / TERAPIA DE LENGUAJE OCUPACIONAL',
+            'sm_psiquiatria' => 'MODULO: SALUD MENTAL / PSIQUIATRIA',
+            'sm_med_familiar' => 'MODULO: SALUD MENTAL / MEDICINA FAMILIAR Y COMUNITARIA',
+            'sm_psicologia' => 'MODULO: SALUD MENTAL / PSICOLOGIA',
+            'sm_enfermeria' => 'MODULO: SALUD MENTAL / ENFERMERIA',
+            'sm_servicio_social' => 'MODULO: SALUD MENTAL / SERVICIO SOCIAL',
+            'sm_terapias' => 'MODULO: SALUD MENTAL / TERAPIA DE LENGUAJE OCUPACIONAL',
 
-            'toma_muestra'        => 'MODULO: TOMA DE MUESTRAS',
-            'farmacia_esp'        => 'MODULO: FARMACIA'
+            'toma_muestra' => 'MODULO: TOMA DE MUESTRAS',
+            'farmacia_esp' => 'MODULO: FARMACIA'
         ];
 
         // 2. OBTENCIÓN DE DATOS CRUDOS (DESORDENADOS)
@@ -56,20 +56,43 @@ class ConsolidadoESPPdfController extends Controller
             ->where('cabecera_monitoreo_id', $id)
             ->get();
 
+        // Obtener módulos habilitados desde config_modulos
+        $configModulos = $modulosAntiguos->firstWhere('modulo_nombre', 'config_modulos');
+        $modulosHabilitados = $configModulos
+            ? (is_array($configModulos->contenido) ? $configModulos->contenido : json_decode($configModulos->contenido, true))
+            : [];
+        $modulosHabilitados = array_filter((array) $modulosHabilitados);
+
+        // Lista de submódulos de Salud Mental
+        $submodulosSM = ['sm_medicina_general', 'sm_psiquiatria', 'sm_med_familiar', 'sm_psicologia', 'sm_enfermeria', 'sm_servicio_social', 'sm_terapias'];
+
+        // Si salud_mental_group está habilitado, incluir sus submódulos habilitados
+        if (in_array('salud_mental_group', $modulosHabilitados)) {
+            $submodulosSMHabilitados = array_intersect($modulosHabilitados, $submodulosSM);
+            // Agregar submódulos habilitados a la lista
+            $modulosHabilitados = array_merge($modulosHabilitados, $submodulosSMHabilitados);
+        }
+
         // Creamos una colección temporal con todo lo que hay en BD
         $poolDeModulos = collect();
-        
+
         // Unificamos nuevos y antiguos
         $nombresEnBd = $modulosNuevos->keys()
             ->merge($modulosAntiguos->pluck('modulo_nombre'))
             ->unique();
 
-        foreach($nombresEnBd as $nombre) {
+        foreach ($nombresEnBd as $nombre) {
+            // FILTRO: Solo incluir si está habilitado en config_modulos
+            if (!in_array($nombre, $modulosHabilitados) && $nombre !== 'config_modulos') {
+                continue; // Saltar módulos deshabilitados
+            }
+
             if ($modulosNuevos->has($nombre)) {
                 $poolDeModulos->put($nombre, $modulosNuevos->get($nombre));
             } else {
                 $old = $modulosAntiguos->firstWhere('modulo_nombre', $nombre);
-                if ($old) $poolDeModulos->put($nombre, $old);
+                if ($old)
+                    $poolDeModulos->put($nombre, $old);
             }
         }
 
@@ -81,10 +104,10 @@ class ConsolidadoESPPdfController extends Controller
             // Si el módulo existe en lo que trajimos de la BD...
             if ($poolDeModulos->has($keyBd)) {
                 $modulo = $poolDeModulos->get($keyBd);
-                
+
                 // Le cambiamos el nombre aquí mismo
                 $modulo->modulo_nombre = $tituloNuevo;
-                
+
                 // Lo agregamos a la lista final
                 $modulosFinales->push($modulo);
             }
@@ -98,7 +121,7 @@ class ConsolidadoESPPdfController extends Controller
         foreach ($modulosFinales as $mod) {
             $cont = is_string($mod->contenido) ? json_decode($mod->contenido, true) : $mod->contenido;
             $lista = $cont['equipos_de_computo'] ?? ($cont['equipos_data'] ?? ($cont['inventario'] ?? []));
-            
+
             if (is_array($lista) && count($lista) > 0) {
                 foreach ($lista as $item) {
                     if (!empty($item['descripcion'])) {
@@ -122,17 +145,17 @@ class ConsolidadoESPPdfController extends Controller
 
         // 6. Preparar PDF
         $data = [
-            'acta'            => $acta,
-            'jefe'            => $jefe,
-            'monitor'         => $monitor,
-            'modulos'         => $modulosFinales, // Pasamos la lista ya ordenada y filtrada
-            'equipos'         => $equipos,
+            'acta' => $acta,
+            'jefe' => $jefe,
+            'monitor' => $monitor,
+            'modulos' => $modulosFinales, // Pasamos la lista ya ordenada y filtrada
+            'equipos' => $equipos,
             'equipoMonitoreo' => $equipoMonitoreo
         ];
 
         $pdf = Pdf::loadView('usuario.monitoreo.pdf_especializados.consolidado_pdf', $data);
 
         return $pdf->setPaper('a4', 'portrait')
-                   ->stream("ACTA_ESP_CONSOLIDADA_N{$acta->id}.pdf");
+            ->stream("ACTA_ESP_CONSOLIDADA_N{$acta->id}.pdf");
     }
 }

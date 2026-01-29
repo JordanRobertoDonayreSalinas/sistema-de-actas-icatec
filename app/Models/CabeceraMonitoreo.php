@@ -32,7 +32,7 @@ class CabeceraMonitoreo extends Model
         'responsable_congelado',
         'foto1',
         'foto2',
-        
+
         // CAMPOS NUEVOS PARA LA LÓGICA DE SERIES
         'tipo_origen', // 'ESTANDAR' o 'ESPECIALIZADA'
         'numero_acta'  // Correlativo (1, 2, 3...)
@@ -80,11 +80,72 @@ class CabeceraMonitoreo extends Model
         // Si es ESPECIALIZADA son 3 módulos (Citas, Triaje, Acogida)
         // Si es ESTANDAR son 18 módulos
         $totalModulos = ($this->tipo_origen === 'ESPECIALIZADA') ? 3 : 18;
-        
+
         $completados = $this->detalles()
-                            ->where('modulo_nombre', '!=', 'config_modulos')
-                            ->count();
-        
+            ->where('modulo_nombre', '!=', 'config_modulos')
+            ->count();
+
         return ($totalModulos > 0) ? round(($completados / $totalModulos) * 100) : 0;
+    }
+
+    /**
+     * Obtiene todos los módulos de Salud Mental asociados a esta cabecera.
+     * Incluye todos los submódulos posibles de Salud Mental.
+     * Solo contará los que realmente estén registrados en la BD para esta acta.
+     */
+    public function modulosSaludMental()
+    {
+        return $this->detalles()
+            ->whereIn('modulo_nombre', [
+                'sm_medicina_general',
+                'sm_psiquiatria',
+                'sm_med_familiar',
+                'sm_psicologia',
+                'sm_enfermeria',
+                'sm_servicio_social',
+                'sm_terapias'
+            ]);
+    }
+
+    /**
+     * Cuenta cuántos módulos de Salud Mental están firmados.
+     * Un módulo está firmado si tiene un valor en pdf_firmado_path.
+     */
+    public function contarModulosSaludMentalFirmados()
+    {
+        return $this->modulosSaludMental()
+            ->whereNotNull('pdf_firmado_path')
+            ->count();
+    }
+
+    /**
+     * Cuenta el total de módulos de Salud Mental registrados.
+     */
+    public function contarTotalModulosSaludMental()
+    {
+        return $this->modulosSaludMental()->count();
+    }
+
+    /**
+     * Obtiene el estado de firma de Salud Mental.
+     * @return string 'firmado'|'en_proceso'|'pendiente'
+     */
+    public function estadoFirmaSaludMental()
+    {
+        $total = $this->contarTotalModulosSaludMental();
+
+        if ($total === 0) {
+            return 'pendiente'; // No hay módulos registrados
+        }
+
+        $firmados = $this->contarModulosSaludMentalFirmados();
+
+        if ($firmados === $total) {
+            return 'firmado'; // Todos firmados
+        } elseif ($firmados > 0) {
+            return 'en_proceso'; // Algunos firmados
+        } else {
+            return 'pendiente'; // Ninguno firmado
+        }
     }
 }
