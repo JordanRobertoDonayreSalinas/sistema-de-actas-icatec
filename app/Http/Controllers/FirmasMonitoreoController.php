@@ -27,8 +27,8 @@ class FirmasMonitoreoController extends Controller
             $nombreLimpio = str_replace('_', ' ', $modulo);
 
             $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                       ->where('modulo_nombre', $modulo)
-                                       ->first();
+                ->where('modulo_nombre', $modulo)
+                ->first();
 
             if (!$registro) {
                 return back()->with('error', "No se puede subir firma: El módulo {$nombreLimpio} no ha sido guardado aún.");
@@ -40,11 +40,12 @@ class FirmasMonitoreoController extends Controller
                     Storage::disk('public')->delete($registro->pdf_firmado_path);
                 }
 
-                // Guardar nuevo archivo
-                $filename = "{$modulo}_" . time() . ".pdf";
+                // Guardar nuevo archivo con nombre único (hash seguro)
+                // Usamos uniqid() con more_entropy para evitar colisiones y caché de cPanel
+                $filename = "{$modulo}_" . uniqid('', true) . "_" . time() . ".pdf";
                 $path = $request->file('pdf_firmado')->storeAs(
-                    "firmas/acta_{$id}", 
-                    $filename, 
+                    "firmas/acta_{$id}",
+                    $filename,
                     'public'
                 );
 
@@ -65,19 +66,33 @@ class FirmasMonitoreoController extends Controller
 
     /**
      * Abre el PDF en el navegador para su visualización.
+     * Incluye encabezados especiales para evitar caché en cPanel/nginx
      */
     public function ver($id, $modulo)
     {
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                   ->where('modulo_nombre', $modulo)
-                                   ->firstOrFail();
+            ->where('modulo_nombre', $modulo)
+            ->firstOrFail();
 
         if (!$registro->pdf_firmado_path || !Storage::disk('public')->exists($registro->pdf_firmado_path)) {
             return back()->with('error', 'El archivo firmado no existe físicamente en el servidor.');
         }
 
-        // Retorna el archivo para abrirse en el navegador
-        return response()->file(storage_path('app/public/' . $registro->pdf_firmado_path));
+        $filePath = storage_path('app/public/' . $registro->pdf_firmado_path);
+        $fileName = basename($registro->pdf_firmado_path);
+
+        // Retorna el archivo con encabezados que previenen el caché del navegador Y de cPanel
+        // Incluye Last-Modified y ETag basados en el archivo real para forzar recarga
+        return response()->file($filePath, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0, private',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'Last-Modified' => gmdate('D, d M Y H:i:s', filemtime($filePath)) . ' GMT',
+            'ETag' => '"' . md5_file($filePath) . '"',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            'X-Accel-Expires' => '0',
+            'Vary' => '*'
+        ]);
     }
 
     /**
@@ -86,8 +101,8 @@ class FirmasMonitoreoController extends Controller
     public function descargar($id, $modulo)
     {
         $registro = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                   ->where('modulo_nombre', $modulo)
-                                   ->firstOrFail();
+            ->where('modulo_nombre', $modulo)
+            ->firstOrFail();
 
         if (!$registro->pdf_firmado_path) {
             return back()->with('error', 'El archivo no existe.');

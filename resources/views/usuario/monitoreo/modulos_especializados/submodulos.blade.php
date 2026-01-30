@@ -84,8 +84,11 @@
                 
                 $hasRoute = Route::has($routeName); 
                 $hasPdfRoute = Route::has($pdfRouteName);
-                
-                $viewSignedRoute = Route::has('usuario.monitoreo.ver-pdf-firmado') ? route('usuario.monitoreo.ver-pdf-firmado', [$acta->id, $slug]) : '#';
+                $hasPdfRoute = Route::has($pdfRouteName);
+                // Agregar parámetro de versión para evitar caché de cPanel
+                $viewSignedRoute = Route::has('usuario.monitoreo.ver-pdf-firmado') 
+                    ? route('usuario.monitoreo.ver-pdf-firmado', [$acta->id, $slug]) . '?v=' . time() 
+                    : '#';
             @endphp
             
             <div class="relative bg-white rounded-[2.5rem] border-2 transition-all duration-500 group overflow-hidden flex flex-col"
