@@ -170,6 +170,7 @@
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Establecimiento</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">Provincia/Distrito</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Implementador</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Submódulos Firmados</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Módulos Firmados</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Acta Consolidada</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-right">Acciones</th>
@@ -188,9 +189,40 @@
                                     'laboratorio', 'urgencias'
                                 ];
                                 $activosKeys = array_filter((array)$activosKeys);
+                                
+                                // Verificar si salud_mental_group está habilitado
+                                $saludMentalHabilitado = in_array('salud_mental_group', $activosKeys);
+                                
+                                // Si salud_mental_group está habilitado, excluir submódulos individuales del conteo total
+                                $submodulosSM = ['sm_medicina_general', 'sm_psiquiatria', 'sm_med_familiar', 'sm_psicologia', 'sm_enfermeria', 'sm_servicio_social', 'sm_terapias'];
+                                
+                                // Guardar submódulos habilitados ANTES de eliminarlos de activosKeys
+                                $submodulosSMHabilitados = array_intersect($activosKeys, $submodulosSM);
+                                
+                                if ($saludMentalHabilitado) {
+                                    // Remover submódulos de SM de activosKeys para evitar conteo duplicado
+                                    $activosKeys = array_diff($activosKeys, $submodulosSM);
+                                }
+                                
+                                // Contar módulos firmados (excluyendo submódulos de Salud Mental)
+                                $modulosNoSM = array_diff($activosKeys, ['salud_mental_group']);
+                                $firmadosCount = $misDetalles->filter(fn($d) => in_array($d->modulo_nombre, $modulosNoSM) && !empty($d->pdf_firmado_path))->count();
+                                
+                                // Si Salud Mental está habilitado, verificar si todos sus submódulos HABILITADOS están firmados
+                                if ($saludMentalHabilitado) {
+                                    // Contar cuántos submódulos habilitados están firmados
+                                    $totalSMHabilitados = count($submodulosSMHabilitados);
+                                    $firmadosSMHabilitados = $misDetalles->filter(fn($d) => 
+                                        in_array($d->modulo_nombre, $submodulosSMHabilitados) && !empty($d->pdf_firmado_path)
+                                    )->count();
+                                    
+                                    // Solo contar Salud Mental como firmado si TODOS los submódulos habilitados están firmados
+                                    if ($totalSMHabilitados > 0 && $firmadosSMHabilitados === $totalSMHabilitados) {
+                                        $firmadosCount++;
+                                    }
+                                }
+                                
                                 $totalHabilitados = count($activosKeys);
-
-                                $firmadosCount = $misDetalles->filter(fn($d) => in_array($d->modulo_nombre, $activosKeys) && !empty($d->pdf_firmado_path))->count();
                                 $porcentaje = $totalHabilitados > 0 ? ($firmadosCount / $totalHabilitados) * 100 : 0;
                             @endphp
 
@@ -221,6 +253,28 @@
                                             @endif
                                         </span>
                                     </div>
+                                </td>
+                                
+                                {{-- COLUMNA SUBMÓDULOS SALUD MENTAL --}}
+                                <td class="px-3 py-3 min-w-[110px]">
+                                    @if($saludMentalHabilitado && isset($totalSMHabilitados) && $totalSMHabilitados > 0)
+                                        @php
+                                            $porcentajeSM = $totalSMHabilitados > 0 ? ($firmadosSMHabilitados / $totalSMHabilitados) * 100 : 0;
+                                        @endphp
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center justify-between mb-0.5">
+                                                <span class="text-[10px] font-bold text-slate-500">{{ $firmadosSMHabilitados }}/{{ $totalSMHabilitados }}</span>
+                                                <span class="text-[9px] font-black {{ $porcentajeSM == 100 ? 'text-emerald-500' : 'text-amber-500' }}">
+                                                    {{ round($porcentajeSM) }}%
+                                                </span>
+                                            </div>
+                                            <div class="progress-bar-container">
+                                                <div class="progress-bar-fill {{ $porcentajeSM == 100 ? 'bg-emerald-500' : 'bg-amber-400' }}" style="width: {{ $porcentajeSM }}%"></div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-slate-400">-</span>
+                                    @endif
                                 </td>
                                 
                                 {{-- COLUMNA MÓDULOS --}}

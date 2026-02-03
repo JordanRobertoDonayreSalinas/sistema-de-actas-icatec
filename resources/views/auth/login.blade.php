@@ -1,22 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{-- CORRECCIÓN: Agregar el meta del token CSRF para AJAX --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Bienvenido - Sistema</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
+    {{-- Favicon --}}
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        body { 
+        body {
             font-family: 'Poppins', sans-serif;
-            background-color: #dbeafe; 
+            background-color: #dbeafe;
             margin: 0;
             display: flex;
             align-items: center;
@@ -76,16 +83,46 @@
         }
 
         @media (max-width: 768px) {
-            .main-card { flex-direction: column; max-width: 450px; }
-            .left-side, .right-side { width: 100%; }
-            .left-side { padding: 30px; min-height: 250px; }
-            .lottie-wrapper { max-width: 200px; }
+            .main-card {
+                flex-direction: column;
+                max-width: 450px;
+            }
+
+            .left-side,
+            .right-side {
+                width: 100%;
+            }
+
+            .left-side {
+                padding: 30px;
+                min-height: 250px;
+            }
+
+            .lottie-wrapper {
+                max-width: 200px;
+            }
         }
 
-        .title { font-size: 28px; font-weight: 700; color: #1e40af; margin-bottom: 5px; text-align: center; }
-        .subtitle { font-size: 14px; color: #64748b; text-align: center; margin-bottom: 35px; }
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 5px;
+            text-align: center;
+        }
 
-        .input-group { margin-bottom: 20px; position: relative; }
+        .subtitle {
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
         .custom-input {
             width: 100%;
             padding: 15px 20px 15px 45px;
@@ -106,32 +143,55 @@
         }
 
         .input-icon {
-            position: absolute; left: 15px; top: 50%;
-            transform: translateY(-50%); width: 20px; height: 20px;
-            color: #94a3b8; pointer-events: none;
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #94a3b8;
+            pointer-events: none;
         }
 
         .btn-primary {
-            width: 100%; padding: 16px; background: #2563eb; color: white;
-            border: none; border-radius: 12px; font-weight: 600; font-size: 15px;
-            cursor: pointer; transition: all 0.3s;
+            width: 100%;
+            padding: 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
             box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
         }
 
-        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
 
-        .error-text { color: #ef4444; font-size: 12px; margin-top: 4px; display: block; }
+        .btn-primary:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .error-text {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="main-card">
         <div class="left-side">
             <div class="lottie-wrapper">
-                <lottie-player 
-                    src="{{ asset('assets/login.json') }}" 
-                    background="transparent" speed="1" 
+                <lottie-player src="{{ asset('assets/login.json') }}" background="transparent" speed="1"
                     style="width: 100%; height: 100%;" loop autoplay>
                 </lottie-player>
             </div>
@@ -147,24 +207,27 @@
             <form id="loginForm" action="{{ route('login') }}" method="POST">
                 {{-- CORRECCIÓN: El CSRF es vital para evitar el Error 419 --}}
                 @csrf
-                
+
                 <div class="input-group">
-                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <input type="text" name="username" required maxlength="8"
-                           placeholder="DNI (Usuario)" class="custom-input" value="{{ old('username') }}">
+                    <input type="text" name="username" required maxlength="8" placeholder="DNI (Usuario)"
+                        class="custom-input" value="{{ old('username') }}">
                     @error('username')
                         <span class="error-text">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <div class="input-group">
-                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    <input type="password" name="password" required 
-                           placeholder="Contraseña" class="custom-input">
+                    <input type="password" name="password" required placeholder="Contraseña" class="custom-input">
                     @error('password')
                         <span class="error-text">{{ $message }}</span>
                     @enderror
@@ -179,13 +242,13 @@
 
     {{-- SCRIPT PARA MANEJO DE AJAX Y ANIMACIÓN --}}
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            
+
             const form = this;
             const btn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
-            
+
             // Animación de carga
             btn.disabled = true;
             btnText.innerHTML = "Verificando...";
@@ -201,34 +264,35 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Acceso Correcto!',
+                            text: 'Redirigiendo...',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            willClose: () => {
+                                window.location.href = data.redirect;
+                            }
+                        });
+                    } else {
+                        throw new Error(data.message || 'Credenciales inválidas');
+                    }
+                })
+                .catch(error => {
                     Swal.fire({
-                        icon: 'success',
-                        title: '¡Acceso Correcto!',
-                        text: 'Redirigiendo...',
-                        timer: 1500,
-                        showConfirmButton: false,
-                        willClose: () => {
-                            window.location.href = data.redirect;
-                        }
+                        icon: 'error',
+                        title: 'Error de acceso',
+                        text: error.message,
+                        confirmButtonColor: '#2563eb'
                     });
-                } else {
-                    throw new Error(data.message || 'Credenciales inválidas');
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de acceso',
-                    text: error.message,
-                    confirmButtonColor: '#2563eb'
+                    btn.disabled = false;
+                    btnText.innerHTML = "Ingresar";
                 });
-                btn.disabled = false;
-                btnText.innerHTML = "Ingresar";
-            });
         });
     </script>
 </body>
+
 </html>
