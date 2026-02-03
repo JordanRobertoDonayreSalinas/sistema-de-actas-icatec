@@ -138,6 +138,8 @@ class DocumentoAdministrativoController extends Controller
         $doc->profesional_nombre = mb_strtoupper($datosProf['nombres'], 'UTF-8');
         $doc->profesional_apellido_paterno = mb_strtoupper($datosProf['apellido_paterno'], 'UTF-8');
         $doc->profesional_apellido_materno = mb_strtoupper($datosProf['apellido_materno'], 'UTF-8');
+        $doc->profesional_telefono = $datosProf['telefono'] ?? null;
+        $doc->profesional_cargo = $datosProf['cargo'] ?? null;
 
         $doc->area_oficina = mb_strtoupper($request->area_oficina, 'UTF-8');
         $doc->cargo_rol = mb_strtoupper($request->cargo_rol, 'UTF-8');
@@ -163,6 +165,8 @@ class DocumentoAdministrativoController extends Controller
                     'apellido_paterno' => $doc->profesional_apellido_paterno,
                     'apellido_materno' => $doc->profesional_apellido_materno,
                     'email' => $doc->correo_electronico,
+                    'telefono' => $doc->profesional_telefono,
+                    'cargo' => $doc->profesional_cargo,
                 ]
             ]
         ];
@@ -198,6 +202,8 @@ class DocumentoAdministrativoController extends Controller
         $doc->profesional_nombre = mb_strtoupper($datosProf['nombres'], 'UTF-8');
         $doc->profesional_apellido_paterno = mb_strtoupper($datosProf['apellido_paterno'], 'UTF-8');
         $doc->profesional_apellido_materno = mb_strtoupper($datosProf['apellido_materno'], 'UTF-8');
+        $doc->profesional_telefono = $datosProf['telefono'] ?? null;
+        $doc->profesional_cargo = $datosProf['cargo'] ?? null;
 
         $doc->area_oficina = mb_strtoupper($request->area_oficina, 'UTF-8');
         $doc->cargo_rol = mb_strtoupper($request->cargo_rol, 'UTF-8');

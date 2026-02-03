@@ -56,7 +56,7 @@
             <td><strong>ÁREA/CARGO, ROL O FUNCIONES:</strong></td>
         </tr>
         <tr>
-            <td><span style="color: #0066cc;">{{ $doc->cargo_rol }} / {{ $doc->area_oficina }}</span></td>
+            <td><span style="color: #0066cc;">{{ $doc->area_oficina }} / {{ $doc->cargo_rol }}</span></td>
         </tr>
         <tr>
             <td><strong>CORREO ELECTRÓNICO:</strong></td>
