@@ -77,11 +77,31 @@
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scroll">
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">Plataforma</p>
 
-                <a href="{{ route('usuario.dashboard') }}"
-                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.dashboard') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                    <span class="font-medium">Dashboard</span>
-                </a>
+                {{-- Dashboard Dropdown --}}
+                <div x-data="{ open: {{ request()->routeIs('usuario.dashboard*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open"
+                        class="w-full group relative flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.dashboard*') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                            <span class="font-medium">Dashboard</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform"
+                            :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
+                        <a href="{{ route('usuario.dashboard') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard') && !request()->routeIs('usuario.dashboard.equipos') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="activity" class="w-4 h-4"></i>
+                            <span class="text-sm font-medium">General</span>
+                        </a>
+                        <a href="{{ route('usuario.dashboard.equipos') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.equipos') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="monitor" class="w-4 h-4"></i>
+                            <span class="text-sm font-medium">Equipos de Cómputo</span>
+                        </a>
+                    </div>
+                </div>
 
                 <a href="{{ route('usuario.perfil') }}"
                     class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.perfil') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
@@ -111,6 +131,35 @@
                     <i data-lucide="folder-open" class="w-5 h-5"></i>
                     <span class="font-medium">Documentos Administrativos</span>
                 </a>
+
+                {{-- REPORTES (Desplegable) --}}
+                <div x-data="{ open: {{ request()->routeIs('usuario.reportes.*') ? 'true' : 'false' }} }">
+                    {{-- Botón Principal --}}
+                    <button @click="open = !open" type="button"
+                        class="w-full group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.reportes.*') ? 'bg-purple-600/10 text-purple-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                        <span class="font-medium flex-1 text-left">Reportes</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"
+                            :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    {{-- Submenú de Reportes --}}
+                    <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="ml-4 mt-1 space-y-1 border-l-2 border-slate-700/50 pl-2" x-cloak>
+
+                        {{-- Equipos de Cómputo --}}
+                        <a href="{{ route('usuario.reportes.equipos') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.equipos') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="monitor" class="w-4 h-4"></i>
+                            <span class="font-medium text-sm">Equipos de Cómputo</span>
+                        </a>
+                    </div>
+                </div>
             </nav>
         </aside>
 
@@ -187,6 +236,9 @@
             }
         }
     </script>
+
+    {{-- Chart.js para gráficos estadísticos --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     @stack('scripts')
 </body>

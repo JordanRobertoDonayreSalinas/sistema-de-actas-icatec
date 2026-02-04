@@ -71,6 +71,7 @@ use App\Http\Controllers\EnfermeriaESPpdfController;
 use App\Http\Controllers\ASocialESPController;
 use App\Http\Controllers\TomaDeMuestraController;
 use App\Http\Controllers\TomaDeMuestrapdfController;
+use App\Http\Controllers\ReporteEquiposController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -100,6 +101,16 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('usuario')->name('usuario.')->group(function () {
 
         Route::get('/dashboard', [UsuarioController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('dashboard.equipos');
+
+        // AJAX para Dashboard - Equipos de Cómputo
+        Route::get('/dashboard/ajax/equipos-stats', [UsuarioController::class, 'getEquiposStats'])->name('dashboard.ajax.equipos.stats');
+        Route::get('/dashboard/ajax/equipos-filter-options', [UsuarioController::class, 'getFilterOptions'])->name('dashboard.ajax.equipos.filter-options');
+        Route::get('/dashboard/ajax/equipos-provincias', [ReporteEquiposController::class, 'getProvincias'])->name('dashboard.ajax.equipos.provincias');
+        Route::get('/dashboard/ajax/equipos-establecimientos', [ReporteEquiposController::class, 'getEstablecimientos'])->name('dashboard.ajax.equipos.establecimientos');
+        Route::get('/dashboard/ajax/equipos-modulos', [ReporteEquiposController::class, 'getModulos'])->name('dashboard.ajax.equipos.modulos');
+        Route::get('/dashboard/ajax/equipos-descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('dashboard.ajax.equipos.descripciones');
+
         Route::get('/mi-perfil', [UsuarioController::class, 'perfil'])->name('perfil');
         Route::put('/mi-perfil', [UsuarioController::class, 'perfilUpdate'])->name('perfil.update');
 
@@ -124,6 +135,20 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{id}', [DocumentoAdministrativoController::class, 'update'])->name('update');
             Route::get('/{id}/pdf', [DocumentoAdministrativoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-firmado', [DocumentoAdministrativoController::class, 'subirFirmado'])->name('subir-firmado');
+        });
+
+        // --- SECCIÓN: REPORTES ---
+        Route::prefix('reportes')->name('reportes.')->group(function () {
+            // Reportes de Equipos de Cómputo
+            Route::get('/equipos', [ReporteEquiposController::class, 'index'])->name('equipos');
+            Route::post('/equipos/pdf', [ReporteEquiposController::class, 'generarPDF'])->name('equipos.pdf');
+            Route::post('/equipos/excel', [ReporteEquiposController::class, 'exportarExcel'])->name('equipos.excel');
+
+            // AJAX endpoints para filtros dinámicos
+            Route::get('/equipos/ajax/establecimientos', [ReporteEquiposController::class, 'getEstablecimientos'])->name('equipos.ajax.establecimientos');
+            Route::get('/equipos/ajax/provincias', [ReporteEquiposController::class, 'getProvincias'])->name('equipos.ajax.provincias');
+            Route::get('/equipos/ajax/modulos', [ReporteEquiposController::class, 'getModulos'])->name('equipos.ajax.modulos');
+            Route::get('/equipos/ajax/descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('equipos.ajax.descripciones');
         });
 
         // --- SECCIÓN: MONITOREO MODULAR ---
