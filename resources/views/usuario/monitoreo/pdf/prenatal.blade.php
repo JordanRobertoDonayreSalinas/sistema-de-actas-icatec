@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>REPORTE PRENATAL - ACTA {{ $acta->id }}</title>
+    <title>Módulo 10: ATENCIÓN PRENATAL - ACTA {{ $acta->id }}</title>
     <style>
         /* --- CONFIGURACIÓN DE PÁGINA --- */
         @page {
@@ -174,9 +174,9 @@
     </div>
 
     <div class="header">
-        <h1>MÓDULO 03: ATENCIÓN PRE NATAL</h1>
+        <h1>Módulo 10: ATENCIÓN PRENATAL</h1>
         <div class="header-sub">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} |
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} |
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? '-' }} -
             {{ $acta->establecimiento->nombre ?? 'NO ESPECIFICADO' }} |
             FECHA: {{ \Carbon\Carbon::parse($registro->fecha_registro)->format('d/m/Y') }}

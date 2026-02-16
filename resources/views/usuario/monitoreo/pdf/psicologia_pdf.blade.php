@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte de Psicología</title>
+    <title>Módulo 07: CONSULTA EXTERNA - Psicología - Acta {{ $acta->id }}</title>
     <style>
         /* --- CONFIGURACIÓN GENERAL --- */
         body { 
@@ -144,9 +144,9 @@
     @php $i = 1; @endphp
 
     <div class="main-header">
-        <h1>MODULO 07 - CONSULTA EXTERNA: Psicología</h1>
+        <h1>Módulo 07: CONSULTA EXTERNA - Psicología</h1>
         <p>
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ $acta->establecimiento->nombre ?? '-' }} |
             FECHA: {{ $dbInicioLabores->fecha_registro ? \Carbon\Carbon::parse($dbInicioLabores->fecha_registro)->format('d/m/Y') : '-' }}
         </p>

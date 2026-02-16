@@ -11,7 +11,7 @@
             <div>
                 <div class="flex items-center gap-3 mb-1">
                     <span class="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo Técnico</span>
-                    <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                    <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta: #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">01. Gestión Administrativa</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">

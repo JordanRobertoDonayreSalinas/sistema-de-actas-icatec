@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Acta de Monitoreo N° {{ ltrim($acta->id, '0') }}</title>
+    <title>Acta de Monitoreo N° {{ ltrim($acta->numero_acta, '0') }}</title>
     <style>
         /* Configuración de Página */
         @page { margin: 1.5cm 2cm 2.5cm 2cm; }
@@ -158,13 +158,13 @@
 
     <div id="footer">
         <div class="footer-text">
-            Acta de Monitoreo IPRESS NO ESPECIALIZADAS N° {{ ltrim($acta->id, '0') }}<br>
+            Acta de Monitoreo IPRESS NO ESPECIALIZADAS N° {{ ltrim($acta->numero_acta, '0') }}<br>
             <span class="page-number"></span> 
         </div>
     </div>
 
     <div class="header">
-        <h1>Acta de Monitoreo IPRESS NO ESPECIALIZADAS N° {{ ltrim($acta->id, '0') }}</h1>
+        <h1>Acta de Monitoreo IPRESS NO ESPECIALIZADAS N° {{ ltrim($acta->numero_acta, '0') }}</h1>
         <div class="establishment">{{ strtoupper($acta->establecimiento->nombre ?? 'ESTABLECIMIENTO NO REGISTRADO') }}</div>
     </div>
 
@@ -344,12 +344,13 @@
             <thead>
                 <tr>
                     <th width="5%">N°</th>
-                    <th width="20%">MODULO</th>
+                    <th width="15%">MODULO</th>
                     <th width="15%">SERIE/CÓDIGO</th>
                     <th width="8%">CANT.</th>
-                    <th width="27%">DESCRIPCIÓN DEL EQUIPO</th>
+                    <th width="20%">DESCRIPCIÓN DEL EQUIPO</th>
                     <th width="10%">ESTADO</th>
-                    <th width="15%">PROPIEDAD</th>
+                    <th width="12%">PROPIEDAD</th>
+                    <th width="15%">OBSERVACIÓN</th>
                 </tr>
             </thead>
             <tbody>
@@ -362,6 +363,7 @@
                         <td>{{ $eq->descripcion }}</td>
                         <td style="text-align: center;">{{ $eq->estado ?? 'N/A' }}</td>
                         <td>{{ $eq->propio ?? '---' }}</td>
+                        <td>{{ $eq->observacion ?? '---' }}</td>
                     </tr>
                 @endforeach
             </tbody>

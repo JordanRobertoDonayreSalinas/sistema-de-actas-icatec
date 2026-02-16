@@ -163,7 +163,7 @@
     <div class="header">
         <h1>Módulo 03: Triaje</h1>
         <div class="header-meta">
-            ACTA N° {{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ACTA N° {{ str_pad($acta->numero_acta ?? $acta->id, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
             FECHA: {{ \Carbon\Carbon::parse($datos['fecha'] ?? date('Y-m-d'))->format('d/m/Y') }}
         </div>
