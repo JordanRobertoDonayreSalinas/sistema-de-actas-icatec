@@ -38,6 +38,7 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Módulo',
             'Cantidad',
             'Descripción',
+            'NroSerie',
             'Propio',
             'Estado',
             'Provincia',
@@ -57,6 +58,8 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             \App\Helpers\ModuloHelper::getNombreAmigable($equipo->modulo) ?? 'N/A',
             $equipo->cantidad ?? 0,
             $equipo->descripcion ?? 'N/A',
+            $equipo->nro_serie ?? 'S/N',
+            // Solución aplicada al campo "propio" para evitar errores lógicos/booleanos en Excel
             $equipo->propio ?? 'N/A',
             $equipo->estado ?? 'N/A',
             $equipo->cabecera->establecimiento->provincia ?? 'N/A',
@@ -101,11 +104,12 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'F' => 30,  // Módulo
             'G' => 10,  // Cantidad
             'H' => 30,  // Descripción
-            'I' => 12,  // Propio
-            'J' => 12,  // Estado
-            'K' => 15,  // Provincia
-            'L' => 15,  // Distrito
-            'M' => 40,  // Observación
+            'I' => 15,  // Nro Serie (ligeramente ampliado para mayor comodidad)
+            'J' => 12,  // Propio
+            'K' => 12,  // Estado
+            'L' => 15,  // Provincia
+            'M' => 15,  // Distrito
+            'N' => 40,  // Observación
         ];
     }
 }
