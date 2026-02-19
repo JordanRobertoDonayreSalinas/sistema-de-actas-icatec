@@ -47,8 +47,8 @@
 @section('content')
 
     @php
-        // Filtros de fecha automáticos (Mes actual)
-        $fechaInicioDefault = now()->startOfMonth()->format('Y-m-d');
+        // Filtros de fecha automáticos (Año actual)
+        $fechaInicioDefault = now()->startOfYear()->format('Y-m-d');
         $fechaFinDefault = now()->format('Y-m-d');
 
         $filtersAreActive = request()->anyFilled(['implementador', 'provincia', 'fecha_inicio', 'fecha_fin', 'estado']);
