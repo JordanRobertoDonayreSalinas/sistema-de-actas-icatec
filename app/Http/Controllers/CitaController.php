@@ -330,7 +330,7 @@ class CitaController extends Controller
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('reporte_citas.pdf');
+        return $pdf->stream('02_Citas_Acta_' . $acta->numero_acta . '.pdf');
     }
 
     public function buscarProfesional(Request $request)

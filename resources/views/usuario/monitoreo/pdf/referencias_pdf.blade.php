@@ -196,7 +196,7 @@
             <td class="uppercase">{{ $detalle->personal_turno ?? 'N/A' }}</td>
         </tr>
 
-        <tr>
+        <!-- <tr>
             <th>¿Firmó Declaración Jurada?:</th>
             <td>{{ $datos['documentacion']['firma_dj'] ?? 'NO' }}</td>
         </tr>
@@ -204,12 +204,12 @@
         <tr>
             <th>¿Firmó Compromiso de Confidencialidad?:</th>
             <td>{{ $datos['documentacion']['firma_confidencialidad'] ?? 'NO' }}</td>
-        </tr>
+        </tr> -->
 
-        <tr>
+        <!-- <tr>
             <th>¿Utiliza SIHCE?:</th>
             <td>{{ $datos['personal']['utiliza_sihce'] ?? 'NO' }}</td>
-        </tr>
+        </tr> -->
 
     </table>
 
@@ -296,12 +296,10 @@
     <table class="table-data">
         @php
             $preguntas = [
-                'hojas_referencia' => '¿Cuenta con stock suficiente de formatos/hojas de referencia?',
                 'libro_registro' => '¿El libro de registro de referencias se encuentra actualizado?',
                 'contrareferencias' => '¿Se realiza el seguimiento y archivo de las contrareferencias?',
                 'flujo_paciente' => '¿Existe un flujo definido para la referencia del paciente?',
-                'digitacion_his' => '¿Se realiza la digitación oportuna en el sistema HIS?',
-                'criterios_medicos' => '¿Las hojas de referencia cumplen criterios técnicos?',
+                'criterios_medicos' => '¿Las referencias cumplen criterios técnicos?',
                 'comunicacion_destino' => '¿Se comunica con el destino antes de enviar al paciente?'
             ];
         @endphp
@@ -313,7 +311,7 @@
         @endforeach
     </table>
 
-    @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
+    <!-- @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
     <div class="section-header">Soporte</div>
     <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;" >
         <tr>
@@ -328,7 +326,7 @@
             </td>
         </tr>
     </table>
-    @endif
+    @endif -->
 
     <div class="section-header">Comentarios</div>
     
