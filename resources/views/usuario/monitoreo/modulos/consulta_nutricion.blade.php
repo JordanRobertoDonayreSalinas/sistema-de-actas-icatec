@@ -362,6 +362,9 @@
                 </div>
                 <x-tabla-equipos :equipos="$equipos" modulo="consulta_nutricion" />
             </div>
+            
+            {{-- TIPO DE CONECTIVIDAD --}}
+            <x-tipo-conectividad :num="7" :contenido="$detalle->contenido ?? []" color="indigo" />
 
             {{-- SECCIÓN 7: SOPORTE TÉCNICO --}}
             <div id="seccion_soporte" class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
@@ -492,6 +495,14 @@
         // 1. INICIALIZACIONES BÁSICAS
         // ============================================================
         toggleDniFields(true); // Lógica interna del DNIe
+
+        // Inyectar clases al componente x-tipo-conectividad sin modificarlo
+        const compConectividad = document.querySelector('.monitoreo-section');
+        if (compConectividad) {
+            compConectividad.classList.add('seccion-numerada');
+            const spanNum = compConectividad.querySelector('.section-number');
+            if (spanNum) spanNum.classList.add('badge-numero');
+        }
 
         // Verificar estado inicial de SIHCE
         const estadoSihce = document.querySelector('input[name="contenido[utiliza_sihce]"]:checked')?.value;
