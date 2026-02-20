@@ -95,6 +95,13 @@ class ConsultaMedicinaController extends Controller
                 $datos['inst_capacitacion'] = null;
             }
             
+            // REGLA E: Si NO se seleccionó tipo de conectividad -> Limpiar campos dependientes
+            if (empty($datos['tipo_conectividad'])) {
+                $datos['tipo_conectividad']  = null;
+                $datos['wifi_fuente']        = null;
+                $datos['operador_servicio']  = null;
+            }
+
             // REGLA D:LÓGICA DE LIMPIEZA DE DATOS (DNI AZUL vs DNI ELECTRÓNICO)
             $tipoDni = $datos['tipo_dni_fisico'] ?? null;
 

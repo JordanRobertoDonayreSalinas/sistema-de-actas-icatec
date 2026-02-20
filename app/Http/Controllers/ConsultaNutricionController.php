@@ -104,6 +104,13 @@ class ConsultaNutricionController extends Controller
                 $datos['dnie_firma_sihce'] = null;
             }
 
+            // REGLA E: Si NO se seleccionó tipo de conectividad -> Limpiar campos dependientes
+            if (empty($datos['tipo_conectividad'])) {
+                $datos['tipo_conectividad']  = null;
+                $datos['wifi_fuente']        = null;
+                $datos['operador_servicio']  = null;
+            }
+
             // ---------------------------------------------------------
             // 3. SINCRONIZACIÓN DE PROFESIONALES
             // ---------------------------------------------------------
