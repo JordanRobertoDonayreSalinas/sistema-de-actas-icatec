@@ -32,11 +32,16 @@
                 enctype="multipart/form-data" class="space-y-6" id="form-monitoreo-final">
                 @csrf
 
+                {{-- DEFINICIÓN DE VARIABLE SEGURA PARA CONTENIDO --}}
+                @php
+                    $contenido = $detalle->contenido ?? [];
+                @endphp
+
                 {{-- 1.- DATOS GENERALES --}}
-                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                         <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">1</span>
+                            class="section-number bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">1</span>
                         <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DATOS GENERALES</h3>
                     </div>
 
@@ -44,26 +49,27 @@
                         <div>
                             <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Fecha
                                 de Monitoreo</label>
-                            <input type="date" name="contenido[fecha]"
-                                value="{{ $detalle->contenido['fecha'] ?? date('Y-m-d') }}"
+                            <input type="date" name="contenido[fecha]" value="{{ $contenido['fecha'] ?? date('Y-m-d') }}"
                                 class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-bold outline-none focus:border-indigo-500 transition-all">
                         </div>
                         <div>
-                            <x-turno :selected="$detalle->contenido['turno'] ?? ''" />
+                            <x-turno :selected="$contenido['turno'] ?? ''" />
                         </div>
                     </div>
                 </div>
 
                 {{-- 2.- DATOS DEL PROFESIONAL --}}
-                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                         <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
+                            class="section-number bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">2</span>
                         <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DATOS DEL PROFESIONAL</h3>
                     </div>
 
                     {{-- BUSQUEDA DE PROFESIONAL --}}
                     <div class="mb-6">
+                        {{-- NOTA: El componente busqueda-profesional maneja su propio acceso a $detalle,
+                        si $detalle es null, el componente debe manejarlo. --}}
                         <x-busqueda-profesional prefix="rrhh" :detalle="$detalle" />
                     </div>
 
@@ -76,8 +82,10 @@
                             <select name="contenido[cuenta_sihce]" id="cuenta_sihce"
                                 onchange="toggleSihceAndDocs(this.value)"
                                 class="w-full px-4 py-3 bg-indigo-50 border-2 border-indigo-100 rounded-xl font-bold text-sm uppercase outline-none text-indigo-700 cursor-pointer hover:bg-indigo-100 transition-colors">
-                                <option value="SI" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                                <option value="NO" {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                                <option value="SI" {{ ($contenido['cuenta_sihce'] ?? '') == 'SI' ? 'selected' : '' }}>SI
+                                </option>
+                                <option value="NO" {{ ($contenido['cuenta_sihce'] ?? '') == 'NO' ? 'selected' : '' }}>NO
+                                </option>
                             </select>
                         </div>
 
@@ -87,9 +95,9 @@
                                 Declaración Jurada?</label>
                             <select name="contenido[firmo_dj]" id="firmo_dj"
                                 class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500">
-                                <option value="SI" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'SI' ? 'selected' : '' }}>SI
+                                <option value="SI" {{ ($contenido['firmo_dj'] ?? '') == 'SI' ? 'selected' : '' }}>SI
                                 </option>
-                                <option value="NO" {{ ($detalle->contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO
+                                <option value="NO" {{ ($contenido['firmo_dj'] ?? '') == 'NO' ? 'selected' : '' }}>NO
                                 </option>
                             </select>
                         </div>
@@ -99,18 +107,19 @@
                                 Compromiso Confidencialidad?</label>
                             <select name="contenido[firmo_confidencialidad]" id="firmo_confidencialidad"
                                 class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500">
-                                <option value="SI" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                                <option value="NO" {{ ($detalle->contenido['firmo_confidencialidad'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                                <option value="SI" {{ ($contenido['firmo_confidencialidad'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
+                                <option value="NO" {{ ($contenido['firmo_confidencialidad'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 {{-- 3.- DETALLE DE DNI Y FIRMA DIGITAL (ESTILO TARJETAS) --}}
-                <div id="section_dni_detalle" class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 hidden">
+                <div id="section_dni_detalle"
+                    class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 hidden">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                         <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">3</span>
+                            class="section-number bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">3</span>
                         <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DETALLE DE DNI Y FIRMA
                             DIGITAL</h3>
                     </div>
@@ -120,12 +129,12 @@
                         <label class="block text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">SELECCIONE
                             EL TIPO DE DOCUMENTO FÍSICO</label>
                         <input type="hidden" name="contenido[tipo_dni]" id="tipo_dni_input"
-                            value="{{ $detalle->contenido['tipo_dni'] ?? '' }}">
+                            value="{{ $contenido['tipo_dni'] ?? '' }}">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {{-- TARJETA DNI ELECTRÓNICO --}}
                             <div id="card_electronico" onclick="selectDniType('ELECTRONICO')"
-                                class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
+                                class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
                                 <div
                                     class="h-12 w-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
                                     <i data-lucide="credit-card" class="w-6 h-6"></i>
@@ -140,7 +149,7 @@
 
                             {{-- TARJETA DNI AZUL --}}
                             <div id="card_azul" onclick="selectDniType('AZUL')"
-                                class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($detalle->contenido['tipo_dni'] ?? '') == 'AZUL' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
+                                class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($contenido['tipo_dni'] ?? '') == 'AZUL' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
                                 <div
                                     class="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
                                     <i data-lucide="user-square" class="w-6 h-6"></i>
@@ -157,27 +166,30 @@
 
                     {{-- BLOQUE INFERIOR (Solo visible si selecciona uno) --}}
                     <div id="bloque_opciones_dni"
-                        class="bg-slate-50 rounded-2xl p-6 border border-slate-200 {{ empty($detalle->contenido['tipo_dni']) ? 'hidden' : '' }}">
+                        class="bg-slate-50 rounded-2xl p-6 border border-slate-200 {{ empty($contenido['tipo_dni']) ? 'hidden' : '' }}">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
                             {{-- COLUMNA IZQ: VERSIÓN --}}
                             <div id="bloque_version_dnie"
-                                class="{{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
+                                class="{{ ($contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
                                 <label
                                     class="block text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-2">Versión
                                     del DNIe</label>
                                 <select name="contenido[version_dnie]"
                                     class="w-full px-4 py-3 bg-white border-2 border-indigo-100 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500 text-indigo-700">
                                     <option value="" selected disabled>-- SELECCIONE --</option>
-                                    <option value="1.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '1.0' ? 'selected' : '' }}>VERSIÓN 1.0</option>
-                                    <option value="2.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '2.0' ? 'selected' : '' }}>VERSIÓN 2.0</option>
-                                    <option value="3.0" {{ ($detalle->contenido['version_dnie'] ?? '') == '3.0' ? 'selected' : '' }}>VERSIÓN 3.0</option>
+                                    <option value="1.0" {{ ($contenido['version_dnie'] ?? '') == '1.0' ? 'selected' : '' }}>
+                                        VERSIÓN 1.0</option>
+                                    <option value="2.0" {{ ($contenido['version_dnie'] ?? '') == '2.0' ? 'selected' : '' }}>
+                                        VERSIÓN 2.0</option>
+                                    <option value="3.0" {{ ($contenido['version_dnie'] ?? '') == '3.0' ? 'selected' : '' }}>
+                                        VERSIÓN 3.0</option>
                                 </select>
                             </div>
 
                             {{-- COLUMNA DER: FIRMA DIGITAL --}}
                             <div id="bloque_firma_digital"
-                                class="{{ ($detalle->contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
+                                class="{{ ($contenido['tipo_dni'] ?? '') == 'ELECTRONICO' ? '' : 'hidden' }}">
                                 <label
                                     class="block text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-3">¿Firma
                                     Digitalmente en SIHCE?</label>
@@ -186,7 +198,7 @@
                                         <div class="relative flex items-center">
                                             <input type="radio" name="contenido[firma_digital_sihce]" value="SI"
                                                 class="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-slate-300 checked:border-indigo-600 transition-all"
-                                                {{ ($detalle->contenido['firma_digital_sihce'] ?? '') == 'SI' ? 'checked' : '' }}>
+                                                {{ ($contenido['firma_digital_sihce'] ?? '') == 'SI' ? 'checked' : '' }}>
                                             <span
                                                 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-indigo-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></span>
                                         </div>
@@ -197,7 +209,7 @@
                                         <div class="relative flex items-center">
                                             <input type="radio" name="contenido[firma_digital_sihce]" value="NO"
                                                 class="peer h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-slate-300 checked:border-red-500 transition-all"
-                                                {{ ($detalle->contenido['firma_digital_sihce'] ?? '') == 'NO' ? 'checked' : '' }}>
+                                                {{ ($contenido['firma_digital_sihce'] ?? '') == 'NO' ? 'checked' : '' }}>
                                             <span
                                                 class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-red-500 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></span>
                                         </div>
@@ -213,17 +225,18 @@
                                     class="block text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Observaciones</label>
                                 <textarea name="contenido[observaciones_dni]" rows="2"
                                     class="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500 placeholder-slate-300"
-                                    placeholder="Escriba aquí si presenta dificultades...">{{ $detalle->contenido['observaciones_dni'] ?? '' }}</textarea>
+                                    placeholder="Escriba aquí si presenta dificultades...">{{ $contenido['observaciones_dni'] ?? '' }}</textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- 4.- DETALLES DE CAPACITACIÓN --}}
-                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div id="section_capacitacion"
+                    class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                         <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
+                            class="section-number bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">4</span>
                         <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">DETALLES DE CAPACITACIÓN
                         </h3>
                     </div>
@@ -236,8 +249,10 @@
                             <select name="contenido[recibio_capacitacion]" id="recibio_capacitacion"
                                 onchange="toggleEntidadCapacitadora(this.value)"
                                 class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase cursor-pointer">
-                                <option value="SI" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>SI</option>
-                                <option value="NO" {{ ($detalle->contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>NO</option>
+                                <option value="SI" {{ ($contenido['recibio_capacitacion'] ?? '') == 'SI' ? 'selected' : '' }}>
+                                    SI</option>
+                                <option value="NO" {{ ($contenido['recibio_capacitacion'] ?? '') == 'NO' ? 'selected' : '' }}>
+                                    NO</option>
                             </select>
                         </div>
                         <div id="wrapper_entidad_capacitadora" class="hidden">
@@ -245,120 +260,34 @@
                                 parte de quién?</label>
                             <select name="contenido[inst_que_lo_capacito]"
                                 class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase cursor-pointer">
-                                <option value="UNIDAD EJECUTORA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'UNIDAD EJECUTORA' ? 'selected' : '' }}>UNIDAD EJECUTORA</option>
-                                <option value="DIRESA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
-                                <option value="MINSA" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
-                                <option value="OTROS" {{ ($detalle->contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
+                                <option value="UNIDAD EJECUTORA" {{ ($contenido['inst_que_lo_capacito'] ?? '') == 'UNIDAD EJECUTORA' ? 'selected' : '' }}>UNIDAD EJECUTORA</option>
+                                <option value="DIRESA" {{ ($contenido['inst_que_lo_capacito'] ?? '') == 'DIRESA' ? 'selected' : '' }}>DIRESA</option>
+                                <option value="MINSA" {{ ($contenido['inst_que_lo_capacito'] ?? '') == 'MINSA' ? 'selected' : '' }}>MINSA</option>
+                                <option value="OTROS" {{ ($contenido['inst_que_lo_capacito'] ?? '') == 'OTROS' ? 'selected' : '' }}>OTROS</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 {{-- 5.- EQUIPAMIENTO DEL CONSULTORIO --}}
-                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
+                <div class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                         <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
+                            class="section-number bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">5</span>
                         <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">EQUIPOS DE COMPUTO</h3>
                     </div>
                     <x-tabla-equipos :equipos="$equipos" modulo="gestion_administrativa" />
                 </div>
 
-                {{-- 6.- TIPO DE CONECTIVIDAD --}}
-                <div class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
-                    <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                        <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">6</span>
-                        <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">TIPO DE CONECTIVIDAD</h3>
-                    </div>
-
-                    <input type="hidden" name="contenido[tipo_conectividad]" id="tipo_conectividad_input"
-                        value="{{ $detalle->contenido['tipo_conectividad'] ?? '' }}">
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- TARJETA WIFI --}}
-                        <div id="card_wifi" onclick="selectConectividad('WIFI')"
-                            class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($detalle->contenido['tipo_conectividad'] ?? '') == 'WIFI' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
-                            <div
-                                class="h-12 w-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                <i data-lucide="wifi" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-black text-slate-800 uppercase">WIFI</h4>
-                                <span
-                                    class="text-[10px] font-bold text-indigo-500 bg-indigo-100 px-2 py-0.5 rounded uppercase">Inalámbrico</span>
-                            </div>
-                        </div>
-
-                        {{-- TARJETA CABLEADO --}}
-                        <div id="card_cableado" onclick="selectConectividad('CABLEADO')"
-                            class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md {{ ($detalle->contenido['tipo_conectividad'] ?? '') == 'CABLEADO' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
-                            <div class="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                                <i data-lucide="cable" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-black text-slate-800 uppercase">CABLEADO</h4>
-                                <span
-                                    class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded uppercase">Ethernet</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- SUB-OPCIÓN: WIFI DEL ESTABLECIMIENTO O PERSONAL --}}
-                    <input type="hidden" name="contenido[wifi_fuente]" id="wifi_fuente_input"
-                        value="{{ $detalle->contenido['wifi_fuente'] ?? '' }}">
-                    <div id="bloque_wifi_fuente"
-                        class="mt-6 bg-slate-50 rounded-2xl p-6 border border-slate-200 {{ ($detalle->contenido['tipo_conectividad'] ?? '') == 'WIFI' ? '' : 'hidden' }}">
-                        <label class="block text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-4">¿De dónde
-                            proviene el WiFi?</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {{-- ESTABLECIMIENTO --}}
-                            <div id="card_wifi_establecimiento" onclick="selectWifiFuente('ESTABLECIMIENTO')"
-                                class="cursor-pointer border-2 rounded-xl p-4 flex items-center gap-3 transition-all hover:shadow-md {{ ($detalle->contenido['wifi_fuente'] ?? '') == 'ESTABLECIMIENTO' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
-                                <div
-                                    class="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                    <i data-lucide="building-2" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-black text-slate-800 uppercase">Establecimiento</h4>
-                                    <span class="text-[9px] font-bold text-indigo-400">Red del EESS</span>
-                                </div>
-                            </div>
-                            {{-- PERSONAL --}}
-                            <div id="card_wifi_personal" onclick="selectWifiFuente('PERSONAL')"
-                                class="cursor-pointer border-2 rounded-xl p-4 flex items-center gap-3 transition-all hover:shadow-md {{ ($detalle->contenido['wifi_fuente'] ?? '') == 'PERSONAL' ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white' }}">
-                                <div
-                                    class="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-                                    <i data-lucide="smartphone" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-xs font-black text-slate-800 uppercase">Personal</h4>
-                                    <span class="text-[9px] font-bold text-slate-400">Hotspot / Propio</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- OPERADOR DE SERVICIO --}}
-                    <div class="mt-6">
-                        <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Operador
-                            de Servicio</label>
-                        <select name="contenido[operador_servicio]"
-                            class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 transition-all uppercase cursor-pointer">
-                            <option value="" selected disabled>-- SELECCIONE --</option>
-                            @foreach(['WOW', 'MOVISTAR', 'ENTEL', 'CLARO', 'BITEL', 'OTROS'] as $op)
-                                <option value="{{ $op }}" {{ ($detalle->contenido['operador_servicio'] ?? '') == $op ? 'selected' : '' }}>{{ $op }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
+                {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :num="6" :contenido="$contenido" color="indigo" />
 
                 {{-- 7.- SOPORTE (Oculto si SIHCE es NO) --}}
                 <div id="section_soporte"
-                    class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
+                    class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 {{ ($contenido['cuenta_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                         <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
+                            class="section-number bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">7</span>
                         <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">SOPORTE</h3>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -368,7 +297,7 @@
                             <select name="contenido[inst_a_quien_comunica]"
                                 class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
                                 @foreach(['DIRESA', 'UNIDAD EJECUTORA', 'JEFE DE ESTABLECIMIENTO', 'MINSA', 'OTROS'] as $op)
-                                    <option value="{{$op}}" {{ ($detalle->contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
+                                    <option value="{{$op}}" {{ ($contenido['inst_a_quien_comunica'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -378,7 +307,7 @@
                             <select name="contenido[medio_que_utiliza]"
                                 class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none uppercase cursor-pointer">
                                 @foreach(['CELULAR', 'EMAIL', 'WHATSAPP', 'OTROS'] as $me)
-                                    <option value="{{$me}}" {{ ($detalle->contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
+                                    <option value="{{$me}}" {{ ($contenido['medio_que_utiliza'] ?? '') == $me ? 'selected' : '' }}>{{$me}}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -387,10 +316,10 @@
 
                 {{-- 8.- PROGRAMACIÓN ACTUAL EN EL SIHCE HASTA --}}
                 <div id="section_programacion"
-                    class="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 {{ ($detalle->contenido['cuenta_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
+                    class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100 {{ ($contenido['cuenta_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                         <span
-                            class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
+                            class="section-number bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">8</span>
                         <h3 class="text-indigo-900 font-black text-lg uppercase tracking-tight">PROGRAMACIÓN ACTUAL EN EL
                             SIHCE HASTA:</h3>
                     </div>
@@ -398,7 +327,7 @@
                         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">SELECCIONE
                             FECHA (MES Y AÑO)</label>
                         <input type="month" name="contenido[fecha_programacion]"
-                            value="{{ $detalle->contenido['fecha_programacion'] ?? '' }}"
+                            value="{{ $contenido['fecha_programacion'] ?? '' }}"
                             class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm uppercase outline-none focus:border-indigo-500 transition-all text-slate-700 cursor-pointer">
                     </div>
                 </div>
@@ -413,7 +342,7 @@
                                 <h3 class="text-white font-black text-lg uppercase tracking-tight">COMENTARIOS</h3>
                             </div>
                             <textarea name="contenido[comentarios]" rows="6"
-                                class="w-full bg-white/10 border-2 border-white/20 rounded-2xl p-4 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/30">{{ $detalle->contenido['comentarios'] ?? '' }}</textarea>
+                                class="w-full bg-white/10 border-2 border-white/20 rounded-2xl p-4 text-white font-bold outline-none focus:border-indigo-500 transition-all uppercase placeholder-white/30">{{ $contenido['comentarios'] ?? '' }}</textarea>
                         </div>
                         <div>
                             <div class="flex items-center gap-3 mb-6">
@@ -425,7 +354,7 @@
 
                             {{-- BLOQUE CORREGIDO PARA EVITAR EL ERROR 'ARRAY TO STRING' --}}
                             @php
-                                $fotoEvidencia = $detalle->contenido['foto_evidencia'] ?? null;
+                                $fotoEvidencia = $contenido['foto_evidencia'] ?? null;
                                 // Si por error viene un array (de pruebas anteriores), tomamos el primero
                                 if (is_array($fotoEvidencia)) {
                                     $fotoEvidencia = $fotoEvidencia[0] ?? null;
@@ -433,13 +362,18 @@
                             @endphp
 
                             @if($fotoEvidencia)
-                                <div class="mb-4 relative group w-full">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Imagen
-                                        Actual:</p>
-                                    <div
-                                        class="rounded-2xl overflow-hidden border-2 border-white/20 shadow-lg h-32 w-32 bg-black/50">
-                                        <img src="{{ asset('storage/' . $fotoEvidencia) }}" class="w-full h-full object-cover">
-                                    </div>
+                                <div
+                                    class="mb-4 w-full flex justify-center bg-black/50 rounded-2xl p-2 border-2 border-white/10">
+                                    <a href="{{ asset('storage/' . $fotoEvidencia) }}" target="_blank"
+                                        class="block relative group/img overflow-hidden rounded-xl max-h-96">
+                                        <div
+                                            class="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-all z-10 flex items-center justify-center opacity-0 group-hover/img:opacity-100">
+                                            <i data-lucide="zoom-in"
+                                                class="text-white w-10 h-10 drop-shadow-lg scale-75 group-hover/img:scale-100 transition-all duration-300"></i>
+                                        </div>
+                                        <img src="{{ asset('storage/' . $fotoEvidencia) }}"
+                                            class="max-w-full h-auto max-h-96 object-contain shadow-2xl rounded-xl">
+                                    </a>
                                 </div>
                             @endif
 
@@ -449,14 +383,14 @@
                                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                                     onchange="previewImage(event)">
                                 <div id="dropzone"
-                                    class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner h-48 border-spacing-4">
+                                    class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner min-h-64 border-spacing-4">
                                     <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-indigo-400 mb-2"></i>
                                     <span id="file-name-display"
                                         class="text-[10px] font-bold uppercase tracking-widest text-slate-300 text-center">
                                         {{ $fotoEvidencia ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}
                                     </span>
                                     <img id="img-preview" src="#"
-                                        class="hidden mt-2 w-20 h-20 object-cover rounded-lg border-2 border-indigo-500">
+                                        class="hidden mt-4 h-48 w-auto object-contain rounded-lg border-2 border-indigo-500 shadow-xl">
                                 </div>
                             </div>
                         </div>
@@ -490,30 +424,58 @@
     </div>
 
     <script>
-        // --- LÓGICA DE NEGOCIO ---
+        // --- ACTUALIZACIÓN DINÁMICA DE NUMERACIÓN ---
+        function updateSectionNumbers() {
+            // Seleccionar todas las secciones que tengan la clase 'monitoreo-section'
+            const sections = document.querySelectorAll('.monitoreo-section');
+            let counter = 1;
 
+            sections.forEach(section => {
+                // Verificar si la sección está visible (no tiene la clase 'hidden')
+                if (!section.classList.contains('hidden')) {
+                    // Buscar el span del número dentro de esta sección
+                    const numberSpan = section.querySelector('.section-number');
+                    if (numberSpan) {
+                        numberSpan.innerText = counter;
+                        counter++;
+                    }
+                }
+            });
+        }
+
+        // --- LÓGICA DE NEGOCIO ---
         // 1. Mostrar/Ocultar campos dependiendo de SIHCE
         function toggleSihceAndDocs(val) {
             const sectionSoporte = document.getElementById('section_soporte');
             const sectionProgramacion = document.getElementById('section_programacion');
+            const sectionCapacitacion = document.getElementById('section_capacitacion');
             const divDj = document.getElementById('div_firmo_dj');
             const divConf = document.getElementById('div_firmo_confidencialidad');
             const djSelect = document.getElementById('firmo_dj');
             const confSelect = document.getElementById('firmo_confidencialidad');
+            const capSelect = document.getElementById('recibio_capacitacion');
 
             if (val === 'SI') {
                 sectionSoporte.classList.remove('hidden');
                 sectionProgramacion.classList.remove('hidden');
+                sectionCapacitacion.classList.remove('hidden');
                 divDj.classList.remove('hidden');
                 divConf.classList.remove('hidden');
             } else {
                 sectionSoporte.classList.add('hidden');
                 sectionProgramacion.classList.add('hidden');
+                sectionCapacitacion.classList.add('hidden');
                 divDj.classList.add('hidden');
                 divConf.classList.add('hidden');
                 if (djSelect) djSelect.value = 'NO';
                 if (confSelect) confSelect.value = 'NO';
+                if (capSelect) {
+                    capSelect.value = 'NO';
+                    toggleEntidadCapacitadora('NO');
+                }
             }
+            // Actualizar numeración después de cambiar visibilidad
+            updateSectionNumbers();
         }
 
         // --- NUEVA LÓGICA TIPO DNI (VISUAL) ---
@@ -550,55 +512,7 @@
             val === 'SI' ? wrapper.classList.remove('hidden') : wrapper.classList.add('hidden');
         }
 
-        // --- LÓGICA TIPO DE CONECTIVIDAD ---
-        function selectConectividad(tipo) {
-            const input = document.getElementById('tipo_conectividad_input');
-            const cardWifi = document.getElementById('card_wifi');
-            const cardCableado = document.getElementById('card_cableado');
-            const bloqueWifiFuente = document.getElementById('bloque_wifi_fuente');
 
-            input.value = tipo;
-
-            if (tipo === 'WIFI') {
-                cardWifi.classList.add('border-indigo-600', 'bg-indigo-50');
-                cardWifi.classList.remove('border-slate-200', 'bg-white');
-                cardCableado.classList.remove('border-indigo-600', 'bg-indigo-50');
-                cardCableado.classList.add('border-slate-200', 'bg-white');
-                bloqueWifiFuente.classList.remove('hidden');
-            } else {
-                cardCableado.classList.add('border-indigo-600', 'bg-indigo-50');
-                cardCableado.classList.remove('border-slate-200', 'bg-white');
-                cardWifi.classList.remove('border-indigo-600', 'bg-indigo-50');
-                cardWifi.classList.add('border-slate-200', 'bg-white');
-                bloqueWifiFuente.classList.add('hidden');
-                // Limpiar selección de fuente WiFi
-                document.getElementById('wifi_fuente_input').value = '';
-                document.getElementById('card_wifi_establecimiento').classList.remove('border-indigo-600', 'bg-indigo-50');
-                document.getElementById('card_wifi_establecimiento').classList.add('border-slate-200', 'bg-white');
-                document.getElementById('card_wifi_personal').classList.remove('border-indigo-600', 'bg-indigo-50');
-                document.getElementById('card_wifi_personal').classList.add('border-slate-200', 'bg-white');
-            }
-        }
-
-        function selectWifiFuente(fuente) {
-            const input = document.getElementById('wifi_fuente_input');
-            const cardEstablecimiento = document.getElementById('card_wifi_establecimiento');
-            const cardPersonal = document.getElementById('card_wifi_personal');
-
-            input.value = fuente;
-
-            if (fuente === 'ESTABLECIMIENTO') {
-                cardEstablecimiento.classList.add('border-indigo-600', 'bg-indigo-50');
-                cardEstablecimiento.classList.remove('border-slate-200', 'bg-white');
-                cardPersonal.classList.remove('border-indigo-600', 'bg-indigo-50');
-                cardPersonal.classList.add('border-slate-200', 'bg-white');
-            } else {
-                cardPersonal.classList.add('border-indigo-600', 'bg-indigo-50');
-                cardPersonal.classList.remove('border-slate-200', 'bg-white');
-                cardEstablecimiento.classList.remove('border-indigo-600', 'bg-indigo-50');
-                cardEstablecimiento.classList.add('border-slate-200', 'bg-white');
-            }
-        }
 
         function checkNationality(tipoDoc) {
             const sectionDni = document.getElementById('section_dni_detalle');
@@ -615,6 +529,8 @@
                 document.getElementById('card_azul').classList.remove('border-indigo-600', 'bg-indigo-50');
                 document.getElementById('card_azul').classList.add('border-slate-200', 'bg-white');
             }
+            // Actualizar numeración
+            updateSectionNumbers();
         }
 
         function previewImage(event) {
@@ -646,13 +562,7 @@
             const dniVal = document.getElementById('tipo_dni_input').value;
             if (dniVal) selectDniType(dniVal);
 
-            // Inicializar conectividad si tiene valor guardado
-            const conectividadVal = document.getElementById('tipo_conectividad_input').value;
-            if (conectividadVal) selectConectividad(conectividadVal);
 
-            // Inicializar fuente WiFi si tiene valor guardado
-            const wifiFuenteVal = document.getElementById('wifi_fuente_input').value;
-            if (wifiFuenteVal) selectWifiFuente(wifiFuenteVal);
 
             const docTypeSelect = document.getElementById('tipo_rrhh');
             if (docTypeSelect) {
@@ -661,6 +571,9 @@
                     checkNationality(this.value);
                 });
             }
+            
+            // Ejecutar inicialización de numeración
+            updateSectionNumbers();
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
         });
