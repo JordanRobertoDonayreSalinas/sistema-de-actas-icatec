@@ -89,6 +89,6 @@ class GestionAdministrativaPdfController extends Controller
 
         // =========================================================================
 
-        return $pdf->stream("Acta_M01_ID" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
+        return $pdf->stream('01_GestionAdmin_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

@@ -60,7 +60,6 @@
      x-data="{ 
         openModal: false,
         tipoDoc: '{{ $detalle->contenido['personal']['tipo_doc'] ?? 'DNI' }}',
-        utilizaSihce: '{{ $detalle->contenido['personal']['utiliza_sihce'] ?? 'NO' }}',
         docNuevo: '', 
         profesion: '{{ $detalle->contenido['personal']['profesion'] ?? '' }}',
         images: {
@@ -218,86 +217,6 @@
                                     <label class="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-2 italic">¿Cuál?</label>
                                     <input type="text" name="contenido[personal][profesion_otro]" value="{{ $detalle->contenido['personal']['profesion_otro'] ?? '' }}" class="input-standard w-full border-indigo-200 bg-indigo-50/30 uppercase" placeholder="Digitar profesión...">
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- SECCIÓN NUEVA: USO DE SISTEMA --}}
-                <div class="space-y-8 mt-12">
-                    <div class="flex items-center gap-4">
-                        <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
-                        <div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Uso del Sistema SIHCE</h4>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Estado de implementación tecnológica en el consultorio</p>
-                        </div>
-                    </div>
-
-                    {{-- CONTENEDOR UNIFICADO (Ancho total) --}}
-                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-6">
-                        <div class="space-y-4">
-                            <label class="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 ml-2">
-                                <i data-lucide="monitor" class="w-4 h-4"></i> ¿Utiliza el aplicativo SIHCE?
-                            </label>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {{-- Opción SÍ --}}
-                                <label class="relative cursor-pointer group">
-                                    <input type="radio" name="contenido[personal][utiliza_sihce]" value="SI" x-model="utilizaSihce" class="peer sr-only">
-                                    <div class="py-5 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 shadow-sm hover:border-slate-200">
-                                        <span class="text-xs font-black uppercase tracking-widest">SÍ</span>
-                                    </div>
-                                </label>
-
-                                {{-- Opción NO --}}
-                                <label class="relative cursor-pointer group">
-                                    <input type="radio" name="contenido[personal][utiliza_sihce]" value="NO" x-model="utilizaSihce" class="peer sr-only">
-                                    <div class="py-5 rounded-2xl border-2 border-slate-100 bg-white text-center transition-all peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 shadow-sm hover:border-slate-200">
-                                        <span class="text-xs font-black uppercase tracking-widest">NO</span>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- DOCUMENTACIÓN ADMINISTRATIVA --}}
-                <div x-show="utilizaSihce === 'SI'" class="mt-6 mb-6 border-t border-slate-100 pt-6">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-                            <i data-lucide="file-signature" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-700 uppercase tracking-tight">Documentación Administrativa</h3>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- Declaración Jurada --}}
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                            <p class="text-[10px] font-black text-slate-400 uppercase mb-3">¿Firmó declaración jurada?</p>
-                            <div class="flex gap-4">
-                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
-                                    <input type="radio" name="contenido[documentacion][firma_dj]" value="SI" 
-                                        {{ ($detalle->contenido['documentacion']['firma_dj'] ?? '') == 'SI' ? 'checked' : '' }}> SÍ
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
-                                    <input type="radio" name="contenido[documentacion][firma_dj]" value="NO" 
-                                        {{ ($detalle->contenido['documentacion']['firma_dj'] ?? '') == 'NO' ? 'checked' : '' }}> NO
-                                </label>
-                            </div>
-                        </div>
-
-                        {{-- Compromiso de Confidencialidad --}}
-                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                            <p class="text-[10px] font-black text-slate-400 uppercase mb-3">¿Firmó compromiso de confidencialidad?</p>
-                            <div class="flex gap-4">
-                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
-                                    <input type="radio" name="contenido[documentacion][firma_confidencialidad]" value="SI" 
-                                        {{ ($detalle->contenido['documentacion']['firma_confidencialidad'] ?? '') == 'SI' ? 'checked' : '' }}> SÍ
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-600">
-                                    <input type="radio" name="contenido[documentacion][firma_confidencialidad]" value="NO" 
-                                        {{ ($detalle->contenido['documentacion']['firma_confidencialidad'] ?? '') == 'NO' ? 'checked' : '' }}> NO
-                                </label>
                             </div>
                         </div>
                     </div>
@@ -543,12 +462,10 @@
                         
                         <div class="grid grid-cols-1 gap-4">
                             @foreach([
-                                'hojas_referencia'     => ['pregunta' => '¿Cuenta con stock suficiente de formatos/hojas de referencia?', 'icon' => 'files'],
                                 'libro_registro'       => ['pregunta' => '¿El libro de registro de referencias se encuentra actualizado al día?', 'icon' => 'book-open'],
                                 'contrareferencias'    => ['pregunta' => '¿Se realiza el seguimiento y archivo de las contrareferencias recibidas?', 'icon' => 'archive'],
                                 'flujo_paciente'       => ['pregunta' => '¿Existe un flujo definido y publicado para la referencia del paciente?', 'icon' => 'git-pull-request'],
-                                'digitacion_his'       => ['pregunta' => '¿Se realiza la digitación oportuna de las referencias en el sistema HIS?', 'icon' => 'monitor'],
-                                'criterios_medicos'    => ['pregunta' => '¿Las hojas de referencia cumplen con los criterios técnicos y médicos requeridos?', 'icon' => 'user-check'],
+                                'criterios_medicos'    => ['pregunta' => '¿Las referencias cumplen con los criterios técnicos y médicos requeridos?', 'icon' => 'user-check'],
                                 'comunicacion_destino' => ['pregunta' => '¿Se comunica con el establecimiento de destino antes de enviar al paciente?', 'icon' => 'phone-forwarded']
                             ] as $key => $info)
                             
@@ -601,80 +518,6 @@
                         </div>
 
                     </div>
-                </div>
-
-                {{-- 05. DIFICULTADES Y SOPORTE --}}
-                <div class="space-y-6" 
-                x-show="utilizaSihce === 'SI'"
-                x-cloak
-                x-transition.duration.400ms>
-                    <div class="flex items-center gap-4 border-b border-slate-100 pb-4">
-                        <div class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number">
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Dificultades y Soporte</h4>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Canales de comunicación y reporte de incidencias</p>
-                        </div>
-                    </div>
-
-                    {{-- Contenedor Principal Unificado --}}
-                    <div class="p-6 md:p-8 rounded-[2.5rem] border border-slate-100 bg-slate-50/50 space-y-10">
-                        
-                        {{-- Pregunta 1: Comunicación --}}
-                        <div class="space-y-5">
-                            <label class="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 ml-2">
-                                <i data-lucide="user-cog" class="w-4 h-4"></i>
-                                ¿A quién comunica dificultades?
-                            </label>
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                @foreach(['MINSA', 'DIRESA', 'UNIDAD EJECUTORA', 'JEFE DE EESS', 'OTROS'] as $com)
-                                <label class="relative cursor-pointer group">
-                                    <input type="radio" name="contenido[soporte][comunica]" value="{{$com}}" 
-                                        {{ ($detalle->contenido['soporte']['comunica'] ?? '') == $com ? 'checked' : '' }} 
-                                        class="peer sr-only">
-                                    <div class="px-2 py-3 min-h-[50px] flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-white text-center transition-all 
-                                        peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700
-                                        group-hover:border-slate-300 shadow-sm">
-                                        <span class="text-[9px] md:text-[10px] font-black uppercase tracking-tight leading-tight">{{ $com }}</span>
-                                    </div>
-                                </label>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        {{-- Pregunta 2: Medio Utilizado --}}
-                        <div class="space-y-5">
-                            <label class="text-[11px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 ml-2">
-                                <i data-lucide="message-circle" class="w-4 h-4"></i>
-                                ¿Qué medio utiliza?
-                            </label>
-
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"> 
-                                @foreach(['WhatsApp', 'Celular', 'Correo', 'Otros'] as $medio)
-                                    @php
-                                        $icon = [
-                                            'WhatsApp' => 'message-square',
-                                            'Celular'  => 'phone',
-                                            'Correo'   => 'mail',
-                                            'Otros'    => 'more-horizontal'
-                                        ][$medio];
-                                    @endphp
-                                    <label class="relative cursor-pointer group">
-                                        <input type="radio" name="contenido[soporte][medio]" value="{{$medio}}" 
-                                            {{ ($detalle->contenido['soporte']['medio'] ?? '') == $medio ? 'checked' : '' }} 
-                                            class="peer sr-only">
-                                        <div class="flex flex-col items-center gap-2 p-4 rounded-3xl border-2 border-slate-200 bg-white transition-all
-                                            peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700
-                                            group-hover:border-slate-300 shadow-sm">
-                                            <i data-lucide="{{ $icon }}" class="w-5 h-5"></i>
-                                            <span class="text-[10px] font-black uppercase">{{ $medio }}</span>
-                                        </div>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-
-                    </div> {{-- FIN CONTENEDOR --}}
                 </div>
 
                 {{-- 06. COMENTARIOS Y OBSERVACIONES GENERALES --}}

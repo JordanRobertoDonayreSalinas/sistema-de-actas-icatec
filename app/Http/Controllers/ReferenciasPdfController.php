@@ -56,6 +56,6 @@ class ReferenciasPdfController extends Controller
                 'chroot'            => base_path(),
             ]);
 
-        return $pdf->stream("MONITOREO_REFERENCIAS_ACTA_{$acta->id}.pdf");
+        return $pdf->stream("16_Referencias_Acta_NOESP_{$acta->numero_acta}.pdf");
     }
 }

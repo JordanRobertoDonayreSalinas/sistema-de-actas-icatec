@@ -81,6 +81,6 @@ class LaboratorioPdfController extends Controller
         // ==========================================================
 
         // 4. Retornar PDF
-        return $pdf->stream("Modulo_Laboratorio_Acta_" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
+        return $pdf->stream("17_Laboratorio_Acta_NOESP_{$acta->numero_acta}.pdf");
     }
 }

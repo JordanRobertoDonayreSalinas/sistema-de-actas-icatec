@@ -252,6 +252,6 @@ class ASocialESPController extends Controller
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('Acta_Asistenta_Social_' . $acta->numero_acta . '.pdf');
+        return $pdf->stream("04.6_Servicio_Social_ESP_Acta_{$acta->numero_acta}.pdf");
     }
 }

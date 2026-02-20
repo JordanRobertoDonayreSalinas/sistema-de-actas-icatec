@@ -100,6 +100,6 @@ class FarmaciaESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_Farmacia_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("06_Farmacia_ESP_Acta_{$monitoreo->numero_acta}.pdf");
     }
 }

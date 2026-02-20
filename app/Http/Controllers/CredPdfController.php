@@ -64,7 +64,7 @@ class CredPdfController extends Controller
             // $pdf->getDomPDF()->set_option("isRemoteEnabled", true);
             // $pdf->getDomPDF()->set_option("chroot", base_path());
 
-            return $pdf->stream("Reporte_CRED_{$id}.pdf");
+            return $pdf->stream("08_CRED_Acta_NOESP_{$acta->numero_acta}.pdf");
 
         } catch (\Exception $e) {
             return "Error: " . $e->getMessage();

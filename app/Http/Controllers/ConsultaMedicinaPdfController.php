@@ -110,6 +110,6 @@ class ConsultaMedicinaPdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("Modulo04_Consulta_Medicina_Acta_{$id}.pdf");
+        return $pdf->stream("04_Medicina_Acta_NOESP_{$acta->numero_acta}.pdf");
     }
 }
