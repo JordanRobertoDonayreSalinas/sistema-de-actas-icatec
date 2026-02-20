@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>FUA Electrónico - Acta {{ $acta->numero_acta }}</title>
+    <title>Módulo 14: FUA Electrónico - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* AJUSTES EXACTOS DEL ARCHIVO DE MEDICINA */
         @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }

@@ -1,5 +1,5 @@
 @extends('layouts.usuario')
-@section('title', 'Módulo 05: Enfermeria')
+@section('title', 'Módulo 4.5: Enfermería')
 
 @section('content')
 
@@ -65,14 +65,14 @@
         <div class="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="flex items-center gap-6">
                 <div class="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
-                    <span class="text-2xl font-black text-teal-600">05</span>
+                    <span class="text-2xl font-black text-teal-600">4.5</span>
                 </div>
                 <div>
                     <div class="flex items-center gap-3 mb-1">
                         <span class="px-3 py-1 bg-teal-100 text-teal-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
-                        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Enfermería</h2>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Enfermeria</h2>
                 </div>
             </div>
             

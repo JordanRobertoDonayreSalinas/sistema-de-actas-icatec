@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Planificación Familiar - ' . ($acta->establecimiento->nombre ?? 'Sin Establecimiento'))
+@section('title', 'Módulo 11: Planificación Familiar')
 
 @push('styles')
     <style>
@@ -92,7 +92,7 @@
                                 Módulo 11
                             </span>
                             <span class="text-slate-400 font-bold text-[10px] uppercase tracking-tighter">
-                                ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}
+                                ID Acta: #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}
                             </span>
                         </div>
                         <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">

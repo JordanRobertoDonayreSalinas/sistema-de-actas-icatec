@@ -22,21 +22,21 @@ class MonitoreoController extends Controller
      */
     private function esEspecializada($establecimiento)
     {
-        $codigosCSMC = ['25933','28653','27197','34021','25977','33478','27199','30478'];
-        
+        $codigosCSMC = ['25933', '28653', '27197', '34021', '25977', '33478', '27199', '30478'];
+
         $nombresCSMC = [
-            'CSMC TUPAC AMARU', 
-            'CSMC COLOR ESPERANZA', 
+            'CSMC TUPAC AMARU',
+            'CSMC COLOR ESPERANZA',
             'CSMC DECÍDETE A SER FELIZ',
-            'CSMC SANTISIMA VIRGEN DE YAUCA', 
-            'CSMC VITALIZA', 
+            'CSMC SANTISIMA VIRGEN DE YAUCA',
+            'CSMC VITALIZA',
             'CSMC CRISTO MORENO DE LUREN',
-            'CSMC NUEVO HORIZONTE', 
+            'CSMC NUEVO HORIZONTE',
             'CSMC MENTE SANA'
         ];
 
-        return in_array($establecimiento->codigo, $codigosCSMC) || 
-               in_array(strtoupper(trim($establecimiento->nombre)), $nombresCSMC);
+        return in_array($establecimiento->codigo, $codigosCSMC) ||
+            in_array(strtoupper(trim($establecimiento->nombre)), $nombresCSMC);
     }
 
     /**
@@ -44,7 +44,7 @@ class MonitoreoController extends Controller
      */
     public function index(Request $request)
     {
-        $fecha_inicio = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $fecha_inicio = $request->input('fecha_inicio', Carbon::now()->startOfYear()->format('Y-m-d'));
         $fecha_fin = $request->input('fecha_fin', Carbon::now()->format('Y-m-d'));
 
         $query = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'detalles', 'user']);
@@ -74,7 +74,7 @@ class MonitoreoController extends Controller
         // Contadores optimizados
         $totalActas = $monitoreos->total();
         $queryCount = clone $query;
-        $queryCount->getQuery()->orders = null; 
+        $queryCount->getQuery()->orders = null;
         $countCompletados = (clone $queryCount)->where('firmado', 1)->count();
         $countPendientes = $totalActas - $countCompletados;
 
@@ -82,10 +82,10 @@ class MonitoreoController extends Controller
         $provincias = Establecimiento::distinct()->pluck('provincia');
 
         return view('usuario.monitoreo.index', compact(
-            'monitoreos', 
-            'countCompletados', 
-            'countPendientes', 
-            'implementadores', 
+            'monitoreos',
+            'countCompletados',
+            'countPendientes',
+            'implementadores',
             'provincias',
             'fecha_inicio',
             'fecha_fin'
@@ -100,7 +100,8 @@ class MonitoreoController extends Controller
     public function buscarFiltro(Request $request)
     {
         $term = trim($request->term);
-        if (empty($term)) return response()->json([]);
+        if (empty($term))
+            return response()->json([]);
 
         $equipo = MonitoreoEquipo::select(
             'doc',
@@ -166,22 +167,22 @@ class MonitoreoController extends Controller
             DB::beginTransaction();
 
             $establecimiento = Establecimiento::findOrFail($request->establecimiento_id);
-            
+
             // Actualizar datos maestros del establecimiento
             $establecimiento->update([
                 'responsable' => mb_strtoupper(trim($request->responsable), 'UTF-8'),
-                'categoria'   => mb_strtoupper(trim($request->categoria), 'UTF-8'),
+                'categoria' => mb_strtoupper(trim($request->categoria), 'UTF-8'),
             ]);
 
             // 1. Determinar el Tipo de Origen (CORREGIDO: 'NO ESPECIALIZADA')
             $esEspecializada = $this->esEspecializada($establecimiento);
             $tipoOrigen = $esEspecializada ? 'ESPECIALIZADA' : 'NO ESPECIALIZADA';
-            
+
             // 2. Calcular Numeración Independiente
             // Buscamos el último número PERO SOLO del mismo tipo_origen
             // Si es ESPECIALIZADA cuenta sus propias actas, si es NO ESPECIALIZADA cuenta las suyas aparte.
             $ultimoNumero = CabeceraMonitoreo::where('tipo_origen', $tipoOrigen)->max('numero_acta');
-            
+
             // Si no existe ninguno de ese tipo, empezamos en 1, sino sumamos 1
             $nuevoNumero = $ultimoNumero ? ($ultimoNumero + 1) : 1;
 
@@ -199,8 +200,12 @@ class MonitoreoController extends Controller
             // Guardar fotos
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
-                if (isset($files[0])) { $monitoreo->foto1 = $files[0]->store('evidencias', 'public'); }
-                if (isset($files[1])) { $monitoreo->foto2 = $files[1]->store('evidencias', 'public'); }
+                if (isset($files[0])) {
+                    $monitoreo->foto1 = $files[0]->store('evidencias', 'public');
+                }
+                if (isset($files[1])) {
+                    $monitoreo->foto2 = $files[1]->store('evidencias', 'public');
+                }
             }
 
             $monitoreo->save();
@@ -210,19 +215,19 @@ class MonitoreoController extends Controller
                 if (!empty($persona['doc'])) {
                     MonitoreoEquipo::create([
                         'cabecera_monitoreo_id' => $monitoreo->id,
-                        'tipo_doc'              => $persona['tipo_doc'] ?? 'DNI',
-                        'doc'                   => trim($persona['doc']),
-                        'apellido_paterno'      => mb_strtoupper(trim($persona['apellido_paterno']), 'UTF-8'),
-                        'apellido_materno'      => mb_strtoupper(trim($persona['apellido_materno']), 'UTF-8'),
-                        'nombres'               => mb_strtoupper(trim($persona['nombres']), 'UTF-8'),
-                        'cargo'                 => mb_strtoupper(trim($persona['cargo'] ?? 'MONITOR'), 'UTF-8'),
-                        'institucion'           => mb_strtoupper(trim($persona['institucion'] ?? 'DIRESA'), 'UTF-8'),
+                        'tipo_doc' => $persona['tipo_doc'] ?? 'DNI',
+                        'doc' => trim($persona['doc']),
+                        'apellido_paterno' => mb_strtoupper(trim($persona['apellido_paterno']), 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper(trim($persona['apellido_materno']), 'UTF-8'),
+                        'nombres' => mb_strtoupper(trim($persona['nombres']), 'UTF-8'),
+                        'cargo' => mb_strtoupper(trim($persona['cargo'] ?? 'MONITOR'), 'UTF-8'),
+                        'institucion' => mb_strtoupper(trim($persona['institucion'] ?? 'DIRESA'), 'UTF-8'),
                     ]);
                 }
             }
 
             DB::commit();
-            
+
             $msjExito = "Acta {$tipoOrigen} N° " . str_pad($nuevoNumero, 5, '0', STR_PAD_LEFT) . " generada con éxito.";
             return redirect()->route('usuario.monitoreo.modulos', $monitoreo->id)->with('success', $msjExito);
 
@@ -248,7 +253,7 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            
+
             $monitoreo->fecha = $request->fecha;
             $monitoreo->establecimiento_id = $request->establecimiento_id;
             $monitoreo->responsable = mb_strtoupper(trim($request->responsable), 'UTF-8');
@@ -258,11 +263,13 @@ class MonitoreoController extends Controller
             if ($request->hasFile('imagenes')) {
                 $files = $request->file('imagenes');
                 if (isset($files[0])) {
-                    if ($monitoreo->foto1) Storage::disk('public')->delete($monitoreo->foto1);
+                    if ($monitoreo->foto1)
+                        Storage::disk('public')->delete($monitoreo->foto1);
                     $monitoreo->foto1 = $files[0]->store('evidencias', 'public');
                 }
                 if (isset($files[1])) {
-                    if ($monitoreo->foto2) Storage::disk('public')->delete($monitoreo->foto2);
+                    if ($monitoreo->foto2)
+                        Storage::disk('public')->delete($monitoreo->foto2);
                     $monitoreo->foto2 = $files[1]->store('evidencias', 'public');
                 }
             }
@@ -274,13 +281,13 @@ class MonitoreoController extends Controller
                 if (!empty($persona['doc'])) {
                     MonitoreoEquipo::create([
                         'cabecera_monitoreo_id' => $monitoreo->id,
-                        'tipo_doc'              => $persona['tipo_doc'] ?? 'DNI',
-                        'doc'                   => trim($persona['doc']),
-                        'apellido_paterno'      => mb_strtoupper(trim($persona['apellido_paterno']), 'UTF-8'),
-                        'apellido_materno'      => mb_strtoupper(trim($persona['apellido_materno']), 'UTF-8'),
-                        'nombres'               => mb_strtoupper(trim($persona['nombres']), 'UTF-8'),
-                        'cargo'                 => mb_strtoupper(trim($persona['cargo']), 'UTF-8'),
-                        'institucion'           => mb_strtoupper(trim($persona['institucion']), 'UTF-8'),
+                        'tipo_doc' => $persona['tipo_doc'] ?? 'DNI',
+                        'doc' => trim($persona['doc']),
+                        'apellido_paterno' => mb_strtoupper(trim($persona['apellido_paterno']), 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper(trim($persona['apellido_materno']), 'UTF-8'),
+                        'nombres' => mb_strtoupper(trim($persona['nombres']), 'UTF-8'),
+                        'cargo' => mb_strtoupper(trim($persona['cargo']), 'UTF-8'),
+                        'institucion' => mb_strtoupper(trim($persona['institucion']), 'UTF-8'),
                     ]);
                 }
             }
@@ -309,58 +316,66 @@ class MonitoreoController extends Controller
 
         // Datos de estado para Nivel 1
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', '!=', 'config_modulos')
-                            ->pluck('modulo_nombre')->toArray();
-                            
+            ->where('modulo_nombre', '!=', 'config_modulos')
+            ->pluck('modulo_nombre')->toArray();
+
         $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                           ->whereNotNull('pdf_firmado_path')
-                           ->pluck('modulo_nombre')->toArray();
-                           
+            ->whereNotNull('pdf_firmado_path')
+            ->pluck('modulo_nombre')->toArray();
+
         $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                  ->where('modulo_nombre', 'config_modulos')->first();
-                  
+            ->where('modulo_nombre', 'config_modulos')->first();
+
         $modulosActivos = $config ? $config->contenido : [];
 
         if ($esEspecializada) {
             // LISTA PRINCIPAL CSMC (Nivel 1)
             // 'salud_mental_group' llevará al sub-menú (Controlador gestionarSaludMental)
             $modulosMaster = [
-                'gestion_admin_esp'  => ['nombre' => '1. GESTION ADMINISTRATIVA', 'icon' => 'folder-kanban'],
-                'citas_esp'          => ['nombre' => '2. CITAS', 'icon' => 'calendar-clock'],
-                'triaje_esp'         => ['nombre' => '3. TRIAJE', 'icon' => 'clipboard-pulse'],
+                'gestion_admin_esp' => ['nombre' => '1. GESTION ADMINISTRATIVA', 'icon' => 'folder-kanban'],
+                'citas_esp' => ['nombre' => '2. CITAS', 'icon' => 'calendar-clock'],
+                'triaje_esp' => ['nombre' => '3. TRIAJE', 'icon' => 'clipboard-pulse'],
                 'salud_mental_group' => ['nombre' => '4. SALUD MENTAL', 'icon' => 'brain-circuit'], // Contenedor Nivel 2
-                'toma_muestra'       => ['nombre' => '5. TOMA DE MUESTRA', 'icon' => 'test-tube'],
-                'farmacia_esp'       => ['nombre' => '6. FARMACIA', 'icon' => 'pill'],
+                'toma_muestra' => ['nombre' => '5. TOMA DE MUESTRA', 'icon' => 'test-tube'],
+                'farmacia_esp' => ['nombre' => '6. FARMACIA', 'icon' => 'pill'],
             ];
 
             return view('usuario.monitoreo.modulos_especializados', compact(
-                'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
+                'acta',
+                'modulosMaster',
+                'modulosGuardados',
+                'modulosActivos',
+                'modulosFirmados'
             ));
         } else {
             // LISTA ESTÁNDAR (NO ESPECIALIZADA)
             $modulosMaster = [
                 'gestion_administrativa' => ['nombre' => '01. Gestión Administrativa', 'icon' => 'folder-kanban'],
-                'citas'                  => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
-                'triaje'                 => ['nombre' => '03. Triaje', 'icon' => 'stethoscope'],
-                'consulta_medicina'      => ['nombre' => '04. Consulta Externa: Medicina', 'icon' => 'user-cog'],
-                'consulta_odontologia'   => ['nombre' => '05. Consulta Externa: Odontología', 'icon' => 'smile'],
-                'consulta_nutricion'     => ['nombre' => '06. Consulta Externa: Nutrición', 'icon' => 'apple'],
-                'consulta_psicologia'    => ['nombre' => '07. Consulta Externa: Psicología', 'icon' => 'brain'],
-                'cred'                   => ['nombre' => '08. CRED', 'icon' => 'baby'],
-                'inmunizaciones'         => ['nombre' => '09. Inmunizaciones', 'icon' => 'syringe'],
-                'atencion_prenatal'      => ['nombre' => '10. Atención Prenatal', 'icon' => 'heart-pulse'],
+                'citas' => ['nombre' => '02. Citas', 'icon' => 'calendar-clock'],
+                'triaje' => ['nombre' => '03. Triaje', 'icon' => 'stethoscope'],
+                'consulta_medicina' => ['nombre' => '04. Consulta Externa: Medicina', 'icon' => 'user-cog'],
+                'consulta_odontologia' => ['nombre' => '05. Consulta Externa: Odontología', 'icon' => 'smile'],
+                'consulta_nutricion' => ['nombre' => '06. Consulta Externa: Nutrición', 'icon' => 'apple'],
+                'consulta_psicologia' => ['nombre' => '07. Consulta Externa: Psicología', 'icon' => 'brain'],
+                'cred' => ['nombre' => '08. CRED', 'icon' => 'baby'],
+                'inmunizaciones' => ['nombre' => '09. Inmunizaciones', 'icon' => 'syringe'],
+                'atencion_prenatal' => ['nombre' => '10. Atención Prenatal', 'icon' => 'heart-pulse'],
                 'planificacion_familiar' => ['nombre' => '11. Planificación Familiar', 'icon' => 'users'],
-                'parto'                  => ['nombre' => '12. Parto', 'icon' => 'bed'],
-                'puerperio'              => ['nombre' => '13. Puerperio', 'icon' => 'home'],
-                'fua_electronico'        => ['nombre' => '14. FUA Electrónico', 'icon' => 'file-digit'],
-                'farmacia'               => ['nombre' => '15. Farmacia', 'icon' => 'pill'],
-                'referencias'            => ['nombre' => '16. Refcon', 'icon' => 'map-pinned'],
-                'laboratorio'            => ['nombre' => '17. Laboratorio', 'icon' => 'test-tube-2'],
-                'urgencias'              => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
+                'parto' => ['nombre' => '12. Parto', 'icon' => 'bed'],
+                'puerperio' => ['nombre' => '13. Puerperio', 'icon' => 'home'],
+                'fua_electronico' => ['nombre' => '14. FUA Electrónico', 'icon' => 'file-digit'],
+                'farmacia' => ['nombre' => '15. Farmacia', 'icon' => 'pill'],
+                'referencias' => ['nombre' => '16. Refcon', 'icon' => 'map-pinned'],
+                'laboratorio' => ['nombre' => '17. Laboratorio', 'icon' => 'test-tube-2'],
+                'urgencias' => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
             ];
 
             return view('usuario.monitoreo.modulos', compact(
-                'acta', 'modulosMaster', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
+                'acta',
+                'modulosMaster',
+                'modulosGuardados',
+                'modulosActivos',
+                'modulosFirmados'
             ));
         }
     }
@@ -374,31 +389,35 @@ class MonitoreoController extends Controller
 
         // Recalcular estados para esta vista
         $modulosGuardados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', '!=', 'config_modulos')
-                            ->pluck('modulo_nombre')->toArray();
-                            
+            ->where('modulo_nombre', '!=', 'config_modulos')
+            ->pluck('modulo_nombre')->toArray();
+
         $modulosFirmados = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                           ->whereNotNull('pdf_firmado_path')
-                           ->pluck('modulo_nombre')->toArray();
-        
+            ->whereNotNull('pdf_firmado_path')
+            ->pluck('modulo_nombre')->toArray();
+
         $config = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                  ->where('modulo_nombre', 'config_modulos')->first();
+            ->where('modulo_nombre', 'config_modulos')->first();
         $modulosActivos = $config ? $config->contenido : [];
 
         // LISTA DE SUB-MÓDULOS (4.1 - 4.7)
         $modulosSaludMental = [
-            'sm_medicina_general'   => ['nombre' => '4.1. MEDICINA GENERAL', 'icon' => 'stethoscope'],
-            'sm_psiquiatria'        => ['nombre' => '4.2. PSIQUIATRIA', 'icon' => 'user-cog'],
-            'sm_med_familiar'       => ['nombre' => '4.3. MED. FAMILIAR Y COMUNITARIA', 'icon' => 'users'],
-            'sm_psicologia'         => ['nombre' => '4.4. PSICOLOGIA', 'icon' => 'brain'],
-            'sm_enfermeria'         => ['nombre' => '4.5. ENFERMERIA', 'icon' => 'activity'],
-            'sm_servicio_social'    => ['nombre' => '4.6. SERVICIO SOCIAL', 'icon' => 'heart-handshake'],
-            'sm_terapias'           => ['nombre' => '4.7. TERAPIA LENGUAJE / OCUPACIONAL', 'icon' => 'puzzle'],
+            'sm_medicina_general' => ['nombre' => '4.1. MEDICINA GENERAL', 'icon' => 'stethoscope'],
+            'sm_psiquiatria' => ['nombre' => '4.2. PSIQUIATRIA', 'icon' => 'user-cog'],
+            'sm_med_familiar' => ['nombre' => '4.3. MED. FAMILIAR Y COMUNITARIA', 'icon' => 'users'],
+            'sm_psicologia' => ['nombre' => '4.4. PSICOLOGIA', 'icon' => 'brain'],
+            'sm_enfermeria' => ['nombre' => '4.5. ENFERMERIA', 'icon' => 'activity'],
+            'sm_servicio_social' => ['nombre' => '4.6. SERVICIO SOCIAL', 'icon' => 'heart-handshake'],
+            'sm_terapias' => ['nombre' => '4.7. TERAPIA LENGUAJE / OCUPACIONAL', 'icon' => 'puzzle'],
         ];
 
         // Apuntamos a la carpeta correcta donde creaste el archivo de submodulos
         return view('usuario.monitoreo.modulos_especializados.submodulos', compact(
-            'acta', 'modulosSaludMental', 'modulosGuardados', 'modulosActivos', 'modulosFirmados'
+            'acta',
+            'modulosSaludMental',
+            'modulosGuardados',
+            'modulosActivos',
+            'modulosFirmados'
         ));
     }
 
@@ -427,17 +446,22 @@ class MonitoreoController extends Controller
         try {
             DB::beginTransaction();
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
-            
-            if ($monitoreo->foto1) Storage::disk('public')->delete($monitoreo->foto1);
-            if ($monitoreo->foto2) Storage::disk('public')->delete($monitoreo->foto2);
+
+            if ($monitoreo->foto1)
+                Storage::disk('public')->delete($monitoreo->foto1);
+            if ($monitoreo->foto2)
+                Storage::disk('public')->delete($monitoreo->foto2);
 
             $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->get();
             foreach ($modulos as $m) {
-                if ($m->pdf_firmado_path) Storage::disk('public')->delete($m->pdf_firmado_path);
-                if (isset($m->contenido['foto_evidencia'])) Storage::disk('public')->delete($m->contenido['foto_evidencia']);
+                if ($m->pdf_firmado_path)
+                    Storage::disk('public')->delete($m->pdf_firmado_path);
+                if (isset($m->contenido['foto_evidencia']))
+                    Storage::disk('public')->delete($m->contenido['foto_evidencia']);
             }
 
-            if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
+            if ($monitoreo->firmado_pdf)
+                Storage::disk('public')->delete($monitoreo->firmado_pdf);
             $monitoreo->delete();
             DB::commit();
             return redirect()->route('usuario.monitoreo.index')->with('success', 'Acta eliminada correctamente.');
@@ -451,10 +475,10 @@ class MonitoreoController extends Controller
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
         $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', '!=', 'config_modulos')->get()->keyBy('modulo_nombre');
-        
+
         $prefijo = $acta->tipo_origen === 'ESPECIALIZADA' ? 'ACTA_CSMC_' : 'ACTA_IPRESS_';
         $numero = str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT);
-        
+
         return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))
             ->setPaper('a4', 'portrait')
             ->stream("{$prefijo}{$numero}.pdf");
@@ -464,16 +488,17 @@ class MonitoreoController extends Controller
     {
         try {
             $request->validate(['pdf_firmado' => 'required|mimes:pdf|max:10240']);
-            
+
             $monitoreo = CabeceraMonitoreo::findOrFail($id);
 
             if ($request->hasFile('pdf_firmado')) {
-                if ($monitoreo->firmado_pdf) Storage::disk('public')->delete($monitoreo->firmado_pdf);
-                
+                if ($monitoreo->firmado_pdf)
+                    Storage::disk('public')->delete($monitoreo->firmado_pdf);
+
                 $path = $request->file('pdf_firmado')->store('monitoreos_firmados/consolidados', 'public');
-                
+
                 $monitoreo->update([
-                    'firmado_pdf' => $path, 
+                    'firmado_pdf' => $path,
                     'firmado' => true
                 ]);
 

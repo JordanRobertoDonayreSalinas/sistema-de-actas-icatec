@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte CRED - Acta {{ $acta->id }}</title>
+    <title>Módulo 08: CRED - Acta {{ $acta->id }}</title>
     <style>
         @page { margin: 1.5cm; }
         body {
@@ -145,7 +145,7 @@
     <div class="header">
         <h1>Módulo 08: Crecimiento y Desarrollo (CRED)</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px;">
-            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
         </div>
     </div>
 

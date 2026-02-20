@@ -1,5 +1,5 @@
 @extends('layouts.usuario')
-@section('title', 'Monitoreo - Atención Pre Natal')
+@section('title', 'Módulo 10: Atención Prenatal')
 
 @push('styles')
     <style>
@@ -165,7 +165,7 @@
                         class="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo
                         Técnico</span>
                     <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta:
-                        #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                        #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 {{-- Sin numeración en el título principal para mantener coherencia si lo deseas, o lo dejamos como "Módulo" --}}
                 <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">10. Atención Pre Natal</h2>

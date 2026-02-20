@@ -1,5 +1,10 @@
 @props(['prefix', 'detalle'])
 
+@php
+    // Aseguramos que $detalle exista y obtenga el array de contenido, o un array vacío si es null
+    $contenido = $detalle->contenido ?? [];
+@endphp
+
 <div id="card_{{$prefix}}" class="bg-white border border-slate-200 rounded-[3rem] overflow-hidden shadow-xl shadow-slate-200/40 transition-all duration-700 mb-10 group/card relative">
     {{-- BARRA DE ESTADO LATERAL IZQUIERDA --}}
     <div id="status_line_{{$prefix}}" class="absolute left-0 top-0 w-2 h-full bg-slate-100 transition-colors duration-700"></div>
@@ -43,7 +48,7 @@
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">N° Identidad</label>
                 <div class="relative group/input">
                     <input type="text" name="contenido[{{$prefix}}][doc]" id="doc_{{$prefix}}" 
-                           value="{{ $detalle->contenido[$prefix]['doc'] ?? '' }}" 
+                           value="{{ $contenido[$prefix]['doc'] ?? '' }}" 
                            class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-black text-slate-700 tracking-widest text-sm shadow-sm">
                     <i data-lucide="fingerprint" class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200 group-focus-within/input:text-indigo-400 transition-colors"></i>
                 </div>
@@ -55,7 +60,7 @@
                 <div class="relative">
                     <select name="contenido[{{$prefix}}][tipo_doc]" id="tipo_{{$prefix}}" 
                             class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-600 text-sm cursor-pointer appearance-none shadow-sm">
-                        @php $tDoc = $detalle->contenido[$prefix]['tipo_doc'] ?? 'DNI'; @endphp
+                        @php $tDoc = $contenido[$prefix]['tipo_doc'] ?? 'DNI'; @endphp
                         <option value="DNI" {{ $tDoc == 'DNI' ? 'selected' : '' }}>DNI</option>
                         <option value="CE" {{ $tDoc == 'CE' ? 'selected' : '' }}>C.E.</option>
                     </select>
@@ -67,7 +72,7 @@
             <div class="md:col-span-6">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Nombres Completos</label>
                 <input type="text" name="contenido[{{$prefix}}][nombres]" id="nombres_{{$prefix}}" 
-                       value="{{ $detalle->contenido[$prefix]['nombres'] ?? '' }}" 
+                       value="{{ $contenido[$prefix]['nombres'] ?? '' }}" 
                        class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-700 uppercase text-sm shadow-sm">
             </div>
 
@@ -75,7 +80,7 @@
             <div class="md:col-span-4">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Apellido Paterno</label>
                 <input type="text" name="contenido[{{$prefix}}][apellido_paterno]" id="paterno_{{$prefix}}" 
-                       value="{{ $detalle->contenido[$prefix]['apellido_paterno'] ?? '' }}" 
+                       value="{{ $contenido[$prefix]['apellido_paterno'] ?? '' }}" 
                        class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-700 uppercase text-sm shadow-sm">
             </div>
 
@@ -83,7 +88,7 @@
             <div class="md:col-span-4">
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Apellido Materno</label>
                 <input type="text" name="contenido[{{$prefix}}][apellido_materno]" id="materno_{{$prefix}}" 
-                       value="{{ $detalle->contenido[$prefix]['apellido_materno'] ?? '' }}" 
+                       value="{{ $contenido[$prefix]['apellido_materno'] ?? '' }}" 
                        class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-700 uppercase text-sm shadow-sm">
             </div>
 
@@ -92,7 +97,7 @@
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Email</label>
                 <div class="relative group/input">
                     <input type="email" name="contenido[{{$prefix}}][email]" id="email_{{$prefix}}" 
-                           value="{{ $detalle->contenido[$prefix]['email'] ?? '' }}" 
+                           value="{{ $contenido[$prefix]['email'] ?? '' }}" 
                            class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-indigo-600 text-sm shadow-sm">
                     <i data-lucide="mail" class="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-200 group-focus-within/input:text-indigo-400 transition-colors"></i>
                 </div>
@@ -103,7 +108,7 @@
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Teléfono / Celular</label>
                 <div class="relative group/input">
                     <input type="text" name="contenido[{{$prefix}}][telefono]" id="tel_{{$prefix}}" 
-                           value="{{ $detalle->contenido[$prefix]['telefono'] ?? '' }}" 
+                           value="{{ $contenido[$prefix]['telefono'] ?? '' }}" 
                            class="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white transition-all outline-none font-bold text-slate-700 text-sm shadow-sm">
                     <i data-lucide="smartphone" class="absolute left-5 top-1/2 -translate-x-1/2 w-4 h-4 text-slate-200 group-focus-within/input:text-indigo-400 transition-colors"></i>
                 </div>
@@ -115,7 +120,7 @@
                 
                 {{-- INPUT HIDDEN QUE GUARDA EL VALOR FINAL --}}
                 <input type="hidden" name="contenido[{{$prefix}}][cargo]" id="cargo_final_{{$prefix}}" 
-                       value="{{ $detalle->contenido[$prefix]['cargo'] ?? '' }}">
+                       value="{{ $contenido[$prefix]['cargo'] ?? '' }}">
 
                 <div class="flex gap-2">
                     {{-- SELECT DE CARGOS --}}
@@ -126,7 +131,7 @@
                                 'TECNICO(A) LABORATORIO', 'BIOLOGO(A)', 'QUIMICO FARMACEUTICO(A)', 
                                 'NUTRICIONISTA', 'PSICOLOGO(A)', 'OBSTETRA', 'OTROS'
                             ]; 
-                            $valorActual = $detalle->contenido[$prefix]['cargo'] ?? '';
+                            $valorActual = $contenido[$prefix]['cargo'] ?? '';
                             // Si el valor actual no está en la lista estándar y no está vacío, asumimos que es "OTROS"
                             $seleccion = in_array($valorActual, $cargos) ? $valorActual : ($valorActual ? 'OTROS' : '');
                         @endphp

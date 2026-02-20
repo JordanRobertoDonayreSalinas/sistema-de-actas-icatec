@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>REPORTE MÓDULO 13 - PUERPERIO</title>
+    <title>Módulo 13: PUERPERIO - Acta {{ $acta->id }}</title>
     <style>
         /* MÁRGENES: 2.5cm abajo para reservar espacio al pie de página del Controlador */
         @page { margin: 1.2cm 1.5cm 2.5cm 1.5cm; }
@@ -60,7 +60,7 @@
     <div class="header">
         <h1>MÓDULO 13: PUERPERIO</h1>
         <div class="acta-info">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
             FECHA: {{ isset($detalle->contenido['fecha']) ? date('d/m/Y', strtotime($detalle->contenido['fecha'])) : date('d/m/Y') }}
         </div>

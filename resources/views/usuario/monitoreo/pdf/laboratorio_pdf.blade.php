@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>REPORTE MÓDULO 10 - LABORATORIO</title>
+    <title>Módulo 17: LABORATORIO - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* MÁRGENES: 2.5cm abajo para reservar espacio al pie de página del Controlador */
         @page { margin: 1.2cm 1.5cm 2.5cm 1.5cm; }
@@ -58,9 +58,9 @@
 
     {{-- ENCABEZADO --}}
     <div class="header">
-        <h1>MÓDULO 10: LABORATORIO</h1>
+        <h1>Módulo 17: LABORATORIO</h1>
         <div class="acta-info">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
             FECHA: {{ isset($detalle->contenido['fecha']) ? date('d/m/Y', strtotime($detalle->contenido['fecha'])) : date('d/m/Y') }}
         </div>

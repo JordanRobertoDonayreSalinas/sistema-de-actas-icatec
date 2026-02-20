@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Salud Mental - Medicina General - Acta {{ $acta->numero_acta }}</title>
+    <title>Modulo 4.1: Medicina General - Acta {{ $acta->numero_acta }}</title>
     <style>
         @page {
             margin: 1.2cm 1.5cm 2cm 1.5cm;
@@ -215,9 +215,9 @@
 
     {{-- HEADER --}}
     <div class="header">
-        <h1>Salud Mental - Medicina General</h1>
+        <h1>Módulo 4.1: Medicina General</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px; margin-top: 5px;">
-            ACTA N° {{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }} |
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} |
             {{ strtoupper($acta->establecimiento->nombre) }} |
             FECHA: {{ \Carbon\Carbon::parse($c['fecha'] ?? $acta->fecha)->format('d/m/Y') }}
         </div>

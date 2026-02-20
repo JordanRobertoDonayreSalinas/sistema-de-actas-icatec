@@ -183,7 +183,7 @@
         <div class="header">
             <h1>MÓDULO 02: CITAS</h1>
             <div class="header-sub">
-                ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} |
+                ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} |
                 ESTABLECIMIENTO: {{ $acta->establecimiento->codigo ?? '-' }} -
                 {{ $acta->establecimiento->nombre ?? 'NO ESPECIFICADO' }} |
                 FECHA: {{ \Carbon\Carbon::parse($registro->fecha_registro)->format('d/m/Y') }}

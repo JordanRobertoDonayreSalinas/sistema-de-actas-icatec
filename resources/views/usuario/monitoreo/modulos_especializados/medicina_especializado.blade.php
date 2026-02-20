@@ -15,7 +15,7 @@
                         <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta:
                             #{{ str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">04.1 MEDICINA GENERAL</h2>
+                    <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">4.1 MEDICINA GENERAL</h2>
                     <p class="text-slate-500 font-bold uppercase text-xs mt-1">
                         <i data-lucide="clipboard-pulse" class="inline-block w-4 h-4 mr-1 text-teal-500"></i>
                         {{ $acta->establecimiento->nombre }}
