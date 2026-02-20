@@ -19,21 +19,30 @@ class AdminController extends Controller
     {
         $totalActas = Acta::count();
         $totalUsuarios = User::count();
-        
+
         // Mapeo con nombres completos en español
         $mesesEspañol = [
-            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 
-            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 
-            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre'
         ];
 
         // Obtener actas por mes del año actual, ordenadas por mes DESC (más reciente primero)
         $actasPorMes = Acta::selectRaw('MONTH(fecha) as mes, COUNT(*) as total')
             ->whereYear('fecha', date('Y'))
             ->groupBy('mes')
-            ->orderBy('mes', 'desc') 
+            ->orderBy('mes', 'desc')
             ->get()
-            ->map(function($item) use ($mesesEspañol) {
+            ->map(function ($item) use ($mesesEspañol) {
                 return [
                     'nombre_mes' => $mesesEspañol[$item->mes] ?? 'S/N',
                     'total' => $item->total

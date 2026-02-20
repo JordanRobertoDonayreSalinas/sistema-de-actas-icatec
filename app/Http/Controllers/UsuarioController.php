@@ -63,10 +63,34 @@ class UsuarioController extends Controller
             ->take(5)
             ->get();
 
+        // 5. IDs de establecimientos con actas de monitoreo (tabla mon_cabecera_monitoreo)
+        $idsConMonitoreo = \App\Models\CabeceraMonitoreo::distinct()
+            ->pluck('establecimiento_id')
+            ->toArray();
+
+        // 6. Establecimientos con coordenadas para el mapa (con flag de monitoreo y provincia)
+        $establecimientosMap = Establecimiento::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->get(['id', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
+            ->map(function ($est) use ($idsConMonitoreo) {
+                $est->has_monitoreo = in_array($est->id, $idsConMonitoreo);
+                return $est;
+            });
+
+        // 7. Lista de provincias únicas para el filtro
+        $provincias = Establecimiento::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->whereNotNull('provincia')
+            ->distinct()
+            ->orderBy('provincia')
+            ->pluck('provincia');
+
         return view('usuario.dashboard.dashboard', compact(
             'totalActas',
             'actasPorMes',
-            'topEstablecimientos'
+            'topEstablecimientos',
+            'establecimientosMap',
+            'provincias'
         ));
     }
 

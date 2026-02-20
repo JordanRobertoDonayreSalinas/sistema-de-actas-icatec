@@ -23,7 +23,9 @@ class Establecimiento extends Model
         'microred',
         'red',
         'responsable',
-        'categoria' // <--- ESTO FALTABA PARA PODER ACTUALIZARLO
+        'categoria',
+        'latitud',
+        'longitud'
     ];
 
     public $timestamps = false;
