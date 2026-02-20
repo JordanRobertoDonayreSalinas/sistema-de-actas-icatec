@@ -335,6 +335,6 @@ class PartoController extends Controller
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('Parto_' . $idActa . '.pdf');
+        return $pdf->stream('12_Parto_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

@@ -80,6 +80,6 @@ class TriajePdfController extends Controller
 
         // 4. Retornar el PDF al navegador
         // 'stream' lo muestra en el navegador, 'download' lo descarga directo.
-        return $pdf->stream('Reporte_Triaje_' . $acta->id . '.pdf');
+        return $pdf->stream('03_Triaje_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

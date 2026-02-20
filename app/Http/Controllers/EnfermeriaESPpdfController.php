@@ -140,6 +140,6 @@ class EnfermeriaESPpdfController extends Controller
         $pdf->setOption('isPhpEnabled', true);
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Reporte_Enfermeria_' . $acta->id . '.pdf');
+        return $pdf->stream("04.5_Enfermeria_ESP_Acta_{$acta->numero_acta}.pdf");
     }
 }

@@ -19,6 +19,7 @@ class GestionAdministrativaESPpdfController extends Controller
     {
         // 1. Obtener datos de la cabecera (Establecimiento, Equipo, Usuario)
         $monitoreo = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'user'])->findOrFail($id);
+        $acta = CabeceraMonitoreo::with('establecimiento:id,nombre,codigo')->findOrFail($id);
 
         // 2. Obtener los datos guardados del módulo específico ('gestion_admin_esp')
         $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
@@ -91,6 +92,6 @@ class GestionAdministrativaESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_Gestion_Admin_ESP_Acta_{$id}.pdf");
+        return $pdf->stream('01_GestionAdmin_Acta_ESP_' . $acta->numero_acta . '.pdf');
     }
 }

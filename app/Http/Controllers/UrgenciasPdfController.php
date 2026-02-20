@@ -93,6 +93,6 @@ class UrgenciasPdfController extends Controller
         // =========================================================================
 
         // 7. Retornar PDF
-        return $pdf->stream("Reporte_Urgencias_Acta_" . str_pad($id, 5, '0', STR_PAD_LEFT) . ".pdf");
+        return $pdf->stream("18_Urgencias_Acta_NOESP_{$acta->numero_acta}.pdf");
     }
 }

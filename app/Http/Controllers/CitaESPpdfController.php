@@ -138,6 +138,6 @@ class CitaESPpdfController extends Controller
         $pdf->setOption('isPhpEnabled', true);
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Reporte_Citas_' . $acta->id . '.pdf');
+        return $pdf->stream('02_Citas_Acta_ESP_' . $acta->numero_acta . '.pdf');
     }
 }

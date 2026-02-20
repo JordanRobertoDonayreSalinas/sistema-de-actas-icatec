@@ -104,6 +104,6 @@ class PsicologiaESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_psicologia_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("04.4_Psicologia_ESP_Acta_{$monitoreo->numero_acta}.pdf");
     }
 }
