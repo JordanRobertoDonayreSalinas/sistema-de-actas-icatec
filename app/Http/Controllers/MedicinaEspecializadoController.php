@@ -264,6 +264,6 @@ class MedicinaEspecializadoController extends Controller
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('Acta_Medicina_General_' . $acta->numero_acta . '.pdf');
+        return $pdf->stream('04.1_Medicina_Acta_ESP_' . $acta->numero_acta . '.pdf');
     }
 }

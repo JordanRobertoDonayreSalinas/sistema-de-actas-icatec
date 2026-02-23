@@ -77,6 +77,6 @@ class OdontologiaPdfController extends Controller
 
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Reporte_Odontologia_' . $acta->id . '.pdf');
+        return $pdf->stream('05_Odontologia_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

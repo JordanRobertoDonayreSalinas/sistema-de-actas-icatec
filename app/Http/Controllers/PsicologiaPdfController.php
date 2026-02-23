@@ -76,6 +76,6 @@ class PsicologiaPdfController extends Controller
 
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Reporte_Psicologia_' . $acta->id . '.pdf');
+        return $pdf->stream('07_Psicologia_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

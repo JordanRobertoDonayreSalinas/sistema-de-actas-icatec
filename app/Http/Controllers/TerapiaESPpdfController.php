@@ -91,6 +91,6 @@ class TerapiaESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_Terapia_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("04.7_Terapia_ESP_Acta_{$monitoreo->numero_acta}.pdf");
     }
 }

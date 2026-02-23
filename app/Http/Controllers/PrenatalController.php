@@ -336,6 +336,6 @@ class PrenatalController extends Controller
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('Prenatal_' . $idActa . '.pdf');
+        return $pdf->stream('10_Prenatal_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

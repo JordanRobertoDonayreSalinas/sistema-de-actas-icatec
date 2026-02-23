@@ -104,6 +104,6 @@ class PsiquiatriaESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_psiquiatria_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("04.2_Psiquiatria_ESP_Acta_{$monitoreo->numero_acta}.pdf");
     }
 }
