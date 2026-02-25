@@ -292,25 +292,6 @@
         </tbody>
     </table>
 
-    <div class="section-header">Gestión de Referencias</div>
-    <table class="table-data">
-        @php
-            $preguntas = [
-                'libro_registro' => '¿El libro de registro de referencias se encuentra actualizado?',
-                'contrareferencias' => '¿Se realiza el seguimiento y archivo de las contrareferencias?',
-                'flujo_paciente' => '¿Existe un flujo definido para la referencia del paciente?',
-                'criterios_medicos' => '¿Las referencias cumplen criterios técnicos?',
-                'comunicacion_destino' => '¿Se comunica con el destino antes de enviar al paciente?'
-            ];
-        @endphp
-        @foreach($preguntas as $key => $texto)
-        <tr>
-            <td width="85%">{{ $texto }}</td>
-            <td width="15%" class="text-center uppercase">{{ $datos['preguntas'][$key] ?? 'N/A' }}</td>
-        </tr>
-        @endforeach
-    </table>
-
     {{-- CONECTIVIDAD --}}
         <div class="section-header">Tipo de Conectividad</div>
         <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;">
@@ -330,6 +311,25 @@
                 <td colspan="3">{{ $datos['operador_servicio'] ?? 'N/A' }}</td>
             </tr>
         </table>
+
+    <div class="section-header">Gestión de Referencias</div>
+    <table class="table-data">
+        @php
+            $preguntas = [
+                'libro_registro' => '¿El libro de registro de referencias se encuentra actualizado?',
+                'contrareferencias' => '¿Se realiza el seguimiento y archivo de las contrareferencias?',
+                'flujo_paciente' => '¿Existe un flujo definido para la referencia del paciente?',
+                'criterios_medicos' => '¿Las referencias cumplen criterios técnicos?',
+                'comunicacion_destino' => '¿Se comunica con el destino antes de enviar al paciente?'
+            ];
+        @endphp
+        @foreach($preguntas as $key => $texto)
+        <tr>
+            <td width="85%">{{ $texto }}</td>
+            <td width="15%" class="text-center uppercase">{{ $datos['preguntas'][$key] ?? 'N/A' }}</td>
+        </tr>
+        @endforeach
+    </table>
 
     <!-- @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
     <div class="section-header">Soporte</div>

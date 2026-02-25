@@ -763,7 +763,10 @@
                     <div id="reader" class="w-full bg-black min-h-[250px] relative"></div>
                 </div>
             </div>
-
+            
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+                
             {{-- ======================================================================== --}}
             {{-- SECCIÓN 7: DATOS DE GESTIÓN (PDF SECCION 7)                            --}}
             {{-- ======================================================================== --}}

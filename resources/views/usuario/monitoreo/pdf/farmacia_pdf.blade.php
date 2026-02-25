@@ -289,24 +289,6 @@
         </tbody>
     </table>
 
-    <div class="section-header">Gestión de Stock y Almacenamiento</div>
-    <table class="table-data">
-        @php
-            $preguntas = [
-                'sis_gestion' => '¿Cuenta con sistema de gestión para el control de inventario?',
-                'stock_actual' => '¿El stock físico coincide con el reporte del sistema?',
-                'fua_sismed' => '¿Realiza la digitación oportuna en el SISMED?',
-                'inventario_anual' => '¿Ha realizado el inventario anual de medicamentos e insumos?'
-            ];
-        @endphp
-        @foreach($preguntas as $key => $texto)
-        <tr>
-            <td width="85%">{{ mb_strtoupper($texto, 'UTF-8') }}</td>
-            <td width="15%" class="text-center uppercase">{{ $datos['preguntas'][$key] ?? 'N/A' }}</td>
-        </tr>
-        @endforeach
-    </table>
-    
     {{-- CONECTIVIDAD --}}
         <div class="section-header">Tipo de Conectividad</div>
         <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;">
@@ -326,6 +308,24 @@
                 <td colspan="3">{{ $datos['operador_servicio'] ?? 'N/A' }}</td>
             </tr>
         </table>
+
+    <div class="section-header">Gestión de Stock y Almacenamiento</div>
+    <table class="table-data">
+        @php
+            $preguntas = [
+                'sis_gestion' => '¿Cuenta con sistema de gestión para el control de inventario?',
+                'stock_actual' => '¿El stock físico coincide con el reporte del sistema?',
+                'fua_sismed' => '¿Realiza la digitación oportuna en el SISMED?',
+                'inventario_anual' => '¿Ha realizado el inventario anual de medicamentos e insumos?'
+            ];
+        @endphp
+        @foreach($preguntas as $key => $texto)
+        <tr>
+            <td width="85%">{{ mb_strtoupper($texto, 'UTF-8') }}</td>
+            <td width="15%" class="text-center uppercase">{{ $datos['preguntas'][$key] ?? 'N/A' }}</td>
+        </tr>
+        @endforeach
+    </table>
         
     @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
     <div class="section-header">Soporte</div>

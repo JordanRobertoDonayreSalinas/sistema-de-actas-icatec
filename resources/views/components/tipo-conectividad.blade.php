@@ -1,8 +1,11 @@
-@props(['contenido', 'color' => 'indigo'])
+@props(['num', 'contenido', 'color' => 'indigo'])
 
 <div class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-        <span class="h-12 w-12 rounded-2xl bg-{{ $color }}-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-{{ $color }}-200 section-number"></span>
+        @if(trim($num ?? '') !== '')
+        <span
+            class="section-number bg-{{ $color }}-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">{{ $num }}</span>
+        @endif
         <h3 class="text-{{ $color }}-900 font-black text-lg uppercase tracking-tight">TIPO DE CONECTIVIDAD</h3>
     </div>
 

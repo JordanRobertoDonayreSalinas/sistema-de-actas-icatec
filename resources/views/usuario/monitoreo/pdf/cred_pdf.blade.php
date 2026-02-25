@@ -313,6 +313,26 @@
         </tbody>
     </table>
 
+    {{-- CONECTIVIDAD --}}
+    <div class="section-header">Tipo de Conectividad</div>
+    <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;">
+        <tr>
+            <th style="width: 30%; background-color: #f8fafc;">Tipo de conexión:</th>
+            <td style="width: 20%;">{{ $datos['tipo_conectividad'] ?? 'N/A' }}</td>
+
+            @if(($datos['tipo_conectividad'] ?? '') === 'WIFI')
+                <th style="width: 25%; background-color: #f8fafc;">Fuente del WiFi:</th>
+                <td style="width: 25%;">{{ $datos['wifi_fuente'] ?? 'N/A' }}</td>
+            @else
+                <td colspan="2"></td>
+            @endif
+        </tr>
+        <tr>
+            <th style="background-color: #f8fafc;">Operador de servicio:</th>
+            <td colspan="3">{{ $datos['operador_servicio'] ?? 'N/A' }}</td>
+        </tr>
+    </table>
+
     <div class="section-header">Métricas de Atención Mes Actual</div>
     <table class="table">
         <tr>
@@ -323,25 +343,6 @@
         </tr>
     </table>
     
-     {{-- CONECTIVIDAD --}}
-        <div class="section-header">Tipo de Conectividad</div>
-        <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;">
-            <tr>
-                <th style="width: 30%; background-color: #f8fafc;">Tipo de conexión:</th>
-                <td style="width: 20%;">{{ $datos['tipo_conectividad'] ?? 'N/A' }}</td>
-
-                @if(($datos['tipo_conectividad'] ?? '') === 'WIFI')
-                    <th style="width: 25%; background-color: #f8fafc;">Fuente del WiFi:</th>
-                    <td style="width: 25%;">{{ $datos['wifi_fuente'] ?? 'N/A' }}</td>
-                @else
-                    <td colspan="2"></td>
-                @endif
-            </tr>
-            <tr>
-                <th style="background-color: #f8fafc;">Operador de servicio:</th>
-                <td colspan="3">{{ $datos['operador_servicio'] ?? 'N/A' }}</td>
-            </tr>
-        </table>
     @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
        
 
