@@ -445,6 +445,9 @@
                     </div> 
                 </div>
 
+                {{-- 08.- TIPO DE CONECTIVIDAD (Componente) --}}
+                    <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
                 {{-- 04. GESTIÓN DE REFERENCIAS --}}
                 <div class="space-y-6 mt-12">
                     {{-- Encabezado --}}
@@ -519,9 +522,6 @@
 
                     </div>
                 </div>
-
-                {{-- 05.- TIPO DE CONECTIVIDAD (Componente) --}}
-                    <x-tipo-conectividad :num="6" :contenido="$detalle->contenido ?? []" color="indigo" />
 
                 {{-- 06. COMENTARIOS Y OBSERVACIONES GENERALES --}}
                 <div class="space-y-6">

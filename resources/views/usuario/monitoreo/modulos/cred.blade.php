@@ -582,6 +582,9 @@
                         </div> 
                     </div>
 
+                    {{-- 08.- TIPO DE CONECTIVIDAD (Componente) --}}
+                    <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
                     {{-- 04. MÉTRICAS --}}
                     <div class="space-y-8">
                         <div class="flex items-center gap-4">
@@ -727,9 +730,6 @@
                                 placeholder="Describa hallazgos relevantes, dificultades adicionales o recomendaciones para este establecimiento...">{{ $detalle->contenido['observaciones_generales'] ?? '' }}</textarea>
                         </div>
                     </div>
-
-                    {{-- 08.- TIPO DE CONECTIVIDAD (Componente) --}}
-                    <x-tipo-conectividad num="" :contenido="$detalle->contenido ?? []" color="indigo" />
 
                     {{-- 09. EVIDENCIAS --}}
                     <div class="space-y-8">

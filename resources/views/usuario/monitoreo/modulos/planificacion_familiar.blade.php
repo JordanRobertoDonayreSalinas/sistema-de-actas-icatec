@@ -580,6 +580,9 @@
                     </div> 
                 </div>
 
+                {{-- 08.- TIPO DE CONECTIVIDAD (Componente) --}}
+                    <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
                 {{-- 04. PROCESOS Y CALIDAD --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
@@ -671,9 +674,6 @@
 
                     </div> {{-- FIN DEL CONTENEDOR --}}
                 </div>
-                
-                {{-- 05.- TIPO DE CONECTIVIDAD (Componente) --}}
-                    <x-tipo-conectividad :num="6" :contenido="$detalle->contenido ?? []" color="indigo" />
                 
                 {{-- 06. SOPORTE --}}
                 <div class="space-y-6" 
