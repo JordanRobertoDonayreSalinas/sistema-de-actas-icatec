@@ -252,6 +252,14 @@
                     item.codigo = (tipo + ' ' + valor).trim(); 
                     return item;
                 });
+
+                // Leer campos de conectividad (vienen de inputs ocultos fuera del form Alpine)
+                formToSend.conectividad = {
+                    tipo_conectividad: document.getElementById('tipo_conectividad_input')?.value || null,
+                    wifi_fuente:       document.getElementById('wifi_fuente_input')?.value || null,
+                    operador_servicio: document.querySelector('[name="contenido[operador_servicio]"]')?.value || null,
+                };
+
                 let fd = new FormData();
                 fd.append('data', JSON.stringify(formToSend));
                 this.files.forEach(f => fd.append('fotos[]', f));

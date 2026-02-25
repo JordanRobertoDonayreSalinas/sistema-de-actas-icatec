@@ -290,6 +290,32 @@
         </tbody>
     </table>
 
+    {{-- SECCIÓN CONECTIVIDAD --}}
+    @php
+        $tipoConectividad = $dbConectividad->tipo_conectividad ?? null;
+        $wifiFuente       = $dbConectividad->wifi_fuente ?? null;
+        $operadorServicio = $dbConectividad->operador_servicio ?? null;
+    @endphp
+    <div class="section-header">{{ $i++ }}. CONECTIVIDAD</div>
+    <table class="details-table">
+        <tr>
+            <td class="label-cell">TIPO DE CONECTIVIDAD:</td>
+            <td class="value-cell" colspan="3">{{ $tipoConectividad ?? '---' }}</td>
+        </tr>
+        @if($tipoConectividad == 'WIFI')
+        <tr>
+            <td class="label-cell">FUENTE DE WIFI:</td>
+            <td class="value-cell" colspan="3">{{ $wifiFuente ?? '---' }}</td>
+        </tr>
+        @endif
+        @if($tipoConectividad != 'SIN CONECTIVIDAD')
+        <tr>
+            <td class="label-cell">OPERADOR DE SERVICIO:</td>
+            <td class="value-cell" colspan="3">{{ $operadorServicio ?? '---' }}</td>
+        </tr>
+        @endif
+    </table>
+
     {{-- 7. SOPORTE (CONDICIONAL) --}}
     @if(isset($dbInicioLabores->utiliza_sihce) && $dbInicioLabores->utiliza_sihce === 'SI')
         <div class="section-header">{{ $i++ }}. SOPORTE</div>

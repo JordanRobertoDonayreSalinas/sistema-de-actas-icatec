@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Módulo 17: LABORATORIO - Acta {{ $acta->numero_acta }}</title>
+    <title>Módulo 17: Laboratorio - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* MÁRGENES: 2.5cm abajo para reservar espacio al pie de página del Controlador */
         @page { margin: 1.2cm 1.5cm 2.5cm 1.5cm; }
@@ -56,6 +56,8 @@
 </head>
 <body>
 
+    @php $n = 1; @endphp
+
     {{-- ENCABEZADO --}}
     <div class="header">
         <h1>Módulo 17: LABORATORIO</h1>
@@ -67,7 +69,7 @@
     </div>
 
     {{-- 1. DATOS GENERALES --}}
-    <div class="section-title">1. DATOS GENERALES</div>
+    <div class="section-title">{{ $n++ }}. DATOS GENERALES</div>
     <table>
         <tbody>
             
@@ -79,7 +81,7 @@
     </table>
 
     {{-- 2. DATOS DEL PROFESIONAL --}}
-    <div class="section-title">2. DATOS DEL PROFESIONAL</div>
+    <div class="section-title">{{ $n++ }}. DATOS DEL PROFESIONAL</div>
     <table>
         <tbody>
             <tr>
@@ -123,7 +125,7 @@
 
     {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
     @if(isset($detalle->contenido['tipo_dni']) && $detalle->contenido['tipo_dni'] != '')
-    <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
+    <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
     <table>
         <tbody>
             <tr>
@@ -149,7 +151,7 @@
     @endif
 
     {{-- 4. DETALLES DE CAPACITACIÓN --}}
-    <div class="section-title">4. DETALLES DE CAPACITACIÓN</div>
+    <div class="section-title">{{ $n++ }}. DETALLES DE CAPACITACIÓN</div>
     <table>
         <tbody>
 
@@ -167,7 +169,7 @@
     </table>
 
     {{-- 5. EQUIPOS DE COMPUTO --}}
-    <div class="section-title">5. EQUIPOS DE COMPUTO</div>
+    <div class="section-title">{{ $n++ }}. EQUIPOS DE COMPUTO</div>
     @if($equipos->count() > 0)
         <table>
             <thead>
@@ -197,8 +199,36 @@
         <div style="color: #94a3b8; font-style: italic; padding: 10px; border: 1px solid #e2e8f0;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
 
+    {{-- SECCIÓN: CONECTIVIDAD --}}
+    @php
+        $tipoConectividad = $detalle->contenido['tipo_conectividad'] ?? null;
+        $wifiFuente       = $detalle->contenido['wifi_fuente'] ?? null;
+        $operadorServicio = $detalle->contenido['operador_servicio'] ?? null;
+    @endphp
+    <div class="section-title">{{ $n++ }}. CONECTIVIDAD</div>
+    <table>
+        <tbody>
+            <tr>
+                <td class="bg-label">Tipo de Conectividad</td>
+                <td class="uppercase">{{ $tipoConectividad ?? '---' }}</td>
+            </tr>
+            @if($tipoConectividad == 'WIFI')
+            <tr>
+                <td class="bg-label">Fuente de WiFi</td>
+                <td class="uppercase">{{ $wifiFuente ?? '---' }}</td>
+            </tr>
+            @endif
+            @if($tipoConectividad != 'SIN CONECTIVIDAD')
+            <tr>
+                <td class="bg-label">Operador de Servicio</td>
+                <td class="uppercase">{{ $operadorServicio ?? '---' }}</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+
     {{-- 6. SOPORTE --}}
-    <div class="section-title">6. SOPORTE</div>
+    <div class="section-title">{{ $n++ }}. SOPORTE</div>
     <table>
         <tbody>
             <tr>
@@ -213,7 +243,7 @@
     </table>
 
     {{-- 7. PROCESOS Y CALIDAD --}}
-    <div class="section-title">7. PROCESOS Y CALIDAD</div>
+    <div class="section-title">{{ $n++ }}. PROCESOS Y CALIDAD</div>
     <table>
         <tbody>
             <tr>
@@ -228,13 +258,13 @@
     </table>
 
     {{-- 8. COMENTARIOS --}}
-    <div class="section-title">8. COMENTARIOS</div>
+    <div class="section-title">{{ $n++ }}. COMENTARIOS</div>
     <div style="border: 1px solid #e2e8f0; padding: 10px; min-height: 40px; text-transform: uppercase; font-size: 10px;">
         {{ $detalle->contenido['comentarios'] ?? 'SIN COMENTARIOS REGISTRADOS.' }}
     </div>
 
     {{-- 9. EVIDENCIA FOTOGRÁFICA --}}
-    <div class="section-title">9. EVIDENCIA FOTOGRÁFICA</div>
+    <div class="section-title">{{ $n++ }}. EVIDENCIA FOTOGRÁFICA</div>
     @php
         $fotoPath = $detalle->contenido['foto_evidencia'] ?? null;
         if(is_array($fotoPath)) $fotoPath = $fotoPath[0] ?? null;
@@ -252,7 +282,7 @@
 
     {{-- 10. FIRMA --}}
     <div class="firma-section">
-        <div class="section-title">10. FIRMA</div>
+        <div class="section-title">{{ $n++ }}. FIRMA</div>
         <div class="firma-container">
             <div class="firma-box">
                 <div class="firma-linea"></div>

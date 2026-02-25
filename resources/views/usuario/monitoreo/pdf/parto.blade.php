@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Módulo 12: ATENCIÓN DE PARTO - ACTA {{ $acta->id }}</title>
+    <title>Módulo 12: Atención de Parto - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* --- CONFIGURACIÓN DE PÁGINA --- */
         @page {
@@ -173,6 +173,8 @@
         SISTEMA DE ACTAS
     </div>
 
+    @php $n = 1; @endphp
+
     <div class="header">
         <h1>Módulo 12: ATENCIÓN DE PARTO</h1>
         <div class="header-sub">
@@ -184,7 +186,7 @@
     </div>
 
     {{-- SECCIÓN 0: DATOS DEL CONSULTORIO --}}
-    <div class="section-title">1. DETALLES DEL CONSULTORIO</div>
+    <div class="section-title">{{ $n++ }}. DETALLES DEL CONSULTORIO</div>
     <table>
         <tr>
             <td class="bg-label">NRO. DE CONSULTORIOS</td>
@@ -197,7 +199,7 @@
     </table>
 
     {{-- SECCIÓN 1: DATOS DEL RESPONSABLE --}}
-    <div class="section-title">2. DATOS DEL RESPONSABLE Y AMBIENTE</div>
+    <div class="section-title">{{ $n++ }}. DATOS DEL RESPONSABLE Y AMBIENTE</div>
     <table>
         <tr>
             <td class="bg-label">APELLIDOS Y NOMBRES</td>
@@ -247,7 +249,7 @@
 
     {{-- SECCIÓN 2: DOCUMENTACIÓN Y SIHCE --}}
     @if (($registro->personal_tipo_doc ?? '') == 'DNI' || ($registro->personal_tipo_doc ?? '') == 'DNIe')
-        <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
+        <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
         <table>
             <tr>
                 <td class="bg-label">TIPO DNI FÍSICO</td>
@@ -266,7 +268,7 @@
     @endif
 
     {{-- SECCIÓN 3: CAPACITACIÓN --}}
-    <div class="section-title">4. DETALLES DE CAPACITACION </div>
+    <div class="section-title">{{ $n++ }}. DETALLES DE CAPACITACION </div>
     <table>
         <tr>
             <td class="bg-label">¿RECIBIÓ CAPACITACIÓN?</td>
@@ -287,7 +289,7 @@
     </table>
 
     {{-- SECCIÓN 4: MATERIALES --}}
-    <div class="section-title">5. MATERIALES</div>
+    <div class="section-title">{{ $n++ }}. MATERIALES</div>
     <table>
         <tr>
             <td class="bg-label">AL INICIAR LABORES CUENTA CON:</td>
@@ -302,7 +304,7 @@
     </table>
 
     {{-- SECCIÓN 5: EQUIPAMIENTO --}}
-    <div class="section-title">6. EQUIPAMIENTO</div>
+    <div class="section-title">{{ $n++ }}. EQUIPAMIENTO</div>
     <table>
         <thead>
             <tr>
@@ -351,8 +353,34 @@
         </table>
     @endif
 
+    {{-- SECCIÓN: CONECTIVIDAD --}}
+    @php
+        $tipoConectividad = $registro->tipo_conectividad ?? null;
+        $wifiFuente       = $registro->wifi_fuente ?? null;
+        $operadorServicio = $registro->operador_servicio ?? null;
+    @endphp
+    <div class="section-title">{{ $n++ }}. CONECTIVIDAD</div>
+    <table>
+        <tr>
+            <td class="bg-label">TIPO DE CONECTIVIDAD</td>
+            <td>{{ $tipoConectividad ?? '---' }}</td>
+        </tr>
+        @if($tipoConectividad == 'WIFI')
+        <tr>
+            <td class="bg-label">FUENTE DE WIFI</td>
+            <td>{{ $wifiFuente ?? '---' }}</td>
+        </tr>
+        @endif
+        @if($tipoConectividad != 'SIN CONECTIVIDAD')
+        <tr>
+            <td class="bg-label">OPERADOR DE SERVICIO</td>
+            <td>{{ $operadorServicio ?? '---' }}</td>
+        </tr>
+        @endif
+    </table>
+
     {{-- SECCIÓN 6: DATOS DE GESTIÓN --}}
-    <div class="section-title">7. DATOS DE GESTIÓN</div>
+    <div class="section-title">{{ $n++ }}. DATOS DE GESTIÓN</div>
     <table>
 
         <tr>
@@ -385,7 +413,7 @@
 
     {{-- SECCIÓN 7: SOPORTE Y DIFICULTADES --}}
     @if (($registro->utiliza_sihce ?? '') == 'SI')
-        <div class="section-title">8. SOPORTE</div>
+        <div class="section-title">{{ $n++ }}. SOPORTE</div>
         <table>
             <tr>
                 <td class="bg-label">ANTE DIFICULTADES COMUNICA A:</td>
@@ -399,7 +427,7 @@
     @endif
 
     {{-- SECCIÓN 8: EVIDENCIA --}}
-    <div class="section-title">9. EVIDENCIA FOTOGRÁFICA</div>
+    <div class="section-title">{{ $n++ }}. EVIDENCIA FOTOGRÁFICA</div>
     @php
         $fotos = $registro->fotos_evidencia ?? [];
         $cantidad = count($fotos);
@@ -432,7 +460,7 @@
 
     {{-- FIRMAS --}}
     <div class="firma-section">
-        <div class="section-title">10. CONFORMIDAD</div>
+        <div class="section-title">{{ $n++ }}. CONFORMIDAD</div>
         <br>
         <div class="firma-container">
             <div class="firma-linea">

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Módulo 16: REFCON - Acta {{ $acta->id }}</title>
+    <title>Módulo 16: REFCON - Acta {{ $acta->numero_acta }}</title>
     <style>
         @page { margin: 1.5cm; }
         body {
@@ -293,23 +293,29 @@
     </table>
 
     {{-- CONECTIVIDAD --}}
-        <div class="section-header">Tipo de Conectividad</div>
+        <div class="section-header">CONECTIVIDAD</div>
         <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;">
+            @php
+                $tipoConectividad = $datos['tipo_conectividad'] ?? null;
+                $wifiFuente       = $datos['wifi_fuente'] ?? null;
+                $operadorServicio = $datos['operador_servicio'] ?? null;
+            @endphp
             <tr>
                 <th style="width: 30%; background-color: #f8fafc;">Tipo de conexión:</th>
-                <td style="width: 20%;">{{ $datos['tipo_conectividad'] ?? 'N/A' }}</td>
-
-                @if(($datos['tipo_conectividad'] ?? '') === 'WIFI')
-                    <th style="width: 25%; background-color: #f8fafc;">Fuente del WiFi:</th>
-                    <td style="width: 25%;">{{ $datos['wifi_fuente'] ?? 'N/A' }}</td>
-                @else
-                    <td colspan="2"></td>
-                @endif
+                <td>{{ $tipoConectividad ?? 'N/A' }}</td>
             </tr>
+            @if($tipoConectividad == 'WIFI')
+            <tr>
+                <th style="background-color: #f8fafc;">Fuente del WiFi:</th>
+                <td>{{ $wifiFuente ?? 'N/A' }}</td>
+            </tr>
+            @endif
+            @if($tipoConectividad != 'SIN CONECTIVIDAD')
             <tr>
                 <th style="background-color: #f8fafc;">Operador de servicio:</th>
-                <td colspan="3">{{ $datos['operador_servicio'] ?? 'N/A' }}</td>
+                <td>{{ $operadorServicio ?? 'N/A' }}</td>
             </tr>
+            @endif
         </table>
 
     <div class="section-header">Gestión de Referencias</div>

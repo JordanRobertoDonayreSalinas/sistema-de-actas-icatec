@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Módulo 06: Consulta Externa - Nutrición - Acta {{ $acta->numero_acta }}</title>
+    <title>Módulo 06: Nutrición - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* AJUSTAMOS EL MARGEN INFERIOR A 2CM PARA QUE QUEPA EL PIE DE PÁGINA */
         @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }

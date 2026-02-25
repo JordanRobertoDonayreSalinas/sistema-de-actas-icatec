@@ -3,7 +3,7 @@
 
     <head>
         <meta charset="UTF-8">
-        <title>REPORTE DE MONITOREO - CITAS - ACTA {{ $acta->id }}</title>
+        <title>Módulo 02: Citas - Acta {{ $acta->numero_acta }}</title>
         <style>
             /* --- CONFIGURACIÓN DE PÁGINA --- */
             @page {
@@ -176,6 +176,7 @@
     </head>
 
     <body>
+        @php $n = 1; @endphp
         <div class="footer-frame">
             SISTEMA DE ACTAS
         </div>
@@ -190,7 +191,7 @@
             </div>
         </div>
 
-        <div class="section-title">1. DETALLES DE VENTANILLA</div>
+        <div class="section-title">{{ $n++ }}. DETALLES DE VENTANILLA</div>
         <table>
             <tr>
                 <td class="bg-label">N° VENTANILLAS</td>
@@ -198,7 +199,7 @@
             </tr>
         </table>
 
-        <div class="section-title">2. DATOS DEL PROFESIONAL</div>
+        <div class="section-title">{{ $n++ }}. DATOS DEL PROFESIONAL</div>
         <table>
             <tr>
                 <td class="bg-label">APELLIDOS Y NOMBRES</td>
@@ -270,7 +271,7 @@
         </table>
 
         @if (($profesional->tipo_doc ?? '') != 'CE')
-            <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
+            <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
             <table>
                 <tr>
                     <td class="bg-label">TIPO DE DNI</td>
@@ -290,7 +291,7 @@
             </table>
         @endif
 
-        <div class="section-title">4. DETALLES DE CAPACITACIÓN</div>
+        <div class="section-title">{{ $n++ }}. DETALLES DE CAPACITACIÓN</div>
         <table>
             <tr>
                 <td class="bg-label">¿RECIBIÓ CAPACITACIÓN?</td>
@@ -304,7 +305,7 @@
             @endif
         </table>
 
-        <div class="section-title">5. MATERIALES</div>
+        <div class="section-title">{{ $n++ }}. MATERIALES</div>
         <table>
             <tr>
                 <td class="bg-label">AL INICIAR SUS LABORES CUENTA CON:</td>
@@ -313,7 +314,7 @@
             </tr>
         </table>
 
-        <div class="section-title">6. EQUIPAMIENTO</div>
+        <div class="section-title">{{ $n++ }}. EQUIPAMIENTO</div>
         <table>
             <thead>
                 <tr>
@@ -361,7 +362,33 @@
             </tr>
         </table>
 
-        <div class="section-title">7. GESTIÓN DE CITAS Y CALIDAD DE ATENCIÓN</div>
+        {{-- SECCIÓN: CONECTIVIDAD --}}
+        <div class="section-title">{{ $n++ }}. CONECTIVIDAD</div>
+        @php
+            $tipoConectividad = $registro->tipo_conectividad ?? null;
+            $wifiFuente       = $registro->wifi_fuente ?? null;
+            $operadorServicio = $registro->operador_servicio ?? null;
+        @endphp
+        <table>
+            <tr>
+                <td class="bg-label">TIPO DE CONECTIVIDAD</td>
+                <td>{{ $tipoConectividad ?? '---' }}</td>
+            </tr>
+            @if($tipoConectividad == 'WIFI')
+            <tr>
+                <td class="bg-label">FUENTE DE WIFI</td>
+                <td>{{ $wifiFuente ?? '---' }}</td>
+            </tr>
+            @endif
+            @if($tipoConectividad != 'SIN CONECTIVIDAD')
+            <tr>
+                <td class="bg-label">OPERADOR DE SERVICIO</td>
+                <td>{{ $operadorServicio ?? '---' }}</td>
+            </tr>
+            @endif
+        </table>
+
+        <div class="section-title">{{ $n++ }}. GESTIÓN DE CITAS Y CALIDAD DE ATENCIÓN</div>
 
         <table style="margin-top: 10px;">
             <thead>
@@ -401,7 +428,7 @@
                 </tr>
             </table>
 
-            <div class="section-title">8. SOPORTE</div>
+            <div class="section-title">{{ $n++ }}. SOPORTE</div>
             <table>
                 <tr>
                     <td class="bg-label">ANTE DIFICULTADES SE COMUNICA CON</td>
@@ -414,7 +441,7 @@
             </table>
         @endif
 
-        <div class="section-title">9. EVIDENCIA FOTOGRÁFICA</div>
+        <div class="section-title">{{ $n++ }}. EVIDENCIA FOTOGRÁFICA</div>
 
         @php
             $fotos = $registro->fotos_evidencia ?? [];
@@ -456,7 +483,7 @@
         @endif
 
         <div class="firma-section">
-            <div class="section-title">10. FIRMA</div>
+            <div class="section-title">{{ $n++ }}. FIRMA</div>
             <br>
             <div class="firma-container">
                 <div class="firma-linea">
