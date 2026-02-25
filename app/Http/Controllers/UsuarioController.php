@@ -59,7 +59,7 @@ class UsuarioController extends Controller
         // 1. Obtener conteo de asistencias (Soportes) por establecimiento
         // Filtramos por tema 'Asistencia' o similar si es necesario
         $asistenciasCount = Acta::select('establecimiento_id', DB::raw('count(*) as total'))
-            ->where('tema', 'like', '%Asistencia%')
+            ->where('tipo', 'asistencia')
             ->groupBy('establecimiento_id')
             ->pluck('total', 'establecimiento_id');
 

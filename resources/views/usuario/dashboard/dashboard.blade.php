@@ -93,8 +93,8 @@
             var map = L.map('mapa-establecimientos').setView([-14.07, -75.73], 9);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
             }).addTo(map);
 
             var iconSin = {
@@ -138,11 +138,13 @@
                     var marker = L.circleMarker([lat, lon], options)
                         .addTo(map)
                         .bindPopup(
-                            '<div style="font-family:sans-serif;min-width:170px;">' +
-                            '<b style="font-size:13px;">' + e.nombre + '</b><br>' +
-                            '<span style="color:#6b7280;font-size:11px;">' + (e.distrito || '') + (e.provincia ? ' — ' + e.provincia : '') + '</span><br>' +
-                            (e.categoria ? '<span style="background:#e0f2fe;color:#0369a1;font-size:10px;padding:1px 6px;border-radius:9999px;display:inline-block;margin-top:4px;">' + e.categoria + '</span><br>' : '') +
-                            badgeMonitoreo +
+                            '<div style="font-family:sans-serif;min-width:180px;padding:5px;">' +
+                            '<div style="margin-bottom:8px;border-bottom:1px solid #f1f5f9;padding-bottom:8px;">' +
+                            '<b style="font-size:14px;color:#1e293b;display:block;">' + e.nombre + '</b>' +
+                            '<span style="color:#64748b;font-size:11px;font-weight:500;">' + (e.distrito || '') + (e.provincia ? ' — ' + e.provincia : '') + '</span>' +
+                            '</div>' +
+                            (e.categoria ? '<div style="margin-bottom:8px;"><span style="background:#f0f9ff;color:#0369a1;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;border:1px solid #bae6fd;">' + e.categoria + '</span></div>' : '') +
+                            '<div>' + badgeMonitoreo + '</div>' +
                             '</div>'
                         );
 

@@ -25,6 +25,26 @@
             max-width: none !important;
         }
 
+        /* Animación de pulsación para intensidad alta */
+        @keyframes custom-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(126, 34, 206, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(126, 34, 206, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(126, 34, 206, 0);
+            }
+        }
+
+        .high-intensity-pulse {
+            animation: custom-pulse 2s infinite;
+            border-radius: 50%;
+        }
+
         .custom-popup .leaflet-popup-content-wrapper {
             border-radius: 12px;
             padding: 0;
@@ -102,10 +122,9 @@
         (function () {
             var map = L.map('mapa-asistencias').setView([-14.07, -75.73], 9);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 20
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
             }).addTo(map);
 
             var establecimientos = @json($establecimientosMap);
@@ -131,25 +150,28 @@
 
                 var style = getMarkerStyle(e.total_asistencias);
 
+                var className = style.pulse ? 'high-intensity-pulse' : '';
+
                 var marker = L.circleMarker([lat, lon], {
                     radius: style.size / 2,
                     fillColor: style.color,
                     color: '#fff',
                     weight: 2,
                     opacity: 1,
-                    fillOpacity: 0.8
+                    fillOpacity: 0.9,
+                    className: className
                 })
                     .addTo(map)
                     .bindPopup(`
-                                <div class="p-4 min-w-[200px]">
-                                    <h4 class="font-bold text-slate-800 text-sm mb-1">${e.nombre}</h4>
-                                    <p class="text-xs text-slate-500 mb-2">${e.distrito} — ${e.provincia}</p>
-                                    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase">Asistencias:</span>
-                                        <span class="text-sm font-black text-indigo-600">${e.total_asistencias}</span>
+                                    <div class="p-4 min-w-[210px] bg-white">
+                                        <h4 class="font-black text-slate-800 text-sm mb-1 leading-tight">${e.nombre}</h4>
+                                        <p class="text-[11px] font-medium text-slate-500 mb-3 uppercase tracking-wider">${e.distrito} — ${e.provincia}</p>
+                                        <div class="flex items-center justify-between bg-indigo-50 px-3 py-2.5 rounded-xl border border-indigo-100/50">
+                                            <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Total Asistencias</span>
+                                            <span class="text-base font-black text-indigo-600">${e.total_asistencias}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            `, { className: 'custom-popup' });
+                                `, { className: 'custom-popup' });
 
                 markers.push({ marker: marker, provincia: e.provincia });
             });
