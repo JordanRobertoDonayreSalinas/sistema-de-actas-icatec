@@ -374,6 +374,12 @@
             {{-- TIPO DE CONECTIVIDAD --}}
             <x-tipo-conectividad :num="7" :contenido="$detalle->contenido ?? []" color="indigo" />
 
+            {{-- TIPO DE CONECTIVIDAD --}}
+            <x-tipo-conectividad :num="7" :contenido="$detalle->contenido ?? []" color="indigo" />
+
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
             {{-- SECCIÓN 7: SOPORTE TÉCNICO --}}
             <div id="seccion_soporte" class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }} seccion-numerada">
                 <div class="flex items-center gap-4 mb-8">
