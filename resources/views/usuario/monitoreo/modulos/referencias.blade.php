@@ -520,6 +520,9 @@
                     </div>
                 </div>
 
+                {{-- 05.- TIPO DE CONECTIVIDAD (Componente) --}}
+                    <x-tipo-conectividad :num="6" :contenido="$detalle->contenido ?? []" color="indigo" />
+
                 {{-- 06. COMENTARIOS Y OBSERVACIONES GENERALES --}}
                 <div class="space-y-6">
                     <div class="flex items-center gap-4">

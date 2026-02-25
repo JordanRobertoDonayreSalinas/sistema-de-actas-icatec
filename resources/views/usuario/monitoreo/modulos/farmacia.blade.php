@@ -601,7 +601,10 @@
                     </div>
                 </div>
 
-                {{-- 05. SOPORTE --}}
+                {{-- 05.- TIPO DE CONECTIVIDAD (Componente) --}}
+                    <x-tipo-conectividad :num="6" :contenido="$detalle->contenido ?? []" color="indigo" />
+
+                {{-- 06. SOPORTE --}}
                 <div class="space-y-6" 
                 x-show="utilizaSihce === 'SI'"
                 x-cloak
@@ -668,7 +671,7 @@
                     </div>
                 </div>
 
-                {{-- 06. COMENTARIOS Y OBSERVACIONES GENERALES --}}
+                {{-- 07. COMENTARIOS Y OBSERVACIONES GENERALES --}}
                 <div class="space-y-6">
                     <div class="flex items-center gap-4">
                         <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
@@ -687,7 +690,7 @@
                     </div>
                 </div>
 
-                {{-- 07. EVIDENCIAS --}}
+                {{-- 08. EVIDENCIAS --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
                         <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
