@@ -1,0 +1,15 @@
+{
+    "id": 1,
+    "codigo": "3372",
+    "nombre": "PACHACUTEC",
+    "provincia": "ICA",
+    "distrito": "PACHACUTEC",
+    "categoria": "I-3",
+    "red": "ICA-PALPA-NAZCA",
+    "microred": "PUEBLO NUEVO",
+    "responsable": "ROGER VIDAL GALA ESCOBAR",
+    "created_at": "0000-00-00 00:00:00",
+    "updated_at": "0000-00-00 00:00:00",
+    "latitud": -1415234688,
+    "longitud": -7569114112
+}

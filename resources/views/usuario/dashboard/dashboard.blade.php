@@ -97,23 +97,23 @@
                 maxZoom: 18,
             }).addTo(map);
 
-            // Marcador rojo — sin actas de monitoreo
-            var iconSin = L.divIcon({
-                html: '<div style="background:#ef4444;width:13px;height:13px;border-radius:50%;border:2px solid white;box-shadow:0 1px 5px rgba(239,68,68,0.6);"></div>',
-                className: '',
-                iconSize: [13, 13],
-                iconAnchor: [6, 6],
-                popupAnchor: [0, -8]
-            });
+            var iconSin = {
+                radius: 6,
+                fillColor: "#ef4444",
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            };
 
-            // Marcador verde — con actas de monitoreo
-            var iconCon = L.divIcon({
-                html: '<div style="background:#10b981;width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 1px 6px rgba(16,185,129,0.7);"></div>',
-                className: '',
-                iconSize: [16, 16],
-                iconAnchor: [8, 8],
-                popupAnchor: [0, -10]
-            });
+            var iconCon = {
+                radius: 8,
+                fillColor: "#10b981",
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            };
 
             var establecimientos = @json($establecimientosMap);
 
@@ -123,14 +123,19 @@
             establecimientos.forEach(function (e) {
                 var lat = parseFloat(e.latitud);
                 var lon = parseFloat(e.longitud);
+
+                // Normalización si los datos vienen escalados por 10^8 (ej: -1415234688)
+                if (Math.abs(lat) > 180) lat = lat / 100000000;
+                if (Math.abs(lon) > 180) lon = lon / 100000000;
+
                 if (!isNaN(lat) && !isNaN(lon)) {
                     var tieneMonitoreo = e.has_monitoreo;
-                    var icon = tieneMonitoreo ? iconCon : iconSin;
+                    var options = tieneMonitoreo ? iconCon : iconSin;
                     var badgeMonitoreo = tieneMonitoreo
                         ? '<span style="background:#d1fae5;color:#065f46;font-size:10px;padding:1px 7px;border-radius:9999px;display:inline-block;margin-top:5px;font-weight:600;">✔ Con monitoreo</span>'
                         : '<span style="background:#fee2e2;color:#991b1b;font-size:10px;padding:1px 7px;border-radius:9999px;display:inline-block;margin-top:5px;">Sin monitoreo</span>';
 
-                    var marker = L.marker([lat, lon], { icon: icon })
+                    var marker = L.circleMarker([lat, lon], options)
                         .addTo(map)
                         .bindPopup(
                             '<div style="font-family:sans-serif;min-width:170px;">' +

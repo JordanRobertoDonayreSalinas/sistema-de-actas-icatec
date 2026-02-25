@@ -122,37 +122,34 @@
             establecimientos.forEach(function (e) {
                 var lat = parseFloat(e.latitud);
                 var lon = parseFloat(e.longitud);
+
+                // Normalización si los datos vienen escalados por 10^8
+                if (Math.abs(lat) > 180) lat = lat / 100000000;
+                if (Math.abs(lon) > 180) lon = lon / 100000000;
+
                 if (isNaN(lat) || isNaN(lon)) return;
 
                 var style = getMarkerStyle(e.total_asistencias);
 
-                var iconHtml = `<div class="relative flex items-center justify-center">
-                        ${style.pulse ? '<div class="absolute w-full h-full rounded-full bg-' + (style.color === '#7e22ce' ? 'purple-500' : 'blue-500') + ' animate-ping opacity-25"></div>' : ''}
-                        <div style="background:${style.color}; width:${style.size}px; height:${style.size}px;" 
-                             class="rounded-full border-2 border-white shadow-lg flex items-center justify-center text-[8px] text-white font-bold">
-                             ${e.total_asistencias > 5 ? e.total_asistencias : ''}
-                        </div>
-                    </div>`;
-
-                var icon = L.divIcon({
-                    html: iconHtml,
-                    className: '',
-                    iconSize: [style.size, style.size],
-                    iconAnchor: [style.size / 2, style.size / 2]
-                });
-
-                var marker = L.marker([lat, lon], { icon: icon })
+                var marker = L.circleMarker([lat, lon], {
+                    radius: style.size / 2,
+                    fillColor: style.color,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                })
                     .addTo(map)
                     .bindPopup(`
-                            <div class="p-4 min-w-[200px]">
-                                <h4 class="font-bold text-slate-800 text-sm mb-1">${e.nombre}</h4>
-                                <p class="text-xs text-slate-500 mb-2">${e.distrito} — ${e.provincia}</p>
-                                <div class="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Asistencias:</span>
-                                    <span class="text-sm font-black text-indigo-600">${e.total_asistencias}</span>
+                                <div class="p-4 min-w-[200px]">
+                                    <h4 class="font-bold text-slate-800 text-sm mb-1">${e.nombre}</h4>
+                                    <p class="text-xs text-slate-500 mb-2">${e.distrito} — ${e.provincia}</p>
+                                    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">Asistencias:</span>
+                                        <span class="text-sm font-black text-indigo-600">${e.total_asistencias}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        `, { className: 'custom-popup' });
+                            `, { className: 'custom-popup' });
 
                 markers.push({ marker: marker, provincia: e.provincia });
             });
