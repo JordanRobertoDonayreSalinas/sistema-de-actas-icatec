@@ -147,6 +147,11 @@ class CitaController extends Controller
             'dificultad_comunica_a' => $input['dificultades']['comunica'] ?? null,
             'dificultad_medio_uso'  => $input['dificultades']['medio'] ?? null,
 
+            // Conectividad
+            'tipo_conectividad'  => $input['tipo_conectividad'] ?? null,
+            'wifi_fuente'        => $input['wifi_fuente'] ?? null,
+            'operador_servicio'  => $input['operador_servicio'] ?? null,
+
             // Evidencias
             'fotos_evidencia' => $rutasFotos,
         ];

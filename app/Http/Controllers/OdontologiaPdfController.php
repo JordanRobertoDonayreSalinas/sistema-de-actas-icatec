@@ -34,7 +34,14 @@ class OdontologiaPdfController extends Controller
         // Inyectamos el updated_at como una nueva propiedad dentro de $acta
         // Le pondremos 'fecha_validacion' para no sobrescribir el updated_at original del acta
         $acta->fecha_validacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
-        // -------------------------
+
+        // Extraer datos de conectividad del JSON
+        $contenidoJson = $monitoreoModulo ? ($monitoreoModulo->contenido ?? []) : [];
+        $dbConectividad = (object) [
+            'tipo_conectividad' => $contenidoJson['tipo_conectividad'] ?? null,
+            'wifi_fuente'       => $contenidoJson['wifi_fuente'] ?? null,
+            'operador_servicio' => $contenidoJson['operador_servicio'] ?? null,
+        ];
 
         // 2. Cargar datos espec铆ficos
         
@@ -70,7 +77,8 @@ class OdontologiaPdfController extends Controller
             'dbDni',
             'dbInventario', 
             'dbDificultad', 
-            'dbFotos'
+            'dbFotos',
+            'dbConectividad'
         ));
 
         $pdf->setOption('isPhpEnabled', true);
