@@ -753,6 +753,9 @@
                 </div>
             </div>
 
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
             {{-- Modal del Escáner --}}
             <div id="scanner-modal"
                 class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 transition-all">

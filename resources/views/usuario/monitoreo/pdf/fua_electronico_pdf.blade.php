@@ -343,8 +343,8 @@
         <div style="color: #94a3b8; font-style: italic; padding: 8px;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
 
-    {{-- SECCIÓN: TIPO DE CONECTIVIDAD --}}
-    <div class="section-title">{{ $n++ }}. TIPO DE CONECTIVIDAD</div>
+    {{-- SECCIÓN: CONECTIVIDAD --}}
+    <div class="section-title">{{ $n++ }}. CONECTIVIDAD</div>
     @php
         $tipoConectividad  = $detalle->contenido['tipo_conectividad'] ?? null;
         $wifiFuente        = $detalle->contenido['wifi_fuente'] ?? null;
@@ -361,10 +361,12 @@
             <td class="uppercase">{{ $wifiFuente ?? '---' }}</td>
         </tr>
         @endif
+        @if($tipoConectividad != 'SIN CONECTIVIDAD')
         <tr>
             <td class="bg-label">Operador de Servicio</td>
             <td class="uppercase">{{ $operadorServicio ?? '---' }}</td>
         </tr>
+        @endif
     </table>
 
     {{-- SECCIÓN 9: SOPORTE (CONDICIONAL SIHCE) --}}

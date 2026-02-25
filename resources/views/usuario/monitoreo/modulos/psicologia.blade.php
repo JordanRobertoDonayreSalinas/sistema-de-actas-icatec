@@ -70,6 +70,9 @@
             {{-- 5. INVENTARIO DE EQUIPAMIENTO (Siempre visible) --}}
             <x-equipamiento model="form.inventario" />
 
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
             {{-- 6. DIFICULTADES CON EL SISTEMA (CONDICIONAL: Solo si SIHCE = SI) --}}
             <div x-show="form.profesional.utiliza_sihce === 'SI'"
                  x-transition:enter="transition ease-out duration-300"
@@ -258,6 +261,13 @@
                     item.codigo = (tipo + ' ' + valor).trim(); 
                     return item;
                 });
+
+                // Leer campos de conectividad (vienen de inputs ocultos fuera del form Alpine)
+                formToSend.conectividad = {
+                    tipo_conectividad: document.getElementById('tipo_conectividad_input')?.value || null,
+                    wifi_fuente:       document.getElementById('wifi_fuente_input')?.value || null,
+                    operador_servicio: document.querySelector('[name="contenido[operador_servicio]"]')?.value || null,
+                };
 
                 let fd = new FormData();
                 fd.append('data', JSON.stringify(formToSend));
