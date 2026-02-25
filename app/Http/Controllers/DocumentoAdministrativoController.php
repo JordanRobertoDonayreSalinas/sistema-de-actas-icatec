@@ -72,10 +72,10 @@ class DocumentoAdministrativoController extends Controller
         // Ejecutar consulta paginada
         $documentos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
 
-        // Estadísticas (Respetando los filtros de fecha actuales)
+        // Estadísticas (Respetando TODOS los filtros de la consulta actual)
         $totalDocs = $documentos->total();
 
-        $countCompletados = DocumentoAdministrativo::whereBetween('fecha', [$fecha_inicio, $fecha_fin])
+        $countCompletados = (clone $query)
             ->whereNotNull('pdf_firmado_compromiso')
             ->whereNotNull('pdf_firmado_declaracion')
             ->count();

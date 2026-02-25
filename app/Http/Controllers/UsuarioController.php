@@ -22,53 +22,12 @@ class UsuarioController extends Controller
      */
     public function index()
     {
-        // 1. Total de Actas global histórico (sin filtro de año)
-        $totalActas = Acta::count();
-
-        // 2. Mapeo de meses en español
-        $mesesEspañol = [
-            1 => 'Enero',
-            2 => 'Febrero',
-            3 => 'Marzo',
-            4 => 'Abril',
-            5 => 'Mayo',
-            6 => 'Junio',
-            7 => 'Julio',
-            8 => 'Agosto',
-            9 => 'Septiembre',
-            10 => 'Octubre',
-            11 => 'Noviembre',
-            12 => 'Diciembre'
-        ];
-
-        // 3. Actas por mes y año (Ordenado de más reciente a más antiguo)
-        // Se agrupa por año y mes para diferenciar periodos (ej. Enero 2025 vs Enero 2026)
-        $actasPorMes = Acta::selectRaw('YEAR(fecha) as anio, MONTH(fecha) as mes, COUNT(*) as total')
-            ->groupBy('anio', 'mes')
-            ->orderBy('anio', 'desc')
-            ->orderBy('mes', 'desc')
-            ->get()
-            ->map(function ($item) use ($mesesEspañol) {
-                return [
-                    // Formato: "Mes Año" (ej: Enero 2026)
-                    'nombre_mes' => $mesesEspañol[$item->mes] . ' ' . $item->anio,
-                    'total' => $item->total
-                ];
-            });
-
-        // 4. Ranking de establecimientos histórico global (Top 5 con más actividad)
-        $topEstablecimientos = Establecimiento::withCount('actas')
-            ->having('actas_count', '>', 0)
-            ->orderBy('actas_count', 'desc')
-            ->take(5)
-            ->get();
-
-        // 5. IDs de establecimientos con actas de monitoreo (tabla mon_cabecera_monitoreo)
+        // 1. IDs de establecimientos con actas de monitoreo (tabla mon_cabecera_monitoreo)
         $idsConMonitoreo = \App\Models\CabeceraMonitoreo::distinct()
             ->pluck('establecimiento_id')
             ->toArray();
 
-        // 6. Establecimientos con coordenadas para el mapa (con flag de monitoreo y provincia)
+        // 2. Establecimientos con coordenadas para el mapa (con flag de monitoreo y provincia)
         $establecimientosMap = Establecimiento::whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->get(['id', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
@@ -77,7 +36,7 @@ class UsuarioController extends Controller
                 return $est;
             });
 
-        // 7. Lista de provincias únicas para el filtro
+        // 3. Lista de provincias únicas para el filtro
         $provincias = Establecimiento::whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->whereNotNull('provincia')
@@ -86,9 +45,42 @@ class UsuarioController extends Controller
             ->pluck('provincia');
 
         return view('usuario.dashboard.dashboard', compact(
-            'totalActas',
-            'actasPorMes',
-            'topEstablecimientos',
+            'establecimientosMap',
+            'provincias'
+        ));
+    }
+
+    /**
+     * MAPA DE ASISTENCIAS TÉCNICAS
+     * Muestra la intensidad de asistencias técnicas por establecimiento.
+     */
+    public function mapaSoportes()
+    {
+        // 1. Obtener conteo de asistencias (Soportes) por establecimiento
+        // Filtramos por tema 'Asistencia' o similar si es necesario
+        $asistenciasCount = Acta::select('establecimiento_id', DB::raw('count(*) as total'))
+            ->where('tema', 'like', '%Asistencia%')
+            ->groupBy('establecimiento_id')
+            ->pluck('total', 'establecimiento_id');
+
+        // 2. Obtener establecimientos con coordenadas
+        $establecimientosMap = Establecimiento::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->get(['id', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
+            ->map(function ($est) use ($asistenciasCount) {
+                $est->total_asistencias = $asistenciasCount[$est->id] ?? 0;
+                return $est;
+            });
+
+        // 3. Lista de provincias para el filtro
+        $provincias = Establecimiento::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->whereNotNull('provincia')
+            ->distinct()
+            ->orderBy('provincia')
+            ->pluck('provincia');
+
+        return view('usuario.dashboard.mapa_soportes', compact(
             'establecimientosMap',
             'provincias'
         ));

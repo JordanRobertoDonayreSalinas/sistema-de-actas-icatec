@@ -37,6 +37,19 @@
                     class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded uppercase">Ethernet</span>
             </div>
         </div>
+
+        {{-- TARJETA SIN CONECTIVIDAD --}}
+        <div id="card_sin_conectividad" onclick="selectConectividad('SIN CONECTIVIDAD')"
+            class="cursor-pointer border-2 rounded-2xl p-6 flex items-center gap-4 transition-all hover:shadow-md md:col-span-2 {{ ($contenido['tipo_conectividad'] ?? '') == 'SIN CONECTIVIDAD' ? 'border-' . $color . '-600 bg-' . $color . '-50' : 'border-slate-200 bg-white' }}">
+            <div class="h-12 w-12 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
+                <i data-lucide="wifi-off" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-black text-slate-800 uppercase">SIN CONECTIVIDAD</h4>
+                <span
+                    class="text-[10px] font-bold text-rose-500 bg-rose-100 px-2 py-0.5 rounded uppercase">No cuenta con internet</span>
+            </div>
+        </div>
     </div>
 
     {{-- SUB-OPCIÓN: WIFI DEL ESTABLECIMIENTO O PERSONAL --}}
@@ -74,13 +87,13 @@
     </div>
 
     {{-- OPERADOR DE SERVICIO --}}
-    <div class="mt-6">
+    <div class="mt-6" id="bloque_operador_servicio">
         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Operador de
             Servicio</label>
         <select name="contenido[operador_servicio]"
             class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-{{ $color }}-500 transition-all uppercase cursor-pointer">
             <option value="" selected disabled>-- SELECCIONE --</option>
-            @foreach(['WOW', 'MOVISTAR', 'ENTEL', 'CLARO', 'BITEL', 'OTROS'] as $op)
+            @foreach(['WOW', 'MOVISTAR', 'ENTEL', 'CLARO', 'BITEL', 'FIBERPRO', 'NUBYX', 'WIN', 'OTROS'] as $op)
                 <option value="{{ $op }}" {{ ($contenido['operador_servicio'] ?? '') == $op ? 'selected' : '' }}>
                     {{ $op }}
                 </option>
@@ -97,35 +110,41 @@
         const input = document.getElementById('tipo_conectividad_input');
         const cardWifi = document.getElementById('card_wifi');
         const cardCableado = document.getElementById('card_cableado');
+        const cardSinConectividad = document.getElementById('card_sin_conectividad');
         const bloqueWifiFuente = document.getElementById('bloque_wifi_fuente');
 
         if (!input) return;
 
         input.value = tipo;
 
-        if (tipo === 'WIFI') {
-            // Activar Wifi
-            cardWifi.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
-            cardWifi.classList.remove('border-slate-200', 'bg-white');
-            // Desactivar Cableado
-            cardCableado.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
-            cardCableado.classList.add('border-slate-200', 'bg-white');
+        // Resetear todas las tarjetas
+        const cards = [
+            { el: cardWifi, val: 'WIFI' },
+            { el: cardCableado, val: 'CABLEADO' },
+            { el: cardSinConectividad, val: 'SIN CONECTIVIDAD' }
+        ];
 
+        cards.forEach(card => {
+            if (card.el) {
+                if (card.val === tipo) {
+                    card.el.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
+                    card.el.classList.remove('border-slate-200', 'bg-white');
+                } else {
+                    card.el.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
+                    card.el.classList.add('border-slate-200', 'bg-white');
+                }
+            }
+        });
+
+        if (tipo === 'WIFI') {
             bloqueWifiFuente.classList.remove('hidden');
         } else {
-            // Activar Cableado
-            cardCableado.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
-            cardCableado.classList.remove('border-slate-200', 'bg-white');
-            // Desactivar Wifi
-            cardWifi.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
-            cardWifi.classList.add('border-slate-200', 'bg-white');
-
             bloqueWifiFuente.classList.add('hidden');
 
             // Limpiar selección de fuente WiFi
             document.getElementById('wifi_fuente_input').value = '';
 
-            // Rosetear estilos de fuentes wifi
+            // Resetear estilos de fuentes wifi
             const cardEst = document.getElementById('card_wifi_establecimiento');
             const cardPers = document.getElementById('card_wifi_personal');
 
@@ -136,6 +155,16 @@
             if (cardPers) {
                 cardPers.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
                 cardPers.classList.add('border-slate-200', 'bg-white');
+            }
+        }
+
+        // Mostrar/Ocultar bloque de operador
+        const bloqueOperador = document.getElementById('bloque_operador_servicio');
+        if (bloqueOperador) {
+            if (tipo === 'SIN CONECTIVIDAD') {
+                bloqueOperador.classList.add('hidden');
+            } else {
+                bloqueOperador.classList.remove('hidden');
             }
         }
     }
