@@ -21,7 +21,13 @@ class PartoController extends Controller
     {
         $acta = CabeceraMonitoreo::findOrFail($idActa);
         $registro = ModuloParto::where('monitoreo_id', $idActa)->first();
-        return view('usuario.monitoreo.modulos.parto', compact('acta', 'registro'));
+
+        // Cargar el JSON snapshot para pre-poblar conectividad
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $idActa)
+                    ->where('modulo_nombre', 'parto')
+                    ->first();
+
+        return view('usuario.monitoreo.modulos.parto', compact('acta', 'registro', 'detalle'));
     }
 
     /**
@@ -139,6 +145,11 @@ class PartoController extends Controller
 
                 'dificultad_comunica_a' => $input['dificultades']['comunica'] ?? null,
                 'dificultad_medio_uso'  => $input['dificultades']['medio'] ?? null,
+
+                // Conectividad
+                'tipo_conectividad'  => $input['tipo_conectividad'] ?? null,
+                'wifi_fuente'        => $input['wifi_fuente'] ?? null,
+                'operador_servicio'  => $input['operador_servicio'] ?? null,
 
                 // Evidencias
                 'fotos_evidencia'       => $rutasFotos,
@@ -281,6 +292,17 @@ class PartoController extends Controller
         $acta = CabeceraMonitoreo::findOrFail($idActa);
         $registro = ModuloParto::where('monitoreo_id', $idActa)->firstOrFail();
 
+        // Cargar datos de conectividad desde el JSON de MonitoreoModulos
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $idActa)
+                            ->where('modulo_nombre', 'parto')
+                            ->first();
+        
+        if ($monitoreoModulo && is_array($monitoreoModulo->contenido)) {
+            $registro->tipo_conectividad = $monitoreoModulo->contenido['tipo_conectividad'] ?? null;
+            $registro->wifi_fuente = $monitoreoModulo->contenido['wifi_fuente'] ?? null;
+            $registro->operador_servicio = $monitoreoModulo->contenido['operador_servicio'] ?? null;
+        }
+
         // 2. Lógica de Imágenes a Base64
         $fotosBase64 = [];
         if (!empty($registro->fotos_evidencia)) {
@@ -335,6 +357,6 @@ class PartoController extends Controller
 
         $canvas->page_text($x, $y, "PAG. {PAGE_NUM} / {PAGE_COUNT}", $font, $size, $color);
 
-        return $pdf->stream('Parto_' . $idActa . '.pdf');
+        return $pdf->stream('12_Parto_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

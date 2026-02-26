@@ -14,7 +14,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-1">
                         <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
-                        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
                     <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Triaje</h2>
 
@@ -65,7 +65,9 @@
             {{-- 5. INVENTARIO --}}
             <x-equipamiento model="form.inventario" />
                   
-            
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+            <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
             {{-- 6. SECCION: DIFICULTADES CON EL SISTEMA (CONDICIONAL) --}}
             {{-- Solo se muestra si utiliza_sihce es 'SI' --}}
             <div x-show="form.profesional.utiliza_sihce === 'SI'"
@@ -255,6 +257,13 @@
                     return item;
                 });
 
+                // Leer conectividad desde los hidden inputs del componente x-tipo-conectividad
+                // (no forman parte del form Alpine, se leen directamente del DOM)
+                formToSend.conectividad = {
+                    tipo:    document.getElementById('tipo_conectividad_input')?.value || '',
+                    fuente:  document.getElementById('wifi_fuente_input')?.value || '',
+                    operador: document.querySelector('select[name="contenido[operador_servicio]"]')?.value || ''
+                };
                 let formData = new FormData();
                 formData.append('data', JSON.stringify(formToSend));
                 this.files.forEach(file => { formData.append('fotos[]', file); });

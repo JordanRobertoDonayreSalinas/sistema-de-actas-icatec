@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 // --- IMPORTACIÓN DE CONTROLADORES ---
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\AsistentaSocialEspecializadoController;
@@ -92,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
         return Auth::user()->role === 'admin'
             ? redirect()->route('admin.dashboard')
-            : redirect()->route('usuario.dashboard');
+            : redirect()->route('usuario.dashboard.general');
     });
 
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
@@ -100,8 +101,11 @@ Route::middleware(['auth'])->group(function () {
     // --- GRUPO USUARIO (Monitor / Técnico) ---
     Route::prefix('usuario')->name('usuario.')->group(function () {
 
-        Route::get('/dashboard', [UsuarioController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('dashboard.equipos');
+        Route::prefix('dashboard')->name('dashboard.')->group(function () {
+            Route::get('/', [UsuarioController::class, 'index'])->name('general');
+            Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
+            Route::get('/mapa-asistencias', [UsuarioController::class, 'mapaSoportes'])->name('mapa.soportes'); // Nuevo mapa
+        });
 
         // AJAX para Dashboard - Equipos de Cómputo
         Route::get('/dashboard/ajax/equipos-stats', [UsuarioController::class, 'getEquiposStats'])->name('dashboard.ajax.equipos.stats');
@@ -150,6 +154,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/equipos/ajax/modulos', [ReporteEquiposController::class, 'getModulos'])->name('equipos.ajax.modulos');
             Route::get('/equipos/ajax/descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('equipos.ajax.descripciones');
         });
+
+        // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA ---
+        Route::get('/auditoria-consistencia', [AuditoriaController::class, 'index'])->name('auditoria.index');
 
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {

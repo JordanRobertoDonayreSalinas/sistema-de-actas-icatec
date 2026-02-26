@@ -344,7 +344,7 @@
                     <div id="section_inst_capacitacion" class="{{ ($detalle->contenido['recibio_capacitacion'] ?? '') === 'NO' ? 'hidden' : '' }}">
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿De parte de quién?</label>
                         <select name="contenido[inst_capacitacion]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 transition-all">
-                            @foreach(['MINSA','DIRESA','UNIDAD EJECUTORA','OTROS'] as $op)
+                            @foreach(['MINSA','DIRESA','UNIDAD EJECUTORA','PERSONAL DEL EESS','OTROS'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['inst_capacitacion'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
                         </select>
@@ -473,6 +473,9 @@
                 <x-tabla-equipos :equipos="$equipos" modulo="fua_electronico" />
             </div>
 
+            {{-- TIPO DE CONECTIVIDAD --}}
+            <x-tipo-conectividad :num="8" :contenido="$detalle->contenido ?? []" color="indigo" />
+
             {{-- SECCIÓN 9: SOPORTE TÉCNICO --}}
             <div id="seccion_soporte" class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }} seccion-numerada">
                 <div class="flex items-center gap-4 mb-8">
@@ -483,7 +486,7 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">¿A quién le comunica?</label>
                         <select name="contenido[comunica_a]" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none">
-                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','OTROS'] as $op)
+                            @foreach(['MINSA','DIRESA','JEFE DE ESTABLECIMIENTO','PERSONAL DEL EESS','OTROS'] as $op)
                                 <option value="{{$op}}" {{ ($detalle->contenido['comunica_a'] ?? '') == $op ? 'selected' : '' }}>{{$op}}</option>
                             @endforeach
                         </select>
@@ -519,48 +522,57 @@
                                 $val = $detalle->contenido['foto_evidencia'];
                                 $fotosActuales = is_array($val) ? $val : [$val];
                             }
+                            $fotoPortada = $fotosActuales[0] ?? null;
+                            $fotosExtra  = array_slice($fotosActuales, 1);
                         @endphp
                         <h3 class="text-sm font-black uppercase tracking-[0.3em] text-red-400 mb-6 flex items-center gap-2">
                             <i data-lucide="camera" class="w-5 h-5"></i> Evidencia Fotográfica
                         </h3>
-                        <div class="relative group">
-                            <input type="file" 
-                            name="foto_evidencia[]" 
-                            id="foto_evidencia" 
-                            accept="image/*" multiple 
-                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
-                            onchange="simplePreview(event)">
 
-                            <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2.5rem] p-10 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all duration-500 shadow-inner">
-                                {{-- Icono y Texto --}}
-                                <div id="placeholder-content" class="flex flex-col items-center">
-                                    <i data-lucide="upload-cloud" class="w-10 h-10 text-indigo-400 mb-4"></i>
-                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center">
-                                        Click para seleccionar (Reemplaza las anteriores)
-                                    </span>
-                                </div>
-
-                                {{-- Contenedor PREVIEW (Nuevas) --}}
-                                <div id="new-previews" class="hidden mt-6 grid grid-cols-3 gap-3 w-full"></div>
+                        {{-- FOTO PRINCIPAL GUARDADA (grande, estilo gestion_administrativa) --}}
+                        @if($fotoPortada)
+                            <div id="saved-images-block" class="mb-4 w-full flex justify-center bg-black/50 rounded-2xl p-2 border-2 border-white/10">
+                                <a href="{{ asset('storage/' . $fotoPortada) }}" target="_blank"
+                                    class="block relative group/img overflow-hidden rounded-xl max-h-96">
+                                    <div class="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-all z-10 flex items-center justify-center opacity-0 group-hover/img:opacity-100">
+                                        <i data-lucide="zoom-in" class="text-white w-10 h-10 drop-shadow-lg scale-75 group-hover/img:scale-100 transition-all duration-300"></i>
+                                    </div>
+                                    <img src="{{ asset('storage/' . $fotoPortada) }}"
+                                        class="max-w-full h-auto max-h-96 object-contain shadow-2xl rounded-xl">
+                                </a>
                             </div>
-                        </div>
-                        
-                        {{-- BLOQUE DE FOTOS GUARDADAS (Se ocultará si subes nuevas) --}}
-                        @if(count($fotosActuales) > 0)
-                            <div id="saved-images-block" class="mt-6">
-                                <div class="flex items-center gap-2 mb-3 opacity-70">
-                                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Imágenes actuales en sistema:</span>
-                                </div>
-                                <div class="grid grid-cols-4 gap-2">
-                                    @foreach($fotosActuales as $foto)
-                                        <a href="{{ asset('storage/'.$foto) }}" target="_blank" class="block aspect-square rounded-lg overflow-hidden border border-white/10 hover:opacity-80 transition">
+                            {{-- Fotos adicionales en grilla --}}
+                            @if(count($fotosExtra) > 0)
+                                <div class="grid grid-cols-3 gap-2 mb-4">
+                                    @foreach($fotosExtra as $foto)
+                                        <a href="{{ asset('storage/'.$foto) }}" target="_blank"
+                                           class="block aspect-video rounded-xl overflow-hidden border border-white/10 hover:opacity-80 transition">
                                             <img src="{{ asset('storage/'.$foto) }}" class="w-full h-full object-cover">
                                         </a>
                                     @endforeach
                                 </div>
-                            </div>
+                            @endif
                         @endif
+
+                        {{-- DROPZONE PARA SUBIR NUEVAS FOTOS --}}
+                        <div class="relative group">
+                            <input type="file" 
+                            name="foto_evidencia[]" 
+                            id="foto_evidencia"
+                            accept="image/*" multiple 
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                            onchange="simplePreview(event)">
+                            <div id="dropzone" class="bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] p-8 flex flex-col items-center justify-center group-hover:bg-white/10 transition-all shadow-inner min-h-48">
+                                <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-indigo-400 mb-2"></i>
+                                <span id="placeholder-content" class="text-[10px] font-black uppercase tracking-widest text-slate-300 text-center">
+                                    {{ $fotoPortada ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO(S)' }}
+                                </span>
+                                {{-- Preview de nuevas fotos --}}
+                                <img id="img-preview-single" src="#"
+                                    class="hidden mt-4 h-48 w-auto object-contain rounded-lg border-2 border-indigo-500 shadow-xl">
+                                <div id="new-previews" class="hidden mt-4 grid grid-cols-3 gap-3 w-full"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -593,6 +605,14 @@
         // 1. INICIALIZACIONES BÁSICAS
         // ============================================================
         toggleDniFields(true); // Lógica interna del DNIe
+
+        // Inyectar clases al componente x-tipo-conectividad sin modificarlo
+        const compConectividad = document.querySelector('.monitoreo-section');
+        if (compConectividad) {
+            compConectividad.classList.add('seccion-numerada');
+            const spanNum = compConectividad.querySelector('.section-number');
+            if (spanNum) spanNum.classList.add('badge-numero');
+        }
 
         // Verificar estado inicial de SIHCE
         const estadoSihce = document.querySelector('input[name="contenido[utiliza_sihce]"]:checked')?.value;
@@ -777,49 +797,62 @@
     function simplePreview(event) {
         const input = event.target;
         const previewContainer = document.getElementById('new-previews');
-        const placeholder = document.getElementById('placeholder-content');
-        const savedBlock = document.getElementById('saved-images-block');
+        const previewSingle    = document.getElementById('img-preview-single');
+        const uploadIcon       = document.getElementById('upload-icon');
+        const placeholder      = document.getElementById('placeholder-content');
+        const savedBlock       = document.getElementById('saved-images-block');
         
+        // Limpiamos previsualizaciones anteriores
         previewContainer.innerHTML = '';
+        previewSingle.classList.add('hidden');
+        previewContainer.classList.add('hidden');
         
+        // VALIDACIÓN
         if (input.files && input.files.length > 0) {
-            
             for (let i = 0; i < input.files.length; i++) {
-                const file = input.files[i];
-                
-                if (!file.type.startsWith('image/')) {
-                    alert(`⚠️ ERROR DE FORMATO:\n\nEl archivo "${file.name}" NO es una imagen.\nSolo se permiten archivos JPG, PNG o JPEG.`);
-                    
-                    input.value = ""; 
-                    
-                    previewContainer.classList.add('hidden');
-                    placeholder.classList.remove('hidden');
-                    if(savedBlock) savedBlock.style.display = 'block';
-                    
+                if (!input.files[i].type.startsWith('image/')) {
+                    alert(`⚠️ ERROR DE FORMATO:\n\nEl archivo "${input.files[i].name}" NO es una imagen.\nSolo se permiten archivos JPG, PNG o JPEG.`);
+                    input.value = "";
+                    if(savedBlock) savedBlock.style.display = '';
                     return;
                 }
             }
 
-            previewContainer.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-            
+            // Ocultar fotos antiguas
             if(savedBlock) savedBlock.style.display = 'none';
+            placeholder.classList.add('hidden');
+            if(uploadIcon) uploadIcon.classList.add('hidden');
 
-            Array.from(input.files).slice(0, 5).forEach(file => {
+            const files = Array.from(input.files).slice(0, 5);
+
+            if (files.length === 1) {
+                // Una sola foto: mostrar grande
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'w-full h-24 object-cover rounded-xl border border-indigo-500 shadow-sm animate-fade-in';
-                    previewContainer.appendChild(img);
-                }
-                reader.readAsDataURL(file);
-            });
+                    previewSingle.src = e.target.result;
+                    previewSingle.classList.remove('hidden');
+                };
+                reader.readAsDataURL(files[0]);
+            } else {
+                // Varias fotos: mostrar en grilla
+                previewContainer.classList.remove('hidden');
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'w-full h-40 object-cover rounded-xl border border-indigo-500 shadow-sm animate-fade-in';
+                        previewContainer.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
 
         } else {
             previewContainer.classList.add('hidden');
             placeholder.classList.remove('hidden');
-            if(savedBlock) savedBlock.style.display = 'block';
+            if(uploadIcon) uploadIcon.classList.remove('hidden');
+            if(savedBlock) savedBlock.style.display = '';
         }
     }
 

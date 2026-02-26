@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Planificación Familiar - ' . ($acta->establecimiento->nombre ?? 'Sin Establecimiento'))
+@section('title', 'Módulo 11: Planificación Familiar')
 
 @push('styles')
     <style>
@@ -92,7 +92,7 @@
                                 Módulo 11
                             </span>
                             <span class="text-slate-400 font-bold text-[10px] uppercase tracking-tighter">
-                                ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}
+                                ID Acta: #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}
                             </span>
                         </div>
                         <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">
@@ -580,6 +580,9 @@
                     </div> 
                 </div>
 
+                {{-- 08.- TIPO DE CONECTIVIDAD (Componente) --}}
+                    <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+
                 {{-- 04. PROCESOS Y CALIDAD --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
@@ -671,8 +674,8 @@
 
                     </div> {{-- FIN DEL CONTENEDOR --}}
                 </div>
-
-                {{-- 05. SOPORTE --}}
+                
+                {{-- 06. SOPORTE --}}
                 <div class="space-y-6" 
                 x-show="utilizaSihce === 'SI'"
                 x-cloak 
@@ -739,7 +742,7 @@
                     </div>
                 </div>
 
-                {{-- 06. COMENTARIOS Y OBSERVACIONES GENERALES --}}
+                {{-- 07. COMENTARIOS Y OBSERVACIONES GENERALES --}}
                 <div class="space-y-6">
                     <div class="flex items-center gap-4">
                         <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>
@@ -758,7 +761,7 @@
                     </div>
                 </div>
 
-                {{-- 07. EVIDENCIAS --}}
+                {{-- 08. EVIDENCIAS --}}
                 <div class="space-y-8">
                     <div class="flex items-center gap-4">
                         <span class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shadow-lg shadow-indigo-200 section-number"></span>

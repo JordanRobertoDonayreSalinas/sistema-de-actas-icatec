@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte CRED - Acta {{ $acta->id }}</title>
+    <title>Módulo 08: CRED - Acta {{ $acta->numero_acta }}</title>
     <style>
         @page { margin: 1.5cm; }
         body {
@@ -145,7 +145,7 @@
     <div class="header">
         <h1>Módulo 08: Crecimiento y Desarrollo (CRED)</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px;">
-            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
         </div>
     </div>
 
@@ -313,6 +313,32 @@
         </tbody>
     </table>
 
+    {{-- CONECTIVIDAD --}}
+    <div class="section-header">Conectividad</div>
+    @php
+        $tipoConectividad = $datos['tipo_conectividad'] ?? null;
+        $wifiFuente       = $datos['wifi_fuente'] ?? null;
+        $operadorServicio = $datos['operador_servicio'] ?? null;
+    @endphp
+    <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;">
+        <tr>
+            <th style="width: 35%; background-color: #f8fafc;">Tipo de Conectividad</th>
+            <td>{{ $tipoConectividad ?? '---' }}</td>
+        </tr>
+        @if($tipoConectividad == 'WIFI')
+        <tr>
+            <th style="background-color: #f8fafc;">Fuente de WiFi</th>
+            <td>{{ $wifiFuente ?? '---' }}</td>
+        </tr>
+        @endif
+        @if($tipoConectividad != 'SIN CONECTIVIDAD')
+        <tr>
+            <th style="background-color: #f8fafc;">Operador de Servicio</th>
+            <td>{{ $operadorServicio ?? '---' }}</td>
+        </tr>
+        @endif
+    </table>
+
     <div class="section-header">Métricas de Atención Mes Actual</div>
     <table class="table">
         <tr>
@@ -322,8 +348,11 @@
             <td>{{ $datos['descargas_his'] ?? 0 }}</td>
         </tr>
     </table>
-
+    
     @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
+       
+
+        {{-- SOPORTE --}}
         <div class="section-header">Soporte</div>
         <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;" >
             <tr>
@@ -339,7 +368,6 @@
             </tr>
         </table>
     @endif
-    
     <div class="section-header">Comentarios</div>
     
     <div style="

@@ -1,5 +1,5 @@
 @extends('layouts.usuario')
-@section('title', 'Módulo 07: Psicología')
+@section('title', 'Módulo 07: Consulta Externa - Psicología')
 
 @section('content')
 <div class="py-12 bg-[#f8fafc] min-h-screen" x-data="psicologiaForm()">
@@ -14,7 +14,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-1">
                         <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">Módulo Técnico</span>
-                        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider">ID Acta: #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
                     <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight italic">Módulo Psicología</h2>
 
@@ -69,6 +69,9 @@
 
             {{-- 5. INVENTARIO DE EQUIPAMIENTO (Siempre visible) --}}
             <x-equipamiento model="form.inventario" />
+
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
 
             {{-- 6. DIFICULTADES CON EL SISTEMA (CONDICIONAL: Solo si SIHCE = SI) --}}
             <div x-show="form.profesional.utiliza_sihce === 'SI'"
@@ -258,6 +261,13 @@
                     item.codigo = (tipo + ' ' + valor).trim(); 
                     return item;
                 });
+
+                // Leer campos de conectividad (vienen de inputs ocultos fuera del form Alpine)
+                formToSend.conectividad = {
+                    tipo_conectividad: document.getElementById('tipo_conectividad_input')?.value || null,
+                    wifi_fuente:       document.getElementById('wifi_fuente_input')?.value || null,
+                    operador_servicio: document.querySelector('[name="contenido[operador_servicio]"]')?.value || null,
+                };
 
                 let fd = new FormData();
                 fd.append('data', JSON.stringify(formToSend));

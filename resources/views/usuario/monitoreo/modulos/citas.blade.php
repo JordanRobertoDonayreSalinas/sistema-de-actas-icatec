@@ -1,5 +1,5 @@
 @extends('layouts.usuario')
-@section('title', 'Monitoreo - Citas')
+@section('title', 'Módulo 02: Citas')
 
 @push('styles')
     <style>
@@ -219,7 +219,7 @@
                         Módulo Técnico
                     </span>
                     <span class="text-slate-400 font-bold text-[10px] uppercase">
-                        ID Acta: #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}
+                        ID Acta: #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}
                     </span>
                 </div>
                 {{-- Mantenemos el "02. Citas" porque es el nombre del Módulo, no una sección del form --}}
@@ -249,7 +249,7 @@
 
         {{-- FORMULARIO PRINCIPAL --}}
         <form id="form-citas" action="{{ route('usuario.monitoreo.citas.create', $acta->id) }}" method="POST"
-            enctype="multipart/form-data" id="mainForm">
+            enctype="multipart/form-data">
             @csrf
 
             {{-- ======================================================================== --}}
@@ -920,6 +920,9 @@
                     <div id="reader" class="w-full bg-black min-h-[250px] relative"></div>
                 </div>
             </div>
+            
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :contenido="$registro ? $registro->toArray() : []" color="indigo" />
 
             {{-- ========================================================================================= --}}
             {{-- SECCIÓN: GESTIÓN DE CITAS Y CALIDAD                                                    --}}

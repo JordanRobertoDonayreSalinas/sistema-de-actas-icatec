@@ -35,6 +35,14 @@ class PsicologiaPdfController extends Controller
         // Le pondremos 'fecha_validacion' para no sobrescribir el updated_at original del acta
         $acta->fecha_validacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
 
+        // Extraer datos de conectividad del JSON
+        $contenidoJson = $monitoreoModulo ? ($monitoreoModulo->contenido ?? []) : [];
+        $dbConectividad = (object) [
+            'tipo_conectividad' => $contenidoJson['tipo_conectividad'] ?? null,
+            'wifi_fuente'       => $contenidoJson['wifi_fuente'] ?? null,
+            'operador_servicio' => $contenidoJson['operador_servicio'] ?? null,
+        ];
+
         // 2. Cargar datos específicos
         
         // Capacitación y Profesional
@@ -65,17 +73,18 @@ class PsicologiaPdfController extends Controller
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.psicologia_pdf', compact(
             'acta', 
             'dbCapacitacion', 
-            'dbInicioLabores', // <--- Pasamos variable
-            'dbDni',           // <--- Pasamos variable
+            'dbInicioLabores',
+            'dbDni',
             'dbInventario', 
             'dbDificultad', 
-            'dbFotos'
+            'dbFotos',
+            'dbConectividad'
         ));
 
         $pdf->setOption('isPhpEnabled', true);
 
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Reporte_Psicologia_' . $acta->id . '.pdf');
+        return $pdf->stream('07_Psicologia_Acta_NOESP_' . $acta->numero_acta . '.pdf');
     }
 }

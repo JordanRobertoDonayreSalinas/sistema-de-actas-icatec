@@ -40,9 +40,14 @@ class TriajeController extends Controller
         $dbDni = ComDni::where('acta_id', $id)
                         ->where('modulo_id', 'triaje')->first();
 
+        // Cargar el JSON snapshot (necesario para pre-poblar el componente x-tipo-conectividad)
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                        ->where('modulo_nombre', 'triaje')->first();
 
-
-        return view('usuario.monitoreo.modulos.triaje', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni'));
+        return view('usuario.monitoreo.modulos.triaje', compact(
+            'acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad',
+            'dbFotos', 'dbInicioLabores', 'dbDni', 'detalle'
+        ));
     }
 
     // 2. BUSCADOR (Sin cambios)
@@ -206,7 +211,13 @@ class TriajeController extends Controller
                 // --- AGREGADO: SECCIÓN DNI (Snapshot) ---
                 'seccion_dni'            => $datosDni,
                 
-                'comentarios'            => null
+                // Conectividad (viene de los inputs HTML del componente x-tipo-conectividad,
+                // capturados en el frontend antes del fetch)
+                'tipo_conectividad' => $data['conectividad']['tipo'] ?? null,
+                'wifi_fuente'       => $data['conectividad']['fuente'] ?? null,
+                'operador_servicio' => $data['conectividad']['operador'] ?? null,
+
+                'comentarios'       => null
             ];
 
             // =========================================================

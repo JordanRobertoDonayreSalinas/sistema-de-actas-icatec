@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Consulta Externa - Nutrición - Acta {{ $acta->numero_acta }}</title>
+    <title>Módulo 06: Nutrición - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* AJUSTAMOS EL MARGEN INFERIOR A 2CM PARA QUE QUEPA EL PIE DE PÁGINA */
         @page { margin: 1.2cm 1.5cm 2cm 1.5cm; }
@@ -281,6 +281,30 @@
     @else
         <div style="color: #94a3b8; font-style: italic; padding: 8px;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
+
+    {{-- SECCIÓN: TIPO DE CONECTIVIDAD --}}
+    <div class="section-title">{{ $n++ }}. TIPO DE CONECTIVIDAD</div>
+    @php
+        $tipoConectividad  = $detalle->contenido['tipo_conectividad'] ?? null;
+        $wifiFuente        = $detalle->contenido['wifi_fuente'] ?? null;
+        $operadorServicio  = $detalle->contenido['operador_servicio'] ?? null;
+    @endphp
+    <table>
+        <tr>
+            <td class="bg-label">Tipo de Conectividad</td>
+            <td class="uppercase">{{ $tipoConectividad ?? '---' }}</td>
+        </tr>
+        @if($tipoConectividad == 'WIFI')
+        <tr>
+            <td class="bg-label">Fuente de WiFi</td>
+            <td class="uppercase">{{ $wifiFuente ?? '---' }}</td>
+        </tr>
+        @endif
+        <tr>
+            <td class="bg-label">Operador de Servicio</td>
+            <td class="uppercase">{{ $operadorServicio ?? '---' }}</td>
+        </tr>
+    </table>
 
     {{-- SECCIÓN 7: SOPORTE (CONDICIONAL SIHCE) --}}
     @if(($detalle->contenido['utiliza_sihce'] ?? '') != 'NO')

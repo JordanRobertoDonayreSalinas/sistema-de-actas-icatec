@@ -152,6 +152,6 @@ class TriajeESPpdfController extends Controller
             $pdf->line(42, $pdf->get_height() - 50, $pdf->get_width() - 42, $pdf->get_height() - 50, array(0.88, 0.91, 0.94), 1);
         ');
 
-        return $pdf->stream('Reporte_Triaje_' . $acta->id . '.pdf');
+        return $pdf->stream('03_Triaje_Acta_ESP_' . $acta->numero_acta . '.pdf');
     }
 }

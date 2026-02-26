@@ -67,6 +67,6 @@ class FarmaciaPdfController extends Controller
                 'chroot'            => base_path(),
             ]);
 
-        return $pdf->stream("MONITOREO_FARMACIA_ACTA_{$id}.pdf");
+        return $pdf->stream("15_Farmacia_Acta_NOESP_{$acta->numero_acta}.pdf");
     }
 }

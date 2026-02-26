@@ -115,6 +115,13 @@ class InmunizacionesController extends Controller
                 $datos['con_quien_comparte'] = null;
             }
 
+            // REGLA E: Si NO se seleccionó tipo de conectividad -> Limpiar campos dependientes
+            if (empty($datos['tipo_conectividad'])) {
+                $datos['tipo_conectividad']  = null;
+                $datos['wifi_fuente']        = null;
+                $datos['operador_servicio']  = null;
+            }
+
             // 1. SINCRONIZACIÓN DE PROFESIONALES
             if (isset($datos['profesional']) && !empty($datos['profesional']['doc'])) {
                 Profesional::updateOrCreate(

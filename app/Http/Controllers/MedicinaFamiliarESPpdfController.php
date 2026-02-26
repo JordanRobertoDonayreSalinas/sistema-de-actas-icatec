@@ -104,6 +104,6 @@ class MedicinaFamiliarESPpdfController extends Controller
         ');
         // -----------------------------------------------------------
        
-        return $pdf->stream("CSMC_sm_med_familiar_ESP_Acta_{$id}.pdf");
+        return $pdf->stream("04.3_Medicina_Familiar_ESP_Acta_{$monitoreo->numero_acta}.pdf");
     }
 }

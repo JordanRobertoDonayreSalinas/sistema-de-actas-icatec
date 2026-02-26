@@ -18,8 +18,8 @@ class ModuloCita extends Model
         'personal_dni',
         'personal_turno',
         'personal_roles',
-        'personal_correo',  // <--- IMPORTANTE
-        'personal_celular', // <--- IMPORTANTE
+        'personal_correo',
+        'personal_celular',
         'personal_cargo',
         'utiliza_sihce',
         'firma_dj',
@@ -45,12 +45,12 @@ class ModuloCita extends Model
 
     // Casting automático: Array <-> JSON
     protected $casts = [
-        'personal_roles' => 'array',
-        'capacitacion_entes' => 'array',
+        'personal_roles'      => 'array',
+        'capacitacion_entes'  => 'array',
         'insumos_disponibles' => 'array',
-        'equipos_listado' => 'array',
-        'produccion_listado' => 'array',
-        'fotos_evidencia' => 'array',
+        'equipos_listado'     => 'array',
+        'produccion_listado'  => 'array',
+        'fotos_evidencia'     => 'array',
     ];
 
     public function acta()

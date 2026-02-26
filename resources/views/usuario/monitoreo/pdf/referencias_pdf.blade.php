@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte Referencias - Acta {{ $acta->id }}</title>
+    <title>Módulo 16: REFCON - Acta {{ $acta->numero_acta }}</title>
     <style>
         @page { margin: 1.5cm; }
         body {
@@ -144,7 +144,7 @@
     <div class="header">
         <h1>Módulo 16: REFCON</h1>
         <div style="font-weight: bold; color: #64748b; font-size: 10px;">
-            ACTA N° {{ str_pad($acta->id, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | ESTABLECIMIENTO.: {{ strtoupper($acta->establecimiento->codigo) }} - {{ strtoupper($acta->establecimiento->nombre) }} | FECHA: {{ !empty($detalle->fecha_registro) ? \Carbon\Carbon::parse($detalle->fecha_registro)->format('d/m/Y') : 'Sin Registro' }}
         </div>
     </div>
 
@@ -196,7 +196,7 @@
             <td class="uppercase">{{ $detalle->personal_turno ?? 'N/A' }}</td>
         </tr>
 
-        <tr>
+        <!-- <tr>
             <th>¿Firmó Declaración Jurada?:</th>
             <td>{{ $datos['documentacion']['firma_dj'] ?? 'NO' }}</td>
         </tr>
@@ -204,12 +204,12 @@
         <tr>
             <th>¿Firmó Compromiso de Confidencialidad?:</th>
             <td>{{ $datos['documentacion']['firma_confidencialidad'] ?? 'NO' }}</td>
-        </tr>
+        </tr> -->
 
-        <tr>
+        <!-- <tr>
             <th>¿Utiliza SIHCE?:</th>
             <td>{{ $datos['personal']['utiliza_sihce'] ?? 'NO' }}</td>
-        </tr>
+        </tr> -->
 
     </table>
 
@@ -292,16 +292,40 @@
         </tbody>
     </table>
 
+    {{-- CONECTIVIDAD --}}
+        <div class="section-header">CONECTIVIDAD</div>
+        <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;">
+            @php
+                $tipoConectividad = $datos['tipo_conectividad'] ?? null;
+                $wifiFuente       = $datos['wifi_fuente'] ?? null;
+                $operadorServicio = $datos['operador_servicio'] ?? null;
+            @endphp
+            <tr>
+                <th style="width: 30%; background-color: #f8fafc;">Tipo de conexión:</th>
+                <td>{{ $tipoConectividad ?? 'N/A' }}</td>
+            </tr>
+            @if($tipoConectividad == 'WIFI')
+            <tr>
+                <th style="background-color: #f8fafc;">Fuente del WiFi:</th>
+                <td>{{ $wifiFuente ?? 'N/A' }}</td>
+            </tr>
+            @endif
+            @if($tipoConectividad != 'SIN CONECTIVIDAD')
+            <tr>
+                <th style="background-color: #f8fafc;">Operador de servicio:</th>
+                <td>{{ $operadorServicio ?? 'N/A' }}</td>
+            </tr>
+            @endif
+        </table>
+
     <div class="section-header">Gestión de Referencias</div>
     <table class="table-data">
         @php
             $preguntas = [
-                'hojas_referencia' => '¿Cuenta con stock suficiente de formatos/hojas de referencia?',
                 'libro_registro' => '¿El libro de registro de referencias se encuentra actualizado?',
                 'contrareferencias' => '¿Se realiza el seguimiento y archivo de las contrareferencias?',
                 'flujo_paciente' => '¿Existe un flujo definido para la referencia del paciente?',
-                'digitacion_his' => '¿Se realiza la digitación oportuna en el sistema HIS?',
-                'criterios_medicos' => '¿Las hojas de referencia cumplen criterios técnicos?',
+                'criterios_medicos' => '¿Las referencias cumplen criterios técnicos?',
                 'comunicacion_destino' => '¿Se comunica con el destino antes de enviar al paciente?'
             ];
         @endphp
@@ -313,7 +337,7 @@
         @endforeach
     </table>
 
-    @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
+    <!-- @if(($datos['personal']['utiliza_sihce'] ?? '') === 'SI')
     <div class="section-header">Soporte</div>
     <table class="table-data" style="width: 100%; margin-top: 5px; text-transform: uppercase;" >
         <tr>
@@ -328,7 +352,7 @@
             </td>
         </tr>
     </table>
-    @endif
+    @endif -->
 
     <div class="section-header">Comentarios</div>
     

@@ -1,5 +1,5 @@
 @extends('layouts.usuario')
-@section('title', 'Monitoreo - Parto')
+@section('title', 'Módulo 12: Parto')
 
 @push('styles')
     <style>
@@ -165,7 +165,7 @@
                         class="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Módulo
                         Técnico</span>
                     <span class="text-slate-400 font-bold text-[10px] uppercase">ID Acta:
-                        #{{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }}</span>
+                        #{{ str_pad($acta->numero_acta, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <h2 class="text-3xl font-black text-slate-900 uppercase tracking-tight">12. Parto</h2>
                 <p class="text-slate-500 font-bold uppercase text-xs mt-1">
@@ -193,7 +193,7 @@
 
         {{-- FORMULARIO --}}
         <form id='formulario' action="{{ route('usuario.monitoreo.parto.create', $acta->id) }}" method="POST"
-            enctype="multipart/form-data" id="mainForm">
+            enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="modulo_nombre" value="parto">
 
@@ -763,7 +763,10 @@
                     <div id="reader" class="w-full bg-black min-h-[250px] relative"></div>
                 </div>
             </div>
-
+            
+            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
+                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+                
             {{-- ======================================================================== --}}
             {{-- SECCIÓN 7: DATOS DE GESTIÓN (PDF SECCION 7)                            --}}
             {{-- ======================================================================== --}}

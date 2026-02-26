@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>REPORTE MÓDULO 13 - PUERPERIO</title>
+    <title>Módulo 13: Puerperio - Acta {{ $acta->numero_acta }}</title>
     <style>
         /* MÁRGENES: 2.5cm abajo para reservar espacio al pie de página del Controlador */
         @page { margin: 1.2cm 1.5cm 2.5cm 1.5cm; }
@@ -56,18 +56,20 @@
 </head>
 <body>
 
+    @php $n = 1; @endphp
+
     {{-- ENCABEZADO --}}
     <div class="header">
         <h1>MÓDULO 13: PUERPERIO</h1>
         <div class="acta-info">
-            ACTA N° {{ str_pad($acta->id, 5, '0', STR_PAD_LEFT) }} | 
+            ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $acta->establecimiento->codigo }} - {{ strtoupper($acta->establecimiento->nombre) }} | 
             FECHA: {{ isset($detalle->contenido['fecha']) ? date('d/m/Y', strtotime($detalle->contenido['fecha'])) : date('d/m/Y') }}
         </div>
     </div>
 
     {{-- 1. DATOS GENERALES --}}
-    <div class="section-title">1. DETALLES DEL CONSULTORIO</div>
+    <div class="section-title">{{ $n++ }}. DETALLES DEL CONSULTORIO</div>
     <table>
         <tbody>
             <tr>
@@ -87,7 +89,7 @@
     </table>
 
     {{-- 2. DATOS DEL PROFESIONAL --}}
-    <div class="section-title">2. DATOS DEL PROFESIONAL</div>
+    <div class="section-title">{{ $n++ }}. DATOS DEL PROFESIONAL</div>
     <table>
         <tbody>
             <tr>
@@ -131,7 +133,7 @@
 
     {{-- 3. DETALLE DE DNI Y FIRMA DIGITAL --}}
     @if(isset($detalle->contenido['tipo_dni']) && $detalle->contenido['tipo_dni'] != '')
-    <div class="section-title">3. DETALLE DE DNI Y FIRMA DIGITAL</div>
+    <div class="section-title">{{ $n++ }}. DETALLE DE DNI Y FIRMA DIGITAL</div>
     <table>
         <tbody>
             <tr>
@@ -157,7 +159,7 @@
     @endif
 
     {{-- 4. DETALLES DE CAPACITACIÓN --}}
-    <div class="section-title">4. DETALLES DE CAPACITACIÓN</div>
+    <div class="section-title">{{ $n++ }}. DETALLES DE CAPACITACIÓN</div>
     <table>
         <tbody>
             <tr>
@@ -174,7 +176,7 @@
     </table>
 
     {{-- 5. EQUIPOS DE COMPUTO --}}
-    <div class="section-title">5. EQUIPAMIENTO DEL CONSULTORIO</div>
+    <div class="section-title">{{ $n++ }}. EQUIPAMIENTO DEL CONSULTORIO</div>
     @if($equipos->count() > 0)
         <table>
             <thead>
@@ -204,8 +206,36 @@
         <div style="color: #94a3b8; font-style: italic; padding: 10px; border: 1px solid #e2e8f0;">SIN EQUIPAMIENTO REGISTRADO</div>
     @endif
 
+    {{-- SECCIÓN: CONECTIVIDAD --}}
+    @php
+        $tipoConectividad = $detalle->contenido['tipo_conectividad'] ?? null;
+        $wifiFuente       = $detalle->contenido['wifi_fuente'] ?? null;
+        $operadorServicio = $detalle->contenido['operador_servicio'] ?? null;
+    @endphp
+    <div class="section-title">{{ $n++ }}. CONECTIVIDAD</div>
+    <table>
+        <tbody>
+            <tr>
+                <td class="bg-label">Tipo de Conectividad</td>
+                <td class="uppercase">{{ $tipoConectividad ?? '---' }}</td>
+            </tr>
+            @if($tipoConectividad == 'WIFI')
+            <tr>
+                <td class="bg-label">Fuente de WiFi</td>
+                <td class="uppercase">{{ $wifiFuente ?? '---' }}</td>
+            </tr>
+            @endif
+            @if($tipoConectividad != 'SIN CONECTIVIDAD')
+            <tr>
+                <td class="bg-label">Operador de Servicio</td>
+                <td class="uppercase">{{ $operadorServicio ?? '---' }}</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+
     {{-- 6. SOPORTE --}}
-    <div class="section-title">6. COMUNICACIÓN</div>
+    <div class="section-title">{{ $n++ }}. COMUNICACIÓN</div>
     <table>
         <tbody>
             <tr>
@@ -220,13 +250,13 @@
     </table>
 
     {{-- 7. COMENTARIOS --}}
-    <div class="section-title">7. COMENTARIOS</div>
+    <div class="section-title">{{ $n++ }}. COMENTARIOS</div>
     <div style="border: 1px solid #e2e8f0; padding: 10px; min-height: 40px; text-transform: uppercase; font-size: 10px;">
         {{ $detalle->contenido['comentarios'] ?? 'SIN COMENTARIOS REGISTRADOS.' }}
     </div>
 
     {{-- 8. EVIDENCIA FOTOGRÁFICA --}}
-    <div class="section-title">8. EVIDENCIA FOTOGRÁFICA</div>
+    <div class="section-title">{{ $n++ }}. EVIDENCIA FOTOGRÁFICA</div>
     @php
         $fotoPath = $detalle->contenido['foto_evidencia'] ?? null;
         if(is_array($fotoPath)) $fotoPath = $fotoPath[0] ?? null;
@@ -244,7 +274,7 @@
 
     {{-- 9. FIRMA --}}
     <div class="firma-section">
-        <div class="section-title">9. FIRMA</div>
+        <div class="section-title">{{ $n++ }}. FIRMA</div>
         <div class="firma-container">
             <div class="firma-box">
                 <div class="firma-linea"></div>

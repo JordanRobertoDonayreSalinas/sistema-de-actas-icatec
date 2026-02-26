@@ -78,6 +78,6 @@ class FuaElectronicoPdfController extends Controller
             $pdf->line(42, $pdf->get_height() - 50, $pdf->get_width() - 42, $pdf->get_height() - 50, array(0.88, 0.91, 0.94), 1);
         ');
         // -----------------------------------------------------------
-        return $pdf->stream("Modulo14_FUA_ELECTRONICO_Acta_{$acta->id}.pdf");
+        return $pdf->stream("14_FUA_Acta_NOESP_{$acta->numero_acta}.pdf");
     }
 }

@@ -227,6 +227,11 @@ class OdontologiaController extends Controller
                 
                 // Snapshot de inventario
                 'inventario'             => $listaInventario,
+
+                // Conectividad
+                'tipo_conectividad'  => $data['conectividad']['tipo_conectividad'] ?? null,
+                'wifi_fuente'        => $data['conectividad']['wifi_fuente'] ?? null,
+                'operador_servicio'  => $data['conectividad']['operador_servicio'] ?? null,
             ];
 
             // =========================================================

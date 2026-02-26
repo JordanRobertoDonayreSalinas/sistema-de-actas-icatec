@@ -90,10 +90,15 @@
                     </button>
 
                     <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
-                        <a href="{{ route('usuario.dashboard') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard') && !request()->routeIs('usuario.dashboard.equipos') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <a href="{{ route('usuario.dashboard.general') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.general') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="activity" class="w-4 h-4"></i>
                             <span class="text-sm font-medium">General</span>
+                        </a>
+                        <a href="{{ route('usuario.dashboard.mapa.soportes') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.mapa.soportes') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="map" class="w-4 h-4"></i>
+                            <span class="text-sm font-medium">Mapa de Soportes</span>
                         </a>
                         <a href="{{ route('usuario.dashboard.equipos') }}"
                             class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.equipos') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
@@ -157,6 +162,13 @@
                             class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.equipos') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="monitor" class="w-4 h-4"></i>
                             <span class="font-medium text-sm">Equipos de Cómputo</span>
+                        </a>
+
+                        {{-- Auditoría de Consistencia --}}
+                        <a href="{{ route('usuario.auditoria.index') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.auditoria.index') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="check-square" class="w-4 h-4"></i>
+                            <span class="font-medium text-sm">Auditoría SIHCE</span>
                         </a>
                     </div>
                 </div>

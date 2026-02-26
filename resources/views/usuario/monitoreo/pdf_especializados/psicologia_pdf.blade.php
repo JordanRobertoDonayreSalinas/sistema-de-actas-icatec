@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Psicologia Especializada - Acta {{ $monitoreo->numero_acta }}</title>
+    <title>Módulo 4.5: Psicología - Acta {{ $monitoreo->numero_acta }}</title>
     <style>
         /* MARGENES DE PÁGINA */
         @page { margin: 1cm 1.5cm 2cm 1.5cm; }
@@ -198,7 +198,7 @@
     @endphp
 
     <div class="header">
-        <h1>Módulo 4.4: Psicologia Especializada</h1>
+        <h1>Módulo 4.4: Psicología</h1>
         <div class="header-meta">
             ACTA N° {{ str_pad($monitoreo->numero_acta, 3, '0', STR_PAD_LEFT) }} | 
             ESTABLECIMIENTO: {{ $monitoreo->establecimiento->codigo }} - {{ strtoupper($monitoreo->establecimiento->nombre) }} | 
