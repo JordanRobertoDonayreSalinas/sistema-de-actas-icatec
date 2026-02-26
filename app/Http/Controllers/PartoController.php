@@ -21,7 +21,13 @@ class PartoController extends Controller
     {
         $acta = CabeceraMonitoreo::findOrFail($idActa);
         $registro = ModuloParto::where('monitoreo_id', $idActa)->first();
-        return view('usuario.monitoreo.modulos.parto', compact('acta', 'registro'));
+
+        // Cargar el JSON snapshot para pre-poblar conectividad
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $idActa)
+                    ->where('modulo_nombre', 'parto')
+                    ->first();
+
+        return view('usuario.monitoreo.modulos.parto', compact('acta', 'registro', 'detalle'));
     }
 
     /**
@@ -285,6 +291,17 @@ class PartoController extends Controller
 
         $acta = CabeceraMonitoreo::findOrFail($idActa);
         $registro = ModuloParto::where('monitoreo_id', $idActa)->firstOrFail();
+
+        // Cargar datos de conectividad desde el JSON de MonitoreoModulos
+        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $idActa)
+                            ->where('modulo_nombre', 'parto')
+                            ->first();
+        
+        if ($monitoreoModulo && is_array($monitoreoModulo->contenido)) {
+            $registro->tipo_conectividad = $monitoreoModulo->contenido['tipo_conectividad'] ?? null;
+            $registro->wifi_fuente = $monitoreoModulo->contenido['wifi_fuente'] ?? null;
+            $registro->operador_servicio = $monitoreoModulo->contenido['operador_servicio'] ?? null;
+        }
 
         // 2. Lógica de Imágenes a Base64
         $fotosBase64 = [];

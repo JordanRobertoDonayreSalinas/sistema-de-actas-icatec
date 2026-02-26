@@ -249,7 +249,7 @@
 
         {{-- FORMULARIO PRINCIPAL --}}
         <form id="form-citas" action="{{ route('usuario.monitoreo.citas.create', $acta->id) }}" method="POST"
-            enctype="multipart/form-data" id="mainForm">
+            enctype="multipart/form-data">
             @csrf
 
             {{-- ======================================================================== --}}
@@ -922,7 +922,7 @@
             </div>
             
             {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
-                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+                <x-tipo-conectividad :contenido="$registro ? $registro->toArray() : []" color="indigo" />
 
             {{-- ========================================================================================= --}}
             {{-- SECCIÓN: GESTIÓN DE CITAS Y CALIDAD                                                    --}}

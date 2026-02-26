@@ -257,6 +257,13 @@
                     return item;
                 });
 
+                // Leer conectividad desde los hidden inputs del componente x-tipo-conectividad
+                // (no forman parte del form Alpine, se leen directamente del DOM)
+                formToSend.conectividad = {
+                    tipo:    document.getElementById('tipo_conectividad_input')?.value || '',
+                    fuente:  document.getElementById('wifi_fuente_input')?.value || '',
+                    operador: document.querySelector('select[name="contenido[operador_servicio]"]')?.value || ''
+                };
                 let formData = new FormData();
                 formData.append('data', JSON.stringify(formToSend));
                 this.files.forEach(file => { formData.append('fotos[]', file); });

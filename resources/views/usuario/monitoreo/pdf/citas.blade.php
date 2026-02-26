@@ -299,8 +299,13 @@
             </tr>
             @if (($registro->capacitacion_recibida ?? '') != 'NO')
                 <tr>
-                    <td class="bg-label">¿DE PARTE DE QUIÉN?</td>
-                    <td>{{ $registro->capacitacion_entes ?? '-' }}</td>
+                    <td>¿DE PARTE DE QUIÉN?</td>
+                    <td>
+                        @php
+                            $entes = $registro->capacitacion_entes;
+                            echo is_array($entes) ? ($entes[0] ?? '-') : ($entes ?? '-');
+                        @endphp
+                    </td>
                 </tr>
             @endif
         </table>

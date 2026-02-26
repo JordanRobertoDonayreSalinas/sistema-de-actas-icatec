@@ -61,8 +61,15 @@ class TriajePdfController extends Controller
                         ->where('modulo_id', 'triaje')
                         ->get();
 
-        // 3. Preparar el PDF
-        // 'usuario.monitoreo.pdf.triaje_pdf' será la vista que crearemos a continuación
+        // 3. Extraer conectividad del JSON guardado en MonitoreoModulos
+        $contenidoJson = $monitoreoModulo->contenido ?? [];
+        $dbConectividad = (object) [
+            'tipo_conectividad' => $contenidoJson['tipo_conectividad'] ?? null,
+            'wifi_fuente'       => $contenidoJson['wifi_fuente'] ?? null,
+            'operador_servicio' => $contenidoJson['operador_servicio'] ?? null,
+        ];
+
+        // 4. Preparar el PDF
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.triaje_pdf', compact(
             'acta', 
             'dbCapacitacion', 
@@ -70,7 +77,8 @@ class TriajePdfController extends Controller
             'dbDificultad', 
             'dbInicioLabores',
             'dbDni',
-            'dbFotos'
+            'dbFotos',
+            'dbConectividad'
         ));
 
 

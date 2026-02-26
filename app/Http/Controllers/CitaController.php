@@ -18,9 +18,21 @@ class CitaController extends Controller
      */
     public function index($id)
     {
-
         $acta = CabeceraMonitoreo::findOrFail($id);
         $registro = ModuloCita::where('monitoreo_id', $id)->first();
+
+        // Inyectar datos de conectividad desde el JSON de MonitoreoModulos
+        // ya que esos campos no existen como columnas en mon_modulo_citas
+        if ($registro) {
+            $moduloJson = \App\Models\MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                ->where('modulo_nombre', 'citas')
+                ->first();
+
+            $contenidoJson = $moduloJson->contenido ?? [];
+            $registro->tipo_conectividad = $contenidoJson['tipo_conectividad'] ?? null;
+            $registro->wifi_fuente       = $contenidoJson['wifi_fuente'] ?? null;
+            $registro->operador_servicio = $contenidoJson['operador_servicio'] ?? null;
+        }
 
         return view('usuario.monitoreo.modulos.citas', compact('acta', 'registro'));
     }
@@ -118,7 +130,6 @@ class CitaController extends Controller
             'personal_correo'   => $input['personal_correo'] ?? null,
             'personal_celular'  => $input['personal_celular'] ?? null,
             'personal_cargo'    => $input['personal_cargo'] ?? null,
-            'personal_tipo_doc' => $input['personal_tipo_doc'],
 
             'utiliza_sihce'          => $input['utiliza_sihce'] ?? 'NO',
             'firma_dj'               => $input['firma_dj'] ?? null,
@@ -128,7 +139,9 @@ class CitaController extends Controller
             'firma_sihce'            => $input['firma_sihce'] ?? null,
 
             'capacitacion_recibida'      => $input['capacitacion'] ?? null,
-            'capacitacion_entes'         => $input['capacitacion_ente'] ?? null,
+            'capacitacion_entes' => isset($input['capacitacion_ente']) && $input['capacitacion_ente'] !== null
+                                    ? [$input['capacitacion_ente']]
+                                    : [],
 
             // Logística
             'insumos_disponibles'   => $input['insumos'] ?? [],
@@ -267,6 +280,15 @@ class CitaController extends Controller
 
         $acta = CabeceraMonitoreo::findOrFail($idActa);
         $registro = ModuloCita::where('monitoreo_id', $idActa)->firstOrFail();
+
+        // Inyectar datos de conectividad desde el JSON de MonitoreoModulos
+        $moduloJson = \App\Models\MonitoreoModulos::where('cabecera_monitoreo_id', $idActa)
+            ->where('modulo_nombre', 'citas')
+            ->first();
+        $contenidoJson = $moduloJson->contenido ?? [];
+        $registro->tipo_conectividad = $contenidoJson['tipo_conectividad'] ?? null;
+        $registro->wifi_fuente       = $contenidoJson['wifi_fuente'] ?? null;
+        $registro->operador_servicio = $contenidoJson['operador_servicio'] ?? null;
 
         // 2. Lógica de Imágenes a Base64
         $fotosBase64 = [];

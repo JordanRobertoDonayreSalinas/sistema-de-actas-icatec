@@ -196,7 +196,7 @@
 
         {{-- FORMULARIO --}}
         <form id='formulario' action="{{ route('usuario.monitoreo.atencion-prenatal.create', $acta->id) }}" method="POST"
-            enctype="multipart/form-data" id="mainForm">
+            enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="modulo_nombre" value="atencion_prenatal">
 

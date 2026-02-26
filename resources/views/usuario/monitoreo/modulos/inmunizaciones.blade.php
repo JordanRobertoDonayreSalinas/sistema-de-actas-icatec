@@ -421,8 +421,8 @@
                 <x-tabla-equipos :equipos="$equipos" modulo="inmunizaciones" />
             </div>
 
-            {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
-                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+            {{-- TIPO DE CONECTIVIDAD --}}
+            <x-tipo-conectividad :num="7" :contenido="$detalle->contenido ?? []" color="indigo" />
 
             {{-- SECCIÓN 6: UTILIZACIÓN DE REPORTES DEL SISTEMA --}}
             <div id="seccion_reportes" class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
@@ -454,9 +454,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- TIPO DE CONECTIVIDAD --}}
-            <x-tipo-conectividad :num="7" :contenido="$detalle->contenido ?? []" color="indigo" />
 
             {{-- SECCIÓN 7: SOPORTE TÉCNICO --}}
             <div id="seccion_soporte" class="seccion-numerada bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 {{ ($detalle->contenido['utiliza_sihce'] ?? '') == 'NO' ? 'hidden' : '' }}">
