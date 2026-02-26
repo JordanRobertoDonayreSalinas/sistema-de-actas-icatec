@@ -58,7 +58,7 @@ class ReporteEquiposController extends Controller
         $modulos = \App\Helpers\ModuloHelper::getTodosLosModulos();
 
         // Inicializar query
-        $query = EquipoComputo::with(['cabecera.establecimiento']);
+        $query = EquipoComputo::with(['cabecera.establecimiento', 'cabecera.detalles']);
 
         // Aplicar filtro de fecha (siempre aplicado con valores por defecto)
         $query->whereHas('cabecera', function ($q) use ($fechaInicio) {
@@ -273,7 +273,7 @@ class ReporteEquiposController extends Controller
         ]);
 
         // Construir query con los mismos filtros
-        $query = EquipoComputo::with(['cabecera.establecimiento']);
+        $query = EquipoComputo::with(['cabecera.establecimiento', 'cabecera.detalles']);
 
         if ($request->filled('fecha_inicio')) {
             $query->whereHas('cabecera', function ($q) use ($request) {

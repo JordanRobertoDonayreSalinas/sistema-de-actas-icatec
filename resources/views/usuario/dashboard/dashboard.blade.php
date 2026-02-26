@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Dashboard')
+@section('title', 'Mapa de Monitoreo')
 
 {{-- HEADER SUPERIOR --}}
 @section('header-content')
@@ -10,7 +10,7 @@
     <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
         <span>Plataforma</span>
         <span class="text-slate-300">•</span>
-        <span>Dashboard</span>
+        <span>Mapa de Monitoreo</span>
     </div>
 @endsection
 
@@ -40,30 +40,32 @@
         <div>
             {{-- Encabezado con título y contadores --}}
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-widest">Mapa de Establecimientos — Región Ica
+                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-widest">Mapa de Monitoreo — Región Ica
                 </h3>
                 <div class="flex items-center gap-3 flex-wrap">
                     {{-- Contador total --}}
                     <span class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1.5 rounded-full">
-                        Total: {{ $establecimientosMap->count() }}
+                        Total: <span id="main-count-total">{{ $establecimientosMap->count() }}</span>
                     </span>
                     {{-- Con monitoreo --}}
                     <span
                         class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
                         <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        Con monitoreo: {{ $establecimientosMap->where('has_monitoreo', true)->count() }}
+                        Con monitoreo: <span
+                            id="main-count-con">{{ $establecimientosMap->where('has_monitoreo', true)->count() }}</span>
                     </span>
                     {{-- Sin monitoreo --}}
                     <span
                         class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
                         <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                        Sin monitoreo: {{ $establecimientosMap->where('has_monitoreo', false)->count() }}
+                        Sin monitoreo: <span
+                            id="main-count-sin">{{ $establecimientosMap->where('has_monitoreo', false)->count() }}</span>
                     </span>
                 </div>
             </div>
 
             {{-- Filtros combinados --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
                 {{-- Filtro por provincia --}}
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Provincia:</label>
@@ -96,6 +98,18 @@
                         <option value="">Todas las categorías</option>
                         @foreach($categorias as $cat)
                             <option value="{{ $cat }}">{{ $cat }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Filtro por establecimiento --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Establecimiento:</label>
+                    <select id="filtro-establecimiento"
+                        class="text-sm font-medium text-slate-700 border border-slate-200 rounded-xl px-4 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition w-full">
+                        <option value="">Todos los establecimientos</option>
+                        @foreach($establecimientosMap as $est)
+                            <option value="{{ $est->id }}">{{ $est->nombre }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -180,6 +194,7 @@
                         );
 
                     markers.push({
+                        id: e.id,
                         marker: marker,
                         provincia: (e.provincia || ''),
                         distrito: (e.distrito || ''),
@@ -206,25 +221,29 @@
             var selectProvincia = document.getElementById('filtro-provincia');
             var selectDistrito = document.getElementById('filtro-distrito');
             var selectCategoria = document.getElementById('filtro-categoria');
+            var selectEstablecimiento = document.getElementById('filtro-establecimiento');
             var contadorFiltro = document.getElementById('contador-filtro');
 
-            // Actualizar opciones de distrito según provincia
-            function updateDistritos() {
+            // Contadores principales
+            var mainCountTotal = document.getElementById('main-count-total');
+            var mainCountCon = document.getElementById('main-count-con');
+            var mainCountSin = document.getElementById('main-count-sin');
+
+            // Actualizar opciones de filtros (Distrito, Categoría y Establecimiento) de forma dinámica
+            function updateOptions() {
                 var prov = selectProvincia.value;
                 var currentDist = selectDistrito.value;
+                var currentCat = selectCategoria.value;
+                var currentEst = selectEstablecimiento.value;
 
-                // Limpiar distritos
+                // 1. Actualizar DISTRITOS (según Provincia)
                 selectDistrito.innerHTML = '<option value="">Todos los distritos</option>';
-
-                // Obtener distritos únicos de la provincia seleccionada
                 var distritosVisibles = new Set();
                 establecimientos.forEach(function (e) {
                     if (prov === '' || e.provincia === prov) {
                         if (e.distrito) distritosVisibles.add(e.distrito);
                     }
                 });
-
-                // Ordenar y agregar
                 Array.from(distritosVisibles).sort().forEach(function (d) {
                     var option = document.createElement('option');
                     option.value = d;
@@ -232,12 +251,48 @@
                     if (d === currentDist) option.selected = true;
                     selectDistrito.appendChild(option);
                 });
+
+                // 2. Actualizar CATEGORÍAS (según Provincia y Distrito)
+                var newDist = selectDistrito.value;
+                selectCategoria.innerHTML = '<option value="">Todas las categorías</option>';
+                var categoriasVisibles = new Set();
+                establecimientos.forEach(function (e) {
+                    var matchProv = (prov === '' || e.provincia === prov);
+                    var matchDist = (newDist === '' || e.distrito === newDist);
+                    if (matchProv && matchDist) {
+                        if (e.categoria) categoriasVisibles.add(e.categoria);
+                    }
+                });
+                Array.from(categoriasVisibles).sort().forEach(function (c) {
+                    var option = document.createElement('option');
+                    option.value = c;
+                    option.textContent = c;
+                    if (c === currentCat) option.selected = true;
+                    selectCategoria.appendChild(option);
+                });
+
+                // 3. Actualizar ESTABLECIMIENTOS (según los otros 3 filtros)
+                var newCat = selectCategoria.value;
+                selectEstablecimiento.innerHTML = '<option value="">Todos los establecimientos</option>';
+                establecimientos.forEach(function (e) {
+                    var matchProv = (prov === '' || e.provincia === prov);
+                    var matchDist = (newDist === '' || e.distrito === newDist);
+                    var matchCat = (newCat === '' || e.categoria === newCat);
+                    if (matchProv && matchDist && matchCat) {
+                        var option = document.createElement('option');
+                        option.value = e.id;
+                        option.textContent = e.nombre;
+                        if (String(e.id) === String(currentEst)) option.selected = true;
+                        selectEstablecimiento.appendChild(option);
+                    }
+                });
             }
 
             function applyFilters() {
                 var prov = selectProvincia.value;
                 var dist = selectDistrito.value;
                 var cat = selectCategoria.value;
+                var estId = selectEstablecimiento.value;
 
                 var visible = 0, conMon = 0, sinMon = 0;
                 var group = L.featureGroup();
@@ -246,8 +301,9 @@
                     var matchProv = (prov === '' || m.provincia === prov);
                     var matchDist = (dist === '' || m.distrito === dist);
                     var matchCat = (cat === '' || m.categoria === cat);
+                    var matchEst = (estId === '' || String(m.id) === String(estId));
 
-                    var mostrar = matchProv && matchDist && matchCat;
+                    var mostrar = matchProv && matchDist && matchCat && matchEst;
 
                     if (mostrar) {
                         if (!map.hasLayer(m.marker)) map.addLayer(m.marker);
@@ -259,15 +315,30 @@
                     }
                 });
 
-                // Auto-enfocar si hay marcadores visibles
-                if (visible > 0 && (prov !== '' || dist !== '' || cat !== '')) {
-                    map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
-                } else if (prov === '' && dist === '' && cat === '') {
+                // Actualizar contadores principales
+                mainCountTotal.textContent = visible;
+                mainCountCon.textContent = conMon;
+                mainCountSin.textContent = sinMon;
+
+                // Auto-enfocar si hay marcadores visibles y algún filtro activo
+                if (visible > 0 && (prov !== '' || dist !== '' || cat !== '' || estId !== '')) {
+                    if (estId !== '') {
+                        // Si es un solo establecimiento, hacemos más zoom
+                        markers.forEach(function (m) {
+                            if (String(m.id) === String(estId)) {
+                                map.setView(m.marker.getLatLng(), 15);
+                                m.marker.openPopup();
+                            }
+                        });
+                    } else {
+                        map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
+                    }
+                } else if (prov === '' && dist === '' && cat === '' && estId === '') {
                     map.setView([-14.07, -75.73], 9);
                 }
 
-                if (prov !== '' || dist !== '' || cat !== '') {
-                    contadorFiltro.textContent = visible + ' establecimiento(s) encontrados con los filtros aplicados';
+                if (prov !== '' || dist !== '' || cat !== '' || estId !== '') {
+                    contadorFiltro.innerHTML = `<b>${visible}</b> establecimientos encontrados con los filtros aplicados`;
                     contadorFiltro.classList.remove('hidden');
                 } else {
                     contadorFiltro.classList.add('hidden');
@@ -275,12 +346,21 @@
             }
 
             selectProvincia.addEventListener('change', function () {
-                updateDistritos();
+                updateOptions();
                 applyFilters();
             });
 
-            selectDistrito.addEventListener('change', applyFilters);
-            selectCategoria.addEventListener('change', applyFilters);
+            selectDistrito.addEventListener('change', function () {
+                updateOptions();
+                applyFilters();
+            });
+
+            selectCategoria.addEventListener('change', function () {
+                updateOptions();
+                applyFilters();
+            });
+
+            selectEstablecimiento.addEventListener('change', applyFilters);
 
         })();
     </script>
