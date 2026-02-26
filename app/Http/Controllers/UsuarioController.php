@@ -44,9 +44,15 @@ class UsuarioController extends Controller
             ->orderBy('provincia')
             ->pluck('provincia');
 
+        // 4. Categorías y Distritos para filtros
+        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
+        $distritos = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
+
         return view('usuario.dashboard.dashboard', compact(
             'establecimientosMap',
-            'provincias'
+            'provincias',
+            'categorias',
+            'distritos'
         ));
     }
 
@@ -80,9 +86,15 @@ class UsuarioController extends Controller
             ->orderBy('provincia')
             ->pluck('provincia');
 
+        // 4. Categorías y Distritos para filtros
+        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
+        $distritos = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
+
         return view('usuario.dashboard.mapa_soportes', compact(
             'establecimientosMap',
-            'provincias'
+            'provincias',
+            'categorias',
+            'distritos'
         ));
     }
 

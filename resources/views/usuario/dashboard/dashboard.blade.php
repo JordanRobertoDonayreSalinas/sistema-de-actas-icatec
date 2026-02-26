@@ -62,18 +62,49 @@
                 </div>
             </div>
 
-            {{-- Filtro por provincia --}}
-            <div class="flex items-center gap-3 mb-3">
-                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Filtrar por provincia:</label>
-                <select id="filtro-provincia"
-                    class="text-sm font-medium text-slate-700 border border-slate-200 rounded-xl px-4 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition">
-                    <option value="">Todas las provincias</option>
-                    @foreach($provincias as $prov)
-                        <option value="{{ $prov }}">{{ $prov }}</option>
-                    @endforeach
-                </select>
-                {{-- Contador dinámico visible al filtrar --}}
-                <span id="contador-filtro" class="text-xs text-slate-400 italic hidden"></span>
+            {{-- Filtros combinados --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                {{-- Filtro por provincia --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Provincia:</label>
+                    <select id="filtro-provincia"
+                        class="text-sm font-medium text-slate-700 border border-slate-200 rounded-xl px-4 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition w-full">
+                        <option value="">Todas las provincias</option>
+                        @foreach($provincias as $prov)
+                            <option value="{{ $prov }}">{{ $prov }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Filtro por distrito --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Distrito:</label>
+                    <select id="filtro-distrito"
+                        class="text-sm font-medium text-slate-700 border border-slate-200 rounded-xl px-4 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition w-full">
+                        <option value="">Todos los distritos</option>
+                        @foreach($distritos as $dist)
+                            <option value="{{ $dist }}">{{ $dist }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Filtro por categoría --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Categoría:</label>
+                    <select id="filtro-categoria"
+                        class="text-sm font-medium text-slate-700 border border-slate-200 rounded-xl px-4 py-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition w-full">
+                        <option value="">Todas las categorías</option>
+                        @foreach($categorias as $cat)
+                            <option value="{{ $cat }}">{{ $cat }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            {{-- Contador dinámico visible al filtrar --}}
+            <div class="mb-4">
+                <span id="contador-filtro"
+                    class="text-xs text-slate-500 font-medium bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 hidden"></span>
             </div>
 
             {{-- Mapa --}}
@@ -148,7 +179,13 @@
                             '</div>'
                         );
 
-                    markers.push({ marker: marker, provincia: (e.provincia || ''), has_monitoreo: tieneMonitoreo });
+                    markers.push({
+                        marker: marker,
+                        provincia: (e.provincia || ''),
+                        distrito: (e.distrito || ''),
+                        categoria: (e.categoria || ''),
+                        has_monitoreo: tieneMonitoreo
+                    });
                 }
             });
 
@@ -165,17 +202,53 @@
             };
             legend.addTo(map);
 
-            // Filtro por provincia
+            // Filtros
             var selectProvincia = document.getElementById('filtro-provincia');
+            var selectDistrito = document.getElementById('filtro-distrito');
+            var selectCategoria = document.getElementById('filtro-categoria');
             var contadorFiltro = document.getElementById('contador-filtro');
 
-            selectProvincia.addEventListener('change', function () {
-                var prov = this.value;
+            // Actualizar opciones de distrito según provincia
+            function updateDistritos() {
+                var prov = selectProvincia.value;
+                var currentDist = selectDistrito.value;
+
+                // Limpiar distritos
+                selectDistrito.innerHTML = '<option value="">Todos los distritos</option>';
+
+                // Obtener distritos únicos de la provincia seleccionada
+                var distritosVisibles = new Set();
+                establecimientos.forEach(function (e) {
+                    if (prov === '' || e.provincia === prov) {
+                        if (e.distrito) distritosVisibles.add(e.distrito);
+                    }
+                });
+
+                // Ordenar y agregar
+                Array.from(distritosVisibles).sort().forEach(function (d) {
+                    var option = document.createElement('option');
+                    option.value = d;
+                    option.textContent = d;
+                    if (d === currentDist) option.selected = true;
+                    selectDistrito.appendChild(option);
+                });
+            }
+
+            function applyFilters() {
+                var prov = selectProvincia.value;
+                var dist = selectDistrito.value;
+                var cat = selectCategoria.value;
+
                 var visible = 0, conMon = 0, sinMon = 0;
                 var group = L.featureGroup();
 
                 markers.forEach(function (m) {
-                    var mostrar = (prov === '' || m.provincia === prov);
+                    var matchProv = (prov === '' || m.provincia === prov);
+                    var matchDist = (dist === '' || m.distrito === dist);
+                    var matchCat = (cat === '' || m.categoria === cat);
+
+                    var mostrar = matchProv && matchDist && matchCat;
+
                     if (mostrar) {
                         if (!map.hasLayer(m.marker)) map.addLayer(m.marker);
                         group.addLayer(m.marker);
@@ -187,20 +260,28 @@
                 });
 
                 // Auto-enfocar si hay marcadores visibles
-                if (visible > 0) {
+                if (visible > 0 && (prov !== '' || dist !== '' || cat !== '')) {
                     map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
-                } else if (prov === '') {
-                    // Reset al centro original si no hay filtro
+                } else if (prov === '' && dist === '' && cat === '') {
                     map.setView([-14.07, -75.73], 9);
                 }
 
-                if (prov !== '') {
-                    contadorFiltro.textContent = visible + ' establecimiento(s) — ' + conMon + ' con monitoreo, ' + sinMon + ' sin monitoreo';
+                if (prov !== '' || dist !== '' || cat !== '') {
+                    contadorFiltro.textContent = visible + ' establecimiento(s) encontrados con los filtros aplicados';
                     contadorFiltro.classList.remove('hidden');
                 } else {
                     contadorFiltro.classList.add('hidden');
                 }
+            }
+
+            selectProvincia.addEventListener('change', function () {
+                updateDistritos();
+                applyFilters();
             });
+
+            selectDistrito.addEventListener('change', applyFilters);
+            selectCategoria.addEventListener('change', applyFilters);
+
         })();
     </script>
 @endpush

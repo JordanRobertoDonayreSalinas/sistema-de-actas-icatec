@@ -68,14 +68,34 @@
                     <p class="text-xs text-slate-400">Intensidad de asistencias por establecimiento</p>
                 </div>
 
-                <div class="flex items-center gap-4 flex-wrap">
-                    <div class="flex items-center gap-2">
+                <div class="flex items-center gap-4 flex-wrap w-full md:w-auto">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="text-xs font-bold text-slate-500 uppercase">Provincia:</label>
                         <select id="filtro-provincia"
                             class="text-sm border-slate-200 rounded-xl px-4 py-2 focus:ring-indigo-500 transition">
                             <option value="">Todas</option>
                             @foreach($provincias as $prov)
                                 <option value="{{ $prov }}">{{ $prov }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Distrito:</label>
+                        <select id="filtro-distrito"
+                            class="text-sm border-slate-200 rounded-xl px-4 py-2 focus:ring-indigo-500 transition">
+                            <option value="">Todos</option>
+                            @foreach($distritos as $dist)
+                                <option value="{{ $dist }}">{{ $dist }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Categoría:</label>
+                        <select id="filtro-categoria"
+                            class="text-sm border-slate-200 rounded-xl px-4 py-2 focus:ring-indigo-500 transition">
+                            <option value="">Todas</option>
+                            @foreach($categorias as $cat)
+                                <option value="{{ $cat }}">{{ $cat }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -163,28 +183,65 @@
                 })
                     .addTo(map)
                     .bindPopup(`
-                                    <div class="p-4 min-w-[210px] bg-white">
-                                        <h4 class="font-black text-slate-800 text-sm mb-1 leading-tight">${e.nombre}</h4>
-                                        <p class="text-[11px] font-medium text-slate-500 mb-3 uppercase tracking-wider">${e.distrito} — ${e.provincia}</p>
-                                        <div class="flex items-center justify-between bg-indigo-50 px-3 py-2.5 rounded-xl border border-indigo-100/50">
-                                            <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Total Asistencias</span>
-                                            <span class="text-base font-black text-indigo-600">${e.total_asistencias}</span>
+                                        <div class="p-4 min-w-[210px] bg-white">
+                                            <h4 class="font-black text-slate-800 text-sm mb-1 leading-tight">${e.nombre}</h4>
+                                            <p class="text-[11px] font-medium text-slate-500 mb-3 uppercase tracking-wider">${e.distrito} — ${e.provincia}</p>
+                                            <div class="flex items-center justify-between bg-indigo-50 px-3 py-2.5 rounded-xl border border-indigo-100/50">
+                                                <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Total Asistencias</span>
+                                                <span class="text-base font-black text-indigo-600">${e.total_asistencias}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                `, { className: 'custom-popup' });
+                                    `, { className: 'custom-popup' });
 
-                markers.push({ marker: marker, provincia: e.provincia });
+                markers.push({
+                    marker: marker,
+                    provincia: e.provincia,
+                    distrito: (e.distrito || ''),
+                    categoria: (e.categoria || '')
+                });
             });
 
-            // Filtro
+            // Filtros
             var selectProv = document.getElementById('filtro-provincia');
-            selectProv.addEventListener('change', function () {
-                var val = this.value;
+            var selectDist = document.getElementById('filtro-distrito');
+            var selectCat = document.getElementById('filtro-categoria');
+
+            function updateDistritos() {
+                var prov = selectProv.value;
+                var currentDist = selectDist.value;
+
+                selectDist.innerHTML = '<option value="">Todos</option>';
+
+                var distritosVisibles = new Set();
+                establecimientos.forEach(function (e) {
+                    if (prov === '' || e.provincia === prov) {
+                        if (e.distrito) distritosVisibles.add(e.distrito);
+                    }
+                });
+
+                Array.from(distritosVisibles).sort().forEach(function (d) {
+                    var option = document.createElement('option');
+                    option.value = d;
+                    option.textContent = d;
+                    if (d === currentDist) option.selected = true;
+                    selectDist.appendChild(option);
+                });
+            }
+
+            function applyFilters() {
+                var provVal = selectProv.value;
+                var distVal = selectDist.value;
+                var catVal = selectCat.value;
+
                 var group = L.featureGroup();
                 var count = 0;
 
                 markers.forEach(function (m) {
-                    if (val === '' || m.provincia === val) {
+                    var matchProv = (provVal === '' || m.provincia === provVal);
+                    var matchDist = (distVal === '' || m.distrito === distVal);
+                    var matchCat = (catVal === '' || m.categoria === catVal);
+
+                    if (matchProv && matchDist && matchCat) {
                         if (!map.hasLayer(m.marker)) map.addLayer(m.marker);
                         group.addLayer(m.marker);
                         count++;
@@ -193,12 +250,20 @@
                     }
                 });
 
-                if (count > 0) {
+                if (count > 0 && (provVal !== '' || distVal !== '' || catVal !== '')) {
                     map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
-                } else {
+                } else if (provVal === '' && distVal === '' && catVal === '') {
                     map.setView([-14.07, -75.73], 9);
                 }
+            }
+
+            selectProv.addEventListener('change', function () {
+                updateDistritos();
+                applyFilters();
             });
+
+            selectDist.addEventListener('change', applyFilters);
+            selectCat.addEventListener('change', applyFilters);
         })();
     </script>
 @endpush
