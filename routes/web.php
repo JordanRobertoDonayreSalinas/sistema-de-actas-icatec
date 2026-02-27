@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\AuditoriaEquiposController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\AsistentaSocialEspecializadoController;
@@ -157,6 +158,7 @@ Route::middleware(['auth'])->group(function () {
 
         // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA ---
         Route::get('/auditoria-consistencia', [AuditoriaController::class, 'index'])->name('auditoria.index');
+        Route::get('/auditoria-equipos', [AuditoriaEquiposController::class, 'index'])->name('auditoria.equipos');
 
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
