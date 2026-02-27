@@ -9,7 +9,7 @@
     <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
         <span>Plataforma</span>
         <span class="text-slate-300">•</span>
-        <span>Mapa de Soportes</span>
+        <span>Mapa de Asistencias Técnicas</span>
     </div>
 @endsection
 
@@ -61,15 +61,28 @@
     <div class="max-w-7xl mx-auto space-y-6">
         {{-- PANEL DE CONTROL --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">Visualización Geográfica
+            <div
+                class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8 mt-4">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-indigo-500"></i>
+                        Intensidad de Asistencia Técnica
                     </h3>
-                    <p class="text-xs text-slate-400">Intensidad de asistencias por establecimiento</p>
+                    <div class="flex items-center gap-3 flex-wrap pt-1">
+                        <span
+                            class="bg-slate-100 text-slate-600 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-tight">
+                            EESS: <span id="main-count-eess">{{ $establecimientosMap->count() }}</span>
+                        </span>
+                        <span
+                            class="bg-indigo-100 text-indigo-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-tight">
+                            Total Asistencias: <span
+                                id="main-count-total">{{ $establecimientosMap->sum('total_asistencias') }}</span>
+                        </span>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-4 flex-wrap">
-                    <div class="flex items-center gap-2">
+                <div class="flex items-center gap-4 flex-wrap w-full md:w-auto">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="text-xs font-bold text-slate-500 uppercase">Provincia:</label>
                         <select id="filtro-provincia"
                             class="text-sm border-slate-200 rounded-xl px-4 py-2 focus:ring-indigo-500 transition">
@@ -79,7 +92,43 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Distrito:</label>
+                        <select id="filtro-distrito"
+                            class="text-sm border-slate-200 rounded-xl px-4 py-2 focus:ring-indigo-500 transition">
+                            <option value="">Todos</option>
+                            @foreach($distritos as $dist)
+                                <option value="{{ $dist }}">{{ $dist }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Categoría:</label>
+                        <select id="filtro-categoria"
+                            class="text-sm border-slate-200 rounded-xl px-4 py-2 focus:ring-indigo-500 transition">
+                            <option value="">Todas</option>
+                            @foreach($categorias as $cat)
+                                <option value="{{ $cat }}">{{ $cat }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Establecimiento:</label>
+                        <select id="filtro-establecimiento"
+                            class="text-sm border-slate-200 rounded-xl px-4 py-2 focus:ring-indigo-500 transition max-w-[200px]">
+                            <option value="">Todos</option>
+                            @foreach($establecimientosMap as $e)
+                                <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
+            </div>
+
+            {{-- Contador dinámico visible al filtrar --}}
+            <div class="mt-4">
+                <span id="contador-filtro"
+                    class="text-xs text-slate-500 font-medium bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 hidden"></span>
             </div>
         </div>
 
@@ -163,42 +212,168 @@
                 })
                     .addTo(map)
                     .bindPopup(`
-                                    <div class="p-4 min-w-[210px] bg-white">
-                                        <h4 class="font-black text-slate-800 text-sm mb-1 leading-tight">${e.nombre}</h4>
-                                        <p class="text-[11px] font-medium text-slate-500 mb-3 uppercase tracking-wider">${e.distrito} — ${e.provincia}</p>
-                                        <div class="flex items-center justify-between bg-indigo-50 px-3 py-2.5 rounded-xl border border-indigo-100/50">
-                                            <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Total Asistencias</span>
-                                            <span class="text-base font-black text-indigo-600">${e.total_asistencias}</span>
-                                        </div>
-                                    </div>
-                                `, { className: 'custom-popup' });
+                                                    <div class="p-4 min-w-[210px] bg-white">
+                                                        <h4 class="font-black text-slate-800 text-sm mb-1 leading-tight">${e.nombre}</h4>
+                                                        <p class="text-[11px] font-medium text-slate-500 mb-3 uppercase tracking-wider">${e.distrito} — ${e.provincia}</p>
+                                                        <div class="flex items-center justify-between bg-indigo-50 px-3 py-2.5 rounded-xl border border-indigo-100/50">
+                                                            <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Total Asistencias</span>
+                                                            <span class="text-base font-black text-indigo-600">${e.total_asistencias}</span>
+                                                        </div>
+                                                    </div>
+                                                `, { className: 'custom-popup' });
 
-                markers.push({ marker: marker, provincia: e.provincia });
+                markers.push({
+                    id: e.id,
+                    marker: marker,
+                    provincia: e.provincia,
+                    distrito: (e.distrito || ''),
+                    categoria: (e.categoria || '')
+                });
             });
 
-            // Filtro
+            // Filtros
             var selectProv = document.getElementById('filtro-provincia');
-            selectProv.addEventListener('change', function () {
-                var val = this.value;
+            var selectDist = document.getElementById('filtro-distrito');
+            var selectCat = document.getElementById('filtro-categoria');
+            var selectEst = document.getElementById('filtro-establecimiento');
+            var contadorFiltro = document.getElementById('contador-filtro');
+
+            // Contadores principales
+            var mainCountEess = document.getElementById('main-count-eess');
+            var mainCountTotal = document.getElementById('main-count-total');
+
+            // Actualizar opciones de filtros (Distrito, Categoría y Establecimiento) de forma dinámica
+            function updateOptions() {
+                var prov = selectProv.value;
+                var currentDist = selectDist.value;
+                var currentCat = selectCat.value;
+                var currentEst = selectEst.value;
+
+                // 1. Actualizar DISTRITOS (según Provincia)
+                selectDist.innerHTML = '<option value="">Todos</option>';
+                var distritosVisibles = new Set();
+                establecimientos.forEach(function (e) {
+                    if (prov === '' || e.provincia === prov) {
+                        if (e.distrito) distritosVisibles.add(e.distrito);
+                    }
+                });
+                Array.from(distritosVisibles).sort().forEach(function (d) {
+                    var option = document.createElement('option');
+                    option.value = d;
+                    option.textContent = d;
+                    if (d === currentDist) option.selected = true;
+                    selectDist.appendChild(option);
+                });
+
+                // 2. Actualizar CATEGORÍAS (según Provincia y Distrito)
+                var newDist = selectDist.value;
+                selectCat.innerHTML = '<option value="">Todas</option>';
+                var categoriasVisibles = new Set();
+                establecimientos.forEach(function (e) {
+                    var matchProv = (prov === '' || e.provincia === prov);
+                    var matchDist = (newDist === '' || e.distrito === newDist);
+                    if (matchProv && matchDist) {
+                        if (e.categoria) categoriasVisibles.add(e.categoria);
+                    }
+                });
+                Array.from(categoriasVisibles).sort().forEach(function (c) {
+                    var option = document.createElement('option');
+                    option.value = c;
+                    option.textContent = c;
+                    if (c === currentCat) option.selected = true;
+                    selectCat.appendChild(option);
+                });
+
+                // 3. Actualizar ESTABLECIMIENTOS (según los otros 3 filtros)
+                var newCat = selectCat.value;
+                selectEst.innerHTML = '<option value="">Todos</option>';
+                establecimientos.forEach(function (e) {
+                    var matchProv = (prov === '' || e.provincia === prov);
+                    var matchDist = (newDist === '' || e.distrito === newDist);
+                    var matchCat = (newCat === '' || e.categoria === newCat);
+                    if (matchProv && matchDist && matchCat) {
+                        var option = document.createElement('option');
+                        option.value = e.id;
+                        option.textContent = e.nombre;
+                        if (String(e.id) === String(currentEst)) option.selected = true;
+                        selectEst.appendChild(option);
+                    }
+                });
+            }
+
+            function applyFilters() {
+                var provVal = selectProv.value;
+                var distVal = selectDist.value;
+                var catVal = selectCat.value;
+                var estId = selectEst.value;
+
                 var group = L.featureGroup();
-                var count = 0;
+                var countEess = 0;
+                var countTotal = 0;
 
                 markers.forEach(function (m) {
-                    if (val === '' || m.provincia === val) {
+                    var matchProv = (provVal === '' || m.provincia === provVal);
+                    var matchDist = (distVal === '' || m.distrito === distVal);
+                    var matchCat = (catVal === '' || m.categoria === catVal);
+                    var matchEst = (estId === '' || String(m.id) === String(estId));
+
+                    if (matchProv && matchDist && matchCat && matchEst) {
                         if (!map.hasLayer(m.marker)) map.addLayer(m.marker);
                         group.addLayer(m.marker);
-                        count++;
+                        countEess++;
+
+                        // Necesitamos el total_asistencias que está en el objeto original e
+                        var estData = establecimientos.find(e => String(e.id) === String(m.id));
+                        if (estData) countTotal += (estData.total_asistencias || 0);
+
                     } else {
                         if (map.hasLayer(m.marker)) map.removeLayer(m.marker);
                     }
                 });
 
-                if (count > 0) {
-                    map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
-                } else {
+                // Actualizar contadores principales
+                mainCountEess.textContent = countEess;
+                mainCountTotal.textContent = countTotal;
+
+                if (countEess > 0 && (provVal !== '' || distVal !== '' || catVal !== '' || estId !== '')) {
+                    if (estId !== '') {
+                        markers.forEach(function (m) {
+                            if (String(m.id) === String(estId)) {
+                                map.setView(m.marker.getLatLng(), 15);
+                                m.marker.openPopup();
+                            }
+                        });
+                    } else {
+                        map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
+                    }
+                } else if (provVal === '' && distVal === '' && catVal === '' && estId === '') {
                     map.setView([-14.07, -75.73], 9);
                 }
+
+                if (provVal !== '' || distVal !== '' || catVal !== '' || estId !== '') {
+                    contadorFiltro.innerHTML = `<b>${countEess}</b> establecimientos encontrados con los filtros aplicados`;
+                    contadorFiltro.classList.remove('hidden');
+                } else {
+                    contadorFiltro.classList.add('hidden');
+                }
+            }
+
+            selectProv.addEventListener('change', function () {
+                updateOptions();
+                applyFilters();
             });
+
+            selectDist.addEventListener('change', function () {
+                updateOptions();
+                applyFilters();
+            });
+
+            selectCat.addEventListener('change', function () {
+                updateOptions();
+                applyFilters();
+            });
+
+            selectEst.addEventListener('change', applyFilters);
         })();
     </script>
 @endpush

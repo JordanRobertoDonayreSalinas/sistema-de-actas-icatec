@@ -43,6 +43,9 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Estado',
             'Provincia',
             'Distrito',
+            'Conectividad',
+            'Fuente WiFi',
+            'Proveedor',
             'Observación',
         ];
     }
@@ -64,6 +67,9 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             $equipo->estado ?? 'N/A',
             $equipo->cabecera->establecimiento->provincia ?? 'N/A',
             $equipo->cabecera->establecimiento->distrito ?? 'N/A',
+            \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['tipo'],
+            \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['fuente'],
+            \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['operador'],
             $equipo->observacion ?? '',
         ];
     }
@@ -109,7 +115,10 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'K' => 12,  // Estado
             'L' => 15,  // Provincia
             'M' => 15,  // Distrito
-            'N' => 40,  // Observación
+            'N' => 18,  // Conectividad
+            'O' => 18,  // Fuente WiFi
+            'P' => 18,  // Proveedor
+            'Q' => 45,  // Observación
         ];
     }
 }

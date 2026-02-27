@@ -193,6 +193,9 @@
                                 <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Categoría</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Módulo</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Conectividad</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Fuente WiFi</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Proveedor</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Cant.</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Descripción</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Propio</th>
@@ -218,6 +221,24 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-slate-700 font-medium">{{ ModuloHelper::getNombreAmigable($equipo->modulo) ?? 'N/A' }}</td>
+                                    @php
+                                        $conectividad = ModuloHelper::getConectividadActa($equipo->cabecera);
+                                    @endphp
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-600">
+                                            {{ $conectividad['tipo'] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-600">
+                                            {{ $conectividad['fuente'] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-600">
+                                            {{ $conectividad['operador'] }}
+                                        </span>
+                                    </td>
                                     <td class="px-4 py-3 text-sm text-slate-700 font-semibold">{{ $equipo->cantidad ?? 0 }}</td>
                                     <td class="px-4 py-3 text-sm text-slate-600">{{ $equipo->descripcion ?? 'N/A' }}</td>
                                     <td class="px-4 py-3 text-sm text-slate-600">{{ $equipo->propio ?? 'N/A' }}</td>

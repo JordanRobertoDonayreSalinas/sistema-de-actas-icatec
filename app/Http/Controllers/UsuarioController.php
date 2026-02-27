@@ -44,9 +44,15 @@ class UsuarioController extends Controller
             ->orderBy('provincia')
             ->pluck('provincia');
 
+        // 4. Categorías y Distritos para filtros
+        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
+        $distritos = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
+
         return view('usuario.dashboard.dashboard', compact(
             'establecimientosMap',
-            'provincias'
+            'provincias',
+            'categorias',
+            'distritos'
         ));
     }
 
@@ -80,9 +86,15 @@ class UsuarioController extends Controller
             ->orderBy('provincia')
             ->pluck('provincia');
 
+        // 4. Categorías y Distritos para filtros
+        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
+        $distritos = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
+
         return view('usuario.dashboard.mapa_soportes', compact(
             'establecimientosMap',
-            'provincias'
+            'provincias',
+            'categorias',
+            'distritos'
         ));
     }
 
@@ -473,6 +485,34 @@ class UsuarioController extends Controller
                 ->pluck('total', 'nombre')
                 ->toArray();
 
+            // --- NUEVO: Estadísticas de Conectividad para Gráficos ---
+            $equiposPorConectividad = [];
+            $equiposPorFuenteWifi = [];
+            $equiposPorProveedor = [];
+
+            // Obtenemos todos los equipos filtrados con sus cabeceras y detalles
+            $equiposParaStats = (clone $query)->with(['cabecera.detalles'])->get();
+
+            foreach ($equiposParaStats as $e) {
+                $con = \App\Helpers\ModuloHelper::getConectividadActa($e->cabecera);
+
+                // Conectividad
+                $tipo = $con['tipo'];
+                $equiposPorConectividad[$tipo] = ($equiposPorConectividad[$tipo] ?? 0) + ($e->cantidad ?? 1);
+
+                // Fuente WiFi (solo si tiene algo)
+                $fuente = $con['fuente'];
+                if ($fuente && $fuente !== '---') {
+                    $equiposPorFuenteWifi[$fuente] = ($equiposPorFuenteWifi[$fuente] ?? 0) + ($e->cantidad ?? 1);
+                }
+
+                // Proveedor (solo si tiene algo)
+                $operador = $con['operador'];
+                if ($operador && $operador !== '---') {
+                    $equiposPorProveedor[$operador] = ($equiposPorProveedor[$operador] ?? 0) + ($e->cantidad ?? 1);
+                }
+            }
+
             // Retornar datos
             $response = [
                 'totalEquipos' => $totalEquipos,
@@ -481,7 +521,10 @@ class UsuarioController extends Controller
                 'equiposPorTipo' => $equiposPorTipo,
                 'equiposPorModulo' => $equiposPorModulo,
                 'topDescripciones' => $topDescripciones,
-                'equiposPorEstablecimiento' => $equiposPorEstablecimiento
+                'equiposPorEstablecimiento' => $equiposPorEstablecimiento,
+                'equiposPorConectividad' => $equiposPorConectividad,
+                'equiposPorFuenteWifi' => $equiposPorFuenteWifi,
+                'equiposPorProveedor' => $equiposPorProveedor
             ];
 
             \Illuminate\Support\Facades\Log::info('DEBUG DATA:', [

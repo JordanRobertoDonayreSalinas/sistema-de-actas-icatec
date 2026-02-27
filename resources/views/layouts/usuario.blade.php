@@ -93,12 +93,12 @@
                         <a href="{{ route('usuario.dashboard.general') }}"
                             class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.general') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="activity" class="w-4 h-4"></i>
-                            <span class="text-sm font-medium">General</span>
+                            <span class="text-sm font-medium">Mapa de Monitoreo</span>
                         </a>
                         <a href="{{ route('usuario.dashboard.mapa.soportes') }}"
                             class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.mapa.soportes') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="map" class="w-4 h-4"></i>
-                            <span class="text-sm font-medium">Mapa de Soportes</span>
+                            <span class="text-sm font-medium">Mapa de Asistencias Técnicas</span>
                         </a>
                         <a href="{{ route('usuario.dashboard.equipos') }}"
                             class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.equipos') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">

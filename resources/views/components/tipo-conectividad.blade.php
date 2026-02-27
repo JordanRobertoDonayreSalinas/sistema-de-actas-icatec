@@ -3,8 +3,8 @@
 <div class="monitoreo-section bg-white rounded-[2rem] p-8 shadow-lg border border-slate-100">
     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
         @if(trim($num ?? '') !== '')
-        <span
-            class="section-number bg-{{ $color }}-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">{{ $num }}</span>
+            <span
+                class="section-number bg-{{ $color }}-600 text-white w-8 h-8 flex items-center justify-center rounded-full font-black text-sm">{{ $num }}</span>
         @endif
         <h3 class="text-{{ $color }}-900 font-black text-lg uppercase tracking-tight">TIPO DE CONECTIVIDAD</h3>
     </div>
@@ -48,8 +48,8 @@
             </div>
             <div>
                 <h4 class="text-sm font-black text-slate-800 uppercase">SIN CONECTIVIDAD</h4>
-                <span
-                    class="text-[10px] font-bold text-rose-500 bg-rose-100 px-2 py-0.5 rounded uppercase">No cuenta con internet</span>
+                <span class="text-[10px] font-bold text-rose-500 bg-rose-100 px-2 py-0.5 rounded uppercase">No cuenta
+                    con internet</span>
             </div>
         </div>
     </div>
@@ -95,7 +95,7 @@
         <select name="contenido[operador_servicio]"
             class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-{{ $color }}-500 transition-all uppercase cursor-pointer">
             <option value="" selected disabled>-- SELECCIONE --</option>
-            @foreach(['WOW', 'MOVISTAR', 'ENTEL', 'CLARO', 'BITEL', 'FIBERPRO', 'NUBYX', 'WIN', 'OTROS'] as $op)
+            @foreach(['WOW', 'MOVISTAR', 'ENTEL', 'CLARO', 'BITEL', 'FIBERPRO', 'NUBYX', 'WIN', 'TICTEL', 'GILAT', 'ALTINET', 'DELAFIBER', 'COMPUIVAN', 'OTROS'] as $op)
                 <option value="{{ $op }}" {{ ($contenido['operador_servicio'] ?? '') == $op ? 'selected' : '' }}>
                     {{ $op }}
                 </option>

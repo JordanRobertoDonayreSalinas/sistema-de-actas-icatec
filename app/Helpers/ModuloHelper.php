@@ -126,4 +126,33 @@ class ModuloHelper
 
         return $esEspecializado ? 'ESPECIALIZADO' : 'NO ESPECIALIZADO';
     }
+
+    /**
+     * Obtiene la información de conectividad de una cabecera de monitoreo
+     * buscando en sus detalles.
+     */
+    public static function getConectividadActa($cabecera)
+    {
+        $info = [
+            'tipo' => 'N/A',
+            'fuente' => 'N/A',
+            'operador' => 'N/A'
+        ];
+
+        if (!$cabecera || !$cabecera->detalles) {
+            return $info;
+        }
+
+        foreach ($cabecera->detalles as $detalle) {
+            $contenido = $detalle->contenido;
+            if (isset($contenido['tipo_conectividad'])) {
+                $info['tipo'] = $contenido['tipo_conectividad'];
+                $info['fuente'] = $contenido['wifi_fuente'] ?? 'N/A';
+                $info['operador'] = $contenido['operador_servicio'] ?? 'N/A';
+                break; // Asumimos que la conectividad es la misma para toda el acta
+            }
+        }
+
+        return $info;
+    }
 }

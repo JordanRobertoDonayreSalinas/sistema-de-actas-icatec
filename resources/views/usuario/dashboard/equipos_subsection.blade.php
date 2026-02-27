@@ -182,61 +182,131 @@
         </div>
     </div>
 
-    <!-- Gráficos -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Gráfico: Por Estado -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <i data-lucide="activity" class="w-5 h-5 text-green-600"></i>
-                Por Estado
-            </h3>
-            <div class="h-64">
-                <canvas id="chartEstado"></canvas>
+    <!-- SECCIÓN 1: ESTADO DEL PARQUE INFORMÁTICO -->
+    <div class="mb-10">
+        <div class="flex items-center gap-2 mb-6 border-l-4 border-indigo-600 pl-4">
+            <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">I. Estado del Parque Informático
+            </h2>
+            <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Gráfico: Por Estado -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md">
+                <h3 class="text-sm font-bold text-slate-500 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <i data-lucide="activity" class="w-4 h-4 text-emerald-500"></i>
+                    Distribución por Estado
+                </h3>
+                <div class="h-[300px] relative">
+                    <canvas id="chartEstado"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico: Por Tipo -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md">
+                <h3 class="text-sm font-bold text-slate-500 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <i data-lucide="monitor" class="w-4 h-4 text-indigo-500"></i>
+                    Distribución por Tipo
+                </h3>
+                <div class="h-[300px] relative">
+                    <canvas id="chartTipo"></canvas>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Gráfico: Por Tipo -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-600"></i>
-                Por Tipo
-            </h3>
-            <div class="h-64">
-                <canvas id="chartTipo"></canvas>
+    <!-- SECCIÓN 2: DISTRIBUCIÓN OPERATIVA -->
+    <div class="mb-10">
+        <div class="flex items-center gap-2 mb-6 border-l-4 border-purple-600 pl-4">
+            <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">II. Distribución Operativa</h2>
+            <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Gráfico: Por Módulo -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md">
+                <h3 class="text-sm font-bold text-slate-500 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <i data-lucide="layers" class="w-4 h-4 text-purple-500"></i>
+                    Uso por Módulo
+                </h3>
+                <div class="h-[300px] relative">
+                    <canvas id="chartModulo"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico: Por Descripción -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md">
+                <h3 class="text-sm font-bold text-slate-500 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <i data-lucide="package" class="w-4 h-4 text-amber-500"></i>
+                    Top Equipos (Descripción)
+                </h3>
+                <div class="h-[300px] relative">
+                    <canvas id="chartDescripcion"></canvas>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Gráfico: Por Módulo -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <i data-lucide="layers" class="w-5 h-5 text-purple-600"></i>
-                Por Módulo
-            </h3>
-            <div class="h-64">
-                <canvas id="chartModulo"></canvas>
+    <!-- SECCIÓN 3: INFRAESTRUCTURA DE CONECTIVIDAD -->
+    <div class="mb-10">
+        <div class="flex items-center gap-2 mb-6 border-l-4 border-blue-600 pl-4">
+            <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">III. Infraestructura de
+                Conectividad</h2>
+            <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Gráfico: Tipo de Conectividad -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md">
+                <h3
+                    class="text-[11px] font-black text-slate-400 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <i data-lucide="wifi" class="w-4 h-4 text-blue-500"></i>
+                    Tipo de Conexión
+                </h3>
+                <div class="h-[250px] relative">
+                    <canvas id="chartConectividad"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico: Fuente WiFi -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md">
+                <h3
+                    class="text-[11px] font-black text-slate-400 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <i data-lucide="router" class="w-4 h-4 text-fuchsia-500"></i>
+                    Fuente de Datos
+                </h3>
+                <div class="h-[250px] relative">
+                    <canvas id="chartFuenteWifi"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico: Proveedor -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md">
+                <h3
+                    class="text-[11px] font-black text-slate-400 mb-6 flex items-center gap-2 uppercase tracking-widest">
+                    <i data-lucide="globe" class="w-4 h-4 text-rose-500"></i>
+                    Operador de Servicio
+                </h3>
+                <div class="h-[250px] relative">
+                    <canvas id="chartProveedor"></canvas>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Gráfico: Por Descripción -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <i data-lucide="package" class="w-5 h-5 text-orange-600"></i>
-                Por Descripción
-            </h3>
-            <div class="h-64">
-                <canvas id="chartDescripcion"></canvas>
-            </div>
+    <!-- SECCIÓN 4: ANÁLISIS POR SEDE / ESTABLECIMIENTO -->
+    <div class="mb-10">
+        <div class="flex items-center gap-2 mb-6 border-l-4 border-cyan-600 pl-4">
+            <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">IV. Distribución por
+                Establecimiento</h2>
+            <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
         </div>
-
-        <!-- Gráfico: Por Establecimiento -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 lg:col-span-2">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <i data-lucide="building-2" class="w-5 h-5 text-cyan-600"></i>
-                Por Establecimiento
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 transition-all hover:shadow-md">
+            <h3 class="text-sm font-bold text-slate-500 mb-8 flex items-center gap-2 uppercase tracking-widest">
+                <i data-lucide="building-2" class="w-5 h-5 text-cyan-500"></i>
+                Total de Equipos por Sede
             </h3>
-            <div class="h-80">
+            <div class="h-96 w-full">
                 <canvas id="chartEstablecimiento"></canvas>
             </div>
         </div>
     </div>
+</div>
 </div>
