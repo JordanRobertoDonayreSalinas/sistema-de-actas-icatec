@@ -41,13 +41,25 @@ class OdontologiaController extends Controller
         $dbDni = ComDni::where('acta_id', $id)
                     ->where('modulo_id', self::MODULO_ID)->first();
         
-        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                            ->where('modulo_nombre', 'consulta_odontologia') 
+        // retrieve stored JSON/content for this module (used by the view components)
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                            ->where('modulo_nombre', 'consulta_odontologia')
                             ->first();
         
-        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
+        $fechaValidacion = $detalle ? $detalle->updated_at : null;
 
-        return view('usuario.monitoreo.modulos.odontologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
+        // pass detalle along with the other data so blade components can read existing values
+        return view('usuario.monitoreo.modulos.odontologia', compact(
+            'acta',
+            'dbCapacitacion',
+            'dbInventario',
+            'dbDificultad',
+            'dbFotos',
+            'dbInicioLabores',
+            'dbDni',
+            'fechaValidacion',
+            'detalle'
+        ));
     }
 
     // 2. BUSCADOR PROFESIONAL

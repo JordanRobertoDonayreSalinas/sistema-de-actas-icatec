@@ -71,7 +71,9 @@
             <x-equipamiento model="form.inventario" />
 
             {{-- 6.- TIPO DE CONECTIVIDAD (Componente) --}}
-                <x-tipo-conectividad :contenido="$detalle->contenido ?? []" color="indigo" />
+                <x-tipo-conectividad :contenido="optional(
+                    $detalle
+                )->contenido ?? []" color="indigo" />
 
             {{-- 6. DIFICULTADES CON EL SISTEMA (CONDICIONAL: Solo si SIHCE = SI) --}}
             <div x-show="form.profesional.utiliza_sihce === 'SI'"

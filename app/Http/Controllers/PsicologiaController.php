@@ -42,14 +42,24 @@ class PsicologiaController extends Controller
         $dbDni = ComDni::where('acta_id', $id)
                     ->where('modulo_id', self::MODULO_ID)->first();
 
-        // Obtener fecha de actualización
-        $monitoreoModulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+        // Obtener registro completo del módulo (contenido JSON)
+        $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                             ->where('modulo_nombre', 'consulta_psicologia')
                             ->first();
         
-        $fechaValidacion = $monitoreoModulo ? $monitoreoModulo->updated_at : null;
+        $fechaValidacion = $detalle ? $detalle->updated_at : null;
 
-        return view('usuario.monitoreo.modulos.psicologia', compact('acta', 'dbCapacitacion', 'dbInventario', 'dbDificultad', 'dbFotos', 'dbInicioLabores', 'dbDni', 'fechaValidacion'));
+        return view('usuario.monitoreo.modulos.psicologia', compact(
+            'acta',
+            'dbCapacitacion',
+            'dbInventario',
+            'dbDificultad',
+            'dbFotos',
+            'dbInicioLabores',
+            'dbDni',
+            'fechaValidacion',
+            'detalle'
+        ));
     }
 
     // 2. BUSCADOR PROFESIONAL
