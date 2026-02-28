@@ -16,9 +16,11 @@ class AuditoriaEquiposController extends Controller
 {
     public function index(Request $request)
     {
-        $fecha_inicio = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $fecha_inicio = $request->input('fecha_inicio', Carbon::now()->startOfYear()->format('Y-m-d'));
         $fecha_fin = $request->input('fecha_fin', Carbon::now()->format('Y-m-d'));
         $provincia = $request->input('provincia');
+        $distrito = $request->input('distrito');
+        $establecimiento_id = $request->input('establecimiento_id');
 
         // Query base: Obtener todos los módulos con su cabecera y establecimiento
         $query = MonitoreoModulos::with(['cabecera.establecimiento'])
@@ -29,6 +31,18 @@ class AuditoriaEquiposController extends Controller
         if ($provincia) {
             $query->whereHas('cabecera.establecimiento', function ($q) use ($provincia) {
                 $q->where('provincia', $provincia);
+            });
+        }
+
+        if ($distrito) {
+            $query->whereHas('cabecera.establecimiento', function ($q) use ($distrito) {
+                $q->where('distrito', $distrito);
+            });
+        }
+
+        if ($establecimiento_id) {
+            $query->whereHas('cabecera', function ($q) use ($establecimiento_id) {
+                $q->where('establecimiento_id', $establecimiento_id);
             });
         }
 
@@ -49,7 +63,8 @@ class AuditoriaEquiposController extends Controller
                 $conectividad = data_get($contenido, 'conectividad.tipo');
             }
 
-            $tiene_conexion = ($conectividad && strtoupper($conectividad) !== 'SIN CONECTIVIDAD' && strtoupper($conectividad) !== 'N/A');
+            $tiene_data_conectividad = !empty($conectividad) && strtoupper($conectividad) !== 'N/A';
+            $tiene_conexion_activa = ($tiene_data_conectividad && strtoupper($conectividad) !== 'SIN CONECTIVIDAD');
 
             // 2. Contar equipos en la tabla SQL para ese monitoreo y módulo
             $equipos_count = EquipoComputo::where('cabecera_monitoreo_id', $reg->cabecera_monitoreo_id)
@@ -58,13 +73,13 @@ class AuditoriaEquiposController extends Controller
 
             $tipo_inconsistencia = null;
 
-            // REGLAS DE NEGOCIO:
-            // 1. Si tiene equipos, DEBE tener datos de conectividad obligatoriamente.
-            if ($equipos_count > 0 && !$tiene_conexion) {
-                $tipo_inconsistencia = 'EQUIPO SIN CONEXIÓN';
+            // REGLAS DE NEGOCIO ACTUALIZADAS:
+            // 1. Si tiene equipos, DEBE haberse registrado al menos el tipo de conectividad (Incluso si es "SIN CONECTIVIDAD").
+            if ($equipos_count > 0 && !$tiene_data_conectividad) {
+                $tipo_inconsistencia = 'EQUIPO SIN DATOS DE CONEXIÓN';
             }
-            // 2. Si no tiene equipos y han agregado datos de conectividad, es inconsistente.
-            elseif ($equipos_count == 0 && $tiene_conexion) {
+            // 2. Si no tiene equipos y han agregado datos de conexión activa (WIFI/CABLEADO), es algo inconsistente.
+            elseif ($equipos_count == 0 && $tiene_conexion_activa) {
                 $tipo_inconsistencia = 'CONEXIÓN SIN EQUIPO';
             }
 
@@ -90,9 +105,48 @@ class AuditoriaEquiposController extends Controller
 
         return view('usuario.auditoria.equipos', [
             'inconsistencias' => $inconsistencias,
-            'provincias' => Establecimiento::distinct()->pluck('provincia'),
+            'provincias' => Establecimiento::whereHas('monitoreos.detalles')
+                ->distinct()
+                ->pluck('provincia')
+                ->filter()
+                ->sort(),
+            'distritos' => $provincia ? Establecimiento::where('provincia', $provincia)
+                ->whereHas('monitoreos.detalles')
+                ->distinct()
+                ->pluck('distrito')
+                ->filter()
+                ->sort() : [],
+            'establecimientos' => Establecimiento::whereHas('monitoreos.detalles')
+                ->when($provincia, fn($q) => $q->where('provincia', $provincia))
+                ->when($distrito, fn($q) => $q->where('distrito', $distrito))
+                ->orderBy('nombre')
+                ->get(),
             'fecha_inicio' => $fecha_inicio,
             'fecha_fin' => $fecha_fin
         ]);
+    }
+
+    public function ajaxGetDistritos(Request $request)
+    {
+        $distritos = Establecimiento::whereHas('monitoreos.detalles')
+            ->when($request->provincia, fn($q) => $q->where('provincia', $request->provincia))
+            ->distinct()
+            ->pluck('distrito')
+            ->filter()
+            ->sort()
+            ->values();
+
+        return response()->json($distritos);
+    }
+
+    public function ajaxGetEstablecimientos(Request $request)
+    {
+        $establecimientos = Establecimiento::whereHas('monitoreos.detalles')
+            ->when($request->provincia, fn($q) => $q->where('provincia', $request->provincia))
+            ->when($request->distrito, fn($q) => $q->where('distrito', $request->distrito))
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
+        return response()->json($establecimientos);
     }
 }

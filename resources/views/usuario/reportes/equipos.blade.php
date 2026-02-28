@@ -16,235 +16,185 @@
     <div class="max-w-7xl mx-auto space-y-6">
 
         {{-- Tarjeta de Filtros --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div class="flex items-center gap-3 mb-6">
-                <div
-                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                    <i data-lucide="filter" class="w-5 h-5 text-white"></i>
-                </div>
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">Filtros de Búsqueda</h2>
-                    <p class="text-xs text-slate-500">Selecciona los criterios para filtrar los equipos</p>
-                </div>
-            </div>
-
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
             <form method="GET" action="{{ route('usuario.reportes.equipos') }}" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3">
                     {{-- Fecha Inicio --}}
                     <div>
-                        <label for="fecha_inicio" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
-                            Fecha Inicio
-                        </label>
-                        <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ $fechaInicio }}"
-                            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Inicio</label>
+                        <input type="date" name="fecha_inicio" value="{{ $fechaInicio }}"
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
                     </div>
 
                     {{-- Fecha Fin --}}
                     <div>
-                        <label for="fecha_fin" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
-                            Fecha Fin
-                        </label>
-                        <input type="date" id="fecha_fin" name="fecha_fin" value="{{ $fechaFin }}"
-                            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Fin</label>
+                        <input type="date" name="fecha_fin" value="{{ $fechaFin }}"
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
                     </div>
 
-                    {{-- Establecimiento --}}
+                    {{-- Tipo --}}
                     <div>
-                        <label for="establecimiento_id" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i data-lucide="building-2" class="w-4 h-4 inline mr-1"></i>
-                            Establecimiento
-                        </label>
-                        <select id="establecimiento_id" name="establecimiento_id"
-                            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Tipo</label>
+                        <select id="tipo" name="tipo"
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
                             <option value="">Todos</option>
-                            @foreach($establecimientos as $est)
-                                <option value="{{ $est->id }}" {{ request('establecimiento_id') == $est->id ? 'selected' : '' }}>
-                                    {{ $est->nombre }}
-                                </option>
-                            @endforeach
+                            <option value="ESPECIALIZADO" {{ request('tipo') == 'ESPECIALIZADO' ? 'selected' : '' }}>ESP
+                            </option>
+                            <option value="NO ESPECIALIZADO" {{ request('tipo') == 'NO ESPECIALIZADO' ? 'selected' : '' }}>NO
+                                ESP</option>
                         </select>
                     </div>
 
                     {{-- Provincia --}}
                     <div>
-                        <label for="provincia" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
-                            Provincia
-                        </label>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Provincia</label>
                         <select id="provincia" name="provincia"
-                            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
                             <option value="">Todas</option>
                             @foreach($provincias as $prov)
-                                <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>
-                                    {{ $prov }}
+                                <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>{{ $prov }}
                                 </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Distrito --}}
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Distrito</label>
+                        <select id="distrito" name="distrito"
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
+                            <option value="">Todos</option>
+                            @isset($distritos)
+                                @foreach($distritos as $dist)
+                                    <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>{{ $dist }}
+                                    </option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+
+                    {{-- Establecimiento --}}
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Establ.</label>
+                        <select id="establecimiento_id" name="establecimiento_id"
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
+                            <option value="">Todos</option>
+                            @foreach($establecimientos as $est)
+                                <option value="{{ $est->id }}" {{ request('establecimiento_id') == $est->id ? 'selected' : '' }}>
+                                    {{ $est->nombre }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     {{-- Módulo --}}
                     <div>
-                        <label for="modulo" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i data-lucide="layers" class="w-4 h-4 inline mr-1"></i>
-                            Módulo
-                        </label>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Módulo</label>
                         <select id="modulo" name="modulo"
-                            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
                             <option value="">Todos</option>
                             @foreach($modulos as $key => $nombre)
-                                <option value="{{ $key }}" {{ request('modulo') == $key ? 'selected' : '' }}>
-                                    {{ $nombre }}
+                                <option value="{{ $key }}" {{ request('modulo') == $key ? 'selected' : '' }}>{{ $nombre }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
-                    {{-- Filtro por Descripción --}}
+                    {{-- Descripción --}}
                     <div>
-                        <label for="descripcion" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i>
-                            Descripción
-                        </label>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Desc.</label>
                         <select id="descripcion" name="descripcion"
-                            class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 transition-all">
                             <option value="">Todas</option>
                             @foreach($descripciones as $descripcion)
                                 <option value="{{ $descripcion }}" {{ request('descripcion') == $descripcion ? 'selected' : '' }}>
-                                    {{ $descripcion }}
-                                </option>
+                                    {{ $descripcion }}</option>
                             @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Tipo --}}
-                    <div>
-                        <label for="tipo" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i data-lucide="building-2" class="w-4 h-4 inline mr-1"></i>
-                            Tipo
-                        </label>
-                        <select id="tipo" name="tipo"
-                            class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
-                            <option value="">Todos</option>
-                            <option value="ESPECIALIZADO" {{ request('tipo') == 'ESPECIALIZADO' ? 'selected' : '' }}>
-                                ESPECIALIZADO</option>
-                            <option value="NO ESPECIALIZADO" {{ request('tipo') == 'NO ESPECIALIZADO' ? 'selected' : '' }}>NO
-                                ESPECIALIZADO</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="flex gap-3 pt-2">
+                <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 mt-2">
                     <button type="submit"
-                        class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                        Filtrar
+                        class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-700 transition-all flex items-center gap-2">
+                        <i data-lucide="search" class="w-3.5 h-3.5"></i> FILTRAR
                     </button>
-
                     <a href="{{ route('usuario.reportes.equipos') }}"
-                        class="flex items-center gap-2 px-6 py-2.5 bg-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-300 transition-all">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                        Limpiar
+                        class="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-200 transition-all flex items-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> LIMPIAR
                     </a>
 
-                    @if($equipos->count() > 0)
-                        <button type="button" onclick="generarPDF()"
-                            class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all ml-auto">
-                            <i data-lucide="file-text" class="w-4 h-4"></i>
-                            Generar PDF
-                        </button>
-
-                        <button type="button" onclick="exportarExcel()"
-                            class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                            Exportar Excel
-                        </button>
-                    @endif
+                    <div class="ml-auto flex items-center gap-2">
+                        @if($equipos->count() > 0)
+                            <button type="button" onclick="generarPDF()"
+                                class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition-all flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF
+                            </button>
+                            <button type="button" onclick="exportarExcel()"
+                                class="px-4 py-2 bg-green-50 text-green-600 text-xs font-bold rounded-lg hover:bg-green-100 transition-all flex items-center gap-2">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> EXCEL
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </form>
         </div>
 
         {{-- Resultados --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                            <i data-lucide="monitor" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-800">Equipos Encontrados</h3>
-                            <p class="text-xs text-slate-500">Total: {{ $equipos->total() }} equipos</p>
-                        </div>
-                    </div>
+            <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="monitor" class="w-4 h-4 text-purple-600"></i>
+                    <h3 class="text-sm font-bold text-slate-800">Equipos Registrados ({{ $equipos->total() }})</h3>
                 </div>
             </div>
 
             @if($equipos->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-white border-b border-slate-200 text-slate-500 uppercase font-bold">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Fecha</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">IPRESS</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Establecimiento</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Categoría</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Módulo</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Conectividad</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Fuente WiFi</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Proveedor</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Cant.</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Descripción</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Propio</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Estado</th>
+                                <th class="px-4 py-3">Fecha</th>
+                                <th class="px-4 py-3">IPRESS</th>
+                                <th class="px-4 py-3">Establecimiento</th>
+                                <th class="px-4 py-3">Tipo</th>
+                                <th class="px-4 py-3">Módulo</th>
+                                <th class="px-4 py-3 text-center">Cant.</th>
+                                <th class="px-4 py-3">Descripción</th>
+                                <th class="px-4 py-3">Conexión</th>
+                                <th class="px-4 py-3">Estado</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @foreach($equipos as $equipo)
-                                <tr class="hover:bg-purple-50/50 transition-colors">
-                                    <td class="px-4 py-3 text-sm text-slate-500">
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         {{ $equipo->cabecera->fecha ? \Carbon\Carbon::parse($equipo->cabecera->fecha)->format('d/m/Y') : 'N/A' }}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-600 font-mono">
-                                        {{ $equipo->cabecera->establecimiento->codigo ?? 'N/A' }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">
-                                        {{ $equipo->cabecera->establecimiento->nombre ?? 'N/A' }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">
-                                        {{ $equipo->cabecera->establecimiento->categoria ?? 'N/A' }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">
+                                    <td class="px-4 py-3 font-mono text-slate-400">
+                                        {{ $equipo->cabecera->establecimiento->codigo ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-4 py-3 font-medium text-slate-700">
+                                        {{ $equipo->cabecera->establecimiento->nombre ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @php $tipo = ModuloHelper::getTipoEstablecimiento($equipo->cabecera->establecimiento); @endphp
                                         <span
-                                            class="px-2 py-1 text-xs font-semibold rounded-full {{ ModuloHelper::getTipoEstablecimiento($equipo->cabecera->establecimiento) == 'ESPECIALIZADO' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                                            {{ ModuloHelper::getTipoEstablecimiento($equipo->cabecera->establecimiento) }}
+                                            class="px-2 py-0.5 rounded-full {{ $tipo == 'ESPECIALIZADO' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600' }}">
+                                            {{ $tipo }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-slate-700 font-medium">{{ ModuloHelper::getNombreAmigable($equipo->modulo) ?? 'N/A' }}</td>
-                                    @php
-                                        $conectividad = ModuloHelper::getConectividadActa($equipo->cabecera);
-                                    @endphp
-                                    <td class="px-4 py-3 text-sm">
-                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-600">
-                                            {{ $conectividad['tipo'] }}
-                                        </span>
+                                    <td class="px-4 py-3 text-slate-600">
+                                        {{ ModuloHelper::getNombreAmigable($equipo->modulo) ?? 'N/A' }}</td>
+                                    <td class="px-4 py-3 text-center font-bold text-slate-800">{{ $equipo->cantidad ?? 0 }}</td>
+                                    <td class="px-4 py-3 text-slate-600">{{ $equipo->descripcion ?? 'N/A' }}</td>
+                                    <td class="px-4 py-3">
+                                        @php $conect = ModuloHelper::getConectividadActa($equipo->cabecera); @endphp
+                                        <span class="text-slate-500">{{ $conect['tipo'] }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm">
-                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-600">
-                                            {{ $conectividad['fuente'] }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm">
-                                        <span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-600">
-                                            {{ $conectividad['operador'] }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-700 font-semibold">{{ $equipo->cantidad ?? 0 }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">{{ $equipo->descripcion ?? 'N/A' }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-600">{{ $equipo->propio ?? 'N/A' }}</td>
                                     <td class="px-4 py-3">
                                         <span
-                                            class="px-2 py-1 text-xs font-semibold rounded-full {{ $equipo->estado == 'Operativo' ? 'bg-green-100 text-green-700' : ($equipo->estado == 'Inoperativo' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
+                                            class="px-2 py-0.5 rounded-full {{ $equipo->estado == 'Operativo' ? 'bg-green-50 text-green-600' : ($equipo->estado == 'Inoperativo' ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-600') }}">
                                             {{ $equipo->estado ?? 'N/A' }}
                                         </span>
                                     </td>
@@ -254,40 +204,39 @@
                     </table>
                 </div>
 
-                {{-- Paginación --}}
-                <div class="p-4 border-t border-slate-200">
+                <div class="p-4 border-t border-slate-100 bg-slate-50/30">
                     {{ $equipos->appends(request()->query())->links() }}
                 </div>
             @else
-                <div class="p-12 text-center">
-                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                        <i data-lucide="inbox" class="w-10 h-10 text-slate-400"></i>
+                <div class="p-10 text-center">
+                    <div class="w-16 h-16 mx-auto mb-3 bg-slate-50 rounded-full flex items-center justify-center">
+                        <i data-lucide="monitor-off" class="w-8 h-8 text-slate-300"></i>
                     </div>
-                    <h3 class="text-lg font-semibold text-slate-700 mb-2">No se encontraron equipos</h3>
-                    <p class="text-sm text-slate-500">Intenta ajustar los filtros de búsqueda</p>
+                    <p class="text-slate-500 font-medium">No se encontraron equipos registrados</p>
                 </div>
             @endif
         </div>
     </div>
 
-    {{-- Formulario oculto para generar PDF --}}
+    {{-- Formularios ocultos --}}
     <form id="pdfForm" method="POST" action="{{ route('usuario.reportes.equipos.pdf') }}" style="display: none;">
         @csrf
         <input type="hidden" name="fecha_inicio" value="{{ $fechaInicio }}">
         <input type="hidden" name="fecha_fin" value="{{ $fechaFin }}">
         <input type="hidden" name="establecimiento_id" value="{{ request('establecimiento_id') }}">
         <input type="hidden" name="provincia" value="{{ request('provincia') }}">
+        <input type="hidden" name="distrito" value="{{ request('distrito') }}">
         <input type="hidden" name="modulo" value="{{ request('modulo') }}">
         <input type="hidden" name="tipo" value="{{ request('tipo') }}">
     </form>
 
-    {{-- Formulario oculto para exportar Excel --}}
     <form id="excelForm" method="POST" action="{{ route('usuario.reportes.equipos.excel') }}" style="display: none;">
         @csrf
         <input type="hidden" name="fecha_inicio" value="{{ $fechaInicio }}">
         <input type="hidden" name="fecha_fin" value="{{ $fechaFin }}">
         <input type="hidden" name="establecimiento_id" value="{{ request('establecimiento_id') }}">
         <input type="hidden" name="provincia" value="{{ request('provincia') }}">
+        <input type="hidden" name="distrito" value="{{ request('distrito') }}">
         <input type="hidden" name="modulo" value="{{ request('modulo') }}">
         <input type="hidden" name="tipo" value="{{ request('tipo') }}">
     </form>
@@ -295,229 +244,120 @@
 
 @push('scripts')
     <script>
-        // Inicializar Lucide icons
         lucide.createIcons();
 
-        // Función para generar PDF
-        function generarPDF() {
-            document.getElementById('pdfForm').submit();
-        }
+        function generarPDF() { document.getElementById('pdfForm').submit(); }
+        function exportarExcel() { document.getElementById('excelForm').submit(); }
 
-        // Función para exportar a Excel
-        function exportarExcel() {
-            document.getElementById('excelForm').submit();
-        }
-
-        // ===== FILTROS DINÁMICOS =====
         const tipoSelect = document.getElementById('tipo');
         const provinciaSelect = document.getElementById('provincia');
+        const distritoSelect = document.getElementById('distrito');
         const establecimientoSelect = document.getElementById('establecimiento_id');
         const moduloSelect = document.getElementById('modulo');
         const descripcionSelect = document.getElementById('descripcion');
 
-        // Guardar valores originales
-        const valoresOriginales = {
-            tipo: '{{ request('tipo') }}',
-            provincia: '{{ request('provincia') }}',
-            establecimiento: '{{ request('establecimiento_id') }}',
-            modulo: '{{ request('modulo') }}',
-            descripcion: '{{ request('descripcion') }}'
-        };
-
-        // Cuando cambia el tipo
-        tipoSelect.addEventListener('change', function() {
-            const tipo = this.value;
-            
-            // Resetear valores dependientes
+        // Lógica de Cascada
+        tipoSelect.addEventListener('change', () => {
             provinciaSelect.value = '';
-            establecimientoSelect.value = '';
-            moduloSelect.value = '';
-            descripcionSelect.value = '';
-            
-            // Actualizar provincias
-            actualizarProvincias(tipo);
-            
-            // Actualizar establecimientos
-            actualizarEstablecimientos(tipo, '');
-            
-            // Actualizar módulos
-            actualizarModulos(tipo, '', '');
-            
-            // Actualizar descripciones
-            actualizarDescripciones(tipo, '', '', '');
+            distritoSelect.innerHTML = '<option value="">Todos</option>';
+            establecimientoSelect.innerHTML = '<option value="">Todos</option>';
+            actualizarProvincias();
         });
 
-        // Cuando cambia la provincia
-        provinciaSelect.addEventListener('change', function() {
-            const tipo = tipoSelect.value;
-            const provincia = this.value;
-
-            // Resetear valores dependientes
-            establecimientoSelect.value = '';
-            moduloSelect.value = '';
-            descripcionSelect.value = '';
-            
-            // Actualizar establecimientos
-            actualizarEstablecimientos(tipo, provincia);
-            
-            // Actualizar módulos
-            actualizarModulos(tipo, provincia, '');
-            
-            // Actualizar descripciones
-            actualizarDescripciones(tipo, provincia, '', '');
+        provinciaSelect.addEventListener('change', () => {
+            distritoSelect.innerHTML = '<option value="">Todos</option>';
+            establecimientoSelect.innerHTML = '<option value="">Todos</option>';
+            actualizarDistritos();
         });
 
-        // Cuando cambia el establecimiento
-        establecimientoSelect.addEventListener('change', function () {
-            const tipo = tipoSelect.value;
-            const provincia = provinciaSelect.value;
-            const establecimiento = this.value;
-
-            // Resetear módulo y descripción
-            moduloSelect.value = '';
-            descripcionSelect.value = '';
-            
-            // Actualizar módulos
-            actualizarModulos(tipo, provincia, establecimiento);
-            
-            // Actualizar descripciones
-            actualizarDescripciones(tipo, provincia, establecimiento, '');
+        distritoSelect.addEventListener('change', () => {
+            establecimientoSelect.innerHTML = '<option value="">Todos</option>';
+            actualizarEstablecimientos();
         });
 
-        // Cuando cambia el módulo
-        moduloSelect.addEventListener('change', function() {
-            const tipo = tipoSelect.value;
-            const provincia = provinciaSelect.value;
-            const establecimiento = establecimientoSelect.value;
-            const modulo = this.value;
-            
-            // Resetear descripción
-            descripcionSelect.value = '';
-            
-            // Actualizar descripciones
-            actualizarDescripciones(tipo, provincia, establecimiento, modulo);
+        establecimientoSelect.addEventListener('change', () => {
+            moduloSelect.innerHTML = '<option value="">Todos</option>';
+            actualizarModulos();
         });
 
-        // Función para actualizar provincias
-        function actualizarProvincias(tipo) {
-            const url = '{{ route('usuario.reportes.equipos.ajax.provincias') }}';
-            const params = new URLSearchParams();
-            if (tipo) params.append('tipo', tipo);
+        moduloSelect.addEventListener('change', () => {
+            descripcionSelect.innerHTML = '<option value="">Todas</option>';
+            actualizarDescripciones();
+        });
 
-            fetch(`${url}?${params}`)
-                .then(response => response.json())
+        function actualizarProvincias() {
+            const params = new URLSearchParams({ tipo: tipoSelect.value });
+            fetch(`{{ route('usuario.reportes.equipos.ajax.provincias') }}?${params}`)
+                .then(r => r.json())
                 .then(data => {
-                    const valorActual = provinciaSelect.value;
                     provinciaSelect.innerHTML = '<option value="">Todas</option>';
-
-                    data.forEach(provincia => {
-                        const option = document.createElement('option');
-                        option.value = provincia;
-                        option.textContent = provincia;
-                        if (provincia === valorActual) option.selected = true;
-                        provinciaSelect.appendChild(option);
+                    data.forEach(p => {
+                        provinciaSelect.innerHTML += `<option value="${p}">${p}</option>`;
                     });
                 });
         }
 
-        // Función para actualizar establecimientos
-        function actualizarEstablecimientos(tipo, provincia) {
-            const url = '{{ route('usuario.reportes.equipos.ajax.establecimientos') }}';
-            const params = new URLSearchParams();
-            if (tipo) params.append('tipo', tipo);
-            if (provincia) params.append('provincia', provincia);
-
-            fetch(`${url}?${params}`)
-                .then(response => response.json())
+        function actualizarDistritos() {
+            const params = new URLSearchParams({ tipo: tipoSelect.value, provincia: provinciaSelect.value });
+            fetch(`{{ route('usuario.reportes.equipos.ajax.distritos') }}?${params}`)
+                .then(r => r.json())
                 .then(data => {
-                    const valorActual = establecimientoSelect.value;
+                    distritoSelect.innerHTML = '<option value="">Todos</option>';
+                    data.forEach(d => {
+                        distritoSelect.innerHTML += `<option value="${d}">${d}</option>`;
+                    });
+                });
+        }
+
+        function actualizarEstablecimientos() {
+            const params = new URLSearchParams({
+                tipo: tipoSelect.value,
+                provincia: provinciaSelect.value,
+                distrito: distritoSelect.value
+            });
+            fetch(`{{ route('usuario.reportes.equipos.ajax.establecimientos') }}?${params}`)
+                .then(r => r.json())
+                .then(data => {
                     establecimientoSelect.innerHTML = '<option value="">Todos</option>';
-
-                    data.forEach(est => {
-                        const option = document.createElement('option');
-                        option.value = est.id;
-                        option.textContent = est.nombre;
-                        if (est.id == valorActual) option.selected = true;
-                        establecimientoSelect.appendChild(option);
+                    data.forEach(e => {
+                        establecimientoSelect.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
                     });
                 });
         }
 
-        // Función para actualizar módulos
-        function actualizarModulos(tipo, provincia, establecimiento) {
-            const url = '{{ route('usuario.reportes.equipos.ajax.modulos') }}';
-            const params = new URLSearchParams();
-            if (tipo) params.append('tipo', tipo);
-            if (provincia) params.append('provincia', provincia);
-            if (establecimiento) params.append('establecimiento_id', establecimiento);
-
-            fetch(`${url}?${params}`)
-                .then(response => response.json())
+        function actualizarModulos() {
+            const params = new URLSearchParams({
+                tipo: tipoSelect.value,
+                provincia: provinciaSelect.value,
+                distrito: distritoSelect.value,
+                establecimiento_id: establecimientoSelect.value
+            });
+            fetch(`{{ route('usuario.reportes.equipos.ajax.modulos') }}?${params}`)
+                .then(r => r.json())
                 .then(data => {
-                    const valorActual = moduloSelect.value;
                     moduloSelect.innerHTML = '<option value="">Todos</option>';
-
-                    Object.entries(data).forEach(([key, nombre]) => {
-                        const option = document.createElement('option');
-                        option.value = key;
-                        option.textContent = nombre;
-                        if (key === valorActual) option.selected = true;
-                        moduloSelect.appendChild(option);
+                    Object.entries(data).forEach(([key, val]) => {
+                        moduloSelect.innerHTML += `<option value="${key}">${val}</option>`;
                     });
                 });
         }
 
-        // Función para actualizar descripciones
-        function actualizarDescripciones(tipo, provincia, establecimiento, modulo) {
-            const url = '{{ route('usuario.reportes.equipos.ajax.descripciones') }}';
-            const params = new URLSearchParams();
-            if (tipo) params.append('tipo', tipo);
-            if (provincia) params.append('provincia', provincia);
-            if (establecimiento) params.append('establecimiento_id', establecimiento);
-            if (modulo) params.append('modulo', modulo);
-
-            fetch(`${url}?${params}`)
-                .then(response => response.json())
+        function actualizarDescripciones() {
+            const params = new URLSearchParams({
+                tipo: tipoSelect.value,
+                provincia: provinciaSelect.value,
+                distrito: distritoSelect.value,
+                establecimiento_id: establecimientoSelect.value,
+                modulo: moduloSelect.value
+            });
+            fetch(`{{ route('usuario.reportes.equipos.ajax.descripciones') }}?${params}`)
+                .then(r => r.json())
                 .then(data => {
-                    const valorActual = descripcionSelect.value;
                     descripcionSelect.innerHTML = '<option value="">Todas</option>';
-                    
-                    data.forEach(descripcion => {
-                        const option = document.createElement('option');
-                        option.value = descripcion;
-                        option.textContent = descripcion;
-                        if (descripcion === valorActual) option.selected = true;
-                        descripcionSelect.appendChild(option);
+                    data.forEach(d => {
+                        descripcionSelect.innerHTML += `<option value="${d}">${d}</option>`;
                     });
                 });
         }
-
-        // Inicializar filtros al cargar la página si hay valores seleccionados
-        document.addEventListener('DOMContentLoaded', function() {
-            const tipoInicial = tipoSelect.value;
-            const provinciaInicial = provinciaSelect.value;
-            const establecimientoInicial = establecimientoSelect.value;
-            const moduloInicial = moduloSelect.value;
-
-            // Si hay un tipo seleccionado, actualizar todos los filtros
-            if (tipoInicial) {
-                actualizarProvincias(tipoInicial);
-                actualizarEstablecimientos(tipoInicial, provinciaInicial);
-                actualizarModulos(tipoInicial, provinciaInicial, establecimientoInicial);
-                actualizarDescripciones(tipoInicial, provinciaInicial, establecimientoInicial, moduloInicial);
-            } else if (provinciaInicial) {
-                // Si solo hay provincia, actualizar establecimientos, módulos y descripciones
-                actualizarEstablecimientos('', provinciaInicial);
-                actualizarModulos('', provinciaInicial, establecimientoInicial);
-                actualizarDescripciones('', provinciaInicial, establecimientoInicial, moduloInicial);
-            } else if (establecimientoInicial) {
-                // Si solo hay establecimiento, actualizar módulos y descripciones
-                actualizarModulos('', '', establecimientoInicial);
-                actualizarDescripciones('', '', establecimientoInicial, moduloInicial);
-            } else if (moduloInicial) {
-                // Si solo hay módulo, actualizar descripciones
-                actualizarDescripciones('', '', '', moduloInicial);
-            }
-        });
     </script>
 @endpush

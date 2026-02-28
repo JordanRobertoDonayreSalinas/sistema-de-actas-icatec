@@ -26,43 +26,67 @@
         </div>
 
         {{-- Filtros --}}
-        <form method="GET" action="{{ route('usuario.auditoria.equipos') }}"
-            class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div>
+        <form method="GET" action="{{ route('usuario.auditoria.equipos') }}" id="filterForm"
+            class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-6 lg:flex lg:items-end gap-3 items-end">
+                <div class="lg:flex-1 min-w-0">
                     <label
                         class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Provincia</label>
-                    <select name="provincia"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                    <select name="provincia" id="provinciaSelect"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                         <option value="">TODAS</option>
                         @foreach($provincias as $prov)
-                            <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>{{ $prov }}</option>
+                            <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>
+                                {{ $prov }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
+                <div class="lg:flex-1 min-w-0">
+                    <label
+                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Distrito</label>
+                    <select name="distrito" id="distritoSelect"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        <option value="">TODOS</option>
+                        @foreach($distritos as $dist)
+                            <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>
+                                {{ $dist }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="lg:flex-[1.5] min-w-0">
+                    <label
+                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Establecimiento</label>
+                    <select name="establecimiento_id" id="establecimientoSelect"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        <option value="">TODOS</option>
+                        @foreach($establecimientos as $est)
+                            <option value="{{ $est->id }}"
+                                {{ request('establecimiento_id') == $est->id ? 'selected' : '' }}>{{ $est->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="lg:w-36">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Desde</label>
                     <input type="date" name="fecha_inicio" value="{{ $fecha_inicio }}"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                 </div>
-                <div>
+                <div class="lg:w-36">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Hasta</label>
                     <input type="date" name="fecha_fin" value="{{ $fecha_fin }}"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                 </div>
                 <div class="flex gap-2">
                     <button type="submit"
-                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
                         <i data-lucide="search" class="w-4 h-4"></i>
-                        <span>Filtrar</span>
                     </button>
                     <button type="submit" name="export" value="1"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2">
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                        <span>Excel</span>
                     </button>
                     <a href="{{ route('usuario.auditoria.equipos') }}"
-                        class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 px-4 rounded-xl text-xs transition-all flex items-center justify-center">
+                        class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center">
                         <i data-lucide="rotate-cw" class="w-4 h-4"></i>
                     </a>
                 </div>
@@ -125,9 +149,9 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @if($item['tipo_inconsistencia'] == 'EQUIPO SIN CONEXIÓN')
+                                    @if($item['tipo_inconsistencia'] == 'EQUIPO SIN DATOS DE CONEXIÓN')
                                         <span class="px-2 py-1 rounded-full font-black text-[9px] bg-red-100 text-red-600">
-                                            EQUIPO SIN CONEXIÓN
+                                            EQUIPO SIN DATOS DE CONEXIÓN
                                         </span>
                                     @else
                                         <span class="px-2 py-1 rounded-full font-black text-[9px] bg-amber-100 text-amber-600">
@@ -158,6 +182,54 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const provinciaSelect = document.getElementById('provinciaSelect');
+            const distritoSelect = document.getElementById('distritoSelect');
+            const establecimientoSelect = document.getElementById('establecimientoSelect');
+
+            provinciaSelect.addEventListener('change', async () => {
+                const provincia = provinciaSelect.value;
+                
+                // Limpiar selectores dependientes
+                distritoSelect.innerHTML = '<option value="">TODOS</option>';
+                establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
+
+                if (provincia) {
+                    // Cargar Distritos
+                    const resDist = await fetch(`{{ route('usuario.auditoria.equipos.ajax.distritos') }}?provincia=${provincia}`);
+                    const distritos = await resDist.json();
+                    distritos.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d;
+                        opt.textContent = d;
+                        distritoSelect.appendChild(opt);
+                    });
+
+                    // Cargar Establecimientos (solo por provincia inicialmente)
+                    actualizarEstablecimientos(provincia, '');
+                } else {
+                    // Volver a cargar todos si es necesario o dejar en todos
+                    actualizarEstablecimientos('', '');
+                }
+            });
+
+            distritoSelect.addEventListener('change', async () => {
+                const provincia = provinciaSelect.value;
+                const distrito = distritoSelect.value;
+                actualizarEstablecimientos(provincia, distrito);
+            });
+
+            async function actualizarEstablecimientos(provincia, distrito) {
+                establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
+                const resEst = await fetch(`{{ route('usuario.auditoria.equipos.ajax.establecimientos') }}?provincia=${provincia}&distrito=${distrito}`);
+                const establecimientos = await resEst.json();
+                establecimientos.forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e.id;
+                    opt.textContent = e.nombre;
+                    establecimientoSelect.appendChild(opt);
+                });
+            }
         });
     </script>
 @endpush

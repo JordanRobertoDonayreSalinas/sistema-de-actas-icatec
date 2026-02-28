@@ -29,7 +29,7 @@ class ReporteEquiposController extends Controller
             session(['equipos_fecha_fin' => $fechaFin]);
         } else {
             // Si no hay fechas en el request, usar las de sesión o valores por defecto
-            $fechaInicio = session('equipos_fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
+            $fechaInicio = session('equipos_fecha_inicio', now()->startOfYear()->format('Y-m-d'));
             $fechaFin = session('equipos_fecha_fin', now()->format('Y-m-d'));
         }
 
@@ -357,6 +357,11 @@ class ReporteEquiposController extends Controller
             $query->where('provincia', $request->provincia);
         }
 
+        // Filtrar por distrito si se proporciona
+        if ($request->filled('distrito')) {
+            $query->where('distrito', $request->distrito);
+        }
+
         // Filtrar por tipo si se proporciona
         if ($request->filled('tipo')) {
             $codigosCSMC = ['25933', '28653', '27197', '34021', '25977', '33478', '27199', '30478'];
@@ -384,6 +389,29 @@ class ReporteEquiposController extends Controller
 
         $establecimientos = $query->orderBy('nombre', 'asc')->get(['id', 'nombre']);
         return response()->json($establecimientos);
+    }
+
+    /**
+     * Obtiene distritos filtrados por provincia y tipo
+     */
+    public function ajaxGetDistritos(Request $request)
+    {
+        $query = Establecimiento::whereIn('id', function ($subQuery) {
+            $subQuery->select('establecimiento_id')
+                ->from('mon_cabecera_monitoreo')
+                ->whereIn('id', function ($subSubQuery) {
+                    $subSubQuery->select('cabecera_monitoreo_id')
+                        ->from('mon_equipos_computo')
+                        ->distinct();
+                });
+        });
+
+        if ($request->filled('provincia')) {
+            $query->where('provincia', $request->provincia);
+        }
+
+        $distritos = $query->distinct()->pluck('distrito')->filter()->sort()->values();
+        return response()->json($distritos);
     }
 
     /**

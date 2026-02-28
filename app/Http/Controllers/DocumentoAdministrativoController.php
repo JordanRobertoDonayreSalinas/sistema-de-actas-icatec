@@ -17,8 +17,8 @@ class DocumentoAdministrativoController extends Controller
      */
     public function index(Request $request)
     {
-        // Fechas por defecto (Mes actual)
-        $fecha_inicio = $request->input('fecha_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        // Fechas por defecto (Mes actual -> ahora: inicio de año)
+        $fecha_inicio = $request->input('fecha_inicio', Carbon::now()->startOfYear()->format('Y-m-d'));
         $fecha_fin = $request->input('fecha_fin', Carbon::now()->format('Y-m-d'));
 
         $query = DocumentoAdministrativo::with(['establecimiento', 'user']);
@@ -49,7 +49,7 @@ class DocumentoAdministrativoController extends Controller
 
         if ($request->filled('establecimiento_nombre')) {
             $query->whereHas('establecimiento', function ($q) use ($request) {
-                $q->where('nombre_establecimiento', 'like', "%{$request->establecimiento_nombre}%");
+                $q->where('nombre', 'like', "%{$request->establecimiento_nombre}%");
             });
         }
 
@@ -82,15 +82,21 @@ class DocumentoAdministrativoController extends Controller
 
         $countPendientes = $totalDocs - $countCompletados;
 
-        // Listas para los Selects de Filtros (Carga optimizada)
-        $provincias = Establecimiento::select('provincia')->distinct()->orderBy('provincia')->pluck('provincia');
+        // Listas para los Selects de Filtros (Carga optimizada con existencia de datos)
+        $provincias = Establecimiento::whereHas('documentosAdministrativos')->select('provincia')->distinct()->orderBy('provincia')->pluck('provincia');
 
-        // Si hay provincia seleccionada, cargamos solo sus distritos, si no, todos
-        $distritosQuery = Establecimiento::select('distrito')->distinct()->orderBy('distrito');
+        // Si hay provincia seleccionada, cargamos solo sus distritos
+        $distritosQuery = Establecimiento::whereHas('documentosAdministrativos')->select('distrito')->distinct()->orderBy('distrito');
         if ($request->filled('provincia')) {
             $distritosQuery->where('provincia', $request->provincia);
         }
         $distritos = $distritosQuery->pluck('distrito');
+
+        $establecimientos = Establecimiento::whereHas('documentosAdministrativos')
+            ->when($request->provincia, fn($q) => $q->where('provincia', $request->provincia))
+            ->when($request->distrito, fn($q) => $q->where('distrito', $request->distrito))
+            ->orderBy('nombre')
+            ->get();
 
         return view('usuario.documentos_administrativos.index', compact(
             'documentos',
@@ -99,7 +105,8 @@ class DocumentoAdministrativoController extends Controller
             'countCompletados',
             'countPendientes',
             'provincias',
-            'distritos'
+            'distritos',
+            'establecimientos'
         ));
     }
 
@@ -252,5 +259,34 @@ class DocumentoAdministrativoController extends Controller
         $doc->update([$columna => $path]);
 
         return response()->json(['success' => true, 'message' => 'Archivo cargado correctamente']);
+    }
+
+    /**
+     * AJAX para obtener distritos que tienen documentos administrativos
+     */
+    public function ajaxGetDistritos(Request $request)
+    {
+        $query = Establecimiento::whereHas('documentosAdministrativos');
+        if ($request->filled('provincia')) {
+            $query->where('provincia', $request->provincia);
+        }
+        $distritos = $query->distinct()->pluck('distrito')->filter()->sort()->values();
+        return response()->json($distritos);
+    }
+
+    /**
+     * AJAX para obtener establecimientos que tienen documentos administrativos
+     */
+    public function ajaxGetEstablecimientos(Request $request)
+    {
+        $query = Establecimiento::whereHas('documentosAdministrativos');
+        if ($request->filled('provincia')) {
+            $query->where('provincia', $request->provincia);
+        }
+        if ($request->filled('distrito')) {
+            $query->where('distrito', $request->distrito);
+        }
+        $establecimientos = $query->orderBy('nombre', 'asc')->get(['id', 'nombre']);
+        return response()->json($establecimientos);
     }
 }

@@ -46,4 +46,9 @@ class Establecimiento extends Model
     {
         return $this->hasMany(Acta::class, 'establecimiento_id');
     }
+
+    public function documentosAdministrativos()
+    {
+        return $this->hasMany(DocumentoAdministrativo::class, 'establecimiento_id');
+    }
 }

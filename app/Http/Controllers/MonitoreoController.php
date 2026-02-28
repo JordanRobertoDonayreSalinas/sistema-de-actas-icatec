@@ -59,6 +59,16 @@ class MonitoreoController extends Controller
             });
         }
 
+        if ($request->filled('distrito')) {
+            $query->whereHas('establecimiento', function ($q) use ($request) {
+                $q->where('distrito', $request->input('distrito'));
+            });
+        }
+
+        if ($request->filled('establecimiento_id')) {
+            $query->where('establecimiento_id', $request->input('establecimiento_id'));
+        }
+
         if ($request->filled('estado')) {
             if ($request->estado == 'firmada') {
                 $query->where('firmado', 1);
@@ -79,7 +89,24 @@ class MonitoreoController extends Controller
         $countPendientes = $totalActas - $countCompletados;
 
         $implementadores = CabeceraMonitoreo::distinct()->pluck('implementador');
-        $provincias = Establecimiento::distinct()->pluck('provincia');
+        $provincias = Establecimiento::whereHas('monitoreos.detalles')
+            ->distinct()
+            ->pluck('provincia')
+            ->filter()
+            ->sort();
+
+        $distritos = $request->filled('provincia') ? Establecimiento::where('provincia', $request->provincia)
+            ->whereHas('monitoreos.detalles')
+            ->distinct()
+            ->pluck('distrito')
+            ->filter()
+            ->sort() : [];
+
+        $establecimientos = Establecimiento::whereHas('monitoreos.detalles')
+            ->when($request->provincia, fn($q) => $q->where('provincia', $request->provincia))
+            ->when($request->distrito, fn($q) => $q->where('distrito', $request->distrito))
+            ->orderBy('nombre')
+            ->get();
 
         return view('usuario.monitoreo.index', compact(
             'monitoreos',
@@ -87,9 +114,35 @@ class MonitoreoController extends Controller
             'countPendientes',
             'implementadores',
             'provincias',
+            'distritos',
+            'establecimientos',
             'fecha_inicio',
             'fecha_fin'
         ));
+    }
+
+    public function ajaxGetDistritos(Request $request)
+    {
+        $distritos = Establecimiento::whereHas('monitoreos.detalles')
+            ->when($request->provincia, fn($q) => $q->where('provincia', $request->provincia))
+            ->distinct()
+            ->pluck('distrito')
+            ->filter()
+            ->sort()
+            ->values();
+
+        return response()->json($distritos);
+    }
+
+    public function ajaxGetEstablecimientos(Request $request)
+    {
+        $establecimientos = Establecimiento::whereHas('monitoreos.detalles')
+            ->when($request->provincia, fn($q) => $q->where('provincia', $request->provincia))
+            ->when($request->distrito, fn($q) => $q->where('distrito', $request->distrito))
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
+        return response()->json($establecimientos);
     }
 
     public function create()
