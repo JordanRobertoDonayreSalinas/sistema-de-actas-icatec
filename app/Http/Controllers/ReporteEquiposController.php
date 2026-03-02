@@ -410,6 +410,11 @@ class ReporteEquiposController extends Controller
             $query->where('provincia', $request->provincia);
         }
 
+        // Aplicar filtro de tipo si existe
+        if ($request->filled('tipo')) {
+            $this->applyTipoFilter($query, $request->tipo);
+        }
+
         $distritos = $query->distinct()->pluck('distrito')->filter()->sort()->values();
         return response()->json($distritos);
     }
@@ -479,36 +484,22 @@ class ReporteEquiposController extends Controller
             });
         }
 
+        // Filtrar por distrito
+        if ($request->filled('distrito')) {
+            $query->whereHas('cabecera.establecimiento', function ($q) use ($request) {
+                $q->where('distrito', $request->distrito);
+            });
+        }
+
         // Filtrar por tipo
         if ($request->filled('tipo')) {
-            $codigosCSMC = ['25933', '28653', '27197', '34021', '25977', '33478', '27199', '30478'];
-            $nombresCSMC = [
-                'CSMC TUPAC AMARU',
-                'CSMC COLOR ESPERANZA',
-                'CSMC DECÍDETE A SER FELIZ',
-                'CSMC SANTISIMA VIRGEN DE YAUCA',
-                'CSMC VITALIZA',
-                'CSMC CRISTO MORENO DE LUREN',
-                'CSMC NUEVO HORIZONTE',
-                'CSMC MENTE SANA'
-            ];
-
-            if ($request->tipo === 'ESPECIALIZADO') {
-                $query->whereHas('cabecera.establecimiento', function ($q) use ($codigosCSMC, $nombresCSMC) {
-                    $q->whereIn('codigo', $codigosCSMC)
-                        ->orWhereIn(DB::raw('UPPER(TRIM(nombre))'), $nombresCSMC);
-                });
-            } elseif ($request->tipo === 'NO ESPECIALIZADO') {
-                $query->whereHas('cabecera.establecimiento', function ($q) use ($codigosCSMC, $nombresCSMC) {
-                    $q->whereNotIn('codigo', $codigosCSMC)
-                        ->whereNotIn(DB::raw('UPPER(TRIM(nombre))'), $nombresCSMC);
-                });
-            }
+            $query->whereHas('cabecera.establecimiento', function ($q) use ($request) {
+                $this->applyTipoFilter($q, $request->tipo);
+            });
         }
 
         $modulosTecnicos = $query->distinct()->pluck('modulo')->filter()->sort()->values();
 
-        // Convertir a formato esperado por JavaScript: [{valor, nombre}, ...]
         $modulos = [];
         foreach ($modulosTecnicos as $moduloTecnico) {
             $modulos[] = [
@@ -541,31 +532,18 @@ class ReporteEquiposController extends Controller
             });
         }
 
+        // Filtrar por distrito
+        if ($request->filled('distrito')) {
+            $query->whereHas('cabecera.establecimiento', function ($q) use ($request) {
+                $q->where('distrito', $request->distrito);
+            });
+        }
+
         // Filtrar por tipo
         if ($request->filled('tipo')) {
-            $codigosCSMC = ['25933', '28653', '27197', '34021', '25977', '33478', '27199', '30478'];
-            $nombresCSMC = [
-                'CSMC TUPAC AMARU',
-                'CSMC COLOR ESPERANZA',
-                'CSMC DECÍDETE A SER FELIZ',
-                'CSMC SANTISIMA VIRGEN DE YAUCA',
-                'CSMC VITALIZA',
-                'CSMC CRISTO MORENO DE LUREN',
-                'CSMC NUEVO HORIZONTE',
-                'CSMC MENTE SANA'
-            ];
-
-            if ($request->tipo === 'ESPECIALIZADO') {
-                $query->whereHas('cabecera.establecimiento', function ($q) use ($codigosCSMC, $nombresCSMC) {
-                    $q->whereIn('codigo', $codigosCSMC)
-                        ->orWhereIn(DB::raw('UPPER(TRIM(nombre))'), $nombresCSMC);
-                });
-            } elseif ($request->tipo === 'NO ESPECIALIZADO') {
-                $query->whereHas('cabecera.establecimiento', function ($q) use ($codigosCSMC, $nombresCSMC) {
-                    $q->whereNotIn('codigo', $codigosCSMC)
-                        ->whereNotIn(DB::raw('UPPER(TRIM(nombre))'), $nombresCSMC);
-                });
-            }
+            $query->whereHas('cabecera.establecimiento', function ($q) use ($request) {
+                $this->applyTipoFilter($q, $request->tipo);
+            });
         }
 
         // Filtrar por módulo
@@ -575,5 +553,35 @@ class ReporteEquiposController extends Controller
 
         $descripciones = $query->distinct()->pluck('descripcion')->filter()->sort()->values();
         return response()->json($descripciones);
+    }
+
+    /**
+     * Helper centralizado para el filtro de tipo de establecimiento
+     */
+    private function applyTipoFilter($query, $tipo)
+    {
+        $codigosCSMC = ['25933', '28653', '27197', '34021', '25977', '33478', '27199', '30478'];
+        $nombresCSMC = [
+            'CSMC TUPAC AMARU',
+            'CSMC COLOR ESPERANZA',
+            'CSMC DECÍDETE A SER FELIZ',
+            'CSMC SANTISIMA VIRGEN DE YAUCA',
+            'CSMC VITALIZA',
+            'CSMC CRISTO MORENO DE LUREN',
+            'CSMC NUEVO HORIZONTE',
+            'CSMC MENTE SANA'
+        ];
+
+        if ($tipo === 'ESPECIALIZADO') {
+            $query->where(function ($q) use ($codigosCSMC, $nombresCSMC) {
+                $q->whereIn('codigo', $codigosCSMC)
+                    ->orWhereIn(DB::raw('UPPER(TRIM(nombre))'), $nombresCSMC);
+            });
+        } elseif ($tipo === 'NO ESPECIALIZADO') {
+            $query->where(function ($q) use ($codigosCSMC, $nombresCSMC) {
+                $q->whereNotIn('codigo', $codigosCSMC)
+                    ->whereNotIn(DB::raw('UPPER(TRIM(nombre))'), $nombresCSMC);
+            });
+        }
     }
 }

@@ -160,6 +160,7 @@ Route::middleware(['auth'])->group(function () {
             // AJAX endpoints para filtros dinámicos
             Route::get('/equipos/ajax/establecimientos', [ReporteEquiposController::class, 'getEstablecimientos'])->name('equipos.ajax.establecimientos');
             Route::get('/equipos/ajax/provincias', [ReporteEquiposController::class, 'getProvincias'])->name('equipos.ajax.provincias');
+            Route::get('/equipos/ajax/distritos', [ReporteEquiposController::class, 'ajaxGetDistritos'])->name('equipos.ajax.distritos');
             Route::get('/equipos/ajax/modulos', [ReporteEquiposController::class, 'getModulos'])->name('equipos.ajax.modulos');
             Route::get('/equipos/ajax/descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('equipos.ajax.descripciones');
         });

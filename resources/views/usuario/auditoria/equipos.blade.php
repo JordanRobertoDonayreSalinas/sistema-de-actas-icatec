@@ -37,7 +37,8 @@
                         <option value="">TODAS</option>
                         @foreach($provincias as $prov)
                             <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>
-                                {{ $prov }}</option>
+                                {{ $prov }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -49,7 +50,8 @@
                         <option value="">TODOS</option>
                         @foreach($distritos as $dist)
                             <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>
-                                {{ $dist }}</option>
+                                {{ $dist }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -60,8 +62,21 @@
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                         <option value="">TODOS</option>
                         @foreach($establecimientos as $est)
-                            <option value="{{ $est->id }}"
-                                {{ request('establecimiento_id') == $est->id ? 'selected' : '' }}>{{ $est->nombre }}
+                            <option value="{{ $est->id }}" {{ request('establecimiento_id') == $est->id ? 'selected' : '' }}>
+                                {{ $est->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="lg:flex-1 min-w-0">
+                    <label
+                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Implementador</label>
+                    <select name="implementador" id="implementadorSelect"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        <option value="">TODOS</option>
+                        @foreach($implementadores as $imp)
+                            <option value="{{ $imp }}" {{ request('implementador') == $imp ? 'selected' : '' }}>
+                                {{ $imp }}
                             </option>
                         @endforeach
                     </select>
@@ -189,7 +204,7 @@
 
             provinciaSelect.addEventListener('change', async () => {
                 const provincia = provinciaSelect.value;
-                
+
                 // Limpiar selectores dependientes
                 distritoSelect.innerHTML = '<option value="">TODOS</option>';
                 establecimientoSelect.innerHTML = '<option value="">TODOS</option>';

@@ -82,7 +82,8 @@
                             <option value="">Todos</option>
                             @foreach($establecimientos as $est)
                                 <option value="{{ $est->id }}" {{ request('establecimiento_id') == $est->id ? 'selected' : '' }}>
-                                    {{ $est->nombre }}</option>
+                                    {{ $est->nombre }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -108,7 +109,8 @@
                             <option value="">Todas</option>
                             @foreach($descripciones as $descripcion)
                                 <option value="{{ $descripcion }}" {{ request('descripcion') == $descripcion ? 'selected' : '' }}>
-                                    {{ $descripcion }}</option>
+                                    {{ $descripcion }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -185,7 +187,8 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-slate-600">
-                                        {{ ModuloHelper::getNombreAmigable($equipo->modulo) ?? 'N/A' }}</td>
+                                        {{ ModuloHelper::getNombreAmigable($equipo->modulo) ?? 'N/A' }}
+                                    </td>
                                     <td class="px-4 py-3 text-center font-bold text-slate-800">{{ $equipo->cantidad ?? 0 }}</td>
                                     <td class="px-4 py-3 text-slate-600">{{ $equipo->descripcion ?? 'N/A' }}</td>
                                     <td class="px-4 py-3">

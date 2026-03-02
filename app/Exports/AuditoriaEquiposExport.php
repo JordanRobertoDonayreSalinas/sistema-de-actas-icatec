@@ -35,6 +35,7 @@ class AuditoriaEquiposExport implements FromCollection, WithHeadings, WithMappin
             'MÓDULO',
             'CANT. EQUIPOS',
             'CONECTIVIDAD',
+            'IMPLEMENTADOR',
             'TIPO INCONSISTENCIA',
         ];
     }
@@ -51,6 +52,7 @@ class AuditoriaEquiposExport implements FromCollection, WithHeadings, WithMappin
             $item['modulo_nombre'],
             $item['equipos_count'],
             $item['conectividad'],
+            $item['implementador'],
             $item['tipo_inconsistencia'],
         ];
     }
@@ -83,7 +85,8 @@ class AuditoriaEquiposExport implements FromCollection, WithHeadings, WithMappin
             'G' => 25,
             'H' => 15,
             'I' => 20,
-            'J' => 30,
+            'J' => 25,
+            'K' => 30,
         ];
     }
 }

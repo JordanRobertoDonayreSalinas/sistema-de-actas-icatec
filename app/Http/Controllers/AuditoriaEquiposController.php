@@ -21,6 +21,7 @@ class AuditoriaEquiposController extends Controller
         $provincia = $request->input('provincia');
         $distrito = $request->input('distrito');
         $establecimiento_id = $request->input('establecimiento_id');
+        $implementador = $request->input('implementador');
 
         // Query base: Obtener todos los módulos con su cabecera y establecimiento
         $query = MonitoreoModulos::with(['cabecera.establecimiento'])
@@ -43,6 +44,12 @@ class AuditoriaEquiposController extends Controller
         if ($establecimiento_id) {
             $query->whereHas('cabecera', function ($q) use ($establecimiento_id) {
                 $q->where('establecimiento_id', $establecimiento_id);
+            });
+        }
+
+        if ($implementador) {
+            $query->whereHas('cabecera', function ($q) use ($implementador) {
+                $q->where('implementador', $implementador);
             });
         }
 
@@ -94,6 +101,7 @@ class AuditoriaEquiposController extends Controller
                     'modulo_nombre' => ModuloHelper::getNombreAmigable($reg->modulo_nombre),
                     'equipos_count' => $equipos_count,
                     'conectividad' => $conectividad ?: 'SIN DATOS',
+                    'implementador' => $cabecera->implementador ?? 'N/A',
                     'tipo_inconsistencia' => $tipo_inconsistencia
                 ];
             }
@@ -121,6 +129,10 @@ class AuditoriaEquiposController extends Controller
                 ->when($distrito, fn($q) => $q->where('distrito', $distrito))
                 ->orderBy('nombre')
                 ->get(),
+            'implementadores' => \App\Models\CabeceraMonitoreo::distinct()
+                ->whereNotNull('implementador')
+                ->pluck('implementador')
+                ->sort(),
             'fecha_inicio' => $fecha_inicio,
             'fecha_fin' => $fecha_fin
         ]);
