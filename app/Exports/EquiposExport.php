@@ -31,6 +31,7 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
     {
         return [
             'Fecha',
+            'Mes',
             'IPRESS',
             'Establecimiento',
             'Categoría',
@@ -38,7 +39,6 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Módulo',
             'Cantidad',
             'Descripción',
-            'NroSerie',
             'Propio',
             'Estado',
             'Provincia',
@@ -46,14 +46,30 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Conectividad',
             'Fuente WiFi',
             'Proveedor',
-            'Observación',
         ];
     }
 
     public function map($equipo): array
     {
+        $meses = [
+            1 => 'ENERO',
+            2 => 'FEBRERO',
+            3 => 'MARZO',
+            4 => 'ABRIL',
+            5 => 'MAYO',
+            6 => 'JUNIO',
+            7 => 'JULIO',
+            8 => 'AGOSTO',
+            9 => 'SEPTIEMBRE',
+            10 => 'OCTUBRE',
+            11 => 'NOVIEMBRE',
+            12 => 'DICIEMBRE',
+        ];
+
+        $fecha = $equipo->cabecera->fecha ? \Carbon\Carbon::parse($equipo->cabecera->fecha) : null;
         return [
-            $equipo->cabecera->fecha ? \Carbon\Carbon::parse($equipo->cabecera->fecha)->format('d/m/Y') : 'N/A',
+            $fecha ? $fecha->format('d/m/Y') : 'N/A',
+            $fecha ? ($meses[$fecha->month] ?? 'N/A') : 'N/A',
             $equipo->cabecera->establecimiento->codigo ?? 'N/A',
             $equipo->cabecera->establecimiento->nombre ?? 'N/A',
             $equipo->cabecera->establecimiento->categoria ?? 'N/A',
@@ -61,8 +77,6 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             \App\Helpers\ModuloHelper::getNombreAmigable($equipo->modulo) ?? 'N/A',
             $equipo->cantidad ?? 0,
             $equipo->descripcion ?? 'N/A',
-            $equipo->nro_serie ?? 'S/N',
-            // Solución aplicada al campo "propio" para evitar errores lógicos/booleanos en Excel
             $equipo->propio ?? 'N/A',
             $equipo->estado ?? 'N/A',
             $equipo->cabecera->establecimiento->provincia ?? 'N/A',
@@ -70,7 +84,6 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['tipo'],
             \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['fuente'],
             \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['operador'],
-            $equipo->observacion ?? '',
         ];
     }
 
@@ -103,14 +116,14 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
     {
         return [
             'A' => 12,  // Fecha
-            'B' => 12,  // IPRESS
-            'C' => 35,  // Establecimiento
-            'D' => 12,  // Categoría
-            'E' => 18,  // Tipo
-            'F' => 30,  // Módulo
-            'G' => 10,  // Cantidad
-            'H' => 30,  // Descripción
-            'I' => 15,  // Nro Serie (ligeramente ampliado para mayor comodidad)
+            'B' => 14,  // Mes
+            'C' => 12,  // IPRESS
+            'D' => 35,  // Establecimiento
+            'E' => 12,  // Categoría
+            'F' => 18,  // Tipo
+            'G' => 30,  // Módulo
+            'H' => 10,  // Cantidad
+            'I' => 30,  // Descripción
             'J' => 12,  // Propio
             'K' => 12,  // Estado
             'L' => 15,  // Provincia
@@ -118,7 +131,6 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'N' => 18,  // Conectividad
             'O' => 18,  // Fuente WiFi
             'P' => 18,  // Proveedor
-            'Q' => 45,  // Observación
         ];
     }
 }
