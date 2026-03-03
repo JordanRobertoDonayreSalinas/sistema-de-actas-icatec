@@ -70,7 +70,7 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
 
         $fecha = $equipo->cabecera->fecha ? \Carbon\Carbon::parse($equipo->cabecera->fecha) : null;
         return [
-            $fecha ? $fecha->toDateTime() : null,
+            $fecha ? \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel($fecha->toDateTime()) : null,
             $fecha ? ($meses[$fecha->month] ?? 'N/A') : 'N/A',
             $equipo->cabecera->establecimiento->codigo ?? 'N/A',
             $equipo->cabecera->establecimiento->nombre ?? 'N/A',
