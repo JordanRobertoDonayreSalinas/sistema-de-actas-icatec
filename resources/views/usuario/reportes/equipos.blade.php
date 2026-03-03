@@ -160,6 +160,8 @@
                                 <th class="px-4 py-3 text-center">Cant.</th>
                                 <th class="px-4 py-3">Descripción</th>
                                 <th class="px-4 py-3">Conexión</th>
+                                <th class="px-4 py-3">Fuente WiFi</th>
+                                <th class="px-4 py-3">Proveedor</th>
                                 <th class="px-4 py-3">Estado</th>
                             </tr>
                         </thead>
@@ -188,8 +190,14 @@
                                     <td class="px-4 py-3 text-center font-bold text-slate-800">{{ $equipo->cantidad ?? 0 }}</td>
                                     <td class="px-4 py-3 text-slate-600">{{ $equipo->descripcion ?? 'N/A' }}</td>
                                     <td class="px-4 py-3">
-                                        @php $conect = ModuloHelper::getConectividadActa($equipo->cabecera); @endphp
+                                        @php $conect = ModuloHelper::getConectividadActa($equipo->cabecera, $equipo->modulo); @endphp
                                         <span class="text-slate-500">{{ $conect['tipo'] }}</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="text-slate-500">{{ $conect['fuente'] }}</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="text-slate-500">{{ $conect['operador'] }}</span>
                                     </td>
                                     <td class="px-4 py-3">
                                         <span

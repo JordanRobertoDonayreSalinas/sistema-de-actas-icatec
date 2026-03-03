@@ -1,0 +1,336 @@
+Equipo desc: CPU Modulo guardado: CITAS
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: CITAS
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: CITAS
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: CITAS
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: IMPRESORA Modulo guardado: CITAS
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: CONSULTA_MEDICINA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: CONSULTA_MEDICINA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: CONSULTA_MEDICINA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: CONSULTA_MEDICINA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: CONSULTA_ODONTOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: CONSULTA_ODONTOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: CONSULTA_ODONTOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: CONSULTA_ODONTOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: IMPRESORA Modulo guardado: CONSULTA_ODONTOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: TRIAJE
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: TRIAJE
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: TRIAJE
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: TRIAJE
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: CONSULTA_PSICOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: CONSULTA_PSICOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: CONSULTA_PSICOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: CONSULTA_PSICOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: IMPRESORA Modulo guardado: CONSULTA_PSICOLOGIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: CRED
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: IMPRESORA Modulo guardado: CRED
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: CRED
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: CRED
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: CRED
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: IMPRESORA Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: FARMACIA
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MONITOR Modulo guardado: LABORATORIO
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: TECLADO Modulo guardado: LABORATORIO
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: MOUSE Modulo guardado: LABORATORIO
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: CPU Modulo guardado: LABORATORIO
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---
+Equipo desc: IMPRESORA Modulo guardado: LABORATORIO
+Conectividad (Helper): Array
+(
+    [tipo] => CABLEADO
+    [fuente] => N/A
+    [operador] => DELAFIBER
+)
+---

@@ -179,9 +179,34 @@ class ModuloHelper
 
         $detalles = $cabecera->detalles;
 
-        // 1) Buscar primero en el módulo específico del equipo
+        // Mapa inverso para buscar el slug interno a partir del nombre amigable o viceversa
+        $mapaModulos = self::getTodosLosModulos();
+        $slugBuscado = $modulo ? strtolower(trim($modulo)) : null;
+
+        // Si $modulo es un nombre amigable (ej: "Consulta Externa: Psicología"), buscar su slug
         if ($modulo) {
-            $detalle = $detalles->firstWhere('modulo_nombre', $modulo);
+            // Normalizamos ambos para una comparación segura
+            $mapaNormalizado = array_map(function ($val) {
+                return strtolower(trim($val));
+            }, $mapaModulos);
+
+            $moduloNormalizado = strtolower(trim($modulo));
+
+            if (in_array($moduloNormalizado, $mapaNormalizado)) {
+                $slugBuscado = array_search($moduloNormalizado, $mapaNormalizado);
+            }
+        }
+
+        // 1) Buscar primero en el módulo específico del equipo usando el slug
+        if ($slugBuscado) {
+            $detalle = $detalles->firstWhere('modulo_nombre', $slugBuscado);
+            if (!$detalle) {
+                // intentar también case sensitive o exacto si vino directamente como slug ej CONSULTA_PSICOLOGIA
+                $detalle = $detalles->firstWhere('modulo_nombre', strtolower($modulo));
+            }
+            if (!$detalle) {
+                $detalle = $detalles->firstWhere('modulo_nombre', $modulo);
+            }
             if ($detalle && is_array($detalle->contenido)) {
                 $resultado = self::extraerConectividad($detalle->contenido);
                 if ($resultado) {
