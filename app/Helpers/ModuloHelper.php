@@ -48,7 +48,15 @@ class ModuloHelper
             'sm_terapias' => 'Terapia Lenguaje / Ocupacional',
         ];
 
-        return $modulosMaster[$moduloTecnico] ?? $moduloTecnico;
+        // Normalizar: minúsculas y convertir guión (-) a subguión (_)
+        $clave = strtolower(str_replace('-', '_', trim($moduloTecnico ?? '')));
+
+        if (isset($modulosMaster[$clave])) {
+            return $modulosMaster[$clave];
+        }
+
+        // Fallback legible: reemplazar guiones/subguiones por espacios y capitalizar
+        return ucwords(str_replace(['_', '-'], ' ', strtolower($clave)));
     }
 
     /**

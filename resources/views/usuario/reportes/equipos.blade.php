@@ -128,10 +128,6 @@
 
                     <div class="ml-auto flex items-center gap-2">
                         @if($equipos->count() > 0)
-                            <button type="button" onclick="generarPDF()"
-                                class="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition-all flex items-center gap-2">
-                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF
-                            </button>
                             <button type="button" onclick="exportarExcel()"
                                 class="px-4 py-2 bg-green-50 text-green-600 text-xs font-bold rounded-lg hover:bg-green-100 transition-all flex items-center gap-2">
                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> EXCEL
@@ -222,17 +218,6 @@
     </div>
 
     {{-- Formularios ocultos --}}
-    <form id="pdfForm" method="POST" action="{{ route('usuario.reportes.equipos.pdf') }}" style="display: none;">
-        @csrf
-        <input type="hidden" name="fecha_inicio" value="{{ $fechaInicio }}">
-        <input type="hidden" name="fecha_fin" value="{{ $fechaFin }}">
-        <input type="hidden" name="establecimiento_id" value="{{ request('establecimiento_id') }}">
-        <input type="hidden" name="provincia" value="{{ request('provincia') }}">
-        <input type="hidden" name="distrito" value="{{ request('distrito') }}">
-        <input type="hidden" name="modulo" value="{{ request('modulo') }}">
-        <input type="hidden" name="tipo" value="{{ request('tipo') }}">
-    </form>
-
     <form id="excelForm" method="POST" action="{{ route('usuario.reportes.equipos.excel') }}" style="display: none;">
         @csrf
         <input type="hidden" name="fecha_inicio" value="{{ $fechaInicio }}">
@@ -249,7 +234,6 @@
     <script>
         lucide.createIcons();
 
-        function generarPDF() { document.getElementById('pdfForm').submit(); }
         function exportarExcel() { document.getElementById('excelForm').submit(); }
 
         const tipoSelect = document.getElementById('tipo');

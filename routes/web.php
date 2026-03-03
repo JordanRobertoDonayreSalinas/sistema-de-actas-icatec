@@ -154,7 +154,6 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('reportes')->name('reportes.')->group(function () {
             // Reportes de Equipos de Cómputo
             Route::get('/equipos', [ReporteEquiposController::class, 'index'])->name('equipos');
-            Route::post('/equipos/pdf', [ReporteEquiposController::class, 'generarPDF'])->name('equipos.pdf');
             Route::post('/equipos/excel', [ReporteEquiposController::class, 'exportarExcel'])->name('equipos.excel');
 
             // AJAX endpoints para filtros dinámicos
