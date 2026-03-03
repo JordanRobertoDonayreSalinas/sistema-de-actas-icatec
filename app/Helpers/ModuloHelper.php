@@ -136,31 +136,70 @@ class ModuloHelper
     }
 
     /**
-     * Obtiene la información de conectividad de una cabecera de monitoreo
-     * buscando en sus detalles.
+     * Extrae los datos de conectividad de un array de contenido JSON.
+     * Maneja las diferentes claves que usan los distintos controladores.
      */
-    public static function getConectividadActa($cabecera)
+    private static function extraerConectividad(array $contenido): ?array
     {
-        $info = [
-            'tipo' => 'N/A',
-            'fuente' => 'N/A',
-            'operador' => 'N/A'
-        ];
-
-        if (!$cabecera || !$cabecera->detalles) {
-            return $info;
+        if (!isset($contenido['tipo_conectividad'])) {
+            return null;
         }
 
-        foreach ($cabecera->detalles as $detalle) {
-            $contenido = $detalle->contenido;
-            if (isset($contenido['tipo_conectividad'])) {
-                $info['tipo'] = $contenido['tipo_conectividad'];
-                $info['fuente'] = $contenido['wifi_fuente'] ?? 'N/A';
-                $info['operador'] = $contenido['operador_servicio'] ?? 'N/A';
-                break; // Asumimos que la conectividad es la misma para toda el acta
+        $tipo = $contenido['tipo_conectividad'];
+        if (empty($tipo)) {
+            return null;
+        }
+
+        // Algunos controladores guardan 'wifi_fuente', otros lo heredan del componente
+        $fuente = $contenido['wifi_fuente'] ?? $contenido['fuente'] ?? 'N/A';
+
+        // Algunos controladores guardan 'operador_servicio'
+        $operador = $contenido['operador_servicio'] ?? $contenido['operador'] ?? 'N/A';
+
+        return [
+            'tipo' => $tipo,
+            'fuente' => $fuente ?: 'N/A',
+            'operador' => $operador ?: 'N/A',
+        ];
+    }
+
+    /**
+     * Obtiene la información de conectividad de una cabecera de monitoreo.
+     * 
+     * @param  mixed       $cabecera   Modelo CabeceraMonitoreo (con detalles cargados)
+     * @param  string|null $modulo     Slug del módulo del equipo (para buscar primero ahí)
+     */
+    public static function getConectividadActa($cabecera, ?string $modulo = null): array
+    {
+        $vacio = ['tipo' => 'N/A', 'fuente' => 'N/A', 'operador' => 'N/A'];
+
+        if (!$cabecera || !$cabecera->detalles) {
+            return $vacio;
+        }
+
+        $detalles = $cabecera->detalles;
+
+        // 1) Buscar primero en el módulo específico del equipo
+        if ($modulo) {
+            $detalle = $detalles->firstWhere('modulo_nombre', $modulo);
+            if ($detalle && is_array($detalle->contenido)) {
+                $resultado = self::extraerConectividad($detalle->contenido);
+                if ($resultado) {
+                    return $resultado;
+                }
             }
         }
 
-        return $info;
+        // 2) Fallback: buscar en cualquier módulo que tenga tipo_conectividad
+        foreach ($detalles as $detalle) {
+            if (!is_array($detalle->contenido))
+                continue;
+            $resultado = self::extraerConectividad($detalle->contenido);
+            if ($resultado) {
+                return $resultado;
+            }
+        }
+
+        return $vacio;
     }
 }

@@ -83,9 +83,9 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             $equipo->estado ?? 'N/A',
             $equipo->cabecera->establecimiento->provincia ?? 'N/A',
             $equipo->cabecera->establecimiento->distrito ?? 'N/A',
-            \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['tipo'],
-            \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['fuente'],
-            \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['operador'],
+            ($conectividad = \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera, $equipo->modulo))['tipo'],
+            $conectividad['fuente'],
+            $conectividad['operador'],
         ];
     }
 
