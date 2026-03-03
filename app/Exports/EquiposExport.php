@@ -8,9 +8,11 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
+class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithColumnFormatting
 {
     protected $equipos;
 
@@ -68,7 +70,7 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
 
         $fecha = $equipo->cabecera->fecha ? \Carbon\Carbon::parse($equipo->cabecera->fecha) : null;
         return [
-            $fecha ? $fecha->format('d/m/Y') : 'N/A',
+            $fecha ? $fecha->toDateTime() : null,
             $fecha ? ($meses[$fecha->month] ?? 'N/A') : 'N/A',
             $equipo->cabecera->establecimiento->codigo ?? 'N/A',
             $equipo->cabecera->establecimiento->nombre ?? 'N/A',
@@ -84,6 +86,16 @@ class EquiposExport implements FromCollection, WithHeadings, WithMapping, WithSt
             \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['tipo'],
             \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['fuente'],
             \App\Helpers\ModuloHelper::getConectividadActa($equipo->cabecera)['operador'],
+        ];
+    }
+
+    /**
+     * Formato de columnas (fecha nativa en Excel)
+     */
+    public function columnFormats(): array
+    {
+        return [
+            'A' => NumberFormat::FORMAT_DATE_DDMMYYYY,
         ];
     }
 
