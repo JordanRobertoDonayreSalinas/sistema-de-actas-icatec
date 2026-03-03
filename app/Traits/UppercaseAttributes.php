@@ -35,6 +35,8 @@ trait UppercaseAttributes
             'deleted_at',
             'fecha',
             'profile_photo_path',
+            'role',
+            'status',
         ];
 
         // También saltar si es una fecha definida en el modelo

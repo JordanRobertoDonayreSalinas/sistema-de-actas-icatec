@@ -93,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/', function () {
         return Auth::user()->role === 'admin'
-            ? redirect()->route('admin.dashboard')
+            ? redirect()->route('admin.users.index')
             : redirect()->route('usuario.dashboard.general');
     });
 
@@ -459,7 +459,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('usuario.monitoreoESP.pdf');
 
     // --- GRUPO ADMINISTRADOR ---
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('is_admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
         Route::prefix('gestionar-usuarios')->name('users.')->group(function () {
             Route::get('/', [AdminController::class, 'usersIndex'])->name('index');

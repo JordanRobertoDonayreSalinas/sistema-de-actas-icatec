@@ -81,24 +81,7 @@
             </div>
 
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scroll">
-                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">Plataforma</p>
-
-                {{-- DASHBOARD --}}
-                <a href="{{ route('admin.dashboard') }}"
-                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all overflow-hidden {{ request()->routeIs('admin.dashboard') ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                    @if(request()->routeIs('admin.dashboard'))
-                        <div class="absolute inset-y-0 left-0 w-1 bg-blue-500 rounded-r-full"></div>
-                    @endif
-                    <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                        </path>
-                    </svg>
-                    <span class="font-medium">Dashboard</span>
-                </a>
-
-                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Administración
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">Administración
                 </p>
 
                 {{-- GESTIONAR USUARIOS --}}
@@ -162,6 +145,15 @@
                             x-cloak>
 
 
+
+                            <div class="px-4 py-2">
+                                <a href="{{ route('usuario.dashboard.general') }}"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors font-bold rounded-xl">
+                                    <i data-lucide="user" class="w-4 h-4"></i>
+                                    <span>Panel de Usuario</span>
+                                </a>
+                            </div>
+                            <div class="border-t border-slate-100 mx-4"></div>
 
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
