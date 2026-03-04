@@ -338,10 +338,35 @@
                                             <i data-lucide="file-text" class="w-4 h-4"></i>
                                         </a>
 
-                                        @if($monitoreo->firmado_pdf)
-                                            <a href="{{ asset('storage/' . $monitoreo->firmado_pdf) }}" target="_blank" 
-                                               class="p-1.5 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all" 
-                                               title="Ver acta consolidada firmada">
+                                         @if($monitoreo->firmado_pdf)
+                                            @php
+                                                // 1. Extraemos la carpeta y la pasamos a minúsculas
+                                                $carpeta = strtolower(dirname($monitoreo->firmado_pdf));
+                                                
+                                                // 2. Nombre en la base de datos (todo en mayúsculas), lo pasamos a minúsculas para comparar
+                                                $archivoBuscado = strtolower(basename($monitoreo->firmado_pdf));
+                                                
+                                                // 3. Definimos un valor por defecto
+                                                $archivoReal = basename($monitoreo->firmado_pdf);
+                                                
+                                                // 4. Leemos los archivos reales dentro de esa carpeta en el servidor
+                                                $archivosEnServidor = \Illuminate\Support\Facades\Storage::disk('public')->files($carpeta);
+                                                
+                                                foreach($archivosEnServidor as $archivoFisico) {
+                                                    // Si el nombre coincide ignorando mayúsculas/minúsculas...
+                                                    if (strtolower(basename($archivoFisico)) === $archivoBuscado) {
+                                                        // ¡Capturamos el nombre exacto con sus mayúsculas y minúsculas originales!
+                                                        $archivoReal = basename($archivoFisico); 
+                                                        break;
+                                                    }
+                                                }
+                                                
+                                                $rutaFinal = ($carpeta === '.') ? $archivoReal : $carpeta . '/' . $archivoReal;
+                                            @endphp
+
+                                            <a href="{{ asset('storage/' . $rutaFinal) }}" target="_blank" 
+                                            class="p-1.5 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all" 
+                                            title="Ver acta consolidada firmada">
                                                 <i data-lucide="file-check-2" class="w-4 h-4"></i>
                                             </a>
                                         @endif
