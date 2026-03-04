@@ -1,34 +1,32 @@
 @extends('layouts.usuario')
 
-@section('title', 'Auditoría de Consistencia')
+@section('title', 'Auditoría de Equipos y Conectividad')
 
 @section('header-content')
-    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Auditoría de Consistencia</h1>
+    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Auditoría de Equipos y Conectividad</h1>
     <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
         <span>Reportes</span>
         <span class="text-slate-300">•</span>
-        <span>SIHCE vs Documentos Administrativos</span>
+        <span>Equipos vs Conectividad</span>
     </div>
 @endsection
 
 @section('content')
     <div class="w-full">
         {{-- Tarjeta de Alerta / Info --}}
-        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-xl shadow-sm">
+        <div class="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-6 rounded-r-xl shadow-sm">
             <div class="flex items-center gap-3">
-                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+                <i data-lucide="info" class="w-5 h-5 text-indigo-500"></i>
                 <div>
-                    <h3 class="text-sm font-bold text-amber-800 uppercase tracking-tight">Reporte de Omisiones</h3>
-                    <p class="text-xs text-amber-700">Este reporte identifica profesionales que, según los monitoreos,
-                        <b>utilizan el sistema SIHCE</b> pero que aún <b>no han sido registrados</b> en el módulo de
-                        Documentos Administrativos.
-                    </p>
+                    <h3 class="text-sm font-bold text-indigo-800 uppercase tracking-tight">Reporte de Inconsistencias</h3>
+                    <p class="text-xs text-indigo-700">Este reporte identifica módulos con discrepancias entre el inventario
+                        de <b>equipos de cómputo</b> y los datos de <b>conectividad</b>.</p>
                 </div>
             </div>
         </div>
 
         {{-- Filtros --}}
-        <form method="GET" action="{{ route('usuario.auditoria.index') }}" id="filterForm"
+        <form method="GET" action="{{ route('usuario.auditoria.equipos') }}" id="filterForm"
             class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-6 lg:flex lg:items-end gap-3 items-end">
                 <div class="lg:flex-1 min-w-0">
@@ -70,6 +68,19 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="lg:flex-1 min-w-0">
+                    <label
+                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Implementador</label>
+                    <select name="implementador" id="implementadorSelect"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        <option value="">TODOS</option>
+                        @foreach($implementadores as $imp)
+                            <option value="{{ $imp }}" {{ request('implementador') == $imp ? 'selected' : '' }}>
+                                {{ $imp }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="lg:w-36">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Desde</label>
                     <input type="date" name="fecha_inicio" value="{{ $fecha_inicio }}"
@@ -85,7 +96,11 @@
                         class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
                         <i data-lucide="search" class="w-4 h-4"></i>
                     </button>
-                    <a href="{{ route('usuario.auditoria.index') }}"
+                    <button type="submit" name="export" value="1"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    </button>
+                    <a href="{{ route('usuario.auditoria.equipos') }}"
                         class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center">
                         <i data-lucide="rotate-cw" class="w-4 h-4"></i>
                     </a>
@@ -99,18 +114,17 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-800">
                         <tr>
-                            <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider">Profesional /
-                                DNI</th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider">Ubicación /
-                                IPRESS</th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider">Acta / Fecha
+                            </th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider">Establecimiento
+                            </th>
+                            <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider">Módulo</th>
                             <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider text-center">
-                                Módulo Origen</th>
+                                Equipos</th>
                             <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider text-center">
-                                Compromiso</th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider text-center">D.
-                                Jurada</th>
+                                Conectividad</th>
                             <th class="px-6 py-4 text-[10px] font-bold text-white uppercase tracking-wider text-center">
-                                Ación</th>
+                                Inconsistencia</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -119,9 +133,9 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <span
-                                            class="font-bold text-slate-800 uppercase text-xs truncate max-w-[200px]">{{ $item['nombre'] }}</span>
+                                            class="font-bold text-slate-800 uppercase text-xs">#{{ str_pad($item['numero_acta'], 5, '0', STR_PAD_LEFT) }}</span>
                                         <span
-                                            class="text-[10px] font-medium text-slate-400 font-mono mt-0.5 tracking-widest">{{ $item['doc'] }}</span>
+                                            class="text-[10px] font-medium text-slate-400 mt-0.5 tracking-widest">{{ \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') }}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
@@ -132,30 +146,33 @@
                                             {{ $item['distrito'] }}</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-6 py-4">
                                     <span
                                         class="bg-slate-100 text-slate-500 px-2 py-1 rounded-lg text-[9px] font-black border border-slate-200 uppercase tracking-tighter">
-                                        {{ $item['modulo_origen'] }}
+                                        {{ $item['modulo_nombre'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="font-black text-slate-700 text-xs">
+                                        {{ $item['equipos_count'] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span
-                                        class="px-2 py-1 rounded-full font-black text-[9px] {{ $item['estado_compromiso'] == 'FIRMADO' ? 'bg-emerald-100 text-emerald-600' : ($item['estado_compromiso'] == 'PENDIENTE' ? 'bg-amber-100 text-amber-600 animate-pulse' : 'bg-red-100 text-red-600 animate-pulse') }}">
-                                        {{ $item['estado_compromiso'] }}
+                                        class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg text-[9px] font-black border border-indigo-100 uppercase tracking-tighter">
+                                        {{ $item['conectividad'] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span
-                                        class="px-2 py-1 rounded-full font-black text-[9px] {{ $item['estado_dj'] == 'FIRMADO' ? 'bg-emerald-100 text-emerald-600' : ($item['estado_dj'] == 'PENDIENTE' ? 'bg-amber-100 text-amber-600 animate-pulse' : 'bg-red-100 text-red-600 animate-pulse') }}">
-                                        {{ $item['estado_dj'] }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <a href="{{ route('usuario.documentos.create', ['dni' => $item['doc']]) }}"
-                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                                        title="Crear Documento">
-                                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                                    </a>
+                                    @if($item['tipo_inconsistencia'] == 'EQUIPO SIN DATOS DE CONEXIÓN')
+                                        <span class="px-2 py-1 rounded-full font-black text-[9px] bg-red-100 text-red-600">
+                                            EQUIPO SIN DATOS DE CONEXIÓN
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-1 rounded-full font-black text-[9px] bg-amber-100 text-amber-600">
+                                            CONEXIÓN SIN EQUIPO
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -185,41 +202,47 @@
             const distritoSelect = document.getElementById('distritoSelect');
             const establecimientoSelect = document.getElementById('establecimientoSelect');
 
-            if (provinciaSelect) {
-                provinciaSelect.addEventListener('change', async () => {
-                    const provincia = provinciaSelect.value;
-                    distritoSelect.innerHTML = '<option value="">TODOS</option>';
-                    establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
+            provinciaSelect.addEventListener('change', async () => {
+                const provincia = provinciaSelect.value;
 
-                    if (provincia) {
-                        const resDist = await fetch(`{{ route('usuario.auditoria.ajax.distritos') }}?provincia=${provincia}`);
-                        const distritos = await resDist.json();
-                        distritos.forEach(d => {
-                            const opt = document.createElement('option');
-                            opt.value = d;
-                            opt.textContent = d;
-                            distritoSelect.appendChild(opt);
-                        });
-                    }
-                });
-            }
+                // Limpiar selectores dependientes
+                distritoSelect.innerHTML = '<option value="">TODOS</option>';
+                establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
 
-            if (distritoSelect) {
-                distritoSelect.addEventListener('change', async () => {
-                    const provincia = provinciaSelect.value;
-                    const distrito = distritoSelect.value;
-                    establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
+                if (provincia) {
+                    // Cargar Distritos
+                    const resDist = await fetch(`{{ route('usuario.auditoria.equipos.ajax.distritos') }}?provincia=${provincia}`);
+                    const distritos = await resDist.json();
+                    distritos.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d;
+                        opt.textContent = d;
+                        distritoSelect.appendChild(opt);
+                    });
 
-                    if (provincia && distrito) {
-                        const resEst = await fetch(`{{ route('usuario.auditoria.ajax.establecimientos') }}?provincia=${provincia}&distrito=${distrito}`);
-                        const establecimientos = await resEst.json();
-                        establecimientos.forEach(e => {
-                            const opt = document.createElement('option');
-                            opt.value = e.id;
-                            opt.textContent = e.nombre;
-                            establecimientoSelect.appendChild(opt);
-                        });
-                    }
+                    // Cargar Establecimientos (solo por provincia inicialmente)
+                    actualizarEstablecimientos(provincia, '');
+                } else {
+                    // Volver a cargar todos si es necesario o dejar en todos
+                    actualizarEstablecimientos('', '');
+                }
+            });
+
+            distritoSelect.addEventListener('change', async () => {
+                const provincia = provinciaSelect.value;
+                const distrito = distritoSelect.value;
+                actualizarEstablecimientos(provincia, distrito);
+            });
+
+            async function actualizarEstablecimientos(provincia, distrito) {
+                establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
+                const resEst = await fetch(`{{ route('usuario.auditoria.equipos.ajax.establecimientos') }}?provincia=${provincia}&distrito=${distrito}`);
+                const establecimientos = await resEst.json();
+                establecimientos.forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e.id;
+                    opt.textContent = e.nombre;
+                    establecimientoSelect.appendChild(opt);
                 });
             }
         });

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\UppercaseAttributes;
+
 
 class Establecimiento extends Model
 {
-    use HasFactory;
+    use HasFactory, UppercaseAttributes;
 
     protected $table = 'establecimientos';
 
@@ -45,5 +47,10 @@ class Establecimiento extends Model
     public function actas()
     {
         return $this->hasMany(Acta::class, 'establecimiento_id');
+    }
+
+    public function documentosAdministrativos()
+    {
+        return $this->hasMany(DocumentoAdministrativo::class, 'establecimiento_id');
     }
 }

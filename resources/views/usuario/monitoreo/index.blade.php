@@ -97,63 +97,78 @@
             </div>
         </div>
 
-        {{-- FILTROS ACTUALIZADOS CON "ESTADO" --}}
+        {{-- FILTROS ACTUALIZADOS --}}
         <form x-show="open" x-cloak 
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
-            method="GET" action="{{ route('usuario.monitoreo.index') }}"
-            class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
+            method="GET" action="{{ route('usuario.monitoreo.index') }}" id="filterForm"
+            class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
             
-            <div class="flex flex-wrap lg:flex-nowrap items-end gap-4">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 flex-grow w-full">
+            <div class="flex flex-wrap lg:flex-nowrap items-end gap-3">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 flex-grow w-full">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Implementador</label>
-                        <select name="implementador" class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2.5">
-                            <option value="">Todos</option>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Implementador</label>
+                        <select name="implementador" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                            <option value="">TODOS</option>
                             @foreach ($implementadores as $impl)
                                 <option value="{{ $impl }}" {{ request('implementador') == $impl ? 'selected' : '' }}>{{ $impl }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Provincia</label>
-                        <select name="provincia" class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2.5">
-                            <option value="">Todas</option>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Provincia</label>
+                        <select name="provincia" id="provinciaSelect" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                            <option value="">TODAS</option>
                             @foreach ($provincias as $prov)
                                 <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>{{ $prov }}</option>
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- NUEVO FILTRO DE ESTADO --}}
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Estado</label>
-                        <select name="estado" class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2.5">
-                            <option value="">Todos</option>
-                            <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>Firmado</option>
-                            <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Distrito</label>
+                        <select name="distrito" id="distritoSelect" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                            <option value="">TODOS</option>
+                            @foreach ($distritos as $dist)
+                                <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>{{ $dist }}</option>
+                            @endforeach
                         </select>
                     </div>
-
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Desde</label>
-                        <input type="date" name="fecha_inicio" value="{{ $valInicio }}" 
-                            class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2.5">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Establecimiento</label>
+                        <select name="establecimiento_id" id="establecimientoSelect" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                            <option value="">TODOS</option>
+                            @foreach ($establecimientos as $est)
+                                <option value="{{ $est->id }}" {{ request('establecimiento_id') == $est->id ? 'selected' : '' }}>{{ $est->nombre }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Hasta</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Estado</label>
+                        <select name="estado" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                            <option value="">TODOS</option>
+                            <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>FIRMADO</option>
+                            <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>PENDIENTE</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Desde</label>
+                        <input type="date" name="fecha_inicio" value="{{ $valInicio }}" 
+                            class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Hasta</label>
                         <input type="date" name="fecha_fin" value="{{ $valFin }}" 
-                            class="w-full text-xs font-medium text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2.5">
+                            class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl py-2">
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 shrink-0">
-                    <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105">
-                        <i data-lucide="search" class="w-5 h-5"></i>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="submit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105">
+                        <i data-lucide="search" class="w-4 h-4"></i>
                     </button>
                     <a href="{{ route('usuario.monitoreo.index') }}" 
-                        class="w-11 h-11 flex items-center justify-center rounded-xl bg-slate-400 hover:bg-slate-500 text-white shadow-lg shadow-slate-400/30 transition-all hover:scale-105">
-                        <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                        class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-sm transition-all hover:scale-105 border border-slate-200">
+                        <i data-lucide="rotate-cw" class="w-4 h-4"></i>
                     </a>
                 </div>
             </div>
@@ -356,6 +371,55 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const provinciaSelect = document.getElementById('provinciaSelect');
+            const distritoSelect = document.getElementById('distritoSelect');
+            const establecimientoSelect = document.getElementById('establecimientoSelect');
+
+            if (provinciaSelect) {
+                provinciaSelect.addEventListener('change', async () => {
+                    const provincia = provinciaSelect.value;
+                    
+                    // Limpiar selectores dependientes
+                    distritoSelect.innerHTML = '<option value="">TODOS</option>';
+                    establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
+
+                    if (provincia) {
+                        const resDist = await fetch(`{{ route('usuario.monitoreo.ajax.distritos') }}?provincia=${provincia}`);
+                        const distritos = await resDist.json();
+                        distritos.forEach(d => {
+                            const opt = document.createElement('option');
+                            opt.value = d;
+                            opt.textContent = d;
+                            distritoSelect.appendChild(opt);
+                        });
+                        actualizarEstablecimientos(provincia, '');
+                    } else {
+                        actualizarEstablecimientos('', '');
+                    }
+                });
+            }
+
+            if (distritoSelect) {
+                distritoSelect.addEventListener('change', async () => {
+                    const provincia = provinciaSelect.value;
+                    const distrito = distritoSelect.value;
+                    actualizarEstablecimientos(provincia, distrito);
+                });
+            }
+
+            async function actualizarEstablecimientos(provincia, distrito) {
+                if (!establecimientoSelect) return;
+                establecimientoSelect.innerHTML = '<option value="">TODOS</option>';
+                const resEst = await fetch(`{{ route('usuario.monitoreo.ajax.establecimientos') }}?provincia=${provincia}&distrito=${distrito}`);
+                const establecimientos = await resEst.json();
+                establecimientos.forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e.id;
+                    opt.textContent = e.nombre;
+                    establecimientoSelect.appendChild(opt);
+                });
+            }
         });
 
         function abrirModalSubir(id) {

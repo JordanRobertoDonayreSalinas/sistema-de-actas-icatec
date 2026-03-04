@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Acta;
 use App\Models\Establecimiento;
-use App\Models\User; 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ActaController extends Controller
 {
@@ -25,16 +26,34 @@ class ActaController extends Controller
                 $q->where('provincia', $request->input('provincia'));
             });
         }
+        if ($request->filled('distrito')) {
+            $query->whereHas('establecimiento', function ($q) use ($request) {
+                $q->where('distrito', $request->input('distrito'));
+            });
+        }
+        if ($request->filled('establecimiento_id')) {
+            $query->where('establecimiento_id', $request->input('establecimiento_id'));
+        }
         if ($request->filled('firmado')) {
             $val = $request->input('firmado');
-            $val == '1' ? $query->where('firmado', 1) : $query->where('firmado', 0)->orWhereNull('firmado');
+            if ($val == '1') {
+                $query->where('firmado', 1);
+            } else {
+                $query->where(function ($q) {
+                    $q->where('firmado', 0)->orWhereNull('firmado');
+                });
+            }
         }
-        if ($request->filled('fecha_inicio')) {
-            $query->whereDate('fecha', '>=', $request->input('fecha_inicio'));
-        }
-        if ($request->filled('fecha_fin')) {
-            $query->whereDate('fecha', '<=', $request->input('fecha_fin'));
-        }
+
+        // Fechas por defecto: primer día del año actual y hoy
+        $fechaInicioDefault = Carbon::now()->startOfYear()->format('Y-m-d');
+        $fechaFinDefault = Carbon::now()->format('Y-m-d');
+
+        $valInicio = $request->input('fecha_inicio', $fechaInicioDefault);
+        $valFin = $request->input('fecha_fin', $fechaFinDefault);
+
+        $query->whereDate('fecha', '>=', $valInicio);
+        $query->whereDate('fecha', '<=', $valFin);
 
         $countFirmadas = (clone $query)->where('firmado', 1)->count();
         $countPendientes = (clone $query)->where(function ($q) {
@@ -43,9 +62,40 @@ class ActaController extends Controller
 
         $actas = $query->orderByDesc('id')->paginate(10)->appends($request->query());
         $implementadores = Acta::distinct()->orderBy('implementador')->pluck('implementador');
-        $provincias = Establecimiento::distinct()->orderBy('provincia')->pluck('provincia');
 
-        return view('usuario.asistencia.index', compact('actas', 'implementadores', 'provincias', 'countFirmadas', 'countPendientes'));
+        // Cargar provincias solo si tienen actas
+        $provincias = Establecimiento::whereHas('actas')->distinct()->orderBy('provincia')->pluck('provincia');
+
+        // Cargar distritos si hay provincia
+        $distritos = collect();
+        if ($request->filled('provincia')) {
+            $distritos = Establecimiento::whereHas('actas')
+                ->where('provincia', $request->provincia)
+                ->distinct()
+                ->orderBy('distrito')
+                ->pluck('distrito');
+        }
+
+        // Cargar establecimientos si hay distrito
+        $establecimientos = collect();
+        if ($request->filled('distrito')) {
+            $establecimientos = Establecimiento::whereHas('actas')
+                ->where('distrito', $request->distrito)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']);
+        }
+
+        return view('usuario.asistencia.index', compact(
+            'actas',
+            'implementadores',
+            'provincias',
+            'distritos',
+            'establecimientos',
+            'countFirmadas',
+            'countPendientes',
+            'valInicio',
+            'valFin'
+        ));
     }
 
     public function create()
@@ -70,7 +120,12 @@ class ActaController extends Controller
             DB::beginTransaction();
 
             $acta = Acta::create($request->only([
-                'fecha', 'establecimiento_id', 'responsable', 'tema', 'modalidad', 'implementador'
+                'fecha',
+                'establecimiento_id',
+                'responsable',
+                'tema',
+                'modalidad',
+                'implementador'
             ]));
 
             if ($request->hasFile('imagenes')) {
@@ -84,16 +139,24 @@ class ActaController extends Controller
             }
 
             if ($request->has('participantes')) {
-                foreach ($request->participantes as $p) { $acta->participantes()->create($p); }
+                foreach ($request->participantes as $p) {
+                    $acta->participantes()->create($p);
+                }
             }
             if ($request->has('actividades')) {
-                foreach ($request->actividades as $a) { $acta->actividades()->create($a); }
+                foreach ($request->actividades as $a) {
+                    $acta->actividades()->create($a);
+                }
             }
             if ($request->has('acuerdos')) {
-                foreach ($request->acuerdos as $ac) { $acta->acuerdos()->create($ac); }
+                foreach ($request->acuerdos as $ac) {
+                    $acta->acuerdos()->create($ac);
+                }
             }
             if ($request->has('observaciones')) {
-                foreach ($request->observaciones as $obs) { $acta->observaciones()->create($obs); }
+                foreach ($request->observaciones as $obs) {
+                    $acta->observaciones()->create($obs);
+                }
             }
 
             DB::commit();
@@ -104,28 +167,16 @@ class ActaController extends Controller
         }
     }
 
-    /**
-     * MÉTODO EDIT: Carga el acta y la lista de usuarios para el selector
-     */
     public function edit($id)
     {
-        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])->findOrFail($id);
-        
-        // CORRECCIÓN: Buscamos los usuarios para que el selector del Implementador no falle
-        $usuariosRegistrados = User::where('status', 'active')
-            ->orderBy('apellido_paterno', 'asc')
-            ->get();
-
+        $acta = Acta::with(['establecimiento', 'participantes', 'actividades', 'acuerdos', 'observaciones'])->findOrFail($id);
+        $usuariosRegistrados = User::where('status', 'active')->orderBy('apellido_paterno')->get();
         return view('usuario.asistencia.edit', compact('acta', 'usuariosRegistrados'));
     }
 
-    /**
-     * MÉTODO UPDATE: Maneja el sistema de slots para no perder imágenes
-     */
     public function update(Request $request, $id)
     {
         $acta = Acta::findOrFail($id);
-        
         $request->validate([
             'fecha' => 'required|date',
             'establecimiento_id' => 'required|exists:establecimientos,id',
@@ -134,26 +185,20 @@ class ActaController extends Controller
 
         try {
             DB::beginTransaction();
-            
-            // 1. Actualizar campos básicos
             $acta->update($request->only(['fecha', 'establecimiento_id', 'responsable', 'tema', 'modalidad', 'implementador']));
 
-            // 2. BORRADO SELECTIVO: Limpiar slots marcados por el usuario
             if ($request->has('eliminar_imagenes')) {
                 foreach ($request->eliminar_imagenes as $campo) {
                     if ($acta->$campo) {
                         Storage::disk('public')->delete($acta->$campo);
-                        $acta->$campo = null; // Liberamos el slot
+                        $acta->$campo = null;
                     }
                 }
             }
 
-            // 3. CARGA EN SLOTS VACÍOS: Rellenar huecos disponibles con fotos nuevas
             if ($request->hasFile('imagenes')) {
                 $nuevosArchivos = $request->file('imagenes');
                 $archivoIndex = 0;
-
-                // Recorremos los 5 slots buscando cuáles están libres (null)
                 for ($i = 1; $i <= 5; $i++) {
                     $campo = 'imagen' . $i;
                     if (is_null($acta->$campo) && isset($nuevosArchivos[$archivoIndex])) {
@@ -165,30 +210,33 @@ class ActaController extends Controller
             }
             $acta->save();
 
-            // 4. RELACIONES: Limpieza y Re-inserción (Evita duplicados y desorden)
             $acta->participantes()->delete();
             if ($request->has('participantes')) {
-                foreach ($request->participantes as $p) { $acta->participantes()->create($p); }
+                foreach ($request->participantes as $p) {
+                    $acta->participantes()->create($p);
+                }
             }
-
             $acta->actividades()->delete();
             if ($request->has('actividades')) {
-                foreach ($request->actividades as $a) { $acta->actividades()->create($a); }
+                foreach ($request->actividades as $a) {
+                    $acta->actividades()->create($a);
+                }
             }
-
             $acta->acuerdos()->delete();
             if ($request->has('acuerdos')) {
-                foreach ($request->acuerdos as $ac) { $acta->acuerdos()->create($ac); }
+                foreach ($request->acuerdos as $ac) {
+                    $acta->acuerdos()->create($ac);
+                }
             }
-
             $acta->observaciones()->delete();
             if ($request->has('observaciones')) {
-                foreach ($request->observaciones as $obs) { $acta->observaciones()->create($obs); }
+                foreach ($request->observaciones as $obs) {
+                    $acta->observaciones()->create($obs);
+                }
             }
 
             DB::commit();
             return redirect()->route('usuario.actas.index')->with('success', 'Acta actualizada correctamente.');
-            
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors('Error al actualizar: ' . $e->getMessage())->withInput();
@@ -197,13 +245,13 @@ class ActaController extends Controller
 
     public function show($id)
     {
-        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])->findOrFail($id);
+        $acta = Acta::with(['establecimiento', 'participantes', 'actividades', 'acuerdos', 'observaciones'])->findOrFail($id);
         return view('usuario.asistencia.show', compact('acta'));
     }
 
     public function generarPDF($id)
     {
-        $acta = Acta::with(['establecimiento','participantes','actividades','acuerdos','observaciones'])->findOrFail($id);
+        $acta = Acta::with(['establecimiento', 'participantes', 'actividades', 'acuerdos', 'observaciones'])->findOrFail($id);
         $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))->setPaper('a4', 'portrait');
         return $pdf->stream("acta_{$acta->id}.pdf");
     }
@@ -218,5 +266,28 @@ class ActaController extends Controller
         $path = $request->file('pdf_firmado')->store('actas_firmadas', 'public');
         $acta->update(['firmado_pdf' => $path, 'firmado' => true]);
         return redirect()->back()->with('success', '✅ El acta firmada fue subida correctamente.');
+    }
+
+    public function ajaxGetDistritos(Request $request)
+    {
+        $query = Establecimiento::whereHas('actas');
+        if ($request->filled('provincia')) {
+            $query->where('provincia', $request->provincia);
+        }
+        $distritos = $query->distinct()->pluck('distrito')->filter()->sort()->values();
+        return response()->json($distritos);
+    }
+
+    public function ajaxGetEstablecimientos(Request $request)
+    {
+        $query = Establecimiento::whereHas('actas');
+        if ($request->filled('provincia')) {
+            $query->where('provincia', $request->provincia);
+        }
+        if ($request->filled('distrito')) {
+            $query->where('distrito', $request->distrito);
+        }
+        $establecimientos = $query->orderBy('nombre', 'asc')->get(['id', 'nombre']);
+        return response()->json($establecimientos);
     }
 }

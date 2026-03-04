@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UppercaseAttributes;
+
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CabeceraMonitoreo extends Model
 {
-    use HasFactory;
+    use HasFactory, UppercaseAttributes;
 
     /**
      * Tabla asociada al modelo.

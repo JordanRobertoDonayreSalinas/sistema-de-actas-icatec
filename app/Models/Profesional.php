@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UppercaseAttributes;
+
 
 class Profesional extends Model
 {
-    use HasFactory;
+    use HasFactory, UppercaseAttributes;
 
     /**
      * Nombre de la tabla en la base de datos.

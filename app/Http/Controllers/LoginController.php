@@ -34,7 +34,7 @@ class LoginController extends Controller
 
             // --- LÓGICA DE REDIRECCIÓN POR ROLES ---
             if ($user->role === 'admin') {
-                $rutaDestino = route('admin.dashboard');
+                $rutaDestino = route('admin.users.index');
             } else {
                 // CAMBIO: Ahora apunta a la ruta del dashboard de usuario normal
                 // Asegúrate de haber definido 'usuario.dashboard' en web.php

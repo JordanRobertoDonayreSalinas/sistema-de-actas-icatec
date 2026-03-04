@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\UppercaseAttributes;
+
 
 class EquipoComputo extends Model
 {
-    use HasFactory;
+    use HasFactory, UppercaseAttributes;
 
     /**
      * Tabla asociada al modelo.

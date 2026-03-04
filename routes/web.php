@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\AuditoriaEquiposController;
 use App\Http\Controllers\DocumentoAdministrativoController;
 use App\Http\Controllers\ActaController;
 use App\Http\Controllers\AsistentaSocialEspecializadoController;
@@ -92,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/', function () {
         return Auth::user()->role === 'admin'
-            ? redirect()->route('admin.dashboard')
+            ? redirect()->route('admin.users.index')
             : redirect()->route('usuario.dashboard.general');
     });
 
@@ -128,6 +129,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{acta}', [ActaController::class, 'show'])->name('show');
             Route::get('/{id}/pdf', [ActaController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
+
+            // AJAX endpoints para filtros dinámicos
+            Route::get('/ajax/distritos', [ActaController::class, 'ajaxGetDistritos'])->name('ajax.distritos');
+            Route::get('/ajax/establecimientos', [ActaController::class, 'ajaxGetEstablecimientos'])->name('ajax.establecimientos');
         });
 
         // --- SECCIÓN: DOCUMENTOS ADMINISTRATIVOS ---
@@ -139,27 +144,39 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{id}', [DocumentoAdministrativoController::class, 'update'])->name('update');
             Route::get('/{id}/pdf', [DocumentoAdministrativoController::class, 'generarPDF'])->name('pdf');
             Route::post('/{id}/subir-firmado', [DocumentoAdministrativoController::class, 'subirFirmado'])->name('subir-firmado');
+
+            // AJAX endpoints para filtros dinámicos
+            Route::get('/ajax/distritos', [DocumentoAdministrativoController::class, 'ajaxGetDistritos'])->name('ajax.distritos');
+            Route::get('/ajax/establecimientos', [DocumentoAdministrativoController::class, 'ajaxGetEstablecimientos'])->name('ajax.establecimientos');
         });
 
         // --- SECCIÓN: REPORTES ---
         Route::prefix('reportes')->name('reportes.')->group(function () {
             // Reportes de Equipos de Cómputo
             Route::get('/equipos', [ReporteEquiposController::class, 'index'])->name('equipos');
-            Route::post('/equipos/pdf', [ReporteEquiposController::class, 'generarPDF'])->name('equipos.pdf');
             Route::post('/equipos/excel', [ReporteEquiposController::class, 'exportarExcel'])->name('equipos.excel');
 
             // AJAX endpoints para filtros dinámicos
             Route::get('/equipos/ajax/establecimientos', [ReporteEquiposController::class, 'getEstablecimientos'])->name('equipos.ajax.establecimientos');
             Route::get('/equipos/ajax/provincias', [ReporteEquiposController::class, 'getProvincias'])->name('equipos.ajax.provincias');
+            Route::get('/equipos/ajax/distritos', [ReporteEquiposController::class, 'ajaxGetDistritos'])->name('equipos.ajax.distritos');
             Route::get('/equipos/ajax/modulos', [ReporteEquiposController::class, 'getModulos'])->name('equipos.ajax.modulos');
             Route::get('/equipos/ajax/descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('equipos.ajax.descripciones');
         });
 
         // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA ---
         Route::get('/auditoria-consistencia', [AuditoriaController::class, 'index'])->name('auditoria.index');
+        Route::get('/auditoria-consistencia/ajax/distritos', [AuditoriaController::class, 'ajaxGetDistritos'])->name('auditoria.ajax.distritos');
+        Route::get('/auditoria-consistencia/ajax/establecimientos', [AuditoriaController::class, 'ajaxGetEstablecimientos'])->name('auditoria.ajax.establecimientos');
+
+        Route::get('/auditoria-equipos', [AuditoriaEquiposController::class, 'index'])->name('auditoria.equipos');
+        Route::get('/auditoria-equipos/ajax/distritos', [AuditoriaEquiposController::class, 'ajaxGetDistritos'])->name('auditoria.equipos.ajax.distritos');
+        Route::get('/auditoria-equipos/ajax/establecimientos', [AuditoriaEquiposController::class, 'ajaxGetEstablecimientos'])->name('auditoria.equipos.ajax.establecimientos');
 
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
+            Route::get('/ajax/distritos', [MonitoreoController::class, 'ajaxGetDistritos'])->name('ajax.distritos');
+            Route::get('/ajax/establecimientos', [MonitoreoController::class, 'ajaxGetEstablecimientos'])->name('ajax.establecimientos');
 
             // Utilitarios de búsqueda
             Route::get('/profesional/buscar/{doc}', [GestionAdministrativaController::class, 'buscarProfesional'])->name('profesional.buscar');
@@ -442,7 +459,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('usuario.monitoreoESP.pdf');
 
     // --- GRUPO ADMINISTRADOR ---
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('is_admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
         Route::prefix('gestionar-usuarios')->name('users.')->group(function () {
             Route::get('/', [AdminController::class, 'usersIndex'])->name('index');

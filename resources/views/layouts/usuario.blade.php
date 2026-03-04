@@ -164,11 +164,18 @@
                             <span class="font-medium text-sm">Equipos de Cómputo</span>
                         </a>
 
-                        {{-- Auditoría de Consistencia --}}
+                        {{-- Auditoría de Consistencia SIHCE --}}
                         <a href="{{ route('usuario.auditoria.index') }}"
                             class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.auditoria.index') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="check-square" class="w-4 h-4"></i>
                             <span class="font-medium text-sm">Auditoría SIHCE</span>
+                        </a>
+
+                        {{-- Auditoría de Equipos y Conectividad --}}
+                        <a href="{{ route('usuario.auditoria.equipos') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.auditoria.equipos') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="monitor" class="w-4 h-4"></i>
+                            <span class="font-medium text-sm">Auditoría Equipos</span>
                         </a>
                     </div>
                 </div>
@@ -193,7 +200,9 @@
 
                             <div class="text-right hidden sm:block">
                                 <p class="text-sm font-bold text-slate-700 leading-tight">{{ Auth::user()->name }}</p>
-                                <p class="text-[10px] text-emerald-600 uppercase tracking-wider font-black">Usuario</p>
+                                <p class="text-[10px] text-emerald-600 uppercase tracking-wider font-black">
+                                    {{ Auth::user()->role === 'admin' ? 'Admin / Usuario' : 'Usuario' }}
+                                </p>
                             </div>
 
                             <div
@@ -213,6 +222,17 @@
                             x-transition:leave-end="opacity-0 scale-95 translate-y-2"
                             class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50"
                             x-cloak>
+
+                            @if(Auth::user()->role === 'admin')
+                                <div class="px-4 py-2">
+                                    <a href="{{ route('admin.users.index') }}"
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors font-bold rounded-xl">
+                                        <i data-lucide="shield" class="w-4 h-4"></i>
+                                        <span>Panel de Administrador</span>
+                                    </a>
+                                </div>
+                                <div class="border-t border-slate-100 mx-4"></div>
+                            @endif
 
                             <div class="border-t border-slate-50 mt-1 pt-1">
                                 <form action="{{ route('logout') }}" method="POST">

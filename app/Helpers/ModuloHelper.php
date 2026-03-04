@@ -48,7 +48,15 @@ class ModuloHelper
             'sm_terapias' => 'Terapia Lenguaje / Ocupacional',
         ];
 
-        return $modulosMaster[$moduloTecnico] ?? $moduloTecnico;
+        // Normalizar: minúsculas y convertir guión (-) a subguión (_)
+        $clave = strtolower(str_replace('-', '_', trim($moduloTecnico ?? '')));
+
+        if (isset($modulosMaster[$clave])) {
+            return $modulosMaster[$clave];
+        }
+
+        // Fallback legible: reemplazar guiones/subguiones por espacios y capitalizar
+        return ucwords(str_replace(['_', '-'], ' ', strtolower($clave)));
     }
 
     /**
@@ -128,31 +136,95 @@ class ModuloHelper
     }
 
     /**
-     * Obtiene la información de conectividad de una cabecera de monitoreo
-     * buscando en sus detalles.
+     * Extrae los datos de conectividad de un array de contenido JSON.
+     * Maneja las diferentes claves que usan los distintos controladores.
      */
-    public static function getConectividadActa($cabecera)
+    private static function extraerConectividad(array $contenido): ?array
     {
-        $info = [
-            'tipo' => 'N/A',
-            'fuente' => 'N/A',
-            'operador' => 'N/A'
-        ];
-
-        if (!$cabecera || !$cabecera->detalles) {
-            return $info;
+        if (!isset($contenido['tipo_conectividad'])) {
+            return null;
         }
 
-        foreach ($cabecera->detalles as $detalle) {
-            $contenido = $detalle->contenido;
-            if (isset($contenido['tipo_conectividad'])) {
-                $info['tipo'] = $contenido['tipo_conectividad'];
-                $info['fuente'] = $contenido['wifi_fuente'] ?? 'N/A';
-                $info['operador'] = $contenido['operador_servicio'] ?? 'N/A';
-                break; // Asumimos que la conectividad es la misma para toda el acta
+        $tipo = $contenido['tipo_conectividad'];
+        if (empty($tipo)) {
+            return null;
+        }
+
+        // Algunos controladores guardan 'wifi_fuente', otros lo heredan del componente
+        $fuente = $contenido['wifi_fuente'] ?? $contenido['fuente'] ?? 'N/A';
+
+        // Algunos controladores guardan 'operador_servicio'
+        $operador = $contenido['operador_servicio'] ?? $contenido['operador'] ?? 'N/A';
+
+        return [
+            'tipo' => $tipo,
+            'fuente' => $fuente ?: 'N/A',
+            'operador' => $operador ?: 'N/A',
+        ];
+    }
+
+    /**
+     * Obtiene la información de conectividad de una cabecera de monitoreo.
+     * 
+     * @param  mixed       $cabecera   Modelo CabeceraMonitoreo (con detalles cargados)
+     * @param  string|null $modulo     Slug del módulo del equipo (para buscar primero ahí)
+     */
+    public static function getConectividadActa($cabecera, ?string $modulo = null): array
+    {
+        $vacio = ['tipo' => 'N/A', 'fuente' => 'N/A', 'operador' => 'N/A'];
+
+        if (!$cabecera || !$cabecera->detalles) {
+            return $vacio;
+        }
+
+        $detalles = $cabecera->detalles;
+
+        // Mapa inverso para buscar el slug interno a partir del nombre amigable o viceversa
+        $mapaModulos = self::getTodosLosModulos();
+        $slugBuscado = $modulo ? strtolower(trim($modulo)) : null;
+
+        // Si $modulo es un nombre amigable (ej: "Consulta Externa: Psicología"), buscar su slug
+        if ($modulo) {
+            // Normalizamos ambos para una comparación segura
+            $mapaNormalizado = array_map(function ($val) {
+                return strtolower(trim($val));
+            }, $mapaModulos);
+
+            $moduloNormalizado = strtolower(trim($modulo));
+
+            if (in_array($moduloNormalizado, $mapaNormalizado)) {
+                $slugBuscado = array_search($moduloNormalizado, $mapaNormalizado);
             }
         }
 
-        return $info;
+        // 1) Buscar primero en el módulo específico del equipo usando el slug
+        if ($slugBuscado) {
+            $detalle = $detalles->firstWhere('modulo_nombre', $slugBuscado);
+            if (!$detalle) {
+                // intentar también case sensitive o exacto si vino directamente como slug ej CONSULTA_PSICOLOGIA
+                $detalle = $detalles->firstWhere('modulo_nombre', strtolower($modulo));
+            }
+            if (!$detalle) {
+                $detalle = $detalles->firstWhere('modulo_nombre', $modulo);
+            }
+            if ($detalle && is_array($detalle->contenido)) {
+                $resultado = self::extraerConectividad($detalle->contenido);
+                if ($resultado) {
+                    return $resultado;
+                }
+            }
+        }
+
+        // 2) Fallback: buscar en cualquier módulo que tenga tipo_conectividad
+        foreach ($detalles as $detalle) {
+            if (!is_array($detalle->contenido))
+                continue;
+            $resultado = self::extraerConectividad($detalle->contenido);
+            if ($resultado) {
+                return $resultado;
+            }
+        }
+
+        return $vacio;
     }
 }
