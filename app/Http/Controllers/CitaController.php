@@ -32,6 +32,8 @@ class CitaController extends Controller
             $registro->tipo_conectividad = $contenidoJson['tipo_conectividad'] ?? null;
             $registro->wifi_fuente       = $contenidoJson['wifi_fuente'] ?? null;
             $registro->operador_servicio = $contenidoJson['operador_servicio'] ?? null;
+
+            $registro->capacitacion_entes = $contenidoJson['capacitacion_entes'] ?? [];
         }
 
         return view('usuario.monitoreo.modulos.citas', compact('acta', 'registro'));
@@ -140,8 +142,8 @@ class CitaController extends Controller
 
             'capacitacion_recibida'      => $input['capacitacion'] ?? null,
             'capacitacion_entes' => isset($input['capacitacion_ente']) && $input['capacitacion_ente'] !== null
-                                    ? [$input['capacitacion_ente']]
-                                    : [],
+                ? [$input['capacitacion_ente']]
+                : [],
 
             // Logística
             'insumos_disponibles'   => $input['insumos'] ?? [],
@@ -222,7 +224,7 @@ class CitaController extends Controller
             [
                 'doc_profesional'       => $datosCita['personal_dni'],
                 'recibio_capacitacion'  => $datosCita['capacitacion_recibida'],
-                'inst_que_lo_capacito'  => $datosCita['capacitacion_entes'],
+                'inst_que_lo_capacito'  => !empty($datosCita['capacitacion_entes']) ? implode(', ', $datosCita['capacitacion_entes']) : null,
                 'inst_a_quien_comunica' => $datosCita['dificultad_comunica_a'],
                 'medio_que_utiliza'     => $datosCita['dificultad_medio_uso'],
             ]
