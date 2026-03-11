@@ -37,6 +37,17 @@ trait UppercaseAttributes
             'profile_photo_path',
             'role',
             'status',
+            'foto1',
+            'foto2',
+            'foto3',
+            'foto4',
+            'foto5',
+            'imagen1',
+            'imagen2',
+            'imagen3',
+            'imagen4',
+            'imagen5',
+            'firmado_pdf',
         ];
 
         // También saltar si es una fecha definida en el modelo
