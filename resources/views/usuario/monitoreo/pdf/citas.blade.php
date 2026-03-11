@@ -303,7 +303,7 @@
                     <td>
                         @php
                             $entes = $registro->capacitacion_entes;
-                            echo is_array($entes) ? ($entes[0] ?? '-') : ($entes ?? '-');
+                            echo is_array($entes) ? $entes[0] ?? '-' : $entes ?? '-';
                         @endphp
                     </td>
                 </tr>
@@ -371,7 +371,7 @@
         <div class="section-title">{{ $n++ }}. CONECTIVIDAD</div>
         @php
             $tipoConectividad = $registro->tipo_conectividad ?? null;
-            $wifiFuente       = $registro->wifi_fuente ?? null;
+            $wifiFuente = $registro->wifi_fuente ?? null;
             $operadorServicio = $registro->operador_servicio ?? null;
         @endphp
         <table>
@@ -379,40 +379,41 @@
                 <td class="bg-label">TIPO DE CONECTIVIDAD</td>
                 <td>{{ $tipoConectividad ?? '---' }}</td>
             </tr>
-            @if($tipoConectividad == 'WIFI')
-            <tr>
-                <td class="bg-label">FUENTE DE WIFI</td>
-                <td>{{ $wifiFuente ?? '---' }}</td>
-            </tr>
-            @endif
-            @if($tipoConectividad != 'SIN CONECTIVIDAD')
-            <tr>
-                <td class="bg-label">OPERADOR DE SERVICIO</td>
-                <td>{{ $operadorServicio ?? '---' }}</td>
-            </tr>
-            @endif
-        </table>
-
-        <div class="section-title">{{ $n++ }}. GESTIÓN DE CITAS Y CALIDAD DE ATENCIÓN</div>
-
-        <table style="margin-top: 10px;">
-            <thead>
+            @if ($tipoConectividad == 'WIFI')
                 <tr>
-                    <th>SERVICIO</th>
-                    <th width="20%" class="text-center">CITAS OTORGADAS</th>
+                    <td class="bg-label">FUENTE DE WIFI</td>
+                    <td>{{ $wifiFuente ?? '---' }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach ($registro->produccion_listado ?? [] as $prod)
-                    <tr>
-                        <td>{{ $prod['nombre'] ?? '-' }}</td>
-                        <td class="text-center"><strong>{{ $prod['cantidad'] ?? 0 }}</strong></td>
-                    </tr>
-                @endforeach
-            </tbody>
+            @endif
+            @if ($tipoConectividad != 'SIN CONECTIVIDAD')
+                <tr>
+                    <td class="bg-label">OPERADOR DE SERVICIO</td>
+                    <td>{{ $operadorServicio ?? '---' }}</td>
+                </tr>
+            @endif
         </table>
 
         @if (($registro->utiliza_sihce ?? '') == 'SI')
+
+            <div class="section-title">{{ $n++ }}. GESTIÓN DE CITAS Y CALIDAD DE ATENCIÓN</div>
+
+            <table style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>SERVICIO</th>
+                        <th width="20%" class="text-center">CITAS OTORGADAS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($registro->produccion_listado ?? [] as $prod)
+                        <tr>
+                            <td>{{ $prod['nombre'] ?? '-' }}</td>
+                            <td class="text-center"><strong>{{ $prod['cantidad'] ?? 0 }}</strong></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
             <div style="margin-top: 5px; font-weight: bold;">CON EL SISTEMA SIHCE:</div>
             <table>
                 <tr>
@@ -444,6 +445,7 @@
                     <td>{{ $registro->dificultad_medio_uso ?? '0' }}</td>
                 </tr>
             </table>
+
         @endif
 
         <div class="section-title">{{ $n++ }}. EVIDENCIA FOTOGRÁFICA</div>
