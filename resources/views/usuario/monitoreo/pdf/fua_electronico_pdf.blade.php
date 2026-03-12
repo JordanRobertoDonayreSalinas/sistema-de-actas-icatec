@@ -37,12 +37,12 @@
         .foto { 
             display: block; 
             margin: 0 auto; 
-            max-width: 100%; 
-            max-height: 300px; 
-            width: auto; height: auto; 
-            object-fit: contain; 
+            width: 100%; 
+            height: 250px; 
+            object-fit: cover; 
             background-color: #ffffff; 
             border: 1px solid #e2e8f0; 
+            border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
         /* Estilo para items (Materiales/Recursos) */
@@ -407,8 +407,8 @@
                                 </tr><tr> 
                             @endif
                             <td style="border: none; padding: 5px; text-align: center; width: 50%;">
-                                <div style="border: 1px solid #cbd5e1; padding: 4px; background: #fff;">
-                                    <img src="{{ $img }}" style="max-width: 100%; height: 160px; object-fit: contain;">
+                                <div style="border: 1px solid #cbd5e1; padding: 4px; background: #fff; border-radius: 10px;">
+                                    <img src="{{ $img }}" style="max-width: 100%; height: 250px; object-fit: cover; border-radius: 8px;">
                                 </div>
                             </td>
                         @endforeach

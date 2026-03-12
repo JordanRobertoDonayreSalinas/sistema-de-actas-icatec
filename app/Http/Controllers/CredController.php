@@ -48,8 +48,8 @@ class CredController extends Controller
                         ->first();
         }
 
-        if ($detalle) {
-            $detalle->contenido = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : $detalle->contenido;
+        if ($detalle && isset($detalle->contenido)) {
+            $detalle->contenido = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : (array)$detalle->contenido;
         }
 
         $fechaParaVista = $detalle->fecha_registro ?? $acta->fecha;
@@ -201,9 +201,45 @@ class CredController extends Controller
                 'apellido_materno' => $profesional->apellido_materno,
                 'telefono' => $profesional->telefono,
                 'email' => $profesional->email,
-                'cargo' => $profesional->cargo, // Asegúrate de que este nombre coincida con data.cargo en el JS
+                'cargo' => $profesional->cargo, 
             ]);
         }
+        
+        if (request()->has('local_only')) {
+            return response()->json(['exists' => false]);
+        }
+
+        if (preg_match('/^\d{8}$/', $doc)) {
+            $decolecta = new \App\Services\DecolectaService();
+            $result = $decolecta->consultarDni($doc);
+
+            if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+                return response()->json([
+                    'exists' => false,
+                    'exists_external' => false,
+                    'quota_exceeded' => true,
+                    'message' => 'Límite mensual de validaciones en RENIEC excedido.'
+                ]);
+            }
+
+            if (isset($result['success']) && $result['success']) {
+                $data = $result['data'];
+                return response()->json([
+                    'exists'           => true, // Para CredController el JS espera exists = true para llenar los datos
+                    'exists_external'  => true,
+                    'tipo_doc'         => 'DNI',
+                    'doc'              => $doc,
+                    'apellido_paterno' => $data['apellido_paterno'],
+                    'apellido_materno' => $data['apellido_materno'],
+                    'nombres'          => $data['nombres'],
+                    'email'            => '',
+                    'telefono'         => '',
+                    'cargo'            => '',
+                    'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                ]);
+            }
+        }
+
         return response()->json(['exists' => false]);
     }
 }

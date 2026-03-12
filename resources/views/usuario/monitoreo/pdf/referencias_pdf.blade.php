@@ -120,10 +120,10 @@
 
         .photo-box img {
             width: 100%;           /* Se adapta al 45% del ancho disponible */
-            height: 180px;         /* Altura fija controlada */
-            object-fit: contain;   /* Muestra la foto completa sin recortar */
+            height: 250px;         /* Altura fija controlada */
+            object-fit: cover;     /* Muestra la foto completa sin recortar */
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            border-radius: 10px;
             background-color: #f8fafc;
         }
     </style>
@@ -377,22 +377,28 @@
     <div class="photo-section">
         {{-- Foto 1 --}}
         @if(!empty($detalle->foto_1))
-            @php $path1 = storage_path('app/public/' . $detalle->foto_1); @endphp
-            @if(file_exists($path1))
+            @php 
+                $foto1 = $detalle->foto_1;
+                $isFullUrl1 = str_starts_with($foto1, 'http');
+                $path1 = $isFullUrl1 ? $foto1 : storage_path('app/public/' . $foto1);
+            @endphp
+            @if($isFullUrl1 || file_exists($path1))
                 <div class="photo-box">
                     <img src="{{ $path1 }}">
-                    
                 </div>
             @endif
         @endif
 
         {{-- Foto 2 --}}
         @if(!empty($detalle->foto_2))
-            @php $path2 = storage_path('app/public/' . $detalle->foto_2); @endphp
-            @if(file_exists($path2))
+            @php 
+                $foto2 = $detalle->foto_2;
+                $isFullUrl2 = str_starts_with($foto2, 'http');
+                $path2 = $isFullUrl2 ? $foto2 : storage_path('app/public/' . $foto2);
+            @endphp
+            @if($isFullUrl2 || file_exists($path2))
                 <div class="photo-box">
                     <img src="{{ $path2 }}">
-                    
                 </div>
             @endif
         @endif

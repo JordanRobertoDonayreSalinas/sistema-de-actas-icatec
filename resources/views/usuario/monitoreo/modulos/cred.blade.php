@@ -755,7 +755,7 @@
                                 <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Evidencia Principal
                             </label>
                             
-                            <div class="relative h-56 rounded-[2rem] border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center transition-all hover:bg-slate-100 group">
+                            <div class="relative h-96 rounded-[2rem] border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center transition-all hover:bg-slate-100 group">
                                 
                                 <template x-if="images.img1">
                                     <div class="relative w-full h-full">

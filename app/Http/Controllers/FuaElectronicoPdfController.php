@@ -26,9 +26,14 @@ class FuaElectronicoPdfController extends Controller
             
             foreach ($fotosArray as $foto) {
                 if (!empty($foto)) {
-                    $rutaCompleta = public_path('storage/' . $foto);
-                    if (file_exists($rutaCompleta)) {
-                        $imagenesData[] = $rutaCompleta;
+                    $isFullUrl = str_starts_with($foto, 'http');
+                    if ($isFullUrl) {
+                        $imagenesData[] = $foto;
+                    } else {
+                        $rutaCompleta = public_path('storage/' . $foto);
+                        if (file_exists($rutaCompleta)) {
+                            $imagenesData[] = $rutaCompleta;
+                        }
                     }
                 }
             }

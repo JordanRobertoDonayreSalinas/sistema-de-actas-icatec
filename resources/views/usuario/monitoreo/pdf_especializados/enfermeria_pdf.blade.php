@@ -110,10 +110,10 @@
         }
         .photo-frame img {
             width: 100%;
-            height: auto;
-            border-radius: 6px;
-            max-height: 300px;
-            object-fit: contain;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
         }
 
         /* --- ESTILO FIRMA (TARJETA REDONDEADA) --- */
@@ -324,9 +324,19 @@
     {{-- 9. EVIDENCIA FOTOGRÁFICA (Con Marco) --}}
     <div class="section-header">{{ $i++ }}. EVIDENCIA FOTOGRÁFICA</div>
     @if(!empty($fotoUrl))
-        <div class="photo-frame">
-            <img src="{{ public_path('storage/' . $fotoUrl) }}">
-        </div>
+        @php
+            $isFullUrl = str_starts_with($fotoUrl, 'http');
+            $finalPath = $isFullUrl ? $fotoUrl : public_path('storage/' . $fotoUrl);
+        @endphp
+        @if($isFullUrl || file_exists($finalPath))
+            <div class="photo-frame">
+                <img src="{{ $finalPath }}">
+            </div>
+        @else
+            <div style="text-align: center; padding: 20px; color: #999; border: 1px dashed #ccc; border-radius: 10px; margin-top: 10px;">
+                EVIDENCIA FOTOGRÁFICA NO ENCONTRADA EN EL SERVIDOR
+            </div>
+        @endif
     @else
         <div style="text-align: center; padding: 20px; color: #999; border: 1px dashed #ccc; border-radius: 10px; margin-top: 10px;">
             NO SE ADJUNTÓ EVIDENCIA FOTOGRÁFICA

@@ -32,20 +32,25 @@ class GestionAdministrativaESPpdfController extends Controller
         if (is_string($fotos)) $fotos = [$fotos];
 
         foreach ($fotos as $path) {
-            // Verificamos si el archivo existe en el disco 'public'
-            if ($path && Storage::disk('public')->exists($path)) {
-                
-                // Obtenemos la ruta absoluta del archivo en el servidor
-                $rutaAbsoluta = storage_path("app/public/{$path}");
-                
-                // Obtenemos el tipo de archivo (jpg, png, etc.)
-                $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
-                
-                // Leemos el contenido del archivo y lo convertimos a Base64
-                $data = file_get_contents($rutaAbsoluta);
-                $base64 = 'data:image/' . $extension . ';base64,' . base64_encode($data);
-                
-                $imagenesData[] = $base64;
+            if ($path) {
+                $isFullUrl = str_starts_with($path, 'http');
+                if ($isFullUrl) {
+                    $imagenesData[] = $path;
+                } elseif (Storage::disk('public')->exists($path)) {
+                    // Obtenemos la ruta absoluta del archivo en el servidor
+                    $rutaAbsoluta = storage_path("app/public/{$path}");
+                    
+                    if (file_exists($rutaAbsoluta)) {
+                        // Obtenemos el tipo de archivo (jpg, png, etc.)
+                        $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
+                        
+                        // Leemos el contenido del archivo y lo convertimos a Base64
+                        $data = file_get_contents($rutaAbsoluta);
+                        $base64 = 'data:image/' . $extension . ';base64,' . base64_encode($data);
+                        
+                        $imagenesData[] = $base64;
+                    }
+                }
             }
         }
 

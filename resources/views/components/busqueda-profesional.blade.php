@@ -234,10 +234,28 @@
             return;
         }
 
-        fetch(`/usuario/monitoreo/profesional/buscar/${doc}`)
+        Swal.fire({
+            html: `
+                <div class="flex items-center justify-center space-x-5 p-2">
+                    <div class="w-10 h-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+                    <div class="text-left">
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Validando Identidad</h3>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-[0.15em] mt-1">Buscando en base local...</p>
+                    </div>
+                </div>
+            `,
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            width: 'auto',
+            customClass: { popup: 'rounded-[2rem] border border-slate-100 shadow-2xl p-4' }
+        });
+
+        // 1er paso: Buscar localmente
+        fetch(`/usuario/monitoreo/profesional/buscar/${doc}?local_only=1`)
             .then(res => res.json())
             .then(data => {
                 if(data.exists) {
+                    Swal.close();
                     // MODO ACTUALIZACIÓN
                     updateIdentityUI(prefix, 'success');
                     document.getElementById('nombres_' + prefix).value = data.nombres;
@@ -252,7 +270,6 @@
                     const select = document.getElementById('cargo_select_' + prefix);
                     const manualInput = document.getElementById('cargo_manual_' + prefix);
                     
-                    // Verificar si el cargo de la BD existe en las opciones del select
                     let existsInSelect = false;
                     for (let i = 0; i < select.options.length; i++) {
                         if (select.options[i].value === cargoDb) {
@@ -265,15 +282,12 @@
                         select.value = cargoDb;
                         manualInput.value = ''; 
                     } else if (cargoDb !== '') {
-                        // Si tiene cargo pero no está en la lista, es "OTROS"
                         select.value = 'OTROS';
                         manualInput.value = cargoDb;
                     } else {
-                        // Si no tiene cargo
                         select.value = '';
                         manualInput.value = '';
                     }
-                    // Ejecutar sincronización para ocultar/mostrar input manual
                     syncCargo(prefix);
 
                     const Toast = Swal.mixin({
@@ -289,30 +303,126 @@
                     });
 
                 } else {
-                    // MODO NUEVO
-                    updateIdentityUI(prefix, 'new');
-                    Swal.fire({
-                        title: 'Sin Resultados',
-                        text: 'El profesional no figura en el maestro. ¿Desea registrarlo como nuevo?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, Registrar',
-                        cancelButtonText: 'Cancelar',
-                        confirmButtonColor: '#0f172a',
-                        customClass: { popup: 'rounded-[2rem]' }
-                    }).then(r => { 
-                        if(!r.isConfirmed) {
-                            nuevoProfesional(prefix);
-                        } else {
-                            document.getElementById('nombres_' + prefix).focus();
-                        }
-                    });
+                    // No está en la BD Local. Procedemos a buscar en RENIEC (API Externa) si es DNI (8 dígitos)
+                    if (doc.length === 8) {
+                        Swal.fire({
+                            html: `
+                                <div class="p-4 flex flex-col items-center">
+                                    <div class="relative w-24 h-24 flex items-center justify-center mb-6">
+                                        <div class="absolute inset-0 border-[6px] border-indigo-50 rounded-full animate-ping opacity-75"></div>
+                                        <div class="absolute inset-3 border-4 border-indigo-100 rounded-full animate-pulse"></div>
+                                        <div class="h-14 w-14 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-full flex items-center justify-center shadow-xl shadow-indigo-500/50 z-10 relative">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white animate-bounce"><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                        </div>
+                                    </div>
+                                    <h3 class="text-2xl font-black text-indigo-900 uppercase tracking-tight mb-2">Conectando RENIEC</h3>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] text-center mb-6 leading-relaxed">
+                                        Extrayendo nombres oficiales<br>de la plataforma nacional.
+                                    </p>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex gap-1">
+                                        <div class="bg-indigo-300 h-full w-1/3 rounded-full animate-pulse"></div>
+                                        <div class="bg-indigo-500 h-full w-1/3 rounded-full animate-pulse delay-75"></div>
+                                        <div class="bg-indigo-700 h-full w-1/3 rounded-full animate-pulse delay-150"></div>
+                                    </div>
+                                </div>
+                            `,
+                            allowOutsideClick: false,
+                            showConfirmButton: false,
+                            customClass: { popup: 'rounded-[2rem] border-2 border-indigo-50 shadow-2xl p-0 bg-white' }
+                        });
+                        
+                        // 2do paso: Buscar en la API externa (ya sin local_only)
+                        fetch(`/usuario/monitoreo/profesional/buscar/${doc}`)
+                            .then(res => res.json())
+                            .then(dataExt => {
+                                Swal.close();
+                                
+                                if (dataExt.quota_exceeded) {
+                                    Swal.fire({
+                                        title: 'Límite Mensual Excedido',
+                                        text: 'Se ha agotado el límite de consultas a RENIEC por este mes. Por favor, ingrese los datos faltantes manualmente.',
+                                        icon: 'warning',
+                                        confirmButtonText: 'Entendido',
+                                        confirmButtonColor: '#4f46e5',
+                                        customClass: { popup: 'rounded-[2rem]' }
+                                    }).then(() => {
+                                        promptNuevoManual(prefix);
+                                    });
+                                    return;
+                                }
+                                
+                                if (dataExt.exists_external) {
+                                    // MODO NUEVO EXTERNO (DNI ENCONTRADO EN API)
+                                    updateIdentityUI(prefix, 'new');
+                                    
+                                    document.getElementById('nombres_' + prefix).value = dataExt.nombres || '';
+                                    document.getElementById('paterno_' + prefix).value = dataExt.apellido_paterno || '';
+                                    document.getElementById('materno_' + prefix).value = dataExt.apellido_materno || '';
+                                    document.getElementById('tipo_' + prefix).value = dataExt.tipo_doc || 'DNI';
+                                    
+                                    // Limpiar y preparar cargo
+                                    document.getElementById('email_' + prefix).value = '';
+                                    document.getElementById('tel_' + prefix).value = '';
+                                    document.getElementById('cargo_select_' + prefix).value = '';
+                                    syncCargo(prefix);
+                                    
+                                    const Toast = Swal.mixin({
+                                        toast: true,
+                                        position: 'top-end',
+                                        showConfirmButton: false,
+                                        timer: 4000,
+                                        timerProgressBar: true
+                                    });
+                                    let tokenMsg = dataExt.remaining_tokens !== undefined ? ` (Tokens restantes: ${dataExt.remaining_tokens})` : '';
+                                    Toast.fire({
+                                        icon: 'info',
+                                        title: 'Nombres encontrados en RENIEC.' + tokenMsg + ' Complete los demás datos.'
+                                    });
+
+                                } else {
+                                    promptNuevoManual(prefix);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error externo:', error);
+                                Swal.fire('Error', 'No se pudo conectar con el servidor externo', 'error')
+                                    .then(() => promptNuevoManual(prefix));
+                            });
+                            
+                    } else {
+                        // Si no es DNI 8 dígitos, simplemente no existe
+                        Swal.close();
+                        promptNuevoManual(prefix);
+                    }
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error local:', error);
                 Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
             });
+    }
+
+    /**
+     * Helper para preguntar si se registra manual cuando no se encuentra en ningún lado
+     */
+    function promptNuevoManual(prefix) {
+        updateIdentityUI(prefix, 'new');
+        Swal.fire({
+            title: 'Sin Resultados',
+            text: 'El profesional no figura en el maestro ni en línea. ¿Desea registrarlo como nuevo manual?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, Registrar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0f172a',
+            customClass: { popup: 'rounded-[2rem]' }
+        }).then(r => { 
+            if(!r.isConfirmed) {
+                nuevoProfesional(prefix);
+            } else {
+                document.getElementById('nombres_' + prefix).focus();
+            }
+        });
     }
 
     /**

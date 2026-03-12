@@ -79,13 +79,13 @@
             text-align: center;
         }
         .foto-wrapper {
-            width: 320px; 
-            height: 240px; 
-            display: inline-block;
-            margin: 8px;
+            width: 100%; 
+            height: 250px; 
+            display: block;
+            margin: 8px 0;
             border: 1px solid #cbd5e1;
             background-color: #f8fafc;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
             vertical-align: top;
         }
@@ -301,12 +301,16 @@
                     {{-- 1. Formato nuevo (array 'fotos_evidencia') --}}
                     @if(!empty($cont['fotos_evidencia']) && is_array($cont['fotos_evidencia']))
                         @foreach($cont['fotos_evidencia'] as $ruta)
-                            @if(!empty($ruta) && file_exists(public_path('storage/' . $ruta)))
+                            @php
+                                $isFullUrl = !empty($ruta) && str_starts_with($ruta, 'http');
+                                $realPath = !empty($ruta) ? ($isFullUrl ? $ruta : public_path('storage/' . $ruta)) : null;
+                            @endphp
+                            @if($realPath && ($isFullUrl || file_exists($realPath)))
                                 @if(!$fotosEncontradas) 
                                     <div style="margin-top:8px;"><div style="font-weight:700; font-size:9px; margin-bottom:6px;">EVIDENCIAS FOTOGRÁFICAS</div><div class="foto-grid"> 
                                     @php $fotosEncontradas = true; @endphp
                                 @endif
-                                <div class="foto-wrapper"><img src="{{ public_path('storage/' . $ruta) }}"></div>
+                                <div class="foto-wrapper"><img src="{{ $realPath }}"></div>
                             @endif
                         @endforeach
                         @if($fotosEncontradas) </div></div> @endif
@@ -317,12 +321,16 @@
                          <div style="margin-top:8px;">
                             <div style="font-weight:700; font-size:9px; margin-bottom:6px;">EVIDENCIAS FOTOGRÁFICAS</div>
                             <div class="foto-grid">
-                                @if(!empty($cont['foto_1']) && file_exists(public_path('storage/' . $cont['foto_1'])))
-                                    <div class="foto-wrapper"><img src="{{ public_path('storage/' . $cont['foto_1']) }}"></div>
-                                @endif
-                                @if(!empty($cont['foto_2']) && file_exists(public_path('storage/' . $cont['foto_2'])))
-                                    <div class="foto-wrapper"><img src="{{ public_path('storage/' . $cont['foto_2']) }}"></div>
-                                @endif
+                                @foreach(['foto_1', 'foto_2'] as $fKey)
+                                    @php
+                                        $fPath = $cont[$fKey] ?? null;
+                                        $fIsFull = $fPath && str_starts_with($fPath, 'http');
+                                        $fRealPath = $fPath ? ($fIsFull ? $fPath : public_path('storage/' . $fPath)) : null;
+                                    @endphp
+                                    @if($fRealPath && ($fIsFull || file_exists($fRealPath)))
+                                        <div class="foto-wrapper"><img src="{{ $fRealPath }}"></div>
+                                    @endif
+                                @endforeach
                             </div>
                         </div>
                     @endif

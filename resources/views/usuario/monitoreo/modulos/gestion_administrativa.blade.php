@@ -365,14 +365,14 @@
                                 <div
                                     class="mb-4 w-full flex justify-center bg-black/50 rounded-2xl p-2 border-2 border-white/10">
                                     <a href="{{ asset('storage/' . $fotoEvidencia) }}" target="_blank"
-                                        class="block relative group/img overflow-hidden rounded-xl max-h-96">
+                                        class="block relative group/img overflow-hidden rounded-xl w-full h-[400px]">
                                         <div
                                             class="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-all z-10 flex items-center justify-center opacity-0 group-hover/img:opacity-100">
                                             <i data-lucide="zoom-in"
                                                 class="text-white w-10 h-10 drop-shadow-lg scale-75 group-hover/img:scale-100 transition-all duration-300"></i>
                                         </div>
                                         <img src="{{ asset('storage/' . $fotoEvidencia) }}"
-                                            class="max-w-full h-auto max-h-96 object-contain shadow-2xl rounded-xl">
+                                            class="w-full h-full object-cover shadow-2xl rounded-xl">
                                     </a>
                                 </div>
                             @endif
@@ -390,7 +390,7 @@
                                         {{ $fotoEvidencia ? 'CLICK PARA CAMBIAR' : 'SUBIR FOTO' }}
                                     </span>
                                     <img id="img-preview" src="#"
-                                        class="hidden mt-4 h-48 w-auto object-contain rounded-lg border-2 border-indigo-500 shadow-xl">
+                                        class="hidden mt-4 w-full h-48 object-cover rounded-lg border-2 border-indigo-500 shadow-xl">
                                 </div>
                             </div>
                         </div>

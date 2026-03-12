@@ -69,9 +69,45 @@ class OdontologiaController extends Controller
 
         if ($profesional) {
             return response()->json(['success' => true, 'data' => $profesional]);
-        } else {
-            return response()->json(['success' => false, 'message' => 'Profesional no encontrado.']);
         }
+        
+        if (request()->has('local_only')) {
+            return response()->json(['success' => false, 'message' => 'Profesional no encontrado localmente.']);
+        }
+
+        // Busqueda Externa (Decolecta)
+        if (preg_match('/^\d{8}$/', $doc)) {
+            $decolecta = new \App\Services\DecolectaService();
+            $result = $decolecta->consultarDni($doc);
+
+            if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+                return response()->json([
+                    'success' => false,
+                    'data' => [
+                        'exists_external' => false,
+                        'quota_exceeded' => true,
+                        'message' => 'Límite mensual de validaciones en RENIEC excedido.'
+                    ]
+                ]);
+            }
+
+            if (isset($result['success']) && $result['success']) {
+                $data = $result['data'];
+                return response()->json(['success' => true, 'data' => [
+                    'exists_external'  => true,
+                    'tipo_doc'         => 'DNI',
+                    'doc'              => $doc,
+                    'apellido_paterno' => $data['apellido_paterno'],
+                    'apellido_materno' => $data['apellido_materno'],
+                    'nombres'          => $data['nombres'],
+                    'email'            => '',
+                    'telefono'         => '',
+                    'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                ]]);
+            }
+        }
+
+        return response()->json(['success' => false, 'message' => 'Profesional no encontrado.']);
     }
 
     // 3. STORE: Guardar datos

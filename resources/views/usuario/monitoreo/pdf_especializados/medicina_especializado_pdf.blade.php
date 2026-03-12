@@ -97,11 +97,11 @@
         .foto {
             display: block;
             margin: 0 auto;
-            max-width: 100%;
-            max-height: 300px;
-            width: auto;
-            height: auto;
-            object-fit: contain;
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
         }
 
         .no-evidence-box {

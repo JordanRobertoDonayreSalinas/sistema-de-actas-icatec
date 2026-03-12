@@ -106,8 +106,10 @@
         }
         .photo-box img {
             width: 100%;
-            height: 200px;
-            object-fit: contain;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
         }
 
         /* --- FIRMAS --- */
@@ -343,9 +345,16 @@
     <div class="section-header">{{ $i++ }}. EVIDENCIA FOTOGRÁFICA</div>
     <div class="gallery">
         @forelse($dbFotos as $foto)
-            <div class="photo-box">
-                <img src="{{ public_path('storage/' . $foto->url_foto) }}">
-            </div>
+            @php
+                $url = $foto->url_foto;
+                $isFullUrl = str_starts_with($url, 'http');
+                $realPath = $isFullUrl ? $url : public_path('storage/' . $url);
+            @endphp
+            @if($isFullUrl || file_exists($realPath))
+                <div class="photo-box">
+                    <img src="{{ $realPath }}">
+                </div>
+            @endif
         @empty
             <p style="padding: 20px; color: #999;">No se adjuntaron fotografías.</p>
         @endforelse

@@ -172,6 +172,15 @@
             }
 
             /* El texto "SISTEMA DE ACTAS" se alinea a la izquierda por defecto */
+            
+            /* --- ESTILO UNIFICADO PARA FOTOS (PREMIUM) --- */
+            .photo-img, .foto, .preview-image, .photo-box img {
+                width: 100%;
+                height: 250px;
+                object-fit: cover;
+                border-radius: 10px;
+                border: 1px solid #e2e8f0;
+            }
         </style>
     </head>
 
@@ -458,33 +467,33 @@
         @if ($cantidad > 0)
 
             @if ($cantidad == 1)
-                <div style="width: 100%; text-align: center; margin-top: 15px;">
-                    <div style="display: inline-block; border: 1px solid #e2e8f0; padding: 5px; background: #fff;">
-                        <img src="{{ $fotos[0] }}" style="max-width: 90%; height: 220px; object-fit: contain;">
-                    </div>
+            <div style="width: 100%; text-align: center; margin-top: 15px;">
+                <div style="display: inline-block; border: 1px solid #e2e8f0; padding: 5px; background: #fff; border-radius: 10px;">
+                    <img src="{{ $fotos[0] }}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 8px;">
                 </div>
-            @else
-                <table style="width: 100%; border: none; margin-top: 10px;">
-                    <tr>
-                        @foreach ($fotos as $index => $fotoUrl)
-                            @if ($index > 0 && $index % 2 == 0)
-                    </tr>
-                    <tr>
-            @endif
-
-            <td style="border: none; padding: 5px; text-align: center; width: 50%;">
-                <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff;">
-                    <img src="{{ $fotoUrl }}" style="max-width: 100%; height: 160px; object-fit: contain;">
-                </div>
-            </td>
-        @endforeach
-
-        @if ($cantidad % 2 != 0)
-            <td style="border: none;"></td>
+            </div>
+        @else
+            <table style="width: 100%; border: none; margin-top: 10px;">
+                <tr>
+                    @foreach ($fotos as $index => $fotoUrl)
+                        @if ($index > 0 && $index % 2 == 0)
+                </tr>
+                <tr>
         @endif
-        </tr>
-        </table>
-        @endif
+
+        <td style="border: none; padding: 5px; text-align: center; width: 50%;">
+            <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff; border-radius: 10px;">
+                <img src="{{ $fotoUrl }}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 8px;">
+            </div>
+        </td>
+    @endforeach
+
+    @if ($cantidad % 2 != 0)
+        <td style="border: none;"></td>
+    @endif
+    </tr>
+    </table>
+    @endif
     @else
         <div class="no-evidence-box">NO SE ADJUNTÓ EVIDENCIA FOTOGRÁFICA.</div>
         @endif

@@ -34,6 +34,41 @@ class UrgenciasController extends Controller
                 'cargo'            => $profesional->cargo,
             ]);
         }
+        
+        if (request()->has('local_only')) {
+            return response()->json(['exists' => false]);
+        }
+
+        if (preg_match('/^\d{8}$/', $doc)) {
+            $decolecta = new \App\Services\DecolectaService();
+            $result = $decolecta->consultarDni($doc);
+
+            if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+                return response()->json([
+                    'exists' => false,
+                    'exists_external' => false,
+                    'quota_exceeded' => true,
+                    'message' => 'Límite mensual de validaciones en RENIEC excedido.'
+                ]);
+            }
+
+            if (isset($result['success']) && $result['success']) {
+                $data = $result['data'];
+                return response()->json([
+                    'exists'           => true, // Para modo tabla (como Urgencias/Cred) el JS asume exists=true
+                    'exists_external'  => true,
+                    'tipo_doc'         => 'DNI',
+                    'doc'              => $doc,
+                    'apellido_paterno' => $data['apellido_paterno'],
+                    'apellido_materno' => $data['apellido_materno'],
+                    'nombres'          => $data['nombres'],
+                    'email'            => '',
+                    'telefono'         => '',
+                    'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                ]);
+            }
+        }
+
         return response()->json(['exists' => false]);
     }
 

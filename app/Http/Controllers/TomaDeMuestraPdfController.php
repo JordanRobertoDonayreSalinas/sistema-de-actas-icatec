@@ -20,7 +20,8 @@ class TomaDeMuestraPdfController extends Controller
                                   ->where('modulo_nombre', 'toma_muestra')
                                   ->firstOrFail();
         
-        $contenido = is_string($registro->contenido) ? json_decode($registro->contenido, true) : $registro->contenido;
+        $contenido = is_string($registro->contenido) ? json_decode((string)$registro->contenido, true) : $registro->contenido;
+
 
         // ----------------------------------------------------
         // MAPEO DE DATOS (Estructura para la vista)
@@ -72,15 +73,19 @@ class TomaDeMuestraPdfController extends Controller
         }
 
         $fotoBase64 = null;
-        if ($fotoPath && Storage::disk('public')->exists($fotoPath)) {
-            try {
-                $rutaAbsoluta = storage_path("app/public/{$fotoPath}");
-                $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
-                $dataImg = file_get_contents($rutaAbsoluta);
-                if ($dataImg !== false) {
-                    $fotoBase64 = 'data:image/' . $extension . ';base64,' . base64_encode($dataImg);
-                }
-            } catch (\Exception $e) { }
+        if ($fotoPath) {
+            if (str_starts_with($fotoPath, 'http')) {
+                $fotoBase64 = $fotoPath;
+            } elseif (Storage::disk('public')->exists($fotoPath)) {
+                try {
+                    $rutaAbsoluta = storage_path("app/public/{$fotoPath}");
+                    $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
+                    $dataImg = file_get_contents($rutaAbsoluta);
+                    if ($dataImg !== false) {
+                        $fotoBase64 = 'data:image/' . $extension . ';base64,' . base64_encode($dataImg);
+                    }
+                } catch (\Exception $e) { }
+            }
         }
         $datos['foto_path_pdf'] = $fotoBase64;
 

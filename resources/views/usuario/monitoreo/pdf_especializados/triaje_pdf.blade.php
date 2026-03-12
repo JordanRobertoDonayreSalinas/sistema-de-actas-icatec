@@ -105,9 +105,11 @@
         .foto { 
             display: block; 
             margin: 0 auto; 
-            max-width: 100%;      
-            max-height: 280px;
-            border-radius: 4px;
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
         }
 
         /* RECUADRO SIN EVIDENCIA */

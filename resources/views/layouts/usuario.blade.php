@@ -19,8 +19,12 @@
     {{-- Vite (Tailwind + JS principal) --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- Alpine.js --}}
+    {{-- Alpine.js con Plugins --}}
+    <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- Librería para Escáner de Código de Barras (Html5-QRCode) --}}
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>

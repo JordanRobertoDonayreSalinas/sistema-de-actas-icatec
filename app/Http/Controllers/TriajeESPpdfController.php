@@ -100,18 +100,23 @@ class TriajeESPpdfController extends Controller
         $relPath = $this->getFotoPath($contenidoDB);
         $fotoBase64 = null;
 
-        if ($relPath && Storage::disk('public')->exists($relPath)) {
-            $rutaAbsoluta = storage_path("app/public/{$relPath}");
-            $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
-            
-            // Intentamos leer y convertir
-            try {
-                $dataImg = file_get_contents($rutaAbsoluta);
-                if ($dataImg !== false) {
-                    $fotoBase64 = 'data:image/' . $extension . ';base64,' . base64_encode($dataImg);
+        if ($relPath) {
+            $isFullUrl = str_starts_with($relPath, 'http');
+            if ($isFullUrl) {
+                $fotoBase64 = $relPath;
+            } elseif (Storage::disk('public')->exists($relPath)) {
+                $rutaAbsoluta = storage_path("app/public/{$relPath}");
+                $extension = pathinfo($rutaAbsoluta, PATHINFO_EXTENSION);
+                
+                // Intentamos leer y convertir
+                try {
+                    $dataImg = file_get_contents($rutaAbsoluta);
+                    if ($dataImg !== false) {
+                        $fotoBase64 = 'data:image/' . $extension . ';base64,' . base64_encode($dataImg);
+                    }
+                } catch (\Exception $e) {
+                    // Si falla, se queda en null y el PDF mostrará "No foto"
                 }
-            } catch (\Exception $e) {
-                // Si falla, se queda en null y el PDF mostrará "No foto"
             }
         }
         

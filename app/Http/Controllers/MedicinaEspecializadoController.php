@@ -223,11 +223,16 @@ class MedicinaEspecializadoController extends Controller
         $rutaFoto = $detalle->contenido['comentarios']['foto'] ?? null;
 
         if ($rutaFoto) {
-            $path = public_path('storage/' . $rutaFoto);
-            if (file_exists($path)) {
-                $type = pathinfo($path, PATHINFO_EXTENSION);
-                $data = file_get_contents($path);
-                $imagenesData[] = 'data:image/' . $type . ';base64,' . base64_encode($data);
+            $isFullUrl = str_starts_with($rutaFoto, 'http');
+            if ($isFullUrl) {
+                $imagenesData[] = $rutaFoto;
+            } else {
+                $path = public_path('storage/' . $rutaFoto);
+                if (file_exists($path)) {
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    $imagenesData[] = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                }
             }
         }
 

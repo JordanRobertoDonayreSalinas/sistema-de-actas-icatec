@@ -275,7 +275,45 @@ class PrenatalController extends Controller
 
         if ($tipo === 'doc') {
             $profesional = Profesional::where('doc', $valor)->first();
-            return response()->json($profesional ? [$profesional] : []);
+
+            if ($profesional) {
+                return response()->json([$profesional]);
+            }
+
+            if (request()->has('local_only')) {
+                return response()->json([]);
+            }
+
+            // Busqueda Externa (Decolecta)
+            if (preg_match('/^\d{8}$/', $valor)) {
+                $decolecta = new \App\Services\DecolectaService();
+                $result = $decolecta->consultarDni($valor);
+
+                if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+                    return response()->json([[
+                        'exists_external' => false,
+                        'quota_exceeded' => true,
+                        'message' => 'Límite mensual de validaciones en RENIEC excedido.'
+                    ]]);
+                }
+
+                if (isset($result['success']) && $result['success']) {
+                    $data = $result['data'];
+                    return response()->json([[
+                        'exists_external'  => true,
+                        'tipo_doc'         => 'DNI',
+                        'doc'              => $valor,
+                        'apellido_paterno' => $data['apellido_paterno'],
+                        'apellido_materno' => $data['apellido_materno'],
+                        'nombres'          => $data['nombres'],
+                        'email'            => '',
+                        'telefono'         => '',
+                        'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                    ]]);
+                }
+            }
+
+            return response()->json([]);
         } else {
             $profesionales = Profesional::where(Profesional::raw("CONCAT(apellido_paterno, ' ', apellido_materno, ' ', nombres)"), 'LIKE', "%{$valor}%")
                 ->orWhere(Profesional::raw("CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno)"), 'LIKE', "%{$valor}%")
@@ -308,14 +346,18 @@ class PrenatalController extends Controller
         $fotosBase64 = [];
         if (!empty($registro->fotos_evidencia)) {
             foreach ($registro->fotos_evidencia as $url) {
-                $rutaRelativa = str_replace(url('/'), '', $url);
-                $path = public_path($rutaRelativa);
+                if (str_starts_with($url, 'http')) {
+                    $fotosBase64[] = $url;
+                } else {
+                    $rutaRelativa = str_replace(url('/'), '', $url);
+                    $path = public_path($rutaRelativa);
 
-                if (file_exists($path)) {
-                    $type = pathinfo($path, PATHINFO_EXTENSION);
-                    $data = file_get_contents($path);
-                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                    $fotosBase64[] = $base64;
+                    if (file_exists($path)) {
+                        $type = pathinfo($path, PATHINFO_EXTENSION);
+                        $data = file_get_contents($path);
+                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                        $fotosBase64[] = $base64;
+                    }
                 }
             }
         }

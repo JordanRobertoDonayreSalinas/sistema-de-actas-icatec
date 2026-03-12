@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class GestionAdministrativaController extends Controller
 {
@@ -18,10 +19,12 @@ class GestionAdministrativaController extends Controller
      */
     public function buscarProfesional($doc)
     {
-        $profesional = Profesional::where('doc', trim($doc))->first();
+        $doc = trim($doc);
+        $profesional = Profesional::where('doc', $doc)->first();
         if ($profesional) {
             return response()->json([
                 'exists'           => true,
+                'exists_external'  => false,
                 'tipo_doc'         => $profesional->tipo_doc,
                 'apellido_paterno' => $profesional->apellido_paterno,
                 'apellido_materno' => $profesional->apellido_materno,
@@ -31,7 +34,43 @@ class GestionAdministrativaController extends Controller
                 'cargo'            => $profesional->cargo, // Retorna el cargo para el formulario
             ]);
         }
-        return response()->json(['exists' => false]);
+
+        // Retornar solo resultado local si se requiere (para el flujo en 2 pasos del frontend)
+        if (request()->has('local_only')) {
+            return response()->json(['exists' => false, 'exists_external' => false]);
+        }
+
+        // Si no existe localmente, y es un DNI (8 dígitos), buscar en API externa
+        if (preg_match('/^\d{8}$/', $doc)) {
+            $decolecta = new \App\Services\DecolectaService();
+            $result = $decolecta->consultarDni($doc);
+
+            if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+                return response()->json([
+                    'exists' => false,
+                    'exists_external' => false,
+                    'quota_exceeded' => true,
+                    'message' => 'Límite mensual de validaciones en RENIEC excedido.'
+                ]);
+            }
+
+            if (isset($result['success']) && $result['success']) {
+                $data = $result['data'];
+                return response()->json([
+                    'exists'           => false,
+                    'exists_external'  => true,
+                    'tipo_doc'         => 'DNI',
+                    'apellido_paterno' => $data['apellido_paterno'],
+                    'apellido_materno' => $data['apellido_materno'],
+                    'nombres'          => $data['nombres'],
+                    'email'            => '',
+                    'telefono'         => '',
+                    'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                ]);
+            }
+        }
+
+        return response()->json(['exists' => false, 'exists_external' => false]);
     }
 
     /**

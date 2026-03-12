@@ -105,6 +105,17 @@
             font-weight: bold;
         }
 
+        /* --- ESTILO UNIFICADO PARA FOTOS (PREMIUM) --- */
+        .photo-img, .foto, .preview-image, .photo-box img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            display: block;
+            margin: 0 auto;
+        }
+
         /* --- EVIDENCIA --- */
         .no-evidence-box {
             border: 2px dashed #cbd5e1;
@@ -436,8 +447,8 @@
     @if ($cantidad > 0)
         @if ($cantidad == 1)
             <div style="width: 100%; text-align: center; margin-top: 15px;">
-                <div style="display: inline-block; border: 1px solid #e2e8f0; padding: 5px; background: #fff;">
-                    <img src="{{ $fotos[0] }}" style="max-width: 90%; height: 220px; object-fit: contain;">
+                <div style="display: inline-block; border: 1px solid #e2e8f0; padding: 5px; background: #fff; border-radius: 10px;">
+                    <img src="{{ $fotos[0] }}" style="width: 100%; height: 250px; object-fit: cover; border-radius: 8px;">
                 </div>
             </div>
         @else
@@ -445,9 +456,9 @@
                 <tr>
                     @foreach ($fotos as $index => $fotoUrl)
                         <td style="border: none; padding: 5px; text-align: center; width: 50%;">
-                            <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff;">
+                            <div style="border: 1px solid #e2e8f0; padding: 4px; background: #fff; border-radius: 10px;">
                                 <img src="{{ $fotoUrl }}"
-                                    style="max-width: 100%; height: 160px; object-fit: contain;">
+                                    style="width: 100%; height: 250px; object-fit: cover; border-radius: 8px;">
                             </div>
                         </td>
                     @endforeach

@@ -113,9 +113,11 @@
         .foto { 
             display: block; 
             margin: 0 auto; 
-            max-width: 100%;      
-            max-height: 300px;
-            border-radius: 4px;
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
         }
 
         /* Grid de fotos */
@@ -398,8 +400,8 @@
                                 </tr><tr> 
                             @endif
                             <td style="border: none; padding: 5px; text-align: center; width: 50%;">
-                                <div style="border: 1px solid #cbd5e1; padding: 4px; background: #fff;">
-                                    <img src="{{ $img }}" style="max-width: 100%; height: 160px; object-fit: contain;">
+                                <div style="border: 1px solid #cbd5e1; padding: 4px; background: #fff; border-radius: 10px;">
+                                    <img src="{{ $img }}" style="max-width: 100%; height: 250px; object-fit: cover; border-radius: 8px;">
                                 </div>
                             </td>
                         @endforeach

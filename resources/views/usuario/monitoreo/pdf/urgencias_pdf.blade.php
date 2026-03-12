@@ -42,7 +42,15 @@
             margin: 15px auto; padding: 10px; border: 1px solid #e2e8f0; 
             background-color: #ffffff; text-align: center; display: table; width: auto; 
         }
-        .foto { display: block; margin: 0 auto; max-width: 100%; max-height: 250px; width: auto; height: auto; object-fit: contain; }
+        .foto { 
+            display: block; 
+            margin: 0 auto; 
+            width: 100%; 
+            height: 250px; 
+            object-fit: cover; 
+            border-radius: 10px; 
+            border: 1px solid #e2e8f0; 
+        }
         .no-evidence { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; text-align: center; color: #64748b; font-style: italic; background-color: #f8fafc; margin: 10px 0; }
 
         /* FIRMA */
@@ -269,11 +277,14 @@
     @php
         $fotoPath = $detalle->contenido['foto_evidencia'] ?? null;
         if(is_array($fotoPath)) $fotoPath = $fotoPath[0] ?? null;
+
+        $isFullUrl = $fotoPath && str_starts_with($fotoPath, 'http');
+        $realPath = $fotoPath ? ($isFullUrl ? $fotoPath : public_path('storage/' . $fotoPath)) : null;
     @endphp
 
-    @if($fotoPath && file_exists(public_path('storage/' . $fotoPath)))
+    @if($realPath && ($isFullUrl || file_exists($realPath)))
         <div class="foto-container">
-            <img src="{{ public_path('storage/' . $fotoPath) }}" class="foto">
+            <img src="{{ $realPath }}" class="foto">
         </div>
     @else
         <div class="no-evidence">

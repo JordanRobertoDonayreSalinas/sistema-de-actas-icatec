@@ -30,9 +30,11 @@ class ConsultaNutricionPdfController extends Controller
             $paths = is_array($fotos) ? $fotos : [$fotos];
 
             foreach ($paths as $p) {
-                // Verificamos existencia
-                if ($p && Storage::disk('public')->exists($p)) {
-                    //try {
+                if ($p) {
+                    $isFullUrl = str_starts_with($p, 'http');
+                    if ($isFullUrl) {
+                        $imagenesData[] = $p;
+                    } elseif (Storage::disk('public')->exists($p)) {
                         // Obtenemos la ruta real del sistema para Intervention Image
                         $realPath = storage_path('app/public/' . $p);
 
@@ -47,15 +49,11 @@ class ConsultaNutricionPdfController extends Controller
 
                         // C. Guardar en el array como Base64 listo para HTML
                         $imagenesData[] = 'data:image/jpeg;base64,' . base64_encode($img);
-
-                        // Límite de seguridad: solo procesar las primeras 5 para no reventar memoria
-                        if (count($imagenesData) >= 5) break;
-
-                    //} catch (\Exception $e) {
-                        // Si una imagen falla al comprimirse, la ignoramos y seguimos
-                      //  continue;
-                    //}
+                    }
                 }
+                
+                // Límite de seguridad: solo procesar las primeras 5 para no reventar memoria
+                if (count($imagenesData) >= 5) break;
             }
         }
 

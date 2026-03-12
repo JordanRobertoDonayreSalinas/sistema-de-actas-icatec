@@ -784,10 +784,10 @@
                                 <label class="text-[10px] font-black uppercase text-slate-400 ml-2 italic flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Evidencia Principal
                                 </label>
-                                <div class="relative h-56 rounded-[2rem] border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center transition-all hover:bg-slate-100 group">
+                                <div class="relative h-96 rounded-[2rem] border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center transition-all hover:bg-slate-100 group">
                                     <template x-if="images.img1">
                                         <div class="relative w-full h-full">
-                                            <img :src="images.img1" class="h-full w-full object-cover shadow-inner">
+                                            <img :src="images.img1" class="h-full w-full object-cover shadow-inner rounded-[2rem]">
                                             <button type="button" @click="removeImage('img1', 'input_foto_1', 'foto_1_actual')" class="btn-remove-image hover:scale-110 active:scale-95 transition-transform">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>

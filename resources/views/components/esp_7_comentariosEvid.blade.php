@@ -49,7 +49,7 @@
 
         {{-- AREA DE CARGA --}}
         {{-- CORRECCIÓN: style="min-height: 200px" fuerza la altura aunque Tailwind falle --}}
-        <div class="relative group w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-400 transition-colors" style="min-height: 200px; height: 13rem;">
+        <div class="relative group w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-400 transition-colors" style="min-height: 200px; height: 24rem;">
             
             {{-- INPUT FILE (Cubre todo, Z-Index SUPERIOR) --}}
             <input 
@@ -74,8 +74,8 @@
             {{-- 2. IMAGEN PREVIA --}}
             <img 
                 src="{{ $rutaImagen }}" 
-                class="preview-image absolute inset-0 w-full h-full object-contain bg-white p-2 z-20 {{ $tieneFoto ? 'block' : 'hidden' }}"
-                style="object-fit: contain;"
+                class="preview-image absolute inset-0 w-full h-full object-cover bg-white p-2 z-20 {{ $tieneFoto ? 'block' : 'hidden' }}"
+                style="object-fit: cover;"
             >
 
             {{-- 3. OVERLAY 'CAMBIAR' --}}

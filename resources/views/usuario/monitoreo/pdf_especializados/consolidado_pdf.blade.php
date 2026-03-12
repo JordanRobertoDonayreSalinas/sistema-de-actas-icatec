@@ -63,7 +63,7 @@
             border: 4px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,0.1);
             border-radius: 8px; overflow: hidden; vertical-align: top;
         }
-        .photo-img { width: 100%; height: 200px; object-fit: cover; border-radius: 5px; }
+        .photo-img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; }
 
         /* FIRMAS */
         .signatures-section { margin-top: 30px; page-break-inside: avoid; }
@@ -147,7 +147,7 @@
 
     @forelse($modulos as $modulo)
         @php
-            $contenido = is_string($modulo->contenido) ? json_decode($modulo->contenido, true) : $modulo->contenido;
+            $contenido = is_string($modulo->contenido) ? json_decode((string)$modulo->contenido, true) : $modulo->contenido;
             $consultorio = $contenido['detalle_del_consultorio'] ?? [];
             $profesional = $contenido['datos_del_profesional'] ?? [];
             $admin       = $contenido['documentacion_administrativa'] ?? [];
@@ -300,20 +300,22 @@
             <div class="photo-grid">
                 @if($acta->foto1)
                     @php 
-                        $path1 = storage_path('app/public/' . $acta->foto1);
-                        if(!file_exists($path1)) $path1 = public_path('storage/' . $acta->foto1);
+                        $isFullUrl1 = str_starts_with($acta->foto1, 'http');
+                        $path1 = $isFullUrl1 ? $acta->foto1 : storage_path('app/public/' . $acta->foto1);
+                        if(!$isFullUrl1 && !file_exists($path1)) $path1 = public_path('storage/' . $acta->foto1);
                     @endphp
-                    @if(file_exists($path1))
+                    @if($isFullUrl1 || file_exists($path1))
                         <div class="photo-container"><img src="{{ $path1 }}" class="photo-img"></div>
                     @endif
                 @endif
 
                 @if($acta->foto2)
                     @php 
-                        $path2 = storage_path('app/public/' . $acta->foto2);
-                        if(!file_exists($path2)) $path2 = public_path('storage/' . $acta->foto2);
+                        $isFullUrl2 = str_starts_with($acta->foto2, 'http');
+                        $path2 = $isFullUrl2 ? $acta->foto2 : storage_path('app/public/' . $acta->foto2);
+                        if(!$isFullUrl2 && !file_exists($path2)) $path2 = public_path('storage/' . $acta->foto2);
                     @endphp
-                    @if(file_exists($path2))
+                    @if($isFullUrl2 || file_exists($path2))
                         <div class="photo-container"><img src="{{ $path2 }}" class="photo-img"></div>
                     @endif
                 @endif

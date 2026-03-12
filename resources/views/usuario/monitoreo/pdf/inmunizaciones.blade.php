@@ -32,10 +32,10 @@
             display: block; 
             margin: 0 auto; 
             max-width: 100%;      /* No desbordar el ancho */
-            max-height: 300px;    /* <--- HE REDUCIDO ESTO (Antes 500px, ahora 350px) */
+            max-height: 250px;    /* <--- HE REDUCIDO ESTO (Antes 500px, ahora 350px) */
             width: auto;          /* Mantiene la proporción correcta */
             height: auto;         /* Mantiene la proporción correcta */
-            object-fit: contain;  /* Asegura que se vea completa dentro del recuadro */
+            object-fit: cover;  /* Asegura que se vea completa dentro del recuadro */
             background-color: #ffffff; 
             border: 1px solid #e2e8f0; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -383,8 +383,8 @@
                                 </tr><tr> 
                             @endif
                             <td style="border: none; padding: 5px; text-align: center; width: 50%;">
-                                <div style="border: 1px solid #cbd5e1; padding: 4px; background: #fff;">
-                                    <img src="{{ $img }}" style="max-width: 100%; height: 160px; object-fit: contain;">
+                                <div style="border: 1px solid #cbd5e1; padding: 4px; background: #fff; border-radius: 10px;">
+                                    <img src="{{ $img }}" style="max-width: 100%; height: 250px; object-fit: cover; border-radius: 8px;">
                                 </div>
                             </td>
                         @endforeach

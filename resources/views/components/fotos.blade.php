@@ -62,8 +62,8 @@
         <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Galería Guardada</h4>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <template x-for="(foto, index) in oldFilesRef" :key="foto.id">
-                <div class="relative group aspect-square bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                    <img :src="'/storage/' + foto.url_foto" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <div class="relative group h-96 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                    <img :src="'/storage/' + foto.url_foto" class="w-full h-full object-cover rounded-2xl shadow-inner shadow-black/10 transition-all duration-700 group-hover:scale-110 group-hover:rotate-1">
                     
                     {{-- Overlay Acciones --}}
                     <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 backdrop-blur-[2px]">

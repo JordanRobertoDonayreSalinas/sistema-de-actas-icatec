@@ -52,7 +52,7 @@ class CitaController extends Controller
         if ($request->hasFile('fotos')) {
             foreach ($request->file('fotos') as $foto) {
                 $path = $foto->store('evidencias', 'public');
-                $rutasFotos[] = asset('storage/' . $path);
+                $rutasFotos[] = $path; // Guardamos solo la ruta relativa
             }
         }
         $rutasFotos = array_slice($rutasFotos, 0, 2);
@@ -296,8 +296,16 @@ class CitaController extends Controller
         $fotosBase64 = [];
         if (!empty($registro->fotos_evidencia)) {
             foreach ($registro->fotos_evidencia as $url) {
-                $rutaRelativa = str_replace(url('/'), '', $url);
-                $path = public_path($rutaRelativa);
+                // Caso A: Es una URL absoluta (Legacy)
+                if (str_starts_with($url, 'http')) {
+                    $rutaRelativa = str_replace(url('/'), '', $url);
+                    // Asegurarnos de remover /storage si está duplicado o presente
+                    $rutaRelativa = str_replace('/storage/', '', $rutaRelativa);
+                    $path = public_path('storage/' . $rutaRelativa);
+                } else {
+                    // Caso B: Es una ruta relativa (Nuevo Estándar)
+                    $path = public_path('storage/' . $url);
+                }
 
                 if (file_exists($path)) {
                     $type = pathinfo($path, PATHINFO_EXTENSION);
@@ -371,10 +379,47 @@ class CitaController extends Controller
         if (!$valor) return response()->json([]);
 
         if ($tipo === 'doc') {
-            // CORRECCIÓN: Usar el modelo directamente
+            // Busqueda Local
             $profesional = Profesional::where('doc', $valor)->first();
 
-            return response()->json($profesional ? [$profesional] : []);
+            if ($profesional) {
+                return response()->json([$profesional]);
+            }
+
+            if (request()->has('local_only')) {
+                return response()->json([]);
+            }
+
+            // Busqueda Externa (Decolecta)
+            if (preg_match('/^\d{8}$/', $valor)) {
+                $decolecta = new \App\Services\DecolectaService();
+                $result = $decolecta->consultarDni($valor);
+
+                if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+                    return response()->json([[
+                        'exists_external' => false,
+                        'quota_exceeded' => true,
+                        'message' => 'Límite mensual de validaciones en RENIEC excedido.'
+                    ]]);
+                }
+
+                if (isset($result['success']) && $result['success']) {
+                    $data = $result['data'];
+                    return response()->json([[
+                        'exists_external'  => true,
+                        'tipo_doc'         => 'DNI',
+                        'doc'              => $valor,
+                        'apellido_paterno' => $data['apellido_paterno'],
+                        'apellido_materno' => $data['apellido_materno'],
+                        'nombres'          => $data['nombres'],
+                        'email'            => '',
+                        'telefono'         => '',
+                        'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                    ]]);
+                }
+            }
+
+            return response()->json([]);
         } else {
             // Búsqueda por nombre
             // CORRECCIÓN: Usar DB::raw() para la concatenación
