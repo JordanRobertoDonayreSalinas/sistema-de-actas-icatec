@@ -74,6 +74,7 @@ use App\Http\Controllers\ASocialESPController;
 use App\Http\Controllers\TomaDeMuestraController;
 use App\Http\Controllers\TomaDeMuestrapdfController;
 use App\Http\Controllers\ReporteEquiposController;
+use App\Http\Controllers\Infraestructura3DController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -442,6 +443,12 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [UrgenciasController::class, 'index'])->name('index');
                 Route::post('/{id}', [UrgenciasController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Módulo 19: Infraestructura 3D
+            Route::prefix('modulo/infraestructura-3d')->name('infraestructura-3d.')->group(function () {
+                Route::get('/{id}', [Infraestructura3DController::class, 'index'])->name('index');
+                Route::post('/{id}', [Infraestructura3DController::class, 'store'])->name('store');
             });
 
             // MOTOR DE CONSOLIDADO

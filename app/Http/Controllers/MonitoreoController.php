@@ -421,6 +421,7 @@ class MonitoreoController extends Controller
                 'referencias' => ['nombre' => '16. Refcon', 'icon' => 'map-pinned'],
                 'laboratorio' => ['nombre' => '17. Laboratorio', 'icon' => 'test-tube-2'],
                 'urgencias' => ['nombre' => '18. Urgencias y Emergencias', 'icon' => 'ambulance'],
+                'infraestructura_3d' => ['nombre' => '19. Infraestructura y Croquis 3D', 'icon' => 'box'],
             ];
 
             return view('usuario.monitoreo.modulos', compact(
