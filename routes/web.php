@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
+    Route::patch('/establecimientos/{id}/coordenadas', [EstablecimientoController::class, 'updateCoordenadas'])->name('establecimientos.coordenadas');
 
     // --- GRUPO USUARIO (Monitor / Técnico) ---
     Route::prefix('usuario')->name('usuario.')->group(function () {

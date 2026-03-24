@@ -48,4 +48,25 @@ class EstablecimientoController extends Controller
 
         return response()->json($resultados);
     }
+
+    public function updateCoordenadas(Request $request, $id)
+    {
+        $request->validate([
+            'latitud'  => 'required|numeric|between:-90,90',
+            'longitud' => 'required|numeric|between:-180,180',
+        ]);
+
+        $establecimiento = Establecimiento::findOrFail($id);
+        $establecimiento->update([
+            'latitud'  => round($request->latitud, 8),
+            'longitud' => round($request->longitud, 8),
+        ]);
+
+        return response()->json([
+            'ok'       => true,
+            'latitud'  => $establecimiento->latitud,
+            'longitud' => $establecimiento->longitud,
+            'mensaje'  => 'Coordenadas actualizadas correctamente.',
+        ]);
+    }
 }
