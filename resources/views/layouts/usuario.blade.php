@@ -168,6 +168,20 @@
                             <span class="font-medium text-sm">Equipos de Cómputo</span>
                         </a>
 
+                        {{-- Actas de Asistencia Técnica --}}
+                        <a href="{{ route('usuario.reportes.actas.asistencia') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.actas.asistencia') ? 'bg-emerald-600/10 text-emerald-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                            <span class="font-medium text-sm">Actas Asistencia Técnica</span>
+                        </a>
+
+                        {{-- Actas de Monitoreo --}}
+                        <a href="{{ route('usuario.reportes.actas.monitoreo') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.actas.monitoreo') ? 'bg-blue-600/10 text-blue-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="activity" class="w-4 h-4"></i>
+                            <span class="font-medium text-sm">Actas de Monitoreo</span>
+                        </a>
+
                         {{-- Auditoría de Consistencia SIHCE --}}
                         <a href="{{ route('usuario.auditoria.index') }}"
                             class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.auditoria.index') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">

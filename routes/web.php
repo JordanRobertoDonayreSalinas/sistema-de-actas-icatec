@@ -74,6 +74,8 @@ use App\Http\Controllers\ASocialESPController;
 use App\Http\Controllers\TomaDeMuestraController;
 use App\Http\Controllers\TomaDeMuestrapdfController;
 use App\Http\Controllers\ReporteEquiposController;
+use App\Http\Controllers\ReporteActasController;
+use App\Http\Controllers\ReporteMonitoreoController;
 use App\Http\Controllers\Infraestructura3DController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
@@ -164,6 +166,18 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/equipos/ajax/distritos', [ReporteEquiposController::class, 'ajaxGetDistritos'])->name('equipos.ajax.distritos');
             Route::get('/equipos/ajax/modulos', [ReporteEquiposController::class, 'getModulos'])->name('equipos.ajax.modulos');
             Route::get('/equipos/ajax/descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('equipos.ajax.descripciones');
+
+            // Reporte de Actas de Asistencia Técnica
+            Route::get('/actas-asistencia', [ReporteActasController::class, 'index'])->name('actas.asistencia');
+            Route::post('/actas-asistencia/excel', [ReporteActasController::class, 'exportarExcel'])->name('actas.asistencia.excel');
+            Route::get('/actas-asistencia/ajax/distritos', [ReporteActasController::class, 'ajaxGetDistritos'])->name('actas.asistencia.ajax.distritos');
+            Route::get('/actas-asistencia/ajax/establecimientos', [ReporteActasController::class, 'ajaxGetEstablecimientos'])->name('actas.asistencia.ajax.establecimientos');
+
+            // Reporte de Actas de Monitoreo
+            Route::get('/actas-monitoreo', [ReporteMonitoreoController::class, 'index'])->name('actas.monitoreo');
+            Route::post('/actas-monitoreo/excel', [ReporteMonitoreoController::class, 'exportarExcel'])->name('actas.monitoreo.excel');
+            Route::get('/actas-monitoreo/ajax/distritos', [ReporteMonitoreoController::class, 'ajaxGetDistritos'])->name('actas.monitoreo.ajax.distritos');
+            Route::get('/actas-monitoreo/ajax/establecimientos', [ReporteMonitoreoController::class, 'ajaxGetEstablecimientos'])->name('actas.monitoreo.ajax.establecimientos');
         });
 
         // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA ---
