@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models\Implementacion;
+
+use Illuminate\Database\Eloquent\Model;
+
+class MedicinaActa extends Model
+{
+    protected $table = 'medicina_actas';
+    
+    protected $fillable = [
+        'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
+        'provincia', 'distrito', 'categoria', 'red', 'microred',
+        'responsable', 'modalidad', 'observaciones'
+    ];
+
+    public function usuarios()
+    {
+        return $this->hasMany(MedicinaUsuario::class, 'acta_id');
+    }
+
+    public function implementadores()
+    {
+        return $this->hasMany(MedicinaImplementador::class, 'acta_id');
+    }
+}

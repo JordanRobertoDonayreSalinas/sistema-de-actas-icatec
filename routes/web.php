@@ -76,6 +76,8 @@ use App\Http\Controllers\TomaDeMuestrapdfController;
 use App\Http\Controllers\ReporteEquiposController;
 use App\Http\Controllers\ReporteActasController;
 use App\Http\Controllers\ReporteMonitoreoController;
+use App\Http\Controllers\ReporteImplementacionController;
+use App\Http\Controllers\ImplementacionController;
 use App\Http\Controllers\Infraestructura3DController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
@@ -178,6 +180,11 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/actas-monitoreo/excel', [ReporteMonitoreoController::class, 'exportarExcel'])->name('actas.monitoreo.excel');
             Route::get('/actas-monitoreo/ajax/distritos', [ReporteMonitoreoController::class, 'ajaxGetDistritos'])->name('actas.monitoreo.ajax.distritos');
             Route::get('/actas-monitoreo/ajax/establecimientos', [ReporteMonitoreoController::class, 'ajaxGetEstablecimientos'])->name('actas.monitoreo.ajax.establecimientos');
+
+            // Reporte de Actas de Implementación
+            Route::get('/actas-implementacion', [ReporteImplementacionController::class, 'index'])->name('actas.implementacion');
+            Route::post('/actas-implementacion/excel', [ReporteImplementacionController::class, 'exportarExcel'])->name('actas.implementacion.excel');
+            Route::get('/actas-implementacion/ajax/distritos', [ReporteImplementacionController::class, 'getDistritos'])->name('actas.implementacion.ajax.distritos');
         });
 
         // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA ---
@@ -188,6 +195,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/auditoria-equipos', [AuditoriaEquiposController::class, 'index'])->name('auditoria.equipos');
         Route::get('/auditoria-equipos/ajax/distritos', [AuditoriaEquiposController::class, 'ajaxGetDistritos'])->name('auditoria.equipos.ajax.distritos');
         Route::get('/auditoria-equipos/ajax/establecimientos', [AuditoriaEquiposController::class, 'ajaxGetEstablecimientos'])->name('auditoria.equipos.ajax.establecimientos');
+
+        // --- SECCIÓN: ACTAS DE IMPLEMENTACIÓN ---
+        Route::prefix('implementacion')->name('implementacion.')->group(function () {
+            Route::get('/', [ImplementacionController::class, 'index'])->name('index');
+            Route::get('/create', [ImplementacionController::class, 'create'])->name('create');
+            Route::post('/', [ImplementacionController::class, 'store'])->name('store');
+            Route::get('/{modulo}/{id}/edit', [ImplementacionController::class, 'edit'])->name('edit');
+            Route::put('/{modulo}/{id}', [ImplementacionController::class, 'update'])->name('update');
+            Route::delete('/{modulo}/{id}', [ImplementacionController::class, 'destroy'])->name('destroy');
+            Route::get('/{modulo}/{id}/pdf', [ImplementacionController::class, 'pdf'])->name('pdf');
+            Route::post('/{modulo}/{id}/subir-pdf', [ImplementacionController::class, 'subirPdf'])->name('subirPdf');
+            
+            // Endpoint AJAX para buscar establecimientos
+            Route::get('/ajax/establecimiento', [ImplementacionController::class, 'buscarEstablecimiento'])->name('ajax.establecimiento');
+        });
 
         // --- SECCIÓN: MONITOREO MODULAR ---
         Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
@@ -444,6 +466,20 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}', [ReferenciasController::class, 'index'])->name('index');
                 Route::post('/{id}', [ReferenciasController::class, 'store'])->name('store');
                 Route::get('/{id}/pdf', [ReferenciasPdfController::class, 'generar'])->name('pdf');
+            });
+
+            // Reportes Monitoreo
+            Route::prefix('actas-monitoreo')->name('actas.monitoreo')->group(function () {
+                Route::get('/', [ReporteMonitoreoController::class, 'index']);
+                Route::post('/excel', [ReporteMonitoreoController::class, 'exportarExcel'])->name('.excel');
+                Route::get('/ajax/distritos', [ReporteMonitoreoController::class, 'getDistritos'])->name('.ajax.distritos');
+            });
+
+            // Reportes Implementación
+            Route::prefix('actas-implementacion')->name('actas.implementacion')->group(function () {
+                Route::get('/', [ReporteImplementacionController::class, 'index']);
+                Route::post('/excel', [ReporteImplementacionController::class, 'exportarExcel'])->name('.excel');
+                Route::get('/ajax/distritos', [ReporteImplementacionController::class, 'getDistritos'])->name('.ajax.distritos');
             });
 
             // Módulo 17: Laboratorio

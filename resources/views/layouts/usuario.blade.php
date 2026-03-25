@@ -120,6 +120,13 @@
 
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Operaciones</p>
 
+                {{-- IMPLEMENTACIÓN --}}
+                <a href="{{ route('usuario.implementacion.index') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.implementacion.*') ? 'bg-purple-600/10 text-purple-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="pen-tool" class="w-5 h-5"></i>
+                    <span class="font-medium">Actas de Implementación</span>
+                </a>
+
                 {{-- ASISTENCIA TÉCNICA --}}
                 <a href="{{ route('usuario.actas.index') }}"
                     class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.actas.*') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
@@ -180,6 +187,13 @@
                             class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.actas.monitoreo') ? 'bg-blue-600/10 text-blue-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="activity" class="w-4 h-4"></i>
                             <span class="font-medium text-sm">Actas de Monitoreo</span>
+                        </a>
+
+                        {{-- Actas de Implementación --}}
+                        <a href="{{ route('usuario.reportes.actas.implementacion') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.actas.implementacion') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="pen-tool" class="w-4 h-4"></i>
+                            <span class="font-medium text-sm">Actas de Implementación</span>
                         </a>
 
                         {{-- Auditoría de Consistencia SIHCE --}}
