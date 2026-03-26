@@ -209,6 +209,7 @@ Route::middleware(['auth'])->group(function () {
             
             // Endpoint AJAX para buscar establecimientos
             Route::get('/ajax/establecimiento', [ImplementacionController::class, 'buscarEstablecimiento'])->name('ajax.establecimiento');
+            Route::get('/ajax/upss-ups', [ImplementacionController::class, 'buscarUpss'])->name('ajax.upss');
         });
 
         // --- SECCIÓN: MONITOREO MODULAR ---

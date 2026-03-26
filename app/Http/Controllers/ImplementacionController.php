@@ -145,8 +145,8 @@ class ImplementacionController extends Controller
      */
     public function create(Request $request)
     {
-        $moduloKey = $request->get('modulo', 'citas'); // por defecto citas
         $modulos = ImplementacionHelper::getModulos();
+        $moduloKey = $request->get('modulo', array_key_first($modulos));
         
         if (!isset($modulos[$moduloKey])) {
             abort(404, 'Módulo no válido');
@@ -173,7 +173,7 @@ class ImplementacionController extends Controller
         $config = $modulos[$moduloKey];
         $ModeloActa = $config['modelo'];
 
-        $request->validate([
+        $rules = [
             'fecha' => 'required|date',
             'codigo_establecimiento' => 'required|string',
             'nombre_establecimiento' => 'required|string',
@@ -181,9 +181,14 @@ class ImplementacionController extends Controller
             'distrito' => 'required|string',
             'categoria' => 'required|string',
             'responsable' => 'required|string',
-            'modalidad' => 'required|string',
             'archivo_pdf' => 'nullable|mimes:pdf|max:5120', // Max 5MB
-        ]);
+        ];
+
+        if ($moduloKey === 'citas') {
+            $rules['modalidad'] = 'required|string';
+        }
+
+        $request->validate($rules);
 
         $rutaPdf = null;
         if ($request->hasFile('archivo_pdf')) {
@@ -192,8 +197,7 @@ class ImplementacionController extends Controller
             $rutaPdf = $archivo->storeAs('actas_implementacion/' . $moduloKey, $nombreArchivo, 'public');
         }
 
-        // Registrar acta
-        $acta = $ModeloActa::create([
+        $actaData = [
             'modulo' => strtoupper($config['nombre']),
             'fecha' => $request->fecha,
             'codigo_establecimiento' => strtoupper($request->codigo_establecimiento),
@@ -204,13 +208,24 @@ class ImplementacionController extends Controller
             'red' => strtoupper($request->red ?? ''),
             'microred' => strtoupper($request->microred ?? ''),
             'responsable' => strtoupper($request->responsable),
-            'modalidad' => strtoupper($request->modalidad),
             'observaciones' => strtoupper($request->observaciones ?? ''),
             'archivo_pdf' => $rutaPdf,
-        ]);
+        ];
+
+        if ($request->has('firma_digital')) {
+            $actaData['firma_digital'] = strtoupper($request->firma_digital);
+        }
+
+        if ($moduloKey === 'citas' && $request->has('modalidad')) {
+            $actaData['modalidad'] = strtoupper($request->modalidad);
+        }
+
+        // Registrar acta
+        $acta = $ModeloActa::create($actaData);
 
         // Registrar participantes (usuarios)
         if ($request->has('usuarios')) {
+            $this->updateGlobalProfesionales($request->usuarios);
             foreach ($request->usuarios as $user) {
                 if (!empty($user['dni'])) {
                     $acta->usuarios()->create([
@@ -228,6 +243,7 @@ class ImplementacionController extends Controller
 
         // Registrar implementadores
         if ($request->has('implementadores')) {
+            $this->updateGlobalProfesionales($request->implementadores);
             foreach ($request->implementadores as $impl) {
                 if (!empty($impl['dni'])) {
                     $acta->implementadores()->create([
@@ -275,7 +291,7 @@ class ImplementacionController extends Controller
         $config = $modulos[$modulo];
         $ModeloActa = $config['modelo'];
         
-        $request->validate([
+        $rules = [
             'fecha' => 'required|date',
             'codigo_establecimiento' => 'required|string',
             'nombre_establecimiento' => 'required|string',
@@ -283,9 +299,14 @@ class ImplementacionController extends Controller
             'distrito' => 'required|string',
             'categoria' => 'required|string',
             'responsable' => 'required|string',
-            'modalidad' => 'required|string',
             'archivo_pdf' => 'nullable|mimes:pdf|max:5120', // Max 5MB
-        ]);
+        ];
+
+        if ($modulo === 'citas') {
+            $rules['modalidad'] = 'required|string';
+        }
+
+        $request->validate($rules);
 
         $acta = $ModeloActa::findOrFail($id);
         
@@ -302,7 +323,7 @@ class ImplementacionController extends Controller
         }
 
         // 1. Actualizar datos principales
-        $acta->update([
+        $actaData = [
             'fecha' => $request->fecha,
             'codigo_establecimiento' => strtoupper($request->codigo_establecimiento),
             'nombre_establecimiento' => strtoupper($request->nombre_establecimiento),
@@ -312,14 +333,24 @@ class ImplementacionController extends Controller
             'red' => strtoupper($request->red ?? ''),
             'microred' => strtoupper($request->microred ?? ''),
             'responsable' => strtoupper($request->responsable),
-            'modalidad' => strtoupper($request->modalidad),
             'observaciones' => strtoupper($request->observaciones ?? ''),
             'archivo_pdf' => $rutaPdf,
-        ]);
+        ];
+
+        if ($request->has('firma_digital')) {
+            $actaData['firma_digital'] = strtoupper($request->firma_digital);
+        }
+
+        if ($modulo === 'citas' && $request->has('modalidad')) {
+            $actaData['modalidad'] = strtoupper($request->modalidad);
+        }
+
+        $acta->update($actaData);
 
         // Reemplazar usuarios
         $acta->usuarios()->delete();
         if ($request->has('usuarios')) {
+            $this->updateGlobalProfesionales($request->usuarios);
             foreach ($request->usuarios as $user) {
                 if (!empty($user['dni'])) {
                     $acta->usuarios()->create([
@@ -338,6 +369,7 @@ class ImplementacionController extends Controller
         // Reemplazar implementadores
         $acta->implementadores()->delete();
         if ($request->has('implementadores')) {
+            $this->updateGlobalProfesionales($request->implementadores);
             foreach ($request->implementadores as $impl) {
                 if (!empty($impl['dni'])) {
                     $acta->implementadores()->create([
@@ -402,6 +434,57 @@ class ImplementacionController extends Controller
         return Establecimiento::where('nombre', 'like', "%$q%")
             ->orWhere('codigo', 'like', "%$q%")
             ->limit(10)
-            ->get(['codigo as codigo_establecimiento', 'nombre as nombre_establecimiento', 'provincia', 'distrito', 'categoria', 'red', 'microred']);
+            ->get(['codigo as codigo_establecimiento', 'nombre as nombre_establecimiento', 'provincia', 'distrito', 'categoria', 'red', 'microred', 'responsable']);
+    }
+
+    /**
+     * Endpoint API para buscar UPSS en la tabla maestra
+     */
+    public function buscarUpss(Request $request)
+    {
+        $q = $request->get('q');
+        return \Illuminate\Support\Facades\DB::table('upss_ups')
+            ->where('codigo_ups', 'like', "%$q%")
+            ->orWhere('descripcion_ups', 'like', "%$q%")
+            ->limit(20)
+            ->get();
+    }
+
+    /**
+     * Helper para guardar o actualizar la tabla global de Profesionales
+     * para facilitar la búsqueda con autocompletado en futuras actas.
+     */
+    private function updateGlobalProfesionales($personas)
+    {
+        if (!$personas || !is_array($personas)) return;
+
+        foreach ($personas as $persona) {
+            if (!empty($persona['dni'])) {
+                $profesional = \App\Models\Profesional::firstOrNew(['doc' => $persona['dni']]);
+                
+                if (!empty($persona['apellido_paterno'])) {
+                    $profesional->apellido_paterno = strtoupper($persona['apellido_paterno']);
+                }
+                if (!empty($persona['apellido_materno'])) {
+                    $profesional->apellido_materno = strtoupper($persona['apellido_materno']);
+                }
+                if (!empty($persona['nombres'])) {
+                    $profesional->nombres = strtoupper($persona['nombres']);
+                }
+                if (!empty($persona['celular'])) {
+                    $profesional->telefono = $persona['celular'];
+                }
+                if (!empty($persona['correo'])) {
+                    $profesional->email = strtolower($persona['correo']);
+                }
+                
+                // Si es un registro nuevo, establecer valores por defecto
+                if (!$profesional->exists) {
+                    $profesional->tipo_doc = 'DNI';
+                }
+
+                $profesional->save();
+            }
+        }
     }
 }

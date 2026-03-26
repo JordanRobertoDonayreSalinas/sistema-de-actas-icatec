@@ -9,7 +9,7 @@ class FarmaciaActa extends Model
     protected $table = 'farmacia_actas';
     
     protected $fillable = [
-        'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
+        'firma_digital', 'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
         'provincia', 'distrito', 'categoria', 'red', 'microred',
         'responsable', 'modalidad', 'observaciones'
     ];
@@ -24,3 +24,4 @@ class FarmaciaActa extends Model
         return $this->hasMany(FarmaciaImplementador::class, 'acta_id');
     }
 }
+

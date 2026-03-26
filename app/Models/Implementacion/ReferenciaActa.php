@@ -9,7 +9,7 @@ class ReferenciaActa extends Model
     protected $table = 'referencias_actas';
     
     protected $fillable = [
-        'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
+        'firma_digital', 'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
         'provincia', 'distrito', 'categoria', 'red', 'microred',
         'responsable', 'modalidad', 'observaciones'
     ];
@@ -24,3 +24,4 @@ class ReferenciaActa extends Model
         return $this->hasMany(ReferenciaImplementador::class, 'acta_id');
     }
 }
+

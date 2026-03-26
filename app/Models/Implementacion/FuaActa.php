@@ -9,7 +9,7 @@ class FuaActa extends Model
     protected $table = 'fua_actas';
     
     protected $fillable = [
-        'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
+        'firma_digital', 'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
         'provincia', 'distrito', 'categoria', 'red', 'microred',
         'responsable', 'modalidad', 'observaciones'
     ];
@@ -24,3 +24,4 @@ class FuaActa extends Model
         return $this->hasMany(FuaImplementador::class, 'acta_id');
     }
 }
+

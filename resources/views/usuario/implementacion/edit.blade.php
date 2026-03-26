@@ -3,6 +3,7 @@
 @section('title', 'Editar Acta ' . $moduloConfig['nombre'])
 
 @section('header-content')
+<div class="flex flex-wrap items-center justify-between w-full gap-4">
     <div>
         <h1 class="text-xl font-bold text-slate-800 tracking-tight">📝 Editar Acta: {{ $moduloConfig['nombre'] }}</h1>
         <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
@@ -11,6 +12,11 @@
             <span>Editar #{{ $acta->id }}</span>
         </div>
     </div>
+    <a href="{{ route('usuario.implementacion.index') }}" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors text-sm font-semibold shadow-sm">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Regresar a la lista
+    </a>
+</div>
 @endsection
 
 @section('content')
@@ -116,6 +122,7 @@
             </div>
 
             {{-- Modalidad --}}
+            @if($moduloKey === 'citas')
             <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Modalidad de Implementación</label>
                 <select name="modalidad" required class="w-full md:w-1/2 border border-slate-200 rounded-xl text-sm p-2.5 outline-none focus:border-blue-500 bg-white">
@@ -124,6 +131,62 @@
                     <option value="POR SELECCION" {{ $acta->modalidad == 'POR SELECCION' ? 'selected' : '' }}>Por Selección (Exclusividad)</option>
                 </select>
             </div>
+            @endif
+
+            {{-- UPSS/UPS (Solo Gestión Administrativa - Solo Visual) --}}
+            @if($moduloKey === 'ges_adm')
+            <div id="seccion-upss" class="mb-4 space-y-4">
+                {{-- Tabla 1: Renipress SUSALUD --}}
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3">Renipress SUSALUD (UPS / UPSS)</h3>
+                    <div class="bg-white rounded-lg overflow-hidden border border-slate-200">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-blue-600 text-white font-semibold">
+                                <tr>
+                                    <th class="p-2">UPSS</th>
+                                    <th class="p-2 border-l border-blue-500">Estado UPSS</th>
+                                    <th class="p-2 border-l border-blue-500">UPS</th>
+                                    <th class="p-2 border-l border-blue-500">Estado UPS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="upss-establecimiento-body">
+                                <tr>
+                                    <td colspan="4" class="p-3 text-center text-slate-400">UPSS del establecimiento (Cargando / Visual)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Tabla 2: Regularizar en Renipress SUSALUD --}}
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3">(UPSS/UPS) Regularizar en Renipress SUSALUD</h3>
+                    <div class="w-full mb-3 shadow-[0_4px_10px_rgba(0,0,0,0.1)] rounded p-2 bg-white relative">
+                        <div class="relative w-full">
+                            <input type="text" id="upss-search-input" class="w-full border-b border-slate-300 rounded text-sm p-3 outline-none focus:border-blue-500 shadow-inner" placeholder="Escriba código o descripción de UPSS/UPS para buscar..." onkeyup="buscarUpsGlobal(this)">
+                            <div id="upss_global_results" class="absolute z-50 w-full bg-white border border-slate-200 shadow-xl mt-1 rounded hidden max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="agregarUpssManual()" class="text-xs font-bold text-white bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 mb-3">
+                        + Agregar UPSS/UPS Manual
+                    </button>
+                    <div id="upss-container" class="space-y-2"></div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Firma Digital (Solo Módulos Específicos) --}}
+            @if(in_array($moduloKey, ['medicina', 'odontologia', 'nutricion', 'psicologia', 'mental', 'emergencia', 'referencias', 'laboratorio', 'farmacia', 'fua']))
+            <div>
+                <label class="block text-xs font-semibold text-slate-800 mb-1">Firma Digital</label>
+                <select name="firma_digital" required class="w-full border border-slate-300 rounded text-sm p-2.5 outline-none focus:border-blue-500 bg-white">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="SI" {{ $acta->firma_digital == 'SI' ? 'selected' : '' }}>SI</option>
+                    <option value="NO" {{ $acta->firma_digital == 'NO' ? 'selected' : '' }}>NO</option>
+                </select>
+            </div>
+            @endif
 
             {{-- Sección: Participantes (Usuarios) --}}
             <div>
@@ -170,14 +233,14 @@
                         <i data-lucide="user-check" class="w-4 h-4 text-purple-600"></i>
                         <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Personal Implementador</h3>
                     </div>
-                    <button type="button" id="btn-add-implem" onclick="agregarImplementador()" class="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1" style="{{ $acta->implementadores->count() > 0 ? 'display:none;' : '' }}">
+                    <button type="button" id="btn-add-implem" onclick="agregarImplementador()" class="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
                         <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
                     </button>
                 </div>
                 <div id="implementadores-container" class="space-y-3">
                     @forelse($acta->implementadores as $index => $imp)
                     <div class="implem-row bg-purple-50/30 border border-purple-100 rounded-xl p-4 relative pr-10">
-                        <button type="button" onclick="this.closest('.implem-row').remove(); document.getElementById('btn-add-implem').style.display='flex';" class="absolute top-4 right-4 text-purple-300 hover:text-red-500 transition-colors" title="Quitar">
+                        <button type="button" onclick="this.closest('.implem-row').remove();" class="absolute top-4 right-4 text-purple-300 hover:text-red-500 transition-colors" title="Quitar">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                         </button>
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
@@ -284,14 +347,80 @@
         idxUsu++;
     }
 
-    // --- IMPLEMENTADORES ---
-    let idxImp = {{ $acta->implementadores->count() > 0 ? $acta->implementadores->keys()->last() + 1 : 0 }};
-    function agregarImplementador() {
-        if(document.querySelectorAll('.implem-row').length > 0) return; // Solo 1 implementador
+    // ====== LÓGICA VISUAL UPSS ======
+    let upssIndex = 0;
+    
+    async function buscarUpsGlobal(input) {
+        const val = input.value.toLowerCase();
+        const resultsDiv = document.getElementById('upss_global_results');
+        if (val.length < 3) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
         
+        try {
+            const response = await fetch(`{{ route('usuario.implementacion.ajax.upss') }}?q=${val}`);
+            const data = await response.json();
+            
+            let html = '';
+            data.forEach(item => {
+                const codUpss = item.codigo_upss || item.codigo_ups.substring(0,2) + '0000';
+                const nombreUpss = item.descripcion_upss || 'UPSS PREDETERMINADA';
+                html += `
+                <div class="p-3 border-b border-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" 
+                     onclick="agregarFilaUpss('${codUpss}', '${nombreUpss}', '${item.codigo_ups}', '${item.descripcion_ups}')">
+                    <div class="text-xs font-semibold text-slate-700">${item.codigo_ups} - ${item.descripcion_ups}</div>
+                    <div class="text-[10px] text-slate-400 font-bold">${codUpss} - ${nombreUpss}</div>
+                </div>`;
+            });
+            
+            if(html) {
+                resultsDiv.innerHTML = html;
+                resultsDiv.classList.remove('hidden');
+            } else {
+                resultsDiv.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">No se encontraron resultados</div>';
+                resultsDiv.classList.remove('hidden');
+            }
+        } catch(error) {
+            console.error('Error buscando UPSS', error);
+        }
+    }
+
+    function agregarFilaUpss(c_upss, n_upss, c_ups, n_ups) {
+        const container = document.getElementById('upss-container');
+        const div = document.createElement('div');
+        div.className = "flex flex-wrap lg:flex-nowrap gap-2 p-3 bg-white border border-slate-200 rounded-lg upss-row relative items-center";
+        div.innerHTML = `
+            <input type="text" name="upss_regularizar[${upssIndex}][codigo_upss]" value="${c_upss}" class="w-full lg:w-32 border border-slate-300 bg-slate-50 rounded text-xs p-2 outline-none" placeholder="UPSS" readonly>
+            <input type="text" name="upss_regularizar[${upssIndex}][nombre_ups]" value="${c_ups} - ${n_ups}" class="flex-1 border border-slate-300 bg-slate-50 rounded text-xs p-2 outline-none" placeholder="UPS Nombre" readonly>
+            <input type="hidden" name="upss_regularizar[${upssIndex}][codigo_ups]" value="${c_ups}">
+            <button type="button" onclick="this.closest('.upss-row').remove()" class="bg-red-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-red-700 shadow flex items-center whitespace-nowrap">
+                × Eliminar
+            </button>
+        `;
+        container.appendChild(div);
+        upssIndex++;
+        
+        document.getElementById('upss-search-input').value = '';
+        document.getElementById('upss_global_results').classList.add('hidden');
+    }
+
+    function agregarUpssManual() {
+        agregarFilaUpss('', '', '', '');
+        const container = document.getElementById('upss-container');
+        const rows = container.querySelectorAll('.upss-row');
+        const lastRow = rows[rows.length - 1];
+        lastRow.querySelectorAll('input').forEach(input => input.removeAttribute('readonly'));
+    }
+
+    // --- IMPLEMENTADORES ---
+    let implementadorIndex = {{ $acta->implementadores->count() }};
+    function agregarImplementador() {
+        let defaultCargo = 'IMPLEMENTADOR(A)';
+
         const tpl = `
         <div class="implem-row bg-purple-50/30 border border-purple-100 rounded-xl p-4 relative pr-10">
-            <button type="button" onclick="this.closest('.implem-row').remove(); document.getElementById('btn-add-implem').style.display='flex';" class="absolute top-4 right-4 text-purple-300 hover:text-red-500 transition-colors" title="Quitar">
+            <button type="button" onclick="this.closest('.implem-row').remove();" class="absolute top-4 right-4 text-purple-300 hover:text-red-500 transition-colors" title="Quitar">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
@@ -299,11 +428,10 @@
                 <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Ap. Paterno</label><input type="text" name="implementadores[${idxImp}][apellido_paterno]" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
                 <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Ap. Materno</label><input type="text" name="implementadores[${idxImp}][apellido_materno]" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
                 <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Nombres</label><input type="text" name="implementadores[${idxImp}][nombres]" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                <div class="col-span-2"><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[${idxImp}][cargo]" class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA"></div>
+                <div class="col-span-2"><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[${idxImp}][cargo]" class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA" value="${defaultCargo}"></div>
             </div>
         </div>`;
         document.getElementById('implementadores-container').insertAdjacentHTML('beforeend', tpl);
-        document.getElementById('btn-add-implem').style.display = 'none';
         idxImp++;
     }
 
