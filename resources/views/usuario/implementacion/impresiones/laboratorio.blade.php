@@ -2,13 +2,14 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Acta PDF</title>
+    <title>AI Nº {{$acta->id}} - {{$acta->modulo}} - {{$acta->nombre_establecimiento}}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         h1 { font-size: 18px;  text-align: center;}
         .section { margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 4px; font-size: 11px; }
+        @page { margin-bottom: 1.5cm; }
     </style>
 </head>
 <body>
@@ -137,6 +138,26 @@
         </table>
     </div>
 
+    @if($acta->foto1 || $acta->foto2)
+    <div style="margin-top: 20px;">
+        <h3>Evidencia Fotográfica</h3>
+        <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
+            <tr>
+                @if($acta->foto1)
+                <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto1) }}" style="max-width: 100%; max-height: 200px;">
+                </td>
+                @endif
+                @if($acta->foto2)
+                <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto2) }}" style="max-width: 100%; max-height: 200px;">
+                </td>
+                @endif
+            </tr>
+        </table>
+    </div>
+    @endif
+
     <div class="section">
         <h3>Firmas.</h3>
     </div>
@@ -145,48 +166,79 @@
 
     <div style="margin: 20px;">
         <p>Dan fe de la veracidad de los datos consignados:</p>
+        
+        @php
+            $firmas = [];
+            // 1. Jefe del establecimiento
+            $firmas[] = [
+                'titulo' => 'Jefe del establecimiento',
+                'nombre' => $acta->responsable ?: '_________________________________',
+                'dni'    => '____________________'
+            ];
+
+            // 2. Implementadores (1 o más)
+            if ($acta->implementadores && $acta->implementadores->count() > 0) {
+                foreach($acta->implementadores as $imp) {
+                    $firmas[] = [
+                        'titulo' => 'Implementador DIRESA_ICATEC',
+                        'nombre' => $imp->apellido_paterno . ' ' . $imp->apellido_materno . ', ' . $imp->nombres,
+                        'dni'    => $imp->dni
+                    ];
+                }
+            } else {
+                $firmas[] = [
+                    'titulo' => 'Implementador DIRESA_ICATEC',
+                    'nombre' => '_________________________________',
+                    'dni'    => '____________________'
+                ];
+            }
+
+            // 3. Usuarios/Participantes (0 o más)
+            if ($acta->usuarios && $acta->usuarios->count() > 0) {
+                foreach($acta->usuarios as $user) {
+                    $firmas[] = [
+                        'titulo' => 'Usuario / Participante',
+                        'nombre' => $user->apellidos_nombres ?? '_________________________________',
+                        'dni'    => $user->dni ?? '____________________'
+                    ];
+                }
+            }
+
+            // 4. Implementador OITE
+            $firmas[] = [
+                'titulo' => 'Implementador OITE Unidad Ejecutora',
+                'nombre' => '_________________________________',
+                'dni'    => '____________________'
+            ];
+
+            // 5. Responsable del Modulo
+            $firmas[] = [
+                'titulo' => 'Responsable del Modulo del EE.SS',
+                'nombre' => '_________________________________',
+                'dni'    => '____________________'
+            ];
+            
+            // Agrupar de a 2 para la tabla
+            $filas = array_chunk($firmas, 2);
+        @endphp
 
         <table width="100%" cellspacing="0" cellpadding="10" style="border: none;">
+            @foreach($filas as $fila)
             <tr>
-                <!-- Jefe del establecimiento -->
-                <td width="50%" valign="top" style="border: none;">
+                @foreach($fila as $firma)
+                <td width="50%" valign="top" style="border: none; padding-bottom: 20px;">
                     <br><br><br><br>
-                    <p><strong>Jefe del establecimiento</strong></p>
-                    <p>Apellidos y Nombres: {{ $acta->responsable }}</p>
-                    <p>DNI: ____________________</p>
+                    <p style="margin: 0; font-size: 11px;">_________________________________________</p>
+                    <p style="margin: 2px 0 0 0; font-size: 11px;"><strong>{{ $firma['titulo'] }}</strong></p>
+                    <p style="margin: 2px 0 0 0; font-size: 10px;">{{ $firma['nombre'] }}</p>
+                    <p style="margin: 2px 0 0 0; font-size: 10px;">DNI: {{ $firma['dni'] }}</p>
                 </td>
-                 <!-- Implementador DIRESA_ICATEC -->
-                <td width="50%" valign="top" style="border: none;">
-                    <br><br><br><br>
-                    @php
-                        $imp = $acta->implementadores->first();
-                    @endphp
-
-                    @if ($imp)
-                    <div>
-                        <p><strong>Implementador DIRESA_ICATEC</strong></p>
-                        <p>Apellidos y Nombres: {{ $imp->apellido_paterno }} {{ $imp->apellido_materno }}, {{ $imp->nombres }}</p>
-                        <p>DNI: {{ $imp->dni }}</p>
-                    </div>
-                    @endif
-                </td>
+                @endforeach
+                @if(count($fila) == 1)
+                <td width="50%" style="border: none;"></td>
+                @endif
             </tr>
-            <tr>
-                <!-- Implementador OITE Unidad Ejecutora -->
-                <td width="50%" valign="top" style="border: none;">
-                    <br><br><br><br>
-                    <p><strong>Implementador OITE Unidad Ejecutora</strong></p>
-                    <p>Apellidos y Nombres: _________________________________</p>
-                    <p>DNI: ____________________</p>
-                </td>
-                <!-- Responsable del Modulo del EE.SS -->
-                <td width="50%" valign="top" style="border: none;">
-                    <br><br><br><br>
-                    <p><strong>Responsable del Modulo del EE.SS</strong></p>
-                    <p>Apellidos y Nombres: _________________________________</p>
-                    <p>DNI: ____________________</p>
-                </td>
-            </tr>
+            @endforeach
         </table>
     </div>
 
@@ -198,5 +250,19 @@
 
 
 
+    <script type="text/php">
+        if (isset($pdf)) {
+            $y = $pdf->get_height() - 30;
+            $font = $fontMetrics->get_font("helvetica", "normal");
+            $size = 8;
+            $color = array(0.3, 0.3, 0.3);
+            $pdf->page_text(40, $y, "HERRAMIENTAS DE IMPLEMENTACION SIHCE", $font, $size, $color);
+            $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
+            $dummyText = "PAG: 10 / 10";
+            $width = $fontMetrics->get_text_width($dummyText, $font, $size);
+            $x = $pdf->get_width() - $width - 40;
+            $pdf->page_text($x, $y, $text, $font, $size, $color);
+        }
+    </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Acta PDF</title>
+    <title>AI Nº {{$acta->id}} - {{$acta->modulo}} - {{$acta->nombre_establecimiento}}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         h1 { font-size: 18px;  text-align: center;}

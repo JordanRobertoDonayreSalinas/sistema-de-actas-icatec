@@ -2,13 +2,14 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Acta PDF</title>
+    <title>AI Nº {{$acta->id}} - {{$acta->modulo}} - {{$acta->nombre_establecimiento}}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         h1 { font-size: 18px;  text-align: center;}
         .section { margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 4px; font-size: 11px; }
+        @page { margin-bottom: 1.5cm; }
     </style>
 </head>
 <body>
@@ -127,6 +128,26 @@
         </table>
     </div>
 
+    @if($acta->foto1 || $acta->foto2)
+    <div style="margin-top: 20px;">
+        <h3>Evidencia Fotográfica</h3>
+        <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
+            <tr>
+                @if($acta->foto1)
+                <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto1) }}" style="max-width: 100%; max-height: 200px;">
+                </td>
+                @endif
+                @if($acta->foto2)
+                <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto2) }}" style="max-width: 100%; max-height: 200px;">
+                </td>
+                @endif
+            </tr>
+        </table>
+    </div>
+    @endif
+
     <div class="section">
         <h3>Firmas.</h3>
     </div>
@@ -188,5 +209,19 @@
 
 
 
+    <script type="text/php">
+        if (isset($pdf)) {
+            $y = $pdf->get_height() - 30;
+            $font = $fontMetrics->get_font("helvetica", "normal");
+            $size = 8;
+            $color = array(0.3, 0.3, 0.3);
+            $pdf->page_text(40, $y, "HERRAMIENTAS DE IMPLEMENTACION SIHCE", $font, $size, $color);
+            $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
+            $dummyText = "PAG: 10 / 10";
+            $width = $fontMetrics->get_text_width($dummyText, $font, $size);
+            $x = $pdf->get_width() - $width - 40;
+            $pdf->page_text($x, $y, $text, $font, $size, $color);
+        }
+    </script>
 </body>
 </html>

@@ -456,9 +456,30 @@ class ImplementacionController extends Controller
         $ModeloActa = $modulos[$modulo]['modelo'];
         $acta = $ModeloActa::with(['usuarios', 'implementadores'])->findOrFail($id);
 
-        // TODO: Crear vista común del PDF de implementación. Por ahora usa la de Triaje como base.
-        $pdf = Pdf::loadView('Actas.pdf.pdfCitas', ['acta' => $acta]); // temporal
-        return $pdf->stream('Acta_' . $modulos[$modulo]['nombre'] . '_' . $acta->id . '.pdf');
+        // Cargar relaciones adicionales según el módulo (si existen en el modelo)
+        if ($modulo === 'ges_adm') {
+            if (method_exists($acta, 'upss')) {
+                $acta->load('upss');
+            } else {
+                $acta->setRelation('upss', collect());
+            }
+            if (method_exists($acta, 'sugeridas')) {
+                $acta->load('sugeridas');
+            } else {
+                $acta->setRelation('sugeridas', collect());
+            }
+        }
+
+        // Usar la vista específica de cada módulo (impresiones/{modulo})
+        $viewName = 'usuario.implementacion.impresiones.' . $modulo;
+        if (!view()->exists($viewName)) {
+            // Fallback: vista genérica si no existe una específica para el módulo
+            $viewName = 'usuario.implementacion.impresiones.triaje';
+        }
+
+        $pdf = Pdf::loadView($viewName, ['acta' => $acta]);
+        $pdf->getDomPDF()->getOptions()->setIsPhpEnabled(true);
+        return $pdf->stream('AI Nº ' . $acta->id . '-' . $modulos[$modulo]['nombre'] . '-' . $acta->nombre_establecimiento . '.pdf');
     }
 
     /**

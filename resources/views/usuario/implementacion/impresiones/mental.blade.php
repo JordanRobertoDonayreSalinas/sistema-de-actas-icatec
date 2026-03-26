@@ -2,13 +2,14 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Acta PDF</title>
+    <title>AI Nº {{$acta->id}} - {{$acta->modulo}} - {{$acta->nombre_establecimiento}}</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         h1 { font-size: 18px;  text-align: center;}
         .section { margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 4px; font-size: 11px; }
+        @page { margin-bottom: 1.5cm; }
     </style>
 </head>
 <body>
@@ -136,6 +137,26 @@
             </tr>
         </table>
     </div>
+
+    @if($acta->foto1 || $acta->foto2)
+    <div style="margin-top: 20px;">
+        <h3>Evidencia Fotográfica</h3>
+        <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
+            <tr>
+                @if($acta->foto1)
+                <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto1) }}" style="max-width: 100%; max-height: 200px;">
+                </td>
+                @endif
+                @if($acta->foto2)
+                <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto2) }}" style="max-width: 100%; max-height: 200px;">
+                </td>
+                @endif
+            </tr>
+        </table>
+    </div>
+    @endif
 
     <div class="section">
         <h3>Firmas.</h3>
