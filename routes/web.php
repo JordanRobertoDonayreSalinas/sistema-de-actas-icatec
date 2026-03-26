@@ -79,6 +79,7 @@ use App\Http\Controllers\ReporteMonitoreoController;
 use App\Http\Controllers\ReporteImplementacionController;
 use App\Http\Controllers\ImplementacionController;
 use App\Http\Controllers\Infraestructura3DController;
+use App\Http\Controllers\MesaAyudaController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -92,6 +93,11 @@ Route::controller(LoginController::class)->group(function () {
     Route::post('/actas/login', 'login');
     Route::post('/logout', 'logout')->name('logout');
 });
+
+// --- MESA DE AYUDA PÚBLICA (sin autenticación) ---
+Route::get('/mesa-de-ayuda', [MesaAyudaController::class, 'formulario'])->name('mesa-ayuda.form');
+Route::post('/mesa-de-ayuda', [MesaAyudaController::class, 'store'])->name('mesa-ayuda.store');
+Route::get('/mesa-de-ayuda/establecimiento', [MesaAyudaController::class, 'buscarEstablecimiento'])->name('mesa-ayuda.buscar');
 
 // --- RUTAS PROTEGIDAS (Middleware Auth) ---
 Route::middleware(['auth'])->group(function () {
@@ -195,6 +201,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/auditoria-equipos', [AuditoriaEquiposController::class, 'index'])->name('auditoria.equipos');
         Route::get('/auditoria-equipos/ajax/distritos', [AuditoriaEquiposController::class, 'ajaxGetDistritos'])->name('auditoria.equipos.ajax.distritos');
         Route::get('/auditoria-equipos/ajax/establecimientos', [AuditoriaEquiposController::class, 'ajaxGetEstablecimientos'])->name('auditoria.equipos.ajax.establecimientos');
+
+        // --- SECCIÓN: MESA DE AYUDA ---
+        Route::prefix('incidencias')->name('mesa-ayuda.')->group(function () {
+            Route::get('/', [MesaAyudaController::class, 'index'])->name('index');
+            Route::get('/{id}/responder', [MesaAyudaController::class, 'responder'])->name('responder');
+            Route::post('/{id}/responder', [MesaAyudaController::class, 'guardarRespuesta'])->name('guardar-respuesta');
+        });
 
         // --- SECCIÓN: ACTAS DE IMPLEMENTACIÓN ---
         Route::prefix('implementacion')->name('implementacion.')->group(function () {

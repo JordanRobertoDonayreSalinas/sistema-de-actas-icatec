@@ -211,6 +211,31 @@
                         </a>
                     </div>
                 </div>
+
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Mesa de Ayuda</p>
+
+                {{-- INCIDENCIAS --}}
+                <a href="{{ route('usuario.mesa-ayuda.index') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.mesa-ayuda.*') ? 'bg-orange-600/10 text-orange-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="headphones" class="w-5 h-5"></i>
+                    <span class="font-medium flex-1">Gestión de Incidencias</span>
+                    @php
+                        $pendientes = \App\Models\Incidencia::where('estado', 'Pendiente')->count();
+                    @endphp
+                    @if($pendientes > 0)
+                        <span class="text-[10px] font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                            {{ $pendientes }}
+                        </span>
+                    @endif
+                </a>
+
+                {{-- FORMULARIO PÚBLICO --}}
+                <a href="{{ route('mesa-ayuda.form') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-white/5">
+                    <i data-lucide="external-link" class="w-5 h-5"></i>
+                    <span class="font-medium">Formulario Público</span>
+                </a>
+
             </nav>
         </aside>
 
