@@ -43,7 +43,7 @@
     <div x-data="{ open: {{ $filtersAreActive ? 'true' : 'false' }} }" class="w-full">
 
         {{-- TARJETA AZUL SUPERIOR --}}
-        <div class="bg-gradient-to-r from-blue-700 to-indigo-600 p-5 rounded-2xl shadow-xl mb-6 relative overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-800 to-violet-600 p-5 rounded-2xl shadow-xl mb-6 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
             <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -72,7 +72,7 @@
                     </button>
 
                     <a href="{{ route('usuario.implementacion.create') }}"
-                        class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg bg-white text-blue-700 hover:bg-blue-50 border border-transparent">
+                        class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg bg-white text-purple-700 hover:bg-purple-50 border border-transparent">
                         <i data-lucide="activity" class="w-5 h-5"></i>
                         <span>Nueva Acta</span>
                     </a>
@@ -92,7 +92,7 @@
                     
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Módulo</label>
-                        <select name="modulo_key" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                        <select name="modulo_key" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-purple-500 py-2">
                             <option value="">TODOS</option>
                             @foreach($modulos as $key => $config)
                                 <option value="{{ $key }}" {{ request('modulo_key') == $key ? 'selected' : '' }}>{{ strtoupper($config['nombre']) }}</option>
@@ -102,7 +102,7 @@
 
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Provincia</label>
-                        <select name="provincia" id="provinciaSelect" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                        <select name="provincia" id="provinciaSelect" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-purple-500 py-2">
                             <option value="">TODAS</option>
                             @foreach ($provincias as $prov)
                                 <option value="{{ $prov }}" {{ request('provincia') == $prov ? 'selected' : '' }}>{{ $prov }}</option>
@@ -111,7 +111,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Distrito</label>
-                        <select name="distrito" id="distritoSelect" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                        <select name="distrito" id="distritoSelect" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-purple-500 py-2">
                             <option value="">TODOS</option>
                             @foreach ($distritos as $dist)
                                 <option value="{{ $dist }}" {{ request('distrito') == $dist ? 'selected' : '' }}>{{ $dist }}</option>
@@ -120,7 +120,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Implementador</label>
-                        <select name="implementador" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                        <select name="implementador" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-purple-500 py-2">
                             <option value="">TODOS</option>
                             @foreach ($implementadores as $impl)
                                 <option value="{{ $impl }}" {{ request('implementador') == $impl ? 'selected' : '' }}>{{ $impl }}</option>
@@ -134,7 +134,7 @@
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 flex-grow w-full">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Estado</label>
-                        <select name="estado" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                        <select name="estado" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-purple-500 py-2">
                             <option value="">TODOS</option>
                             <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>FIRMADO</option>
                             <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>PENDIENTE</option>
@@ -172,21 +172,21 @@
             <table class="w-full text-left text-xs text-slate-600">
                 <thead class="bg-slate-800 text-white">
                     <tr>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Fecha</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Módulo / ID</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Establecimiento</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Implementadores</th>
-                            <th class="px-5 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Estado Doc.</th>
-                            <th class="px-5 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Acciones</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold uppercase tracking-wider">Fecha</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold uppercase tracking-wider">Módulo / ID</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold uppercase tracking-wider">Establecimiento</th>
+                            <th class="px-5 py-4 text-left text-xs font-bold uppercase tracking-wider">Implementadores</th>
+                            <th class="px-5 py-4 text-center text-xs font-bold uppercase tracking-wider">Estado Doc.</th>
+                            <th class="px-5 py-4 text-right text-xs font-bold uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($actas as $acta)
-                    <tr class="hover:bg-blue-50/50 transition-colors">
+                    <tr class="hover:bg-purple-50/50 transition-colors">
                         <td class="px-4 py-3 font-semibold">{{ \Carbon\Carbon::parse($acta['fecha'])->format('d/m/Y') }}</td>
                         <td class="px-4 py-3">
                             <div class="font-bold text-slate-800">{{ $acta['nombre'] }}</div>
-                            <div class="text-[10px] text-blue-600 font-semibold uppercase">{{ $acta['tipo_nombre'] }}</div>
+                            <div class="text-[10px] text-purple-600 font-semibold uppercase">{{ $acta['tipo_nombre'] }}</div>
                         </td>
                         <td class="px-4 py-3 max-w-xs truncate" title="{{ $acta['establecimiento'] }}">
                             {{ $acta['establecimiento'] }}
@@ -235,7 +235,7 @@
                                 </a>
                                 @else
                                 <a href="{{ $acta['ruta_pdf'] }}" target="_blank"
-                                    class="p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200" title="Generar PDF (Temporal)">
+                                    class="p-1.5 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-200" title="Generar PDF (Temporal)">
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
                                 </a>
                                 @endif
@@ -313,7 +313,7 @@
             showCancelButton: true,
             confirmButtonText: 'Subir PDF',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#3b82f6',
+            confirmButtonColor: '#9333ea',
             showLoaderOnConfirm: true,
             preConfirm: (file) => {
                 if (!file) {

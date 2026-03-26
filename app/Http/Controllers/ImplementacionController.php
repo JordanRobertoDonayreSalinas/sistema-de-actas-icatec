@@ -182,6 +182,8 @@ class ImplementacionController extends Controller
             'categoria' => 'required|string',
             'responsable' => 'required|string',
             'archivo_pdf' => 'nullable|mimes:pdf|max:5120', // Max 5MB
+            'foto1' => 'nullable|image|max:5120',
+            'foto2' => 'nullable|image|max:5120',
         ];
 
         if ($moduloKey === 'citas') {
@@ -197,6 +199,18 @@ class ImplementacionController extends Controller
             $rutaPdf = $archivo->storeAs('actas_implementacion/' . $moduloKey, $nombreArchivo, 'public');
         }
 
+        $rutaFoto1 = null;
+        if ($request->hasFile('foto1')) {
+            $f = $request->file('foto1');
+            $rutaFoto1 = $f->storeAs('actas_implementacion/' . $moduloKey . '/fotos', 'foto1_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
+        }
+
+        $rutaFoto2 = null;
+        if ($request->hasFile('foto2')) {
+            $f = $request->file('foto2');
+            $rutaFoto2 = $f->storeAs('actas_implementacion/' . $moduloKey . '/fotos', 'foto2_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
+        }
+
         $actaData = [
             'modulo' => strtoupper($config['nombre']),
             'fecha' => $request->fecha,
@@ -210,6 +224,8 @@ class ImplementacionController extends Controller
             'responsable' => strtoupper($request->responsable),
             'observaciones' => strtoupper($request->observaciones ?? ''),
             'archivo_pdf' => $rutaPdf,
+            'foto1' => $rutaFoto1,
+            'foto2' => $rutaFoto2,
         ];
 
         if ($request->has('firma_digital')) {
@@ -300,6 +316,8 @@ class ImplementacionController extends Controller
             'categoria' => 'required|string',
             'responsable' => 'required|string',
             'archivo_pdf' => 'nullable|mimes:pdf|max:5120', // Max 5MB
+            'foto1' => 'nullable|image|max:5120',
+            'foto2' => 'nullable|image|max:5120',
         ];
 
         if ($modulo === 'citas') {
@@ -312,14 +330,30 @@ class ImplementacionController extends Controller
         
         $rutaPdf = $acta->archivo_pdf;
         if ($request->hasFile('archivo_pdf')) {
-            // Borrar pdf antiguo si existe
             if ($rutaPdf && Storage::disk('public')->exists($rutaPdf)) {
                 Storage::disk('public')->delete($rutaPdf);
             }
-            
             $archivo = $request->file('archivo_pdf');
             $nombreArchivo = 'acta_' . $modulo . '_' . time() . '.' . $archivo->getClientOriginalExtension();
             $rutaPdf = $archivo->storeAs('actas_implementacion/' . $modulo, $nombreArchivo, 'public');
+        }
+
+        $rutaFoto1 = $acta->foto1;
+        if ($request->hasFile('foto1')) {
+            if ($rutaFoto1 && Storage::disk('public')->exists($rutaFoto1)) {
+                Storage::disk('public')->delete($rutaFoto1);
+            }
+            $f = $request->file('foto1');
+            $rutaFoto1 = $f->storeAs('actas_implementacion/' . $modulo . '/fotos', 'foto1_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
+        }
+
+        $rutaFoto2 = $acta->foto2;
+        if ($request->hasFile('foto2')) {
+            if ($rutaFoto2 && Storage::disk('public')->exists($rutaFoto2)) {
+                Storage::disk('public')->delete($rutaFoto2);
+            }
+            $f = $request->file('foto2');
+            $rutaFoto2 = $f->storeAs('actas_implementacion/' . $modulo . '/fotos', 'foto2_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
         }
 
         // 1. Actualizar datos principales
@@ -335,6 +369,8 @@ class ImplementacionController extends Controller
             'responsable' => strtoupper($request->responsable),
             'observaciones' => strtoupper($request->observaciones ?? ''),
             'archivo_pdf' => $rutaPdf,
+            'foto1' => $rutaFoto1,
+            'foto2' => $rutaFoto2,
         ];
 
         if ($request->has('firma_digital')) {

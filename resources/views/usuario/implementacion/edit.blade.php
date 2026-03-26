@@ -2,281 +2,469 @@
 
 @section('title', 'Editar Acta ' . $moduloConfig['nombre'])
 
+@push('styles')
+<style>
+    @keyframes slide-up {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .slide-up { animation: slide-up 0.45s ease-out forwards; }
+    .slide-up-d1 { animation: slide-up 0.45s 0.05s ease-out both; }
+    .slide-up-d2 { animation: slide-up 0.45s 0.10s ease-out both; }
+    .slide-up-d3 { animation: slide-up 0.45s 0.15s ease-out both; }
+    .slide-up-d4 { animation: slide-up 0.45s 0.20s ease-out both; }
+    .slide-up-d5 { animation: slide-up 0.45s 0.25s ease-out both; }
+    .slide-up-d6 { animation: slide-up 0.45s 0.30s ease-out both; }
+    .slide-up-d7 { animation: slide-up 0.45s 0.35s ease-out both; }
+    .slide-up-d8 { animation: slide-up 0.45s 0.40s ease-out both; }
+
+    /* Radio pill para Firma Digital */
+    .radio-pill input[type="radio"] { display:none; }
+    .radio-pill label { cursor:pointer; display:flex; align-items:center; gap:0.5rem; padding:0.6rem 1.2rem; border-radius:9999px; border:2px solid #e2e8f0; font-size:0.8rem; font-weight:700; color:#64748b; transition:all 0.2s; background:#fff; }
+    .radio-pill input[type="radio"]:checked + label { border-color:#6366f1; background:#eef2ff; color:#4338ca; }
+
+    /* Radio pill para Modalidad */
+    .radio-pill-blue input[type="radio"] { display:none; }
+    .radio-pill-blue label { cursor:pointer; display:flex; align-items:center; gap:0.5rem; padding:0.6rem 1.2rem; border-radius:9999px; border:2px solid #e2e8f0; font-size:0.8rem; font-weight:700; color:#64748b; transition:all 0.2s; background:#fff; }
+    .radio-pill-blue input[type="radio"]:checked + label { border-color:#3b82f6; background:#eff6ff; color:#1d4ed8; }
+</style>
+@endpush
+
 @section('header-content')
-<div class="flex flex-wrap items-center justify-between w-full gap-4">
+<div class="flex items-center gap-3 w-full">
+    <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-purple-600 text-white flex-shrink-0">
+        <i data-lucide="file-pen" class="w-5 h-5"></i>
+    </div>
     <div>
-        <h1 class="text-xl font-bold text-slate-800 tracking-tight">📝 Editar Acta: {{ $moduloConfig['nombre'] }}</h1>
-        <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-            <a href="{{ route('usuario.implementacion.index') }}" class="hover:text-blue-600">Actas</a>
-            <span class="text-slate-300">•</span>
+        <h1 class="text-xl font-bold text-slate-800 tracking-tight">Editar Acta #{{ $acta->id }}: {{ $moduloConfig['nombre'] }}</h1>
+        <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+            <a href="{{ route('usuario.implementacion.index') }}" class="hover:text-indigo-600 font-semibold">Actas de Implementación</a>
+            <span>›</span>
             <span>Editar #{{ $acta->id }}</span>
         </div>
     </div>
-    <a href="{{ route('usuario.implementacion.index') }}" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors text-sm font-semibold shadow-sm">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-        Regresar a la lista
-    </a>
 </div>
 @endsection
 
 @section('content')
 <div class="max-w-5xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mb-6">
-        <form action="{{ route('usuario.implementacion.update', ['modulo' => $moduloKey, 'id' => $acta->id]) }}" method="POST" enctype="multipart/form-data" class="p-6 md:p-8 space-y-8">
-            @csrf
-            @method('PUT')
-            
-            {{-- Sección: Datos Principales --}}
-            <div>
-                <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-2 flex-wrap gap-2">
+    <form action="{{ route('usuario.implementacion.update', ['modulo' => $moduloKey, 'id' => $acta->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        @csrf
+        @method('PUT')
+
+        {{-- === TARJETA 1: MÓDULO ================================================== --}}
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d1">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl text-white">
+                        <i data-lucide="layers" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">1. Módulo a Implementar</h2>
+                </div>
+                <a href="{{ route('usuario.implementacion.index') }}" class="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    Volver
+                </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {{-- Módulo (readonly en edición) --}}
+                <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                    <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Módulo</label>
                     <div class="flex items-center gap-2">
-                        <i data-lucide="book-open" class="w-4 h-4 text-blue-600"></i>
-                        <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Módulo a Implementar</h3>
+                        <i data-lucide="grid-2x2" class="w-5 h-5 text-indigo-600 flex-shrink-0"></i>
+                        <span class="text-sm font-black text-indigo-900">{{ $moduloConfig['nombre'] }}</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Módulo</label>
-                        <input type="text" value="{{ $moduloConfig['nombre'] }}" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl text-sm p-2.5 outline-none font-bold text-slate-500 cursor-not-allowed">
+                {{-- Fecha --}}
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Fecha de Implementación</label>
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-slate-500 flex-shrink-0"></i>
+                        <input type="date" name="fecha" required value="{{ date('Y-m-d', strtotime($acta->fecha)) }}" class="bg-transparent border-0 p-0 text-sm font-black text-slate-800 focus:ring-0 w-full cursor-pointer outline-none">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha de Implementación</label>
-                        <input type="date" name="fecha" required value="{{ date('Y-m-d', strtotime($acta->fecha)) }}" class="w-full border border-slate-200 rounded-xl text-sm p-2.5 outline-none focus:border-blue-500">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Acta Firmada (PDF)</label>
-                        <div class="relative">
-                            <input type="file" name="archivo_pdf" accept="application/pdf" class="w-full text-sm text-slate-500
-                                file:mr-4 file:py-2.5 file:px-4 file:rounded-xl
-                                file:border-0 file:text-sm file:font-bold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100 transition-all border border-slate-200 rounded-xl bg-white
-                            ">
+                </div>
+                {{-- PDF --}}
+                <div class="md:col-span-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Acta Firmada (PDF)</label>
+                    @if($acta->archivo_pdf)
+                    <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl mb-3">
+                        <div class="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
                         </div>
-                        @if($acta->archivo_pdf)
-                        <div class="mt-2 text-[11px] font-medium text-slate-500 flex items-center gap-2 bg-emerald-50 w-max px-3 py-1.5 rounded-lg border border-emerald-100">
-                            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
-                            Acta PDF actual:
-                            <a href="{{ Storage::url($acta->archivo_pdf) }}" target="_blank" class="text-blue-600 font-bold hover:underline flex items-center gap-1">Ver Archivo <i data-lucide="external-link" class="w-3 h-3"></i></a>
-                            <span class="text-slate-400 mx-2">|</span>
-                            Si subes uno nuevo, reemplazará al actual.
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-emerald-700">PDF actual cargado correctamente</p>
+                            <a href="{{ Storage::url($acta->archivo_pdf) }}" target="_blank" class="text-xs text-blue-600 hover:underline font-bold flex items-center gap-1 mt-0.5">
+                                Ver archivo actual <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </a>
                         </div>
-                        @else
-                        <p class="text-[10px] text-slate-400 mt-1"><i data-lucide="info" class="w-3 h-3 inline"></i> Opcional. Sube el documento escaneado con las firmas correspondientes.</p>
-                        @endif
+                        <span class="text-[10px] text-slate-400 font-medium text-right hidden md:block">Sube uno nuevo<br>para reemplazar</span>
                     </div>
+                    @endif
+                    <label for="archivo_pdf_input" class="flex items-center gap-4 p-4 bg-blue-50/60 border-2 border-dashed border-blue-200 rounded-2xl cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group">
+                        <div class="h-11 w-11 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                            <i data-lucide="file-up" class="w-6 h-6 text-blue-500"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-700" id="pdf_label_text">{{ $acta->archivo_pdf ? 'Subir nuevo PDF (reemplazará el actual)' : 'Haz clic para subir el PDF escaneado con firmas' }}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Solo archivos PDF. Opcional.</p>
+                        </div>
+                    </label>
+                    <input type="file" id="archivo_pdf_input" name="archivo_pdf" accept="application/pdf" class="hidden" onchange="document.getElementById('pdf_label_text').textContent = this.files[0] ? this.files[0].name : '{{ $acta->archivo_pdf ? 'Subir nuevo PDF (reemplazará el actual)' : 'Haz clic para subir el PDF escaneado con firmas' }}'">
                 </div>
             </div>
+        </div>
 
-            {{-- Sección: Establecimiento --}}
-            <div>
-                <div class="flex items-center gap-2 mb-4 border-b border-slate-100 pb-2 mt-2">
-                    <i data-lucide="hospital" class="w-4 h-4 text-blue-600"></i>
-                    <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Datos del Establecimiento</h3>
+        {{-- === TARJETA 2: ESTABLECIMIENTO ======================================== --}}
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d2">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <div class="bg-teal-600 p-2.5 rounded-xl text-white">
+                    <i data-lucide="hospital" class="w-5 h-5"></i>
                 </div>
-                
-                <div class="relative mb-5">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Buscar Establecimiento (Renipress / Nombre)</label>
+                <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">2. Datos del Establecimiento</h2>
+            </div>
+
+            {{-- Buscador (opcional en edición) --}}
+            <div class="relative mb-5">
+                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Buscar Establecimiento (Opcional — para actualizar datos)</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="h-5 w-5 text-slate-400"></i>
+                    </div>
+                    <input type="text" id="busqueda_establecimiento" placeholder="Opcional: Volver a buscar para actualizar campos..." autocomplete="off"
+                        class="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-teal-400 focus:bg-white transition-all uppercase">
+                </div>
+                <ul id="sugerencias_establecimiento" class="absolute z-50 bg-white border border-slate-200 w-full rounded-2xl shadow-xl mt-1 hidden max-h-60 overflow-y-auto divide-y divide-slate-50"></ul>
+            </div>
+
+            {{-- Campos con datos precargados --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="col-span-2 md:col-span-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Nombre Establecimiento</label>
+                    <input type="text" id="nombre_establecimiento" name="nombre_establecimiento" readonly required value="{{ $acta->nombre_establecimiento }}"
+                        class="w-full bg-transparent border-0 p-0 text-sm font-bold text-slate-700 focus:ring-0">
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">RENIPRESS</label>
+                    <input type="text" id="codigo_establecimiento" name="codigo_establecimiento" readonly required value="{{ $acta->codigo_establecimiento }}"
+                        class="w-full bg-transparent border-0 p-0 text-xs font-bold text-slate-700 focus:ring-0 font-mono">
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Provincia</label>
+                    <input type="text" id="provincia" name="provincia" readonly value="{{ $acta->provincia }}" class="w-full bg-transparent border-0 p-0 text-xs font-bold text-slate-700 focus:ring-0">
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Distrito</label>
+                    <input type="text" id="distrito" name="distrito" readonly value="{{ $acta->distrito }}" class="w-full bg-transparent border-0 p-0 text-xs font-bold text-slate-700 focus:ring-0">
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Categoría</label>
+                    <input type="text" id="categoria" name="categoria" readonly value="{{ $acta->categoria }}" class="w-full bg-transparent border-0 p-0 text-xs font-bold text-slate-700 focus:ring-0">
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Red</label>
+                    <input type="text" id="red" name="red" readonly value="{{ $acta->red }}" class="w-full bg-transparent border-0 p-0 text-xs font-bold text-slate-700 focus:ring-0">
+                </div>
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Microred</label>
+                    <input type="text" id="microred" name="microred" readonly value="{{ $acta->microred }}" class="w-full bg-transparent border-0 p-0 text-xs font-bold text-slate-700 focus:ring-0">
+                </div>
+                <div class="col-span-2 md:col-span-4">
+                    <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Responsable del Establecimiento</label>
                     <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
-                        <input type="text" id="busqueda_establecimiento" placeholder="Opcional: Volver a buscar establecimiento para actualizar campos..." autocomplete="off"
-                            class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 bg-blue-50/30">
-                    </div>
-                    <ul id="sugerencias_establecimiento" class="absolute z-50 bg-white border border-slate-200 w-full rounded-xl shadow-xl mt-1 hidden max-h-60 overflow-y-auto divide-y divide-slate-50"></ul>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre Establecimiento</label>
-                        <input type="text" id="nombre_establecimiento" name="nombre_establecimiento" value="{{ $acta->nombre_establecimiento }}" readonly required class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm p-2 outline-none text-slate-500 font-medium">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Código RENIPRESS</label>
-                        <input type="text" id="codigo_establecimiento" name="codigo_establecimiento" value="{{ $acta->codigo_establecimiento }}" readonly required class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm p-2 outline-none text-slate-500 font-mono">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Provincia</label>
-                        <input type="text" id="provincia" name="provincia" value="{{ $acta->provincia }}" readonly class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm p-2 outline-none text-slate-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Distrito</label>
-                        <input type="text" id="distrito" name="distrito" value="{{ $acta->distrito }}" readonly class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm p-2 outline-none text-slate-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Categoría</label>
-                        <input type="text" id="categoria" name="categoria" value="{{ $acta->categoria }}" readonly class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm p-2 outline-none text-slate-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Red</label>
-                        <input type="text" id="red" name="red" value="{{ $acta->red }}" readonly class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm p-2 outline-none text-slate-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Microred</label>
-                        <input type="text" id="microred" name="microred" value="{{ $acta->microred }}" readonly class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm p-2 outline-none text-slate-500">
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Responsable del Establecimiento</label>
-                        <input type="text" id="responsable" name="responsable" value="{{ $acta->responsable }}" required placeholder="Nombre del médico jefe o responsable" class="w-full border border-slate-200 rounded-lg text-sm p-2 outline-none focus:border-blue-500">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="user-cog" class="h-5 w-5 text-slate-400"></i>
+                        </div>
+                        <input type="text" id="responsable" name="responsable" required value="{{ $acta->responsable }}" placeholder="Nombre del médico jefe o responsable"
+                            class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:border-teal-400 uppercase">
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Modalidad --}}
-            @if($moduloKey === 'citas')
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Modalidad de Implementación</label>
-                <select name="modalidad" required class="w-full md:w-1/2 border border-slate-200 rounded-xl text-sm p-2.5 outline-none focus:border-blue-500 bg-white">
-                    <option value="">Seleccione Modalidad</option>
-                    <option value="POR HORARIO" {{ $acta->modalidad == 'POR HORARIO' ? 'selected' : '' }}>Por Horario</option>
-                    <option value="POR SELECCION" {{ $acta->modalidad == 'POR SELECCION' ? 'selected' : '' }}>Por Selección (Exclusividad)</option>
-                </select>
+        {{-- === TARJETA 3: MODALIDAD (solo Citas) ================================= --}}
+        @if($moduloKey === 'citas')
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d3">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <div class="bg-blue-600 p-2.5 rounded-xl text-white">
+                    <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                </div>
+                <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">3. Modalidad de Implementación</h2>
             </div>
-            @endif
+            <div class="flex flex-wrap gap-3">
+                <div class="radio-pill-blue">
+                    <input type="radio" name="modalidad" id="modal_horario" value="POR HORARIO" {{ $acta->modalidad == 'POR HORARIO' ? 'checked' : '' }}>
+                    <label for="modal_horario">
+                        <i data-lucide="clock" class="w-4 h-4"></i> Por Horario
+                    </label>
+                </div>
+                <div class="radio-pill-blue">
+                    <input type="radio" name="modalidad" id="modal_seleccion" value="POR SELECCION" {{ $acta->modalidad == 'POR SELECCION' ? 'checked' : '' }}>
+                    <label for="modal_seleccion">
+                        <i data-lucide="mouse-pointer-click" class="w-4 h-4"></i> Por Selección (Exclusividad)
+                    </label>
+                </div>
+            </div>
+        </div>
+        @endif
 
-            {{-- UPSS/UPS (Solo Gestión Administrativa - Solo Visual) --}}
-            @if($moduloKey === 'ges_adm')
-            <div id="seccion-upss" class="mb-4 space-y-4">
+        {{-- === TARJETA 4: UPSS/UPS (solo Ges. Adm.) ============================= --}}
+        @if($moduloKey === 'ges_adm')
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d3">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <div class="bg-cyan-600 p-2.5 rounded-xl text-white">
+                    <i data-lucide="building-2" class="w-5 h-5"></i>
+                </div>
+                <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">3. UPSS / UPS</h2>
+            </div>
+            <div id="seccion-upss" class="space-y-5">
                 {{-- Tabla 1: Renipress SUSALUD --}}
-                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50">
-                    <h3 class="font-bold text-slate-800 text-sm mb-3">Renipress SUSALUD (UPS / UPSS)</h3>
-                    <div class="bg-white rounded-lg overflow-hidden border border-slate-200">
+                <div>
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Renipress SUSALUD (UPS / UPSS)</p>
+                    <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
                         <table class="w-full text-left text-xs text-slate-600">
-                            <thead class="bg-blue-600 text-white font-semibold">
+                            <thead class="bg-cyan-600 text-white font-semibold">
                                 <tr>
-                                    <th class="p-2">UPSS</th>
-                                    <th class="p-2 border-l border-blue-500">Estado UPSS</th>
-                                    <th class="p-2 border-l border-blue-500">UPS</th>
-                                    <th class="p-2 border-l border-blue-500">Estado UPS</th>
+                                    <th class="p-3">UPSS</th>
+                                    <th class="p-3 border-l border-cyan-500">Estado UPSS</th>
+                                    <th class="p-3 border-l border-cyan-500">UPS</th>
+                                    <th class="p-3 border-l border-cyan-500">Estado UPS</th>
                                 </tr>
                             </thead>
                             <tbody id="upss-establecimiento-body">
-                                <tr>
-                                    <td colspan="4" class="p-3 text-center text-slate-400">UPSS del establecimiento (Cargando / Visual)</td>
-                                </tr>
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400 italic">UPSS del establecimiento (Cargando / Visual)</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-
-                {{-- Tabla 2: Regularizar en Renipress SUSALUD --}}
-                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50">
-                    <h3 class="font-bold text-slate-800 text-sm mb-3">(UPSS/UPS) Regularizar en Renipress SUSALUD</h3>
-                    <div class="w-full mb-3 shadow-[0_4px_10px_rgba(0,0,0,0.1)] rounded p-2 bg-white relative">
-                        <div class="relative w-full">
-                            <input type="text" id="upss-search-input" class="w-full border-b border-slate-300 rounded text-sm p-3 outline-none focus:border-blue-500 shadow-inner" placeholder="Escriba código o descripción de UPSS/UPS para buscar..." onkeyup="buscarUpsGlobal(this)">
-                            <div id="upss_global_results" class="absolute z-50 w-full bg-white border border-slate-200 shadow-xl mt-1 rounded hidden max-h-60 overflow-y-auto"></div>
-                        </div>
-                    </div>
-                    
-                    <button type="button" onclick="agregarUpssManual()" class="text-xs font-bold text-white bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 mb-3">
-                        + Agregar UPSS/UPS Manual
-                    </button>
-                    <div id="upss-container" class="space-y-2"></div>
-                </div>
-            </div>
-            @endif
-
-            {{-- Firma Digital (Solo Módulos Específicos) --}}
-            @if(in_array($moduloKey, ['medicina', 'odontologia', 'nutricion', 'psicologia', 'mental', 'emergencia', 'referencias', 'laboratorio', 'farmacia', 'fua']))
-            <div>
-                <label class="block text-xs font-semibold text-slate-800 mb-1">Firma Digital</label>
-                <select name="firma_digital" required class="w-full border border-slate-300 rounded text-sm p-2.5 outline-none focus:border-blue-500 bg-white">
-                    <option value="">-- Seleccionar --</option>
-                    <option value="SI" {{ $acta->firma_digital == 'SI' ? 'selected' : '' }}>SI</option>
-                    <option value="NO" {{ $acta->firma_digital == 'NO' ? 'selected' : '' }}>NO</option>
-                </select>
-            </div>
-            @endif
-
-            {{-- Sección: Participantes (Usuarios) --}}
-            <div>
-                <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2 mt-4">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="users" class="w-4 h-4 text-emerald-600"></i>
-                        <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Usuarios Participantes</h3>
-                    </div>
-                    <button type="button" onclick="agregarParticipante()" class="text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                        <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
-                    </button>
-                </div>
-                <div id="usuarios-container" class="space-y-3">
-                    @forelse($acta->usuarios as $index => $usu)
-                    <div class="participante-row bg-slate-50/50 border border-slate-200 rounded-xl p-4 relative pr-10">
-                        <button type="button" onclick="this.closest('.participante-row').remove()" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors" title="Quitar">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                        </button>
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                            <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">DNI</label><input type="text" name="usuarios[{{$index}}][dni]" value="{{$usu->dni}}" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Ap. Paterno</label><input type="text" name="usuarios[{{$index}}][apellido_paterno]" value="{{$usu->apellido_paterno}}" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Ap. Materno</label><input type="text" name="usuarios[{{$index}}][apellido_materno]" value="{{$usu->apellido_materno}}" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Nombres</label><input type="text" name="usuarios[{{$index}}][nombres]" value="{{$usu->nombres}}" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Celular</label><input type="text" name="usuarios[{{$index}}][celular]" value="{{$usu->celular}}" class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Correo</label><input type="email" name="usuarios[{{$index}}][correo]" value="{{$usu->correo}}" class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                            <div class="col-span-2"><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Estado Credencial</label>
-                                <select name="usuarios[{{$index}}][permisos]" required class="w-full border-slate-200 rounded-lg px-2 h-9 outline-none focus:border-emerald-500 bg-white text-sm">
-                                    <option value="">Seleccione...</option>
-                                    <option value="C.C. Y D.J." {{ $usu->permisos == 'C.C. Y D.J.' ? 'selected' : '' }}>Entregado (C.C. y D.J.)</option>
-                                    <option value="POR REGULARIZAR" {{ $usu->permisos == 'POR REGULARIZAR' ? 'selected' : '' }}>Por regularizar</option>
-                                </select>
+                {{-- Tabla 2: Regularizar --}}
+                <div>
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">(UPSS/UPS) Regularizar en Renipress SUSALUD</p>
+                    <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4">
+                        <div class="relative mb-3">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="search" class="h-4 w-4 text-slate-400"></i>
                             </div>
+                            <input type="text" id="upss-search-input" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-300 transition-all" placeholder="Escriba código o descripción de UPSS/UPS..." onkeyup="buscarUpsGlobal(this)">
+                            <div id="upss_global_results" class="absolute z-50 w-full bg-white border border-slate-200 shadow-xl mt-1 rounded-xl hidden max-h-60 overflow-y-auto"></div>
                         </div>
-                    </div>
-                    @empty
-                    @endforelse
-                </div>
-            </div>
-
-            {{-- Sección: Implementadores --}}
-            <div>
-                <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2 mt-4">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="user-check" class="w-4 h-4 text-purple-600"></i>
-                        <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Personal Implementador</h3>
-                    </div>
-                    <button type="button" id="btn-add-implem" onclick="agregarImplementador()" class="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                        <i data-lucide="plus" class="w-3 h-3"></i> AGREGAR
-                    </button>
-                </div>
-                <div id="implementadores-container" class="space-y-3">
-                    @forelse($acta->implementadores as $index => $imp)
-                    <div class="implem-row bg-purple-50/30 border border-purple-100 rounded-xl p-4 relative pr-10">
-                        <button type="button" onclick="this.closest('.implem-row').remove();" class="absolute top-4 right-4 text-purple-300 hover:text-red-500 transition-colors" title="Quitar">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        <button type="button" onclick="agregarUpssManual()" class="flex items-center gap-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-xl transition-colors mb-3">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar UPSS/UPS Manual
                         </button>
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                            <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">DNI (Escribir manual)</label><input type="text" name="implementadores[{{$index}}][dni]" value="{{$imp->dni}}" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Ap. Paterno</label><input type="text" name="implementadores[{{$index}}][apellido_paterno]" value="{{$imp->apellido_paterno}}" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Ap. Materno</label><input type="text" name="implementadores[{{$index}}][apellido_materno]" value="{{$imp->apellido_materno}}" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                            <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Nombres</label><input type="text" name="implementadores[{{$index}}][nombres]" value="{{$imp->nombres}}" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                            <div class="col-span-2"><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[{{$index}}][cargo]" value="{{$imp->cargo}}" class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA"></div>
-                        </div>
+                        <div id="upss-container" class="space-y-2"></div>
                     </div>
-                    @empty
-                    @endforelse
                 </div>
             </div>
+        </div>
+        @endif
 
-            {{-- Observaciones --}}
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Observaciones Finales</label>
-                <textarea name="observaciones" rows="3" class="w-full border border-slate-200 rounded-xl text-sm p-3 outline-none focus:border-blue-500" placeholder="Ingrese anotaciones u observaciones sobre la implementación...">{{ $acta->observaciones }}</textarea>
+        {{-- === TARJETA 5: FIRMA DIGITAL ========================================= --}}
+        @if(in_array($moduloKey, ['medicina', 'odontologia', 'nutricion', 'psicologia', 'mental', 'emergencia', 'referencias', 'laboratorio', 'farmacia', 'fua']))
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d4">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <div class="bg-violet-600 p-2.5 rounded-xl text-white">
+                    <i data-lucide="pen-tool" class="w-5 h-5"></i>
+                </div>
+                <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Firma Digital</h2>
             </div>
+            <p class="text-xs text-slate-500 mb-4">¿El módulo cuenta con firma digital habilitada?</p>
+            <div class="flex flex-wrap gap-3">
+                <div class="radio-pill">
+                    <input type="radio" name="firma_digital" id="firma_si" value="SI" {{ $acta->firma_digital == 'SI' ? 'checked' : '' }} required>
+                    <label for="firma_si">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> SÍ, cuenta con firma digital
+                    </label>
+                </div>
+                <div class="radio-pill">
+                    <input type="radio" name="firma_digital" id="firma_no" value="NO" {{ $acta->firma_digital == 'NO' ? 'checked' : '' }} required>
+                    <label for="firma_no">
+                        <i data-lucide="x-circle" class="w-4 h-4 text-red-400"></i> NO cuenta con firma digital
+                    </label>
+                </div>
+            </div>
+        </div>
+        @endif
 
-            {{-- Footer / Botones --}}
-            <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
-                <a href="{{ route('usuario.implementacion.index') }}" class="px-5 py-2.5 rounded-xl font-bold text-sm text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</a>
-                <button type="submit" class="px-6 py-2.5 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all">Guardar Cambios</button>
+        {{-- === TARJETA 6: USUARIOS PARTICIPANTES ================================ --}}
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d5">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-emerald-500 p-2.5 rounded-xl text-white">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Usuarios Participantes</h2>
+                </div>
+                <button type="button" onclick="agregarParticipante()" class="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-xl transition-colors border border-emerald-200">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar
+                </button>
             </div>
-            
-        </form>
-    </div>
+            <div id="usuarios-container" class="space-y-3">
+                @forelse($acta->usuarios as $index => $usu)
+                <div class="participante-row bg-emerald-50/40 border border-emerald-100 rounded-2xl p-4 relative pr-12">
+                    <button type="button" onclick="this.closest('.participante-row').remove()" class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors" title="Quitar">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">DNI</label><input type="text" name="usuarios[{{$index}}][dni]" value="{{$usu->dni}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white font-bold"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Paterno</label><input type="text" name="usuarios[{{$index}}][apellido_paterno]" value="{{$usu->apellido_paterno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Materno</label><input type="text" name="usuarios[{{$index}}][apellido_materno]" value="{{$usu->apellido_materno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Nombres</label><input type="text" name="usuarios[{{$index}}][nombres]" value="{{$usu->nombres}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Celular</label><input type="text" name="usuarios[{{$index}}][celular]" value="{{$usu->celular}}" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Correo</label><input type="email" name="usuarios[{{$index}}][correo]" value="{{$usu->correo}}" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div class="col-span-2">
+                            <label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Estado Credencial</label>
+                            <select name="usuarios[{{$index}}][permisos]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white">
+                                <option value="">Seleccione...</option>
+                                <option value="C.C. Y D.J." {{ $usu->permisos == 'C.C. Y D.J.' ? 'selected' : '' }}>Entregado (C.C. y D.J.)</option>
+                                <option value="POR REGULARIZAR" {{ $usu->permisos == 'POR REGULARIZAR' ? 'selected' : '' }}>Por regularizar</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                @endforelse
+            </div>
+        </div>
+
+        {{-- === TARJETA 7: PERSONAL IMPLEMENTADOR ================================ --}}
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d6">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-500 p-2.5 rounded-xl text-white">
+                        <i data-lucide="user-check" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Personal Implementador</h2>
+                </div>
+                <button type="button" id="btn-add-implem" onclick="agregarImplementador()" class="flex items-center gap-1.5 text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-xl transition-colors border border-purple-200">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar
+                </button>
+            </div>
+            <div id="implementadores-container" class="space-y-3">
+                @forelse($acta->implementadores as $index => $imp)
+                <div class="implem-row bg-purple-50/40 border border-purple-100 rounded-2xl p-4 relative pr-12">
+                    <button type="button" onclick="this.closest('.implem-row').remove();" class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-purple-200 hover:text-red-500 hover:bg-red-50 transition-colors" title="Quitar">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">DNI</label><input type="text" name="implementadores[{{$index}}][dni]" value="{{$imp->dni}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white font-bold"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Paterno</label><input type="text" name="implementadores[{{$index}}][apellido_paterno]" value="{{$imp->apellido_paterno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Materno</label><input type="text" name="implementadores[{{$index}}][apellido_materno]" value="{{$imp->apellido_materno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Nombres</label><input type="text" name="implementadores[{{$index}}][nombres]" value="{{$imp->nombres}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                        <div class="col-span-2"><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[{{$index}}][cargo]" value="{{$imp->cargo}}" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA"></div>
+                    </div>
+                </div>
+                @empty
+                @endforelse
+            </div>
+        </div>
+
+        {{-- === TARJETA 8: OBSERVACIONES ========================================= --}}
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d7">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <div class="bg-amber-500 p-2.5 rounded-xl text-white">
+                    <i data-lucide="message-square" class="w-5 h-5"></i>
+                </div>
+                <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Observaciones Finales</h2>
+            </div>
+            <textarea name="observaciones" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl text-sm p-4 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300 transition-all resize-none" placeholder="Ingrese anotaciones u observaciones sobre la implementación...">{{ $acta->observaciones }}</textarea>
+        </div>
+
+        {{-- === TARJETA 9: EVIDENCIA FOTOGRAFICA ================================== --}}
+        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d8">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <div class="bg-orange-500 p-2.5 rounded-xl text-white">
+                    <i data-lucide="camera" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Evidencia Fotográfica</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Adjunte hasta 2 fotografías como evidencia de la implementación</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                {{-- FOTO 1 --}}
+                <div>
+                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Foto 1</p>
+                    @if($acta->foto1)
+                    <div class="relative group mb-3 rounded-2xl overflow-hidden border-2 border-orange-200" style="min-height:180px">
+                        <img src="{{ Storage::url($acta->foto1) }}" alt="Foto 1 actual" class="w-full h-48 object-cover">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                            <span class="opacity-0 group-hover:opacity-100 text-white text-xs font-bold bg-black/60 px-3 py-1.5 rounded-full transition-all">Foto actual — sube otra para reemplazar</span>
+                        </div>
+                    </div>
+                    @endif
+                    <label for="foto1_input" class="group relative flex flex-col items-center justify-center gap-3 min-h-[140px] bg-orange-50/60 border-2 border-dashed border-orange-200 rounded-2xl cursor-pointer hover:bg-orange-50 hover:border-orange-400 transition-all overflow-hidden" id="foto1_label">
+                        <img id="foto1_preview" class="absolute inset-0 w-full h-full object-cover rounded-2xl hidden" alt="Nueva foto 1">
+                        <div id="foto1_placeholder" class="flex flex-col items-center gap-2 p-4 text-center z-10">
+                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                <i data-lucide="image-plus" class="w-6 h-6 text-orange-400"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-600">{{ $acta->foto1 ? 'Subir nueva foto 1 (reemplazará la actual)' : 'Haz clic para subir foto 1' }}</p>
+                            <p class="text-[10px] text-slate-400">JPG, PNG, WEBP — máx. 5 MB</p>
+                        </div>
+                    </label>
+                    <input type="file" id="foto1_input" name="foto1" accept="image/*" class="hidden"
+                        onchange="previewFotoEdit('foto1', this)">
+                    <div id="foto1_actions" class="hidden mt-2 flex justify-end">
+                        <button type="button" onclick="clearFotoEdit('foto1')" class="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
+                            <i data-lucide="x" class="w-3 h-3"></i> Quitar selección
+                        </button>
+                    </div>
+                </div>
+
+                {{-- FOTO 2 --}}
+                <div>
+                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Foto 2</p>
+                    @if($acta->foto2)
+                    <div class="relative group mb-3 rounded-2xl overflow-hidden border-2 border-orange-200" style="min-height:180px">
+                        <img src="{{ Storage::url($acta->foto2) }}" alt="Foto 2 actual" class="w-full h-48 object-cover">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                            <span class="opacity-0 group-hover:opacity-100 text-white text-xs font-bold bg-black/60 px-3 py-1.5 rounded-full transition-all">Foto actual — sube otra para reemplazar</span>
+                        </div>
+                    </div>
+                    @endif
+                    <label for="foto2_input" class="group relative flex flex-col items-center justify-center gap-3 min-h-[140px] bg-orange-50/60 border-2 border-dashed border-orange-200 rounded-2xl cursor-pointer hover:bg-orange-50 hover:border-orange-400 transition-all overflow-hidden" id="foto2_label">
+                        <img id="foto2_preview" class="absolute inset-0 w-full h-full object-cover rounded-2xl hidden" alt="Nueva foto 2">
+                        <div id="foto2_placeholder" class="flex flex-col items-center gap-2 p-4 text-center z-10">
+                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                <i data-lucide="image-plus" class="w-6 h-6 text-orange-400"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-600">{{ $acta->foto2 ? 'Subir nueva foto 2 (reemplazará la actual)' : 'Haz clic para subir foto 2' }}</p>
+                            <p class="text-[10px] text-slate-400">JPG, PNG, WEBP — máx. 5 MB</p>
+                        </div>
+                    </label>
+                    <input type="file" id="foto2_input" name="foto2" accept="image/*" class="hidden"
+                        onchange="previewFotoEdit('foto2', this)">
+                    <div id="foto2_actions" class="hidden mt-2 flex justify-end">
+                        <button type="button" onclick="clearFotoEdit('foto2')" class="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
+                            <i data-lucide="x" class="w-3 h-3"></i> Quitar selección
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- === BOTÓN GUARDAR ===================================================== --}}
+        <div class="slide-up-d8">
+            <div class="flex gap-3">
+                <a href="{{ route('usuario.implementacion.index') }}" class="flex-1 flex items-center justify-center py-4 bg-white border-2 border-slate-200 rounded-[1.5rem] text-slate-500 font-black text-sm uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
+                    Cancelar
+                </a>
+                <button type="submit" class="flex-[3] py-4 bg-indigo-600 rounded-[1.5rem] text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.01] transition-all flex items-center justify-center gap-3">
+                    <i data-lucide="save" class="w-5 h-5"></i>
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+
+    </form>
 </div>
 @endsection
 
 @push('scripts')
 <script>
     lucide.createIcons();
-    
+
     // --- ESTABLECIMIENTO AUTOCOMPLETE ---
     const inputEst = document.getElementById('busqueda_establecimiento');
     const listaEst = document.getElementById('sugerencias_establecimiento');
@@ -292,7 +480,7 @@
                         listaEst.classList.remove('hidden');
                         data.forEach(est => {
                             const li = document.createElement('li');
-                            li.className = 'px-4 py-3 hover:bg-blue-50 cursor-pointer flex flex-col gap-0.5';
+                            li.className = 'px-4 py-3 hover:bg-teal-50 cursor-pointer flex flex-col gap-0.5';
                             li.innerHTML = `<span class="font-bold text-slate-700 text-sm">${est.codigo_establecimiento} - ${est.nombre_establecimiento}</span>
                                             <span class="text-[10px] text-slate-500">${est.distrito}, ${est.provincia} (${est.categoria})</span>`;
                             li.addEventListener('click', () => {
@@ -321,24 +509,26 @@
         if (!inputEst.contains(e.target) && !listaEst.contains(e.target)) listaEst.classList.add('hidden');
     });
 
-    // --- PARTICIPANTES ---
+    // --- PARTICIPANTES (nuevos) ---
     let idxUsu = {{ $acta->usuarios->count() > 0 ? $acta->usuarios->keys()->last() + 1 : 0 }};
     function agregarParticipante() {
         const tpl = `
-        <div class="participante-row bg-slate-50/50 border border-slate-200 rounded-xl p-4 relative pr-10">
-            <button type="button" onclick="this.closest('.participante-row').remove()" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors" title="Quitar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <div class="participante-row bg-emerald-50/40 border border-emerald-100 rounded-2xl p-4 relative pr-12">
+            <button type="button" onclick="this.closest('.participante-row').remove()" class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors" title="Quitar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">DNI</label><input type="text" name="usuarios[${idxUsu}][dni]" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Ap. Paterno</label><input type="text" name="usuarios[${idxUsu}][apellido_paterno]" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Ap. Materno</label><input type="text" name="usuarios[${idxUsu}][apellido_materno]" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Nombres</label><input type="text" name="usuarios[${idxUsu}][nombres]" required class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Celular</label><input type="text" name="usuarios[${idxUsu}][celular]" class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Correo</label><input type="email" name="usuarios[${idxUsu}][correo]" class="w-full border-slate-200 rounded-lg p-2 h-9 outline-none focus:border-emerald-500 bg-white"></div>
-                <div class="col-span-2"><label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Estado Credencial</label>
-                    <select name="usuarios[${idxUsu}][permisos]" required class="w-full border-slate-200 rounded-lg px-2 h-9 outline-none focus:border-emerald-500 bg-white text-sm">
-                        <option value="">Seleccione...</option><option value="C.C. Y D.J.">Entregado (C.C. y D.J.)</option><option value="POR REGULARIZAR">Por regularizar</option>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">DNI</label><input type="text" name="usuarios[${idxUsu}][dni]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white font-bold"></div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Paterno</label><input type="text" name="usuarios[${idxUsu}][apellido_paterno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Materno</label><input type="text" name="usuarios[${idxUsu}][apellido_materno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Nombres</label><input type="text" name="usuarios[${idxUsu}][nombres]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Celular</label><input type="text" name="usuarios[${idxUsu}][celular]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Correo</label><input type="email" name="usuarios[${idxUsu}][correo]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div class="col-span-2"><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Estado Credencial</label>
+                    <select name="usuarios[${idxUsu}][permisos]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white">
+                        <option value="">Seleccione...</option>
+                        <option value="C.C. Y D.J.">Entregado (C.C. y D.J.)</option>
+                        <option value="POR REGULARIZAR">Por regularizar</option>
                     </select>
                 </div>
             </div>
@@ -349,31 +539,24 @@
 
     // ====== LÓGICA VISUAL UPSS ======
     let upssIndex = 0;
-    
+
     async function buscarUpsGlobal(input) {
         const val = input.value.toLowerCase();
         const resultsDiv = document.getElementById('upss_global_results');
-        if (val.length < 3) {
-            resultsDiv.classList.add('hidden');
-            return;
-        }
-        
+        if (val.length < 3) { resultsDiv.classList.add('hidden'); return; }
         try {
             const response = await fetch(`{{ route('usuario.implementacion.ajax.upss') }}?q=${val}`);
             const data = await response.json();
-            
             let html = '';
             data.forEach(item => {
                 const codUpss = item.codigo_upss || item.codigo_ups.substring(0,2) + '0000';
                 const nombreUpss = item.descripcion_upss || 'UPSS PREDETERMINADA';
-                html += `
-                <div class="p-3 border-b border-slate-100 hover:bg-blue-50 cursor-pointer transition-colors" 
+                html += `<div class="p-3 border-b border-slate-100 hover:bg-teal-50 cursor-pointer transition-colors"
                      onclick="agregarFilaUpss('${codUpss}', '${nombreUpss}', '${item.codigo_ups}', '${item.descripcion_ups}')">
                     <div class="text-xs font-semibold text-slate-700">${item.codigo_ups} - ${item.descripcion_ups}</div>
                     <div class="text-[10px] text-slate-400 font-bold">${codUpss} - ${nombreUpss}</div>
                 </div>`;
             });
-            
             if(html) {
                 resultsDiv.innerHTML = html;
                 resultsDiv.classList.remove('hidden');
@@ -381,26 +564,22 @@
                 resultsDiv.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">No se encontraron resultados</div>';
                 resultsDiv.classList.remove('hidden');
             }
-        } catch(error) {
-            console.error('Error buscando UPSS', error);
-        }
+        } catch(error) { console.error('Error buscando UPSS', error); }
     }
 
     function agregarFilaUpss(c_upss, n_upss, c_ups, n_ups) {
         const container = document.getElementById('upss-container');
         const div = document.createElement('div');
-        div.className = "flex flex-wrap lg:flex-nowrap gap-2 p-3 bg-white border border-slate-200 rounded-lg upss-row relative items-center";
+        div.className = "flex flex-wrap lg:flex-nowrap gap-2 p-3 bg-white border border-slate-200 rounded-xl upss-row items-center";
         div.innerHTML = `
-            <input type="text" name="upss_regularizar[${upssIndex}][codigo_upss]" value="${c_upss}" class="w-full lg:w-32 border border-slate-300 bg-slate-50 rounded text-xs p-2 outline-none" placeholder="UPSS" readonly>
-            <input type="text" name="upss_regularizar[${upssIndex}][nombre_ups]" value="${c_ups} - ${n_ups}" class="flex-1 border border-slate-300 bg-slate-50 rounded text-xs p-2 outline-none" placeholder="UPS Nombre" readonly>
+            <input type="text" name="upss_regularizar[${upssIndex}][codigo_upss]" value="${c_upss}" class="w-full lg:w-32 border border-slate-200 bg-slate-50 rounded-lg text-xs p-2 outline-none" placeholder="UPSS" readonly>
+            <input type="text" name="upss_regularizar[${upssIndex}][nombre_ups]" value="${c_ups} - ${n_ups}" class="flex-1 border border-slate-200 bg-slate-50 rounded-lg text-xs p-2 outline-none" placeholder="UPS Nombre" readonly>
             <input type="hidden" name="upss_regularizar[${upssIndex}][codigo_ups]" value="${c_ups}">
-            <button type="button" onclick="this.closest('.upss-row').remove()" class="bg-red-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-red-700 shadow flex items-center whitespace-nowrap">
+            <button type="button" onclick="this.closest('.upss-row').remove()" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors whitespace-nowrap">
                 × Eliminar
-            </button>
-        `;
+            </button>`;
         container.appendChild(div);
         upssIndex++;
-        
         document.getElementById('upss-search-input').value = '';
         document.getElementById('upss_global_results').classList.add('hidden');
     }
@@ -413,27 +592,46 @@
         lastRow.querySelectorAll('input').forEach(input => input.removeAttribute('readonly'));
     }
 
-    // --- IMPLEMENTADORES ---
-    let implementadorIndex = {{ $acta->implementadores->count() }};
+    // --- IMPLEMENTADORES (nuevos) ---
+    let idxImp = {{ $acta->implementadores->count() }};
     function agregarImplementador() {
-        let defaultCargo = 'IMPLEMENTADOR(A)';
-
+        const defaultCargo = 'IMPLEMENTADOR(A)';
         const tpl = `
-        <div class="implem-row bg-purple-50/30 border border-purple-100 rounded-xl p-4 relative pr-10">
-            <button type="button" onclick="this.closest('.implem-row').remove();" class="absolute top-4 right-4 text-purple-300 hover:text-red-500 transition-colors" title="Quitar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        <div class="implem-row bg-purple-50/40 border border-purple-100 rounded-2xl p-4 relative pr-12">
+            <button type="button" onclick="this.closest('.implem-row').remove();" class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-purple-200 hover:text-red-500 hover:bg-red-50 transition-colors" title="Quitar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">DNI (Escribir manual)</label><input type="text" name="implementadores[${idxImp}][dni]" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Ap. Paterno</label><input type="text" name="implementadores[${idxImp}][apellido_paterno]" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Ap. Materno</label><input type="text" name="implementadores[${idxImp}][apellido_materno]" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Nombres</label><input type="text" name="implementadores[${idxImp}][nombres]" required class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white"></div>
-                <div class="col-span-2"><label class="block text-[10px] uppercase font-bold text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[${idxImp}][cargo]" class="w-full border-purple-200 rounded-lg p-2 h-9 outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA" value="${defaultCargo}"></div>
+                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">DNI</label><input type="text" name="implementadores[${idxImp}][dni]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white font-bold"></div>
+                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Paterno</label><input type="text" name="implementadores[${idxImp}][apellido_paterno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Materno</label><input type="text" name="implementadores[${idxImp}][apellido_materno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Nombres</label><input type="text" name="implementadores[${idxImp}][nombres]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                <div class="col-span-2"><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[${idxImp}][cargo]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA" value="${defaultCargo}"></div>
             </div>
         </div>`;
         document.getElementById('implementadores-container').insertAdjacentHTML('beforeend', tpl);
         idxImp++;
     }
 
+    // ====== EVIDENCIA FOTOGRÁFICA (EDIT) ======
+    function previewFotoEdit(slot, input) {
+        if (!input.files || !input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(slot + '_preview').src = e.target.result;
+            document.getElementById(slot + '_preview').classList.remove('hidden');
+            document.getElementById(slot + '_placeholder').classList.add('hidden');
+            document.getElementById(slot + '_actions').classList.remove('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function clearFotoEdit(slot) {
+        document.getElementById(slot + '_input').value = '';
+        document.getElementById(slot + '_preview').src = '';
+        document.getElementById(slot + '_preview').classList.add('hidden');
+        document.getElementById(slot + '_placeholder').classList.remove('hidden');
+        document.getElementById(slot + '_actions').classList.add('hidden');
+    }
 </script>
 @endpush
