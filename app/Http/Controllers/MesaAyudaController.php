@@ -157,23 +157,87 @@ class MesaAyudaController extends Controller
 
     public function buscarEstablecimiento(Request $request)
     {
-        $codigo = $request->query('codigo');
+        $term = trim($request->query('term'));
 
-        $establecimiento = Establecimiento::where('codigo', $codigo)->first();
-
-        if (!$establecimiento) {
-            return response()->json(['found' => false, 'message' => 'Código IPRESS no encontrado.'], 404);
+        if (!$term) {
+            return response()->json([]);
         }
 
-        return response()->json([
-            'found'    => true,
-            'nombre'   => $establecimiento->nombre,
-            'distrito' => $establecimiento->distrito,
-            'provincia'=> $establecimiento->provincia,
-            'categoria'=> $establecimiento->categoria,
-            'red'      => $establecimiento->red,
-            'microred' => $establecimiento->microred,
-        ]);
+        $establecimientos = \App\Models\Establecimiento::where(function($q) use ($term) {
+                $q->where('codigo', 'LIKE', "%{$term}%")
+                  ->orWhere('nombre', 'LIKE', "%{$term}%");
+            })
+            ->orderBy('nombre', 'asc')
+            ->limit(10)
+            ->get();
+
+        $resultados = $establecimientos->map(function ($e) {
+            return [
+                'id'       => $e->codigo, // Usaremos el código como valor
+                'label'    => "{$e->codigo} - {$e->nombre}", // Para mostrar en la lista
+                'nombre'   => $e->nombre,
+                'distrito' => $e->distrito ?? '',
+                'provincia'=> $e->provincia ?? '',
+                'categoria'=> $e->categoria ?? '',
+                'red'      => $e->red ?? '',
+                'microred' => $e->microred ?? '',
+            ];
+        });
+
+        return response()->json($resultados);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // AJAX PÚBLICO: Buscar DNI en RENIEC (DecolectaService)
+    // ─────────────────────────────────────────────────────────
+
+    public function buscarDni(Request $request)
+    {
+        $doc = trim($request->query('dni'));
+
+        if (!preg_match('/^\d{8}$/', $doc)) {
+            return response()->json(['found' => false, 'message' => 'DNI inválido.'], 400);
+        }
+
+        // Primero buscar si el profesional ya existe en nuestra BD local
+        $profesional = \App\Models\Profesional::where('doc', $doc)->first();
+        if ($profesional) {
+            return response()->json([
+                'found'            => true,
+                'source'           => 'local',
+                'apellido_paterno' => $profesional->apellido_paterno,
+                'apellido_materno' => $profesional->apellido_materno,
+                'nombres'          => $profesional->nombres,
+                'correo'           => $profesional->email ?? '',
+                'celular'          => $profesional->telefono ?? '',
+            ]);
+        }
+
+        // Si no está, buscar en API Externa (RENIEC)
+        $decolecta = new \App\Services\DecolectaService();
+        $result = $decolecta->consultarDni($doc);
+
+        if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+            return response()->json([
+                'found'   => false,
+                'message' => 'Límite de consultas a RENIEC excedido. Por favor, escriba sus nombres manualmente.'
+            ], 429);
+        }
+
+        if (isset($result['success']) && $result['success']) {
+            $data = $result['data'];
+            return response()->json([
+                'found'            => true,
+                'source'           => 'reniec',
+                'apellido_paterno' => $data['apellido_paterno'],
+                'apellido_materno' => $data['apellido_materno'],
+                'nombres'          => $data['nombres'],
+                'correo'           => '',
+                'celular'          => '',
+            ]);
+        }
+
+        return response()->json(['found' => false, 'message' => 'DNI no encontrado en RENIEC.'], 404);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -182,7 +246,12 @@ class MesaAyudaController extends Controller
 
     public function index(Request $request)
     {
-        $query = Incidencia::query();
+        if (\Auth::user()->role === 'admin') {
+            $query = Incidencia::query();
+        } else {
+            // El usuario normal solo ve las suyas (su username es su DNI en el sistema)
+            $query = Incidencia::where('dni', \Auth::user()->username);
+        }
 
         if ($request->filled('ticket')) {
             $query->where('id', $request->ticket);
@@ -200,11 +269,13 @@ class MesaAyudaController extends Controller
 
         $provincias = Incidencia::distinct()->orderBy('provincia_establecimiento')->pluck('provincia_establecimiento');
 
+        $baseQuery = \Auth::user()->role === 'admin' ? Incidencia::query() : Incidencia::where('dni', \Auth::user()->username);
+
         $stats = [
-            'total'      => Incidencia::count(),
-            'pendientes' => Incidencia::where('estado', 'Pendiente')->count(),
-            'en_proceso' => Incidencia::where('estado', 'En proceso')->count(),
-            'resueltos'  => Incidencia::where('estado', 'Resuelto')->count(),
+            'total'      => (clone $baseQuery)->count(),
+            'pendientes' => (clone $baseQuery)->where('estado', 'Pendiente')->count(),
+            'en_proceso' => (clone $baseQuery)->where('estado', 'En proceso')->count(),
+            'resueltos'  => (clone $baseQuery)->where('estado', 'Resuelto')->count(),
         ];
 
         return view('usuario.mesa-ayuda.index', compact('incidencias', 'provincias', 'stats'));
@@ -216,14 +287,19 @@ class MesaAyudaController extends Controller
 
     public function responder($id)
     {
-        $incidencia = Incidencia::with('respuestas.usuario')->findOrFail($id);
+        if (\Auth::user()->role !== 'admin') {
+            return redirect()->route('usuario.mesa-ayuda.index')->with('error', 'No tienes permisos para responder incidencias.');
+        }
+
+        $incidencia = Incidencia::findOrFail($id);
+        $respuestas = $incidencia->respuestas()->with('usuario')->latest()->get();
 
         // Cambiar automáticamente a "En proceso" si está pendiente
         if ($incidencia->estado === 'Pendiente') {
             $incidencia->update(['estado' => 'En proceso']);
         }
 
-        return view('usuario.mesa-ayuda.responder', compact('incidencia'));
+        return view('usuario.mesa-ayuda.responder', compact('incidencia', 'respuestas'));
     }
 
     // ─────────────────────────────────────────────────────────
@@ -232,6 +308,10 @@ class MesaAyudaController extends Controller
 
     public function guardarRespuesta(Request $request, $id)
     {
+        if (\Auth::user()->role !== 'admin') {
+            return back()->with('error', 'No tienes permisos.');
+        }
+
         try {
             $request->validate([
                 'respuesta' => 'required|string|max:2000',

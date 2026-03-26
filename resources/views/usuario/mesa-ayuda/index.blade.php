@@ -200,14 +200,17 @@
                             <span class="text-slate-400">{{ $inc->created_at->format('H:i') }} h</span>
                         </td>
                         <td class="px-5 py-4">
-                            <a href="{{ route('usuario.mesa-ayuda.responder', $inc->id) }}"
-                                class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-3 py-1.5 rounded-lg transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
-                                </svg>
-                                Responder
-                            </a>
+                            <div class="flex items-center gap-2">
+                                @if(Auth::user()->role === 'admin')
+                                <a href="{{ route('usuario.mesa-ayuda.responder', $inc->id) }}"
+                                    class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
+                                    title="Responder / Atender">
+                                    <i data-lucide="message-square-reply" class="w-4 h-4"></i>
+                                </a>
+                                @else
+                                <span class="text-xs text-slate-400 italic">Solo lectura</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach
