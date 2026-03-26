@@ -20,7 +20,7 @@
             <h2 class="text-lg font-bold text-slate-800">Incidencias Reportadas</h2>
             <p class="text-sm text-slate-500 mt-0.5">Gestiona y responde los reportes técnicos de los establecimientos.</p>
         </div>
-        <a href="{{ route('mesa-ayuda.form') }}" target="_blank"
+        <a href="{{ route('usuario.mesa-ayuda.form') }}" target="_blank"
             class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-orange-100 hover:scale-105">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>

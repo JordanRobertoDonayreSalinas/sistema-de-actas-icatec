@@ -220,7 +220,7 @@
 
                 {{-- INCIDENCIAS --}}
                 <a href="{{ route('usuario.mesa-ayuda.index') }}"
-                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.mesa-ayuda.*') ? 'bg-orange-600/10 text-orange-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.mesa-ayuda.index', 'usuario.mesa-ayuda.responder') ? 'bg-orange-600/10 text-orange-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <i data-lucide="headphones" class="w-5 h-5"></i>
                     <span class="font-medium flex-1">Gestión de Incidencias</span>
                     @php
@@ -238,8 +238,8 @@
                 </a>
 
                 {{-- FORMULARIO PÚBLICO --}}
-                <a href="{{ route('mesa-ayuda.form') }}"
-                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-white/5">
+                <a href="{{ route('usuario.mesa-ayuda.form') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.mesa-ayuda.form') ? 'bg-orange-600/10 text-orange-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <i data-lucide="external-link" class="w-5 h-5"></i>
                     <span class="font-medium">Registro de Incidencias</span>
                 </a>

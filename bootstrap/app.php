@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            '/logout',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

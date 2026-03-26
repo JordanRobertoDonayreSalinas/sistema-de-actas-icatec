@@ -95,81 +95,148 @@
 
             {{-- SECCIÓN 1: Datos del profesional --}}
             <div class="premium-card">
-                <div
-                    class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
-                    <div
-                        class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-md shadow-emerald-200 text-white flex items-center justify-center text-sm font-black tracking-tighter">
-                        1</div>
-                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight">Datos del Profesional</h2>
+                <div class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-200 text-white flex items-center justify-center">
+                        <i data-lucide="user-check" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight uppercase">1. Datos del Profesional</h2>
                 </div>
-                <div class="p-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label class="label-field">DNI *</label>
-                        <div class="flex gap-3 items-stretch">
-                            <div class="relative flex-1">
-                                <i data-lucide="user"
-                                    class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" id="dniSearch" name="dni" maxlength="8" placeholder="8 dígitos"
-                                    class="input-field h-full" style="padding-left: 2.5rem;" required>
+                <div class="p-7 space-y-6">
+                    {{-- DNI SEARCH ROW --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                        <div class="space-y-2">
+                            <label class="label-field">Documento de Identidad (DNI) *</label>
+                            <div class="flex gap-3 items-stretch">
+                                <div class="relative flex-1 group">
+                                    <i data-lucide="id-card"
+                                        class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                    <input type="text" id="dniSearch" name="dni" maxlength="8" placeholder="8 dígitos"
+                                        class="input-field h-full py-3 text-base font-black" style="padding-left: 3.5rem;" required>
+                                </div>
+                                <button type="button" id="btnBuscarDni"
+                                    class="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap uppercase tracking-wider">
+                                    <i data-lucide="search" class="w-4 h-4"></i>
+                                    Validar
+                                </button>
                             </div>
-                            <button type="button" id="btnBuscarDni"
-                                class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap">
-                                <i data-lucide="search" class="w-4 h-4"></i>
-                                Buscar
-                            </button>
+                            <p id="msgBusquedaDni" class="text-[10px] mt-2 hidden uppercase font-black"></p>
                         </div>
-                        <p id="msgBusquedaDni" class="text-xs mt-2 hidden"></p>
+                        <div class="hidden md:block">
+                            <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex items-start gap-3">
+                                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500 mt-0.5"></i>
+                                <p class="text-[10px] text-emerald-700 leading-tight">Sus datos se validarán contra la base de datos de RENIEC y MPI-Engineers para garantizar la autenticidad del reporte.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="label-field">Celular *</label>
-                        <input type="text" name="celular" maxlength="9" placeholder="9 dígitos" class="input-field"
-                            required>
+
+                    {{-- NAMES ROW --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="label-field">Apellidos Completos *</label>
+                            <div class="relative group">
+                                <i data-lucide="user" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                <input type="text" name="apellidos" placeholder="Ej: Perez Garcia" class="input-field py-3 font-bold" style="padding-left: 3.5rem;" required>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="label-field">Nombres Completos *</label>
+                            <div class="relative group">
+                                <i data-lucide="user" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                <input type="text" name="nombres" placeholder="Ej: Juan Pedro" class="input-field py-3 font-bold" style="padding-left: 3.5rem;" required>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="label-field">Apellidos *</label>
-                        <input type="text" name="apellidos" placeholder="Apellidos completos" class="input-field" required>
-                    </div>
-                    <div>
-                        <label class="label-field">Nombres *</label>
-                        <input type="text" name="nombres" placeholder="Nombres completos" class="input-field" required>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="label-field">Correo Electrónico *</label>
-                        <input type="email" name="correo" placeholder="correo@ejemplo.com" class="input-field" required>
+
+                    {{-- CONTACT ROW --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="label-field">Número de Celular *</label>
+                            <div class="relative group">
+                                <i data-lucide="phone" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                <input type="text" name="celular" maxlength="9" placeholder="999 999 999" class="input-field py-3 font-bold" style="padding-left: 3.5rem;" required>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="label-field">Correo Institucional / Personal *</label>
+                            <div class="relative group">
+                                <i data-lucide="mail" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                <input type="email" name="correo" placeholder="ejemplo@dominio.com" class="input-field py-3 font-bold" style="padding-left: 3.5rem;" required>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
             {{-- SECCIÓN 2: Establecimiento --}}
             <div class="premium-card">
-                <div
-                    class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
-                    <div
-                        class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md shadow-blue-200 text-white flex items-center justify-center text-sm font-black tracking-tighter">
-                        2</div>
-                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight">Datos del Establecimiento</h2>
+                <div class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-md shadow-indigo-200 text-white flex items-center justify-center">
+                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight uppercase">2. Datos del Establecimiento</h2>
                 </div>
-                <div class="p-7 space-y-6">
+                <div class="p-7 space-y-8">
+                    {{-- BUSCADOR PRINCIPAL --}}
                     <div>
-                        <label class="label-field">Código IPRESS *</label>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Buscar IPRESS (Escriba nombre o código)</label>
                         <div class="flex gap-3 items-stretch">
                             <div class="relative flex-1">
-                                <i data-lucide="hash"
-                                    class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" id="codigoIpress" placeholder="Ej: 3372 o 'Santa Rosa'"
-                                    autocomplete="off" class="input-field h-full" style="padding-left: 2.5rem;">
+                                <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" id="codigoIpress" placeholder="EJ: HOSPITAL REGIONAL..."
+                                    autocomplete="off" class="input-field h-full py-4 text-lg font-bold placeholder:font-normal placeholder:text-slate-300" style="padding-left: 3.5rem;">
                                 <!-- Dropdown de sugerencias -->
                                 <ul id="ipressSuggestions"
-                                    class="absolute z-50 w-full bg-white border border-slate-200 shadow-2xl rounded-xl mt-2 hidden max-h-64 overflow-y-auto custom-scroll overflow-hidden">
+                                    class="absolute z-50 w-full bg-white border border-slate-200 shadow-2xl rounded-2xl mt-3 hidden max-h-80 overflow-y-auto custom-scroll overflow-hidden transition-all duration-200 border-t-4 border-t-indigo-500">
                                 </ul>
                             </div>
                             <button type="button" id="btnBuscar"
-                                class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 whitespace-nowrap">
-                                <i data-lucide="search" class="w-4 h-4"></i>
+                                class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black rounded-2xl shadow-xl shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 whitespace-nowrap uppercase tracking-wider">
+                                <i data-lucide="search" class="w-5 h-5"></i>
                                 Buscar
                             </button>
                         </div>
-                        <p id="msgBusqueda" class="text-xs mt-2 hidden"></p>
+                        <p id="msgBusqueda" class="text-xs mt-3 hidden"></p>
+                    </div>
+
+                    {{-- GRID DE RESULTADOS (CARDS) --}}
+                    <div id="resultadoEstablecimiento" class="animate-in fade-in slide-in-from-top-4 duration-500">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            {{-- CATEGORÍA --}}
+                            <div class="bg-indigo-50/30 border-2 border-dashed border-indigo-200 rounded-2xl p-5 transition-all hover:bg-indigo-50/50">
+                                <p class="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-1">Categoría</p>
+                                <p id="txtCategoria" class="text-lg font-black text-slate-800">---</p>
+                            </div>
+                            {{-- PROVINCIA --}}
+                            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-5">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Provincia</p>
+                                <p id="txtProvincia" class="text-lg font-black text-slate-800">---</p>
+                            </div>
+                            {{-- DISTRITO --}}
+                            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-5">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Distrito</p>
+                                <p id="txtDistrito" class="text-lg font-black text-slate-800">---</p>
+                            </div>
+                            {{-- RED --}}
+                            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-5">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Red</p>
+                                <p id="txtRed" class="text-lg font-black text-slate-800">---</p>
+                            </div>
+                        </div>
+
+                        {{-- MICRORED (FULL WIDTH) --}}
+                        <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-5 mb-8">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Microred</p>
+                            <p id="txtMicrored" class="text-lg font-black text-slate-800">---</p>
+                        </div>
+
+                        {{-- JEFE DEL ESTABLECIMIENTO (EDITABLE) --}}
+                        <div>
+                            <label class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3 block">Jefe del Establecimiento (Editable)</label>
+                            <div class="relative">
+                                <i data-lucide="user-cog" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" name="jefe_establecimiento" id="jefeEstablecimiento" placeholder="Ingrese nombre del jefe o responsable..."
+                                    class="input-field py-4 font-bold text-slate-700 bg-white border-2 border-slate-100 hover:border-slate-200 transition-colors" style="padding-left: 3.5rem;">
+                            </div>
+                        </div>
                     </div>
 
                     <input type="hidden" name="codigo_ipress" id="hiddenCodigo">
@@ -179,105 +246,100 @@
                     <input type="hidden" name="categoria" id="hiddenCategoria">
                     <input type="hidden" name="red" id="hiddenRed">
                     <input type="hidden" name="microred" id="hiddenMicrored">
-
-                    <div id="resultadoEstablecimiento" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                            <div><span class="text-[10px] font-bold text-blue-500 uppercase">Establecimiento</span>
-                                <p id="txtNombre" class="font-semibold text-slate-800 mt-0.5 text-xs"></p>
-                            </div>
-                            <div><span class="text-[10px] font-bold text-blue-500 uppercase">Categoría</span>
-                                <p id="txtCategoria" class="font-semibold text-slate-800 mt-0.5 text-xs"></p>
-                            </div>
-                            <div><span class="text-[10px] font-bold text-blue-500 uppercase">Distrito</span>
-                                <p id="txtDistrito" class="font-semibold text-slate-800 mt-0.5 text-xs"></p>
-                            </div>
-                            <div><span class="text-[10px] font-bold text-blue-500 uppercase">Provincia</span>
-                                <p id="txtProvincia" class="font-semibold text-slate-800 mt-0.5 text-xs"></p>
-                            </div>
-                            <div><span class="text-[10px] font-bold text-blue-500 uppercase">Red</span>
-                                <p id="txtRed" class="font-semibold text-slate-800 mt-0.5 text-xs"></p>
-                            </div>
-                            <div><span class="text-[10px] font-bold text-blue-500 uppercase">Microred</span>
-                                <p id="txtMicrored" class="font-semibold text-slate-800 mt-0.5 text-xs"></p>
-                            </div>
-                        </div>
-                    </div>
+                </div>
                 </div>
             </div>
 
             {{-- SECCIÓN 3: Incidencia --}}
             <div class="premium-card">
-                <div
-                    class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
-                    <div
-                        class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 shadow-md shadow-orange-200 text-white flex items-center justify-center text-sm font-black tracking-tighter">
-                        3</div>
-                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight">Descripción de la Incidencia</h2>
+                <div class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 shadow-md shadow-orange-200 text-white flex items-center justify-center">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight uppercase">3. Descripción de la Incidencia</h2>
                 </div>
                 <div class="p-7 space-y-6">
-                    <div>
-                        <label class="label-field">Módulo SIHCE con problema *</label>
-                        <select name="modulos" class="input-field" required>
-                            <option value="">— Seleccione un módulo —</option>
-                            @foreach($modulos as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="label-field">Módulo SIHCE con problema *</label>
+                            <div class="relative group">
+                                <i data-lucide="layers" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors"></i>
+                                <select name="modulos" class="input-field py-3 font-bold appearance-none cursor-pointer" style="padding-left: 3.5rem;" required>
+                                    <option value="">— SELECCIONE UN MÓDULO —</option>
+                                    @foreach($modulos as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <i data-lucide="chevron-down" class="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-start gap-3 w-full">
+                                <i data-lucide="info" class="w-5 h-5 text-orange-500 mt-0.5"></i>
+                                <p class="text-[10px] text-orange-700 leading-tight">Seleccione el módulo donde se presenta el error para que el especialista correspondiente pueda atenderlo rápidamente.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="label-field">Descripción del problema *</label>
-                        <textarea name="observacion" rows="5" maxlength="2000"
-                            placeholder="Describa el problema con detalle: pasos para reproducirlo, mensajes de error, etc."
-                            class="input-field resize-none" required></textarea>
-                        <p class="text-xs text-slate-400 mt-1">Máximo 2000 caracteres.</p>
+                    <div class="space-y-2">
+                        <label class="label-field">Descripción Detallada del Problema *</label>
+                        <div class="relative group">
+                            <i data-lucide="message-square" class="w-5 h-5 absolute left-4 top-5 text-slate-400 group-focus-within:text-orange-500 transition-colors"></i>
+                            <textarea name="observacion" rows="5" maxlength="2000"
+                                placeholder="Describa el problema con detalle: pasos para reproducirlo, mensajes de error, etc."
+                                class="input-field py-4 font-medium resize-none" style="padding-left: 3.5rem;" required></textarea>
+                        </div>
+                        <div class="flex justify-between items-center px-1">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Máximo 2000 caracteres</p>
+                            <p id="charCount" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 / 2000</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- SECCIÓN 4: Imágenes --}}
             <div class="premium-card">
-                <div
-                    class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
-                    <div
-                        class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 shadow-md shadow-purple-200 text-white flex items-center justify-center text-sm font-black tracking-tighter">
-                        4</div>
-                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight">Evidencia Fotográfica</h2>
+                <div class="px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-center gap-4">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md shadow-purple-200 text-white flex items-center justify-center">
+                        <i data-lucide="image-plus" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-base font-extrabold text-slate-800 tracking-tight uppercase">4. Soporte Visual (Opcional)</h2>
                 </div>
                 <div class="p-7">
-                    <p
-                        class="text-xs font-medium text-slate-500 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100/50">
-                        <i data-lucide="info" class="w-4 h-4 inline-block text-slate-400 mr-1 -mt-0.5"></i>
-                        Adjunte capturas de pantalla o fotos del problema (hasta 3). Formatos: JPG, PNG – Máx 5 MB c/u.
-                    </p>
+                    <div class="mb-6 bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-indigo-500 shadow-sm">
+                            <i data-lucide="info" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-[11px] font-black text-indigo-700 uppercase tracking-widest leading-none mb-1">Recomendación</p>
+                            <p class="text-xs text-indigo-600/80 font-medium">Adjunte capturas de pantalla (máximo 3) para facilitar la resolución. Formatos permitidos: JPG, PNG (máx. 5MB).</p>
+                        </div>
+                    </div>
+                    
                     <label for="imagenes"
-                        class="relative overflow-hidden group flex flex-col items-center justify-center gap-4 border-2 border-dashed border-slate-300 hover:border-orange-500 bg-slate-50 hover:bg-orange-50/50 rounded-2xl p-10 cursor-pointer transition-all duration-300">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        class="relative overflow-hidden group flex flex-col items-center justify-center gap-4 border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-slate-50/50 hover:bg-white rounded-3xl p-12 cursor-pointer transition-all duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div class="w-16 h-16 rounded-2xl bg-white shadow-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 z-10 border border-slate-100">
+                            <i data-lucide="upload-cloud" class="w-8 h-8 text-indigo-500"></i>
                         </div>
-                        <div
-                            class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all duration-300 z-10 text-orange-500 border border-slate-100">
-                            <i data-lucide="upload-cloud"
-                                class="w-6 h-6 text-slate-400 group-hover:text-orange-500 transition-colors"></i>
-                        </div>
+                        
                         <div class="text-center z-10">
-                            <span
-                                class="block text-sm font-extrabold text-slate-600 group-hover:text-orange-600 transition-colors">Haz
-                                clic aquí para seleccionar imágenes</span>
-                            <span class="block text-xs font-medium text-slate-400 mt-1">O arrastra y suelta tus archivos
-                                aquí</span>
+                            <span class="block text-base font-black text-slate-700 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">Seleccionar Archivos</span>
+                            <span class="block text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">O arrastre y suelte aquí</span>
                         </div>
                         <input id="imagenes" type="file" name="imagenes[]" multiple accept=".jpg,.jpeg,.png" class="hidden">
                     </label>
-                    <div id="previewImagenes" class="mt-4 grid grid-cols-3 gap-3 hidden"></div>
+                    <div id="previewImagenes" class="mt-6 grid grid-cols-3 gap-4 hidden"></div>
                 </div>
             </div>
 
             {{-- BOTÓN ENVIAR --}}
-            <div class="flex justify-end pt-4 pb-8">
+            <div class="flex justify-center pt-8 pb-12">
                 <button type="submit" id="btnEnviar"
-                    class="flex items-center gap-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold px-10 py-4 rounded-xl shadow-xl shadow-orange-500/30 border border-orange-400/50 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/40 active:translate-y-0 active:shadow-md text-base">
-                    <i data-lucide="send" class="w-5 h-5"></i>
-                    Enviar Reporte Técnico
+                    class="group relative flex items-center gap-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black px-16 py-5 rounded-2xl shadow-2xl shadow-indigo-500/30 border border-indigo-400/30 transition-all hover:-translate-y-1.5 active:translate-y-0 uppercase tracking-widest text-sm overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <i data-lucide="send" class="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span>Enviar Reporte Técnico</span>
                 </button>
             </div>
         </form>
@@ -289,16 +351,111 @@
         document.addEventListener('DOMContentLoaded', function () {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            // ─── BÚSQUEDA DE ESTABLECIMIENTO ───────────────────────────
-            document.getElementById('btnBuscar').addEventListener('click', async function () {
-                const codigo = document.getElementById('codigoIpress').value.trim();
-                const msg = document.getElementById('msgBusqueda');
-                const result = document.getElementById('resultadoEstablecimiento');
+            const inputIpress = document.getElementById('codigoIpress');
+            const listIpress = document.getElementById('ipressSuggestions');
+            const msgBusqueda = document.getElementById('msgBusqueda');
+            const resultDiv = document.getElementById('resultadoEstablecimiento');
 
-                if (!codigo) {
-                    msg.textContent = 'Ingrese un código IPRESS válido.';
-                    msg.className = 'text-xs mt-1 text-red-500';
-                    msg.classList.remove('hidden');
+            function fillEstablecimiento(data) {
+                document.getElementById('hiddenCodigo').value = data.id || data.codigo;
+                document.getElementById('hiddenNombre').value = data.nombre;
+                document.getElementById('hiddenDistrito').value = data.distrito;
+                document.getElementById('hiddenProvincia').value = data.provincia;
+                document.getElementById('hiddenCategoria').value = data.categoria;
+                document.getElementById('hiddenRed').value = data.red;
+                document.getElementById('hiddenMicrored').value = data.microred;
+
+                // Actualizar CARDS visuales
+                document.getElementById('txtCategoria').textContent = data.categoria || '---';
+                document.getElementById('txtDistrito').textContent = data.distrito || '---';
+                document.getElementById('txtProvincia').textContent = data.provincia || '---';
+                document.getElementById('txtRed').textContent = data.red || '---';
+                document.getElementById('txtMicrored').textContent = data.microred || '---';
+                
+                // Jefe del establecimiento
+                const jefeInput = document.getElementById('jefeEstablecimiento');
+                jefeInput.value = data.jefe || '';
+
+                resultDiv.classList.remove('hidden');
+                msgBusqueda.textContent = '✔ Establecimiento seleccionado: ' + data.nombre;
+                msgBusqueda.className = 'text-xs mt-3 text-emerald-600 font-black uppercase tracking-wider';
+                listIpress.classList.add('hidden');
+                inputIpress.value = data.id || data.codigo;
+            }
+
+            // ─── AUTOCOMPLETE IPRESS ──────────────────────────────────
+            let debounceTimer;
+            inputIpress.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const term = this.value.trim();
+                
+                if (term.length < 3) {
+                    listIpress.classList.add('hidden');
+                    return;
+                }
+
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`{{ route('usuario.mesa-ayuda.buscar') }}?term=${encodeURIComponent(term)}`);
+                        const data = await res.json();
+                        
+                        listIpress.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'px-5 py-4 hover:bg-indigo-50/50 cursor-pointer border-b border-slate-50 last:border-none transition-all group';
+                                li.innerHTML = `
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-white group-hover:text-indigo-600 transition-colors shadow-sm">
+                                            <i data-lucide="building-2" class="w-5 h-5"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-black text-slate-800 group-hover:text-indigo-700 transition-colors">${item.label}</span>
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">${item.red} / ${item.microred}</span>
+                                        </div>
+                                    </div>
+                                `;
+                                li.addEventListener('click', () => fillEstablecimiento(item));
+                                listIpress.appendChild(li);
+                            });
+                            if (typeof lucide !== 'undefined') lucide.createIcons({attrs: { class: 'w-5 h-5' }, node: listIpress});
+                            listIpress.classList.remove('hidden');
+                        } else {
+                            listIpress.classList.add('hidden');
+                        }
+                    } catch (e) {
+                        console.error('Error fetching establishments', e);
+                    }
+                }, 300);
+            });
+
+            // ─── CHARACTER COUNTER ─────────────────────────────────────
+            const observacion = document.querySelector('textarea[name="observacion"]');
+            const charCount = document.getElementById('charCount');
+            if (observacion && charCount) {
+                observacion.addEventListener('input', function() {
+                    const count = this.value.length;
+                    charCount.textContent = `${count} / 2000`;
+                    if (count > 1800) charCount.className = 'text-[9px] font-black text-orange-500 uppercase tracking-widest';
+                    else charCount.className = 'text-[9px] font-black text-slate-400 uppercase tracking-widest';
+                });
+            }
+
+            // Cerrar lista al hacer click fuera
+            document.addEventListener('click', (e) => {
+                if (!inputIpress.contains(e.target) && !listIpress.contains(e.target)) {
+                    listIpress.classList.add('hidden');
+                }
+            });
+
+            // ─── BOTÓN BUSCAR (Acción Directa) ──────────────────────────
+            document.getElementById('btnBuscar').addEventListener('click', async function () {
+                const term = inputIpress.value.trim();
+
+                if (!term) {
+                    msgBusqueda.textContent = 'Ingrese un nombre o código IPRESS.';
+                    msgBusqueda.className = 'text-xs mt-1 text-red-500';
+                    msgBusqueda.classList.remove('hidden');
                     return;
                 }
 
@@ -306,38 +463,35 @@
                 this.textContent = 'Buscando...';
 
                 try {
-                    const res = await fetch(`{{ route('mesa-ayuda.buscar') }}?codigo=${encodeURIComponent(codigo)}`);
+                    const res = await fetch(`{{ route('usuario.mesa-ayuda.buscar') }}?term=${encodeURIComponent(term)}`);
                     const data = await res.json();
 
-                    if (data.found) {
-                        document.getElementById('hiddenCodigo').value = codigo;
-                        document.getElementById('hiddenNombre').value = data.nombre;
-                        document.getElementById('hiddenDistrito').value = data.distrito;
-                        document.getElementById('hiddenProvincia').value = data.provincia;
-                        document.getElementById('hiddenCategoria').value = data.categoria;
-                        document.getElementById('hiddenRed').value = data.red;
-                        document.getElementById('hiddenMicrored').value = data.microred;
-
-                        document.getElementById('txtNombre').textContent = data.nombre;
-                        document.getElementById('txtCategoria').textContent = data.categoria;
-                        document.getElementById('txtDistrito').textContent = data.distrito;
-                        document.getElementById('txtProvincia').textContent = data.provincia;
-                        document.getElementById('txtRed').textContent = data.red;
-                        document.getElementById('txtMicrored').textContent = data.microred;
-
-                        result.classList.remove('hidden');
-                        msg.textContent = '✔ Establecimiento encontrado.';
-                        msg.className = 'text-xs mt-1 text-emerald-600 font-semibold';
+                    if (data.length > 0) {
+                        // Si hay varios, mostramos la lista. Si hay uno solo, lo seleccionamos.
+                        if (data.length === 1) {
+                            fillEstablecimiento(data[0]);
+                        } else {
+                            listIpress.classList.remove('hidden');
+                            msgBusqueda.textContent = 'Seleccione una de las opciones encontradas.';
+                            msgBusqueda.className = 'text-xs mt-3 text-blue-500 font-black uppercase tracking-wider';
+                        }
                     } else {
-                        result.classList.add('hidden');
-                        msg.textContent = '✗ Código IPRESS no encontrado en el sistema.';
-                        msg.className = 'text-xs mt-1 text-red-500';
+                        // Resetear etiquetas pero no ocultar
+                        document.getElementById('txtCategoria').textContent = '---';
+                        document.getElementById('txtDistrito').textContent = '---';
+                        document.getElementById('txtProvincia').textContent = '---';
+                        document.getElementById('txtRed').textContent = '---';
+                        document.getElementById('txtMicrored').textContent = '---';
+                        document.getElementById('jefeEstablecimiento').value = '';
+                        
+                        msgBusqueda.textContent = '✗ No se encontraron resultados.';
+                        msgBusqueda.className = 'text-xs mt-3 text-red-500 font-bold';
                     }
-                    msg.classList.remove('hidden');
+                    msgBusqueda.classList.remove('hidden');
                 } catch (e) {
-                    msg.textContent = 'Error de conexión. Intente nuevamente.';
-                    msg.className = 'text-xs mt-1 text-red-500';
-                    msg.classList.remove('hidden');
+                    msgBusqueda.textContent = 'Error de conexión. Intente nuevamente.';
+                    msgBusqueda.className = 'text-xs mt-1 text-red-500';
+                    msgBusqueda.classList.remove('hidden');
                 }
 
                 this.innerHTML = '<i data-lucide="search" class="w-4 h-4"></i> Buscar';
@@ -362,7 +516,7 @@
                 this.innerHTML = '<div class="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>';
 
                 try {
-                    const res = await fetch(`{{ route('mesa-ayuda.buscar-dni') }}?dni=${encodeURIComponent(dni)}`);
+                    const res = await fetch(`{{ route('usuario.mesa-ayuda.buscar-dni') }}?dni=${encodeURIComponent(dni)}`);
                     const data = await res.json();
 
                     if (data.found) {
@@ -455,7 +609,7 @@
                 Array.from(fileInput.files).forEach(f => formData.append('imagenes[]', f));
 
                 try {
-                    const res = await fetch('{{ route("mesa-ayuda.store") }}', {
+                    const res = await fetch('{{ route("usuario.mesa-ayuda.store") }}', {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                         body: formData
@@ -470,8 +624,13 @@
                             confirmButtonColor: '#f97316',
                             confirmButtonText: 'Aceptar'
                         }).then(() => {
-                            document.getElementById('formIncidencia').reset();
-                            document.getElementById('resultadoEstablecimiento').classList.add('hidden');
+                            this.reset();
+                            document.getElementById('txtCategoria').textContent = '---';
+                            document.getElementById('txtDistrito').textContent = '---';
+                            document.getElementById('txtProvincia').textContent = '---';
+                            document.getElementById('txtRed').textContent = '---';
+                            document.getElementById('txtMicrored').textContent = '---';
+                            document.getElementById('jefeEstablecimiento').value = '';
                             document.getElementById('msgBusqueda').classList.add('hidden');
                             document.getElementById('previewImagenes').classList.add('hidden');
                             document.getElementById('hiddenCodigo').value = '';

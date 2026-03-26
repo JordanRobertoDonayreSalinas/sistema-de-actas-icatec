@@ -22,6 +22,7 @@ class Incidencia extends Model
         'categoria',
         'red',
         'microred',
+        'jefe_establecimiento',
         'modulos',
         'observacion',
         'imagen1',

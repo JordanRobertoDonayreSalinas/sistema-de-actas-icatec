@@ -91,17 +91,18 @@ class MesaAyudaController extends Controller
                 'distrito_establecimiento'   => 'required|string',
                 'provincia_establecimiento'  => 'required|string',
                 'categoria'                  => 'required|string|max:20',
-                'red'                        => 'required|string|max:100',
-                'microred'                   => 'required|string|max:100',
-                'modulos'                    => 'required|string|max:100',
+                'red'                        => 'required|string',
+                'microred'                   => 'required|string',
+                'jefe_establecimiento'       => 'nullable|string|max:150',
+                'modulos'                    => 'required|array',
                 'observacion'                => 'required|string|max:2000',
             ]);
 
             // Guardar incidencia
-            $incidencia = Incidencia::create([
-                ...$validated,
-                'estado' => 'Pendiente',
-            ]);
+            $incidencia = Incidencia::create(array_merge($validated, [
+                'modulos' => implode(', ', $validated['modulos']),
+                'estado'  => 'Pendiente',
+            ]));
 
             // Guardar imágenes
             $paths = [];
@@ -157,7 +158,7 @@ class MesaAyudaController extends Controller
 
     public function buscarEstablecimiento(Request $request)
     {
-        $term = trim($request->query('term'));
+        $term = trim($request->query('term') ?? $request->query('codigo') ?? '');
 
         if (!$term) {
             return response()->json([]);
@@ -181,6 +182,7 @@ class MesaAyudaController extends Controller
                 'categoria'=> $e->categoria ?? '',
                 'red'      => $e->red ?? '',
                 'microred' => $e->microred ?? '',
+                'jefe'     => $e->responsable ?? '',
             ];
         });
 

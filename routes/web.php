@@ -91,14 +91,9 @@ Route::resourceVerbs([
 Route::controller(LoginController::class)->group(function () {
     Route::get('/actas/login', 'showLoginForm')->name('login');
     Route::post('/actas/login', 'login');
-    Route::post('/logout', 'logout')->name('logout');
+    Route::match(['get', 'post'], '/logout', 'logout')->name('logout');
 });
 
-// --- MESA DE AYUDA PÚBLICA (sin autenticación) ---
-Route::get('/mesa-de-ayuda', [MesaAyudaController::class, 'formulario'])->name('mesa-ayuda.form');
-Route::post('/mesa-de-ayuda', [MesaAyudaController::class, 'store'])->name('mesa-ayuda.store');
-Route::get('/mesa-de-ayuda/establecimiento', [MesaAyudaController::class, 'buscarEstablecimiento'])->name('mesa-ayuda.buscar');
-Route::get('/mesa-de-ayuda/dni', [MesaAyudaController::class, 'buscarDni'])->name('mesa-ayuda.buscar-dni');
 
 // --- RUTAS PROTEGIDAS (Middleware Auth) ---
 Route::middleware(['auth'])->group(function () {
@@ -212,6 +207,12 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [MesaAyudaController::class, 'index'])->name('index');
             Route::get('/{id}/responder', [MesaAyudaController::class, 'responder'])->name('responder');
             Route::post('/{id}/responder', [MesaAyudaController::class, 'guardarRespuesta'])->name('guardar-respuesta');
+            
+            // Rutas de reporte (ahora protegidas)
+            Route::get('/formulario', [MesaAyudaController::class, 'formulario'])->name('form');
+            Route::post('/store', [MesaAyudaController::class, 'store'])->name('store');
+            Route::get('/buscar-establecimiento', [MesaAyudaController::class, 'buscarEstablecimiento'])->name('buscar');
+            Route::get('/buscar-dni', [MesaAyudaController::class, 'buscarDni'])->name('buscar-dni');
         });
 
         // --- SECCIÓN: ACTAS DE IMPLEMENTACIÓN ---
