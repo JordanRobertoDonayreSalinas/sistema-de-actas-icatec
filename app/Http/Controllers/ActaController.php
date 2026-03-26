@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Acta;
 use App\Models\Establecimiento;
+use App\Models\Profesional;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -130,7 +131,7 @@ class ActaController extends Controller
 
             if ($request->hasFile('imagenes')) {
                 foreach ($request->file('imagenes') as $index => $file) {
-                    if ($index < 5) {
+                    if ($index < 2) {
                         $campo = 'imagen' . ($index + 1);
                         $acta->$campo = $file->store('evidencias', 'public');
                     }
@@ -141,6 +142,24 @@ class ActaController extends Controller
             if ($request->has('participantes')) {
                 foreach ($request->participantes as $p) {
                     $acta->participantes()->create($p);
+
+                    // Auto-guardar en maestro mon_profesionales si no existe
+                    $docNum = trim($p['dni'] ?? '');
+                    if ($docNum !== '') {
+                        $existeEnMaestro = Profesional::where('doc', $docNum)->exists();
+                        if (!$existeEnMaestro) {
+                            Profesional::create([
+                                'tipo_doc'         => 'DNI',
+                                'doc'              => $docNum,
+                                'apellido_paterno' => $p['apellidos'] ?? '',
+                                'apellido_materno' => '',
+                                'nombres'          => $p['nombres'] ?? '',
+                                'cargo'            => $p['cargo'] ?? null,
+                                'email'            => null,
+                                'telefono'         => null,
+                            ]);
+                        }
+                    }
                 }
             }
             if ($request->has('actividades')) {
@@ -199,7 +218,7 @@ class ActaController extends Controller
             if ($request->hasFile('imagenes')) {
                 $nuevosArchivos = $request->file('imagenes');
                 $archivoIndex = 0;
-                for ($i = 1; $i <= 5; $i++) {
+                for ($i = 1; $i <= 2; $i++) {
                     $campo = 'imagen' . $i;
                     if (is_null($acta->$campo) && isset($nuevosArchivos[$archivoIndex])) {
                         $path = $nuevosArchivos[$archivoIndex]->store('evidencias', 'public');
