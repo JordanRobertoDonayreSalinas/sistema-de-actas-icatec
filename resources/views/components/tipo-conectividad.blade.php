@@ -117,7 +117,13 @@
 
         if (!input) return;
 
-        input.value = tipo;
+        // Si el valor actual es igual al que se clickeó, lo vaciamos (unselect)
+        if (input.value === tipo) {
+            input.value = '';
+            tipo = '';
+        } else {
+            input.value = tipo;
+        }
 
         // Resetear todas las tarjetas
         const cards = [
@@ -128,7 +134,7 @@
 
         cards.forEach(card => {
             if (card.el) {
-                if (card.val === tipo) {
+                if (card.val === tipo && tipo !== '') {
                     card.el.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
                     card.el.classList.remove('border-slate-200', 'bg-white');
                 } else {
@@ -177,18 +183,35 @@
         const cardPersonal = document.getElementById('card_wifi_personal');
 
         if (!input) return;
-        input.value = fuente;
+
+        // Toggle logic
+        if (input.value === fuente) {
+            input.value = '';
+            fuente = '';
+        } else {
+            input.value = fuente;
+        }
 
         if (fuente === 'ESTABLECIMIENTO') {
             cardEstablecimiento.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardEstablecimiento.classList.remove('border-slate-200', 'bg-white');
             cardPersonal.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardPersonal.classList.add('border-slate-200', 'bg-white');
-        } else {
+        } else if (fuente === 'PERSONAL') {
             cardPersonal.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardPersonal.classList.remove('border-slate-200', 'bg-white');
             cardEstablecimiento.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardEstablecimiento.classList.add('border-slate-200', 'bg-white');
+        } else {
+            // Unselected state
+            if (cardEstablecimiento) {
+                cardEstablecimiento.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
+                cardEstablecimiento.classList.add('border-slate-200', 'bg-white');
+            }
+            if (cardPersonal) {
+                cardPersonal.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
+                cardPersonal.classList.add('border-slate-200', 'bg-white');
+            }
         }
     }
 
