@@ -120,14 +120,18 @@ class ActaController extends Controller
         try {
             DB::beginTransaction();
 
-            $acta = Acta::create($request->only([
+            $data = $request->only([
                 'fecha',
                 'establecimiento_id',
                 'responsable',
-                'tema',
                 'modalidad',
                 'implementador'
-            ]));
+            ]);
+            $data['tema'] = ($request->tema === 'Otros' && $request->filled('tema_otro'))
+                            ? $request->tema_otro
+                            : $request->tema;
+
+            $acta = Acta::create($data);
 
             if ($request->hasFile('imagenes')) {
                 foreach ($request->file('imagenes') as $index => $file) {
@@ -204,7 +208,11 @@ class ActaController extends Controller
 
         try {
             DB::beginTransaction();
-            $acta->update($request->only(['fecha', 'establecimiento_id', 'responsable', 'tema', 'modalidad', 'implementador']));
+            $data = $request->only(['fecha', 'establecimiento_id', 'responsable', 'modalidad', 'implementador']);
+            $data['tema'] = ($request->tema === 'Otros' && $request->filled('tema_otro'))
+                            ? $request->tema_otro
+                            : $request->tema;
+            $acta->update($data);
 
             if ($request->has('eliminar_imagenes')) {
                 foreach ($request->eliminar_imagenes as $campo) {
@@ -271,8 +279,13 @@ class ActaController extends Controller
     public function generarPDF($id)
     {
         $acta = Acta::with(['establecimiento', 'participantes', 'actividades', 'acuerdos', 'observaciones'])->findOrFail($id);
-        $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))->setPaper('a4', 'portrait');
-        return $pdf->stream("acta_{$acta->id}.pdf");
+        $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))
+                  ->setOptions(['isRemoteEnabled' => true])
+                  ->setPaper('a4', 'portrait');
+        $nombreEstablecimiento = mb_strtoupper($acta->establecimiento->nombre ?? 'SIN ESTABLECIMIENTO');
+        $correlativo = str_pad($acta->id, 3, '0', STR_PAD_LEFT);
+        $fileName = "AAT Nº {$correlativo} - {$nombreEstablecimiento}.pdf";
+        return $pdf->stream($fileName);
     }
 
     public function subirPDF(Request $request, $id)

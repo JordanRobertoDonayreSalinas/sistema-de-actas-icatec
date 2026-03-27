@@ -185,19 +185,38 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                             <div>
                                 <label class="lbl">Tema / Motivo</label>
+                                @php
+                                    $opcionesTema = [
+                                        'Reactivación de módulo',
+                                        'Cambio de responsable del módulo',
+                                        'Ingreso de nuevo personal',
+                                        'Actualización de cartera de servicios'
+                                    ];
+                                    $valTema = old('tema', $acta->tema ?? '');
+                                    $valOtro = old('tema_otro', '');
+                                    
+                                    if($valTema !== '' && !in_array($valTema, $opcionesTema)) {
+                                        if ($valTema !== 'Otros') {
+                                            $valOtro = $valTema; 
+                                            $valTema = 'Otros';
+                                        }
+                                    }
+                                    $esOtro = ($valTema === 'Otros');
+                                @endphp
                                 <select id="selectTema" name="tema" required class="inp">
                                     <option value="">Seleccione un motivo...</option>
-                                    <option value="Reactivación de módulo" {{ old('tema', $acta->tema ?? '') == 'Reactivación de módulo' ? 'selected' : '' }}>Reactivación de módulo</option>
-                                    <option value="Cambio de responsable del módulo" {{ old('tema', $acta->tema ?? '') == 'Cambio de responsable del módulo' ? 'selected' : '' }}>Cambio de responsable del módulo</option>
-                                    <option value="Ingreso de nuevo personal" {{ old('tema', $acta->tema ?? '') == 'Ingreso de nuevo personal' ? 'selected' : '' }}>Ingreso de nuevo personal</option>
-                                    <option value="Actualización de cartera de servicios" {{ old('tema', $acta->tema ?? '') == 'Actualización de cartera de servicios' ? 'selected' : '' }}>Actualización de cartera de servicios</option>
-                                    <option value="Otros" {{ old('tema', $acta->tema ?? '') == 'Otros' ? 'selected' : '' }}>Otros</option>
+                                    <option value="Reactivación de módulo" {{ $valTema == 'Reactivación de módulo' ? 'selected' : '' }}>Reactivación de módulo</option>
+                                    <option value="Cambio de responsable del módulo" {{ $valTema == 'Cambio de responsable del módulo' ? 'selected' : '' }}>Cambio de responsable del módulo</option>
+                                    <option value="Ingreso de nuevo personal" {{ $valTema == 'Ingreso de nuevo personal' ? 'selected' : '' }}>Ingreso de nuevo personal</option>
+                                    <option value="Actualización de cartera de servicios" {{ $valTema == 'Actualización de cartera de servicios' ? 'selected' : '' }}>Actualización de cartera de servicios</option>
+                                    <option value="Otros" {{ $esOtro ? 'selected' : '' }}>Otros</option>
                                 </select>
-                                <div id="divTemaOtro" class="mt-2 {{ old('tema', $acta->tema ?? '') == 'Otros' ? '' : 'hidden' }}">
+                                <div id="divTemaOtro" class="mt-2 {{ $esOtro ? '' : 'hidden' }}">
                                     <input type="text" name="tema_otro" id="temaOtro"
                                            placeholder="Especifique el motivo..."
-                                           value="{{ old('tema_otro', $acta->tema_otro ?? '') }}"
-                                           class="inp slide-down">
+                                           value="{{ $valOtro }}"
+                                           class="inp slide-down"
+                                           {{ $esOtro ? 'required' : '' }}>
                                 </div>
                             </div>
                             <div>
