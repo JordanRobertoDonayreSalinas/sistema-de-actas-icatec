@@ -79,6 +79,7 @@ use App\Http\Controllers\ReporteMonitoreoController;
 use App\Http\Controllers\ReporteImplementacionController;
 use App\Http\Controllers\ImplementacionController;
 use App\Http\Controllers\Infraestructura3DController;
+use App\Http\Controllers\MesaAyudaController;
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -90,8 +91,9 @@ Route::resourceVerbs([
 Route::controller(LoginController::class)->group(function () {
     Route::get('/actas/login', 'showLoginForm')->name('login');
     Route::post('/actas/login', 'login');
-    Route::post('/logout', 'logout')->name('logout');
+    Route::match(['get', 'post'], '/logout', 'logout')->name('logout');
 });
+
 
 // --- RUTAS PROTEGIDAS (Middleware Auth) ---
 Route::middleware(['auth'])->group(function () {
@@ -99,7 +101,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
         return Auth::user()->role === 'admin'
             ? redirect()->route('admin.users.index')
-            : redirect()->route('usuario.dashboard.general');
+            : redirect()->route('usuario.mesa-ayuda.index');
     });
 
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
@@ -108,25 +110,27 @@ Route::middleware(['auth'])->group(function () {
     // --- GRUPO USUARIO (Monitor / Técnico) ---
     Route::prefix('usuario')->name('usuario.')->group(function () {
 
-        Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::prefix('dashboard')->name('dashboard.')->middleware('is_admin')->group(function () {
             Route::get('/', [UsuarioController::class, 'index'])->name('general');
             Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
             Route::get('/mapa-asistencias', [UsuarioController::class, 'mapaSoportes'])->name('mapa.soportes'); // Nuevo mapa
         });
 
-        // AJAX para Dashboard - Equipos de Cómputo
-        Route::get('/dashboard/ajax/equipos-stats', [UsuarioController::class, 'getEquiposStats'])->name('dashboard.ajax.equipos.stats');
-        Route::get('/dashboard/ajax/equipos-filter-options', [UsuarioController::class, 'getFilterOptions'])->name('dashboard.ajax.equipos.filter-options');
-        Route::get('/dashboard/ajax/equipos-provincias', [ReporteEquiposController::class, 'getProvincias'])->name('dashboard.ajax.equipos.provincias');
-        Route::get('/dashboard/ajax/equipos-establecimientos', [ReporteEquiposController::class, 'getEstablecimientos'])->name('dashboard.ajax.equipos.establecimientos');
-        Route::get('/dashboard/ajax/equipos-modulos', [ReporteEquiposController::class, 'getModulos'])->name('dashboard.ajax.equipos.modulos');
-        Route::get('/dashboard/ajax/equipos-descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('dashboard.ajax.equipos.descripciones');
+        // AJAX para Dashboard - Equipos de Cómputo (Protegidos)
+        Route::middleware('is_admin')->group(function () {
+            Route::get('/dashboard/ajax/equipos-stats', [UsuarioController::class, 'getEquiposStats'])->name('dashboard.ajax.equipos.stats');
+            Route::get('/dashboard/ajax/equipos-filter-options', [UsuarioController::class, 'getFilterOptions'])->name('dashboard.ajax.equipos.filter-options');
+            Route::get('/dashboard/ajax/equipos-provincias', [ReporteEquiposController::class, 'getProvincias'])->name('dashboard.ajax.equipos.provincias');
+            Route::get('/dashboard/ajax/equipos-establecimientos', [ReporteEquiposController::class, 'getEstablecimientos'])->name('dashboard.ajax.equipos.establecimientos');
+            Route::get('/dashboard/ajax/equipos-modulos', [ReporteEquiposController::class, 'getModulos'])->name('dashboard.ajax.equipos.modulos');
+            Route::get('/dashboard/ajax/equipos-descripciones', [ReporteEquiposController::class, 'getDescripciones'])->name('dashboard.ajax.equipos.descripciones');
+        });
 
         Route::get('/mi-perfil', [UsuarioController::class, 'perfil'])->name('perfil');
         Route::put('/mi-perfil', [UsuarioController::class, 'perfilUpdate'])->name('perfil.update');
 
         // --- SECCIÓN: ASISTENCIA TÉCNICA ---
-        Route::prefix('listado-actas')->name('actas.')->group(function () {
+        Route::prefix('listado-actas')->name('actas.')->middleware('is_admin')->group(function () {
             Route::get('/', [ActaController::class, 'index'])->name('index');
             Route::get('/crear-acta', [ActaController::class, 'create'])->name('create');
             Route::post('/', [ActaController::class, 'store'])->name('store');
@@ -142,7 +146,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // --- SECCIÓN: DOCUMENTOS ADMINISTRATIVOS ---
-        Route::prefix('documentos-administrativos')->name('documentos.')->group(function () {
+        Route::prefix('documentos-administrativos')->name('documentos.')->middleware('is_admin')->group(function () {
             Route::get('/', [DocumentoAdministrativoController::class, 'index'])->name('index');
             Route::get('/crear', [DocumentoAdministrativoController::class, 'create'])->name('create');
             Route::post('/guardar', [DocumentoAdministrativoController::class, 'store'])->name('store');
@@ -157,7 +161,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // --- SECCIÓN: REPORTES ---
-        Route::prefix('reportes')->name('reportes.')->group(function () {
+        Route::prefix('reportes')->name('reportes.')->middleware('is_admin')->group(function () {
             // Reportes de Equipos de Cómputo
             Route::get('/equipos', [ReporteEquiposController::class, 'index'])->name('equipos');
             Route::post('/equipos/excel', [ReporteEquiposController::class, 'exportarExcel'])->name('equipos.excel');
@@ -187,17 +191,32 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/actas-implementacion/ajax/distritos', [ReporteImplementacionController::class, 'getDistritos'])->name('actas.implementacion.ajax.distritos');
         });
 
-        // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA ---
-        Route::get('/auditoria-consistencia', [AuditoriaController::class, 'index'])->name('auditoria.index');
-        Route::get('/auditoria-consistencia/ajax/distritos', [AuditoriaController::class, 'ajaxGetDistritos'])->name('auditoria.ajax.distritos');
-        Route::get('/auditoria-consistencia/ajax/establecimientos', [AuditoriaController::class, 'ajaxGetEstablecimientos'])->name('auditoria.ajax.establecimientos');
+        // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA (Protegida) ---
+        Route::middleware('is_admin')->group(function () {
+            Route::get('/auditoria-consistencia', [AuditoriaController::class, 'index'])->name('auditoria.index');
+            Route::get('/auditoria-consistencia/ajax/distritos', [AuditoriaController::class, 'ajaxGetDistritos'])->name('auditoria.ajax.distritos');
+            Route::get('/auditoria-consistencia/ajax/establecimientos', [AuditoriaController::class, 'ajaxGetEstablecimientos'])->name('auditoria.ajax.establecimientos');
 
-        Route::get('/auditoria-equipos', [AuditoriaEquiposController::class, 'index'])->name('auditoria.equipos');
-        Route::get('/auditoria-equipos/ajax/distritos', [AuditoriaEquiposController::class, 'ajaxGetDistritos'])->name('auditoria.equipos.ajax.distritos');
-        Route::get('/auditoria-equipos/ajax/establecimientos', [AuditoriaEquiposController::class, 'ajaxGetEstablecimientos'])->name('auditoria.equipos.ajax.establecimientos');
+            Route::get('/auditoria-equipos', [AuditoriaEquiposController::class, 'index'])->name('auditoria.equipos');
+            Route::get('/auditoria-equipos/ajax/distritos', [AuditoriaEquiposController::class, 'ajaxGetDistritos'])->name('auditoria.equipos.ajax.distritos');
+            Route::get('/auditoria-equipos/ajax/establecimientos', [AuditoriaEquiposController::class, 'ajaxGetEstablecimientos'])->name('auditoria.equipos.ajax.establecimientos');
+        });
+
+        // --- SECCIÓN: MESA DE AYUDA ---
+        Route::prefix('incidencias')->name('mesa-ayuda.')->group(function () {
+            Route::get('/', [MesaAyudaController::class, 'index'])->name('index');
+            Route::get('/{id}/responder', [MesaAyudaController::class, 'responder'])->name('responder');
+            Route::post('/{id}/responder', [MesaAyudaController::class, 'guardarRespuesta'])->name('guardar-respuesta');
+            
+            // Rutas de reporte (ahora protegidas)
+            Route::get('/formulario', [MesaAyudaController::class, 'formulario'])->name('form');
+            Route::post('/store', [MesaAyudaController::class, 'store'])->name('store');
+            Route::get('/buscar-establecimiento', [MesaAyudaController::class, 'buscarEstablecimiento'])->name('buscar');
+            Route::get('/buscar-dni', [MesaAyudaController::class, 'buscarDni'])->name('buscar-dni');
+        });
 
         // --- SECCIÓN: ACTAS DE IMPLEMENTACIÓN ---
-        Route::prefix('implementacion')->name('implementacion.')->group(function () {
+        Route::prefix('implementacion')->name('implementacion.')->middleware('is_admin')->group(function () {
             Route::get('/', [ImplementacionController::class, 'index'])->name('index');
             Route::get('/create', [ImplementacionController::class, 'create'])->name('create');
             Route::post('/', [ImplementacionController::class, 'store'])->name('store');
@@ -213,7 +232,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // --- SECCIÓN: MONITOREO MODULAR ---
-        Route::prefix('monitoreo')->name('monitoreo.')->group(function () {
+        Route::prefix('monitoreo')->name('monitoreo.')->middleware('is_admin')->group(function () {
             Route::get('/ajax/distritos', [MonitoreoController::class, 'ajaxGetDistritos'])->name('ajax.distritos');
             Route::get('/ajax/establecimientos', [MonitoreoController::class, 'ajaxGetEstablecimientos'])->name('ajax.establecimientos');
 

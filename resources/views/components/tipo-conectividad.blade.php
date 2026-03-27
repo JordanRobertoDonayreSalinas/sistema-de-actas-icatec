@@ -92,7 +92,7 @@
     <div class="mt-6" id="bloque_operador_servicio">
         <label class="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Operador de
             Servicio</label>
-        <select name="contenido[operador_servicio]"
+        <select name="contenido[operador_servicio]" id="operador_servicio_select"
             class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-{{ $color }}-500 transition-all uppercase cursor-pointer">
             <option value="" selected disabled>-- SELECCIONE --</option>
             @foreach(['WOW', 'MOVISTAR', 'ENTEL', 'CLARO', 'BITEL', 'FIBERPRO', 'NUBYX', 'WIN', 'TICTEL', 'GILAT', 'ALTINET', 'DELAFIBER', 'COMPUIVAN', 'OTROS'] as $op)
@@ -108,7 +108,7 @@
     // Variables globales para el componente (usando el color pasado por props)
     const colorTheme = "{{ $color }}";
 
-    function selectConectividad(tipo) {
+    function selectConectividad(tipo, isInit = false) {
         const input = document.getElementById('tipo_conectividad_input');
         const cardWifi = document.getElementById('card_wifi');
         const cardCableado = document.getElementById('card_cableado');
@@ -117,7 +117,13 @@
 
         if (!input) return;
 
-        input.value = tipo;
+        // Si no es inicialización y el valor actual es igual al que se clickeó, lo vaciamos (unselect)
+        if (!isInit && input.value === tipo) {
+            input.value = '';
+            tipo = '';
+        } else {
+            input.value = tipo;
+        }
 
         // Resetear todas las tarjetas
         const cards = [
@@ -128,7 +134,7 @@
 
         cards.forEach(card => {
             if (card.el) {
-                if (card.val === tipo) {
+                if (card.val === tipo && tipo !== '') {
                     card.el.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
                     card.el.classList.remove('border-slate-200', 'bg-white');
                 } else {
@@ -162,33 +168,53 @@
 
         // Mostrar/Ocultar bloque de operador
         const bloqueOperador = document.getElementById('bloque_operador_servicio');
+        const selectOperador = document.getElementById('operador_servicio_select');
+        
         if (bloqueOperador) {
-            if (tipo === 'SIN CONECTIVIDAD') {
-                bloqueOperador.classList.add('hidden');
-            } else {
+            if (tipo === 'WIFI' || tipo === 'CABLEADO') {
                 bloqueOperador.classList.remove('hidden');
+            } else {
+                bloqueOperador.classList.add('hidden');
+                if (selectOperador) selectOperador.value = ''; // Limpiar valor si se oculta
             }
         }
     }
 
-    function selectWifiFuente(fuente) {
+    function selectWifiFuente(fuente, isInit = false) {
         const input = document.getElementById('wifi_fuente_input');
         const cardEstablecimiento = document.getElementById('card_wifi_establecimiento');
         const cardPersonal = document.getElementById('card_wifi_personal');
 
         if (!input) return;
-        input.value = fuente;
+
+        // Toggle logic (solo si no es inicialización)
+        if (!isInit && input.value === fuente) {
+            input.value = '';
+            fuente = '';
+        } else {
+            input.value = fuente;
+        }
 
         if (fuente === 'ESTABLECIMIENTO') {
             cardEstablecimiento.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardEstablecimiento.classList.remove('border-slate-200', 'bg-white');
             cardPersonal.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardPersonal.classList.add('border-slate-200', 'bg-white');
-        } else {
+        } else if (fuente === 'PERSONAL') {
             cardPersonal.classList.add(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardPersonal.classList.remove('border-slate-200', 'bg-white');
             cardEstablecimiento.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
             cardEstablecimiento.classList.add('border-slate-200', 'bg-white');
+        } else {
+            // Unselected state
+            if (cardEstablecimiento) {
+                cardEstablecimiento.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
+                cardEstablecimiento.classList.add('border-slate-200', 'bg-white');
+            }
+            if (cardPersonal) {
+                cardPersonal.classList.remove(`border-${colorTheme}-600`, `bg-${colorTheme}-50`);
+                cardPersonal.classList.add('border-slate-200', 'bg-white');
+            }
         }
     }
 
@@ -196,11 +222,11 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Inicializar conectividad si tiene valor guardado
         const conectividadVal = document.getElementById('tipo_conectividad_input')?.value;
-        if (conectividadVal) selectConectividad(conectividadVal);
+        if (conectividadVal) selectConectividad(conectividadVal, true);
 
         // Inicializar fuente WiFi si tiene valor guardado
         const wifiFuenteVal = document.getElementById('wifi_fuente_input')?.value;
-        if (wifiFuenteVal) selectWifiFuente(wifiFuenteVal);
+        if (wifiFuenteVal) selectWifiFuente(wifiFuenteVal, true);
 
         // Reinicializar iconos si es necesario
         if (typeof lucide !== 'undefined') lucide.createIcons();
