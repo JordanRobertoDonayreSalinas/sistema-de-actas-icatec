@@ -90,20 +90,7 @@
                         <input type="date" name="fecha" required value="{{ date('Y-m-d') }}" class="bg-transparent border-0 p-0 text-sm font-black text-slate-800 focus:ring-0 w-full cursor-pointer outline-none">
                     </div>
                 </div>
-                {{-- PDF --}}
-                <div class="md:col-span-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Acta Firmada (PDF) — Opcional</label>
-                    <label for="archivo_pdf_input" class="flex items-center gap-4 p-4 bg-blue-50/60 border-2 border-dashed border-blue-200 rounded-2xl cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group">
-                        <div class="h-11 w-11 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
-                            <i data-lucide="file-up" class="w-6 h-6 text-blue-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-700" id="pdf_label_text">Haz clic para subir el PDF escaneado con firmas</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Solo archivos PDF. Se adjuntará al acta.</p>
-                        </div>
-                    </label>
-                    <input type="file" id="archivo_pdf_input" name="archivo_pdf" accept="application/pdf" class="hidden" onchange="document.getElementById('pdf_label_text').textContent = this.files[0] ? this.files[0].name : 'Haz clic para subir el PDF escaneado con firmas'">
-                </div>
+
             </div>
         </div>
 

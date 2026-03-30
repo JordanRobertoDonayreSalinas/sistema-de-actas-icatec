@@ -164,85 +164,97 @@
 
 
 
-    <div style="margin: 20px;">
+            <div style="margin: 10px 0;">
         <p>Dan fe de la veracidad de los datos consignados:</p>
-        
+
         @php
-            $firmas = [];
-            // 1. Jefe del establecimiento
-            $firmas[] = [
-                'titulo' => 'Jefe del establecimiento',
-                'nombre' => $acta->responsable ?: '_________________________________',
-                'dni'    => '____________________'
+            $firmantes = [];
+            
+            // 1. Jefe del Establecimiento
+            $firmantes[] = [
+                'cargo' => 'Jefe del establecimiento',
+                'nombre' => !empty($acta->responsable) ? mb_strtoupper($acta->responsable) : '_________________________________',
+                'dni' => '____________________',
+                'tipo_doc' => 'DNI'
             ];
 
-            // 2. Implementadores (1 o más)
-            if ($acta->implementadores && $acta->implementadores->count() > 0) {
-                foreach($acta->implementadores as $imp) {
-                    $firmas[] = [
-                        'titulo' => 'Implementador DIRESA_ICATEC',
-                        'nombre' => $imp->apellido_paterno . ' ' . $imp->apellido_materno . ', ' . $imp->nombres,
-                        'dni'    => $imp->dni
+            // 2. Implementadores (dinámicos)
+            foreach ($acta->implementadores as $i) {
+                $nombreCompleto = trim($i->apellido_paterno . ' ' . $i->apellido_materno . ', ' . $i->nombres);
+                $cargo = trim($i->cargo);
+                if (empty($cargo)) {
+                    $cargo = 'Implementador DIRESA_ICATEC';
+                }
+                if (!empty($nombreCompleto) && $nombreCompleto != ', ') {
+                    $firmantes[] = [
+                        'cargo' => mb_strtoupper($cargo),
+                        'nombre' => mb_strtoupper($nombreCompleto),
+                        'dni' => $i->dni,
+                        'tipo_doc' => 'DNI'
                     ];
                 }
-            } else {
-                $firmas[] = [
-                    'titulo' => 'Implementador DIRESA_ICATEC',
-                    'nombre' => '_________________________________',
-                    'dni'    => '____________________'
+            }
+
+            // 3. Implementador OITE Unidad Ejecutora (SIEMPRE FIJO SEGÚN REQUERIMIENTO)
+            $firmantes[] = [
+                'cargo' => 'Implementador OITE Unidad Ejecutora',
+                'nombre' => '____________________________________',
+                'dni' => '____________________',
+                'tipo_doc' => 'DNI'
+            ];
+
+            // 4. Usuarios Participantes (dinámicos)
+            foreach ($acta->usuarios as $u) {
+                $nombreCompleto = trim($u->apellido_paterno . ' ' . $u->apellido_materno . ', ' . $u->nombres);
+                if (!empty($nombreCompleto) && $nombreCompleto != ', ') {
+                    $firmantes[] = [
+                        'cargo' => 'Participante de Implementación',
+                        'nombre' => mb_strtoupper($nombreCompleto),
+                        'dni' => $u->dni,
+                        'tipo_doc' => isset($u->tipo_doc) && !empty($u->tipo_doc) ? mb_strtoupper($u->tipo_doc) : 'DNI'
+                    ];
+                }
+            }
+
+            // 5. Espacio en blanco si no se llenaron usuarios participantes
+            if ($acta->usuarios->count() === 0) {
+                $firmantes[] = [
+                    'cargo' => 'Participante de Implementación',
+                    'nombre' => '____________________________________',
+                    'dni' => '____________________',
+                    'tipo_doc' => 'DNI'
                 ];
             }
-
-            // 3. Usuarios/Participantes (0 o más)
-            if ($acta->usuarios && $acta->usuarios->count() > 0) {
-                foreach($acta->usuarios as $user) {
-                    $firmas[] = [
-                        'titulo' => 'Usuario / Participante',
-                        'nombre' => $user->apellidos_nombres ?? '_________________________________',
-                        'dni'    => $user->dni ?? '____________________'
-                    ];
-                }
-            }
-
-            // 4. Implementador OITE
-            $firmas[] = [
-                'titulo' => 'Implementador OITE Unidad Ejecutora',
-                'nombre' => '_________________________________',
-                'dni'    => '____________________'
-            ];
-
-            // 5. Responsable del Modulo
-            $firmas[] = [
-                'titulo' => 'Responsable del Modulo del EE.SS',
-                'nombre' => '_________________________________',
-                'dni'    => '____________________'
-            ];
-            
-            // Agrupar de a 2 para la tabla
-            $filas = array_chunk($firmas, 2);
         @endphp
 
-        <table width="100%" cellspacing="0" cellpadding="10" style="border: none;">
-            @foreach($filas as $fila)
+        <table width="100%" cellspacing="0" cellpadding="0" style="border: none; margin-top: 10px;">
+            @foreach (array_chunk($firmantes, 2) as $row)
             <tr>
-                @foreach($fila as $firma)
-                <td width="50%" valign="top" style="border: none; padding-bottom: 20px;">
-                    <br><br><br><br>
-                    <p style="margin: 0; font-size: 11px;">_________________________________________</p>
-                    <p style="margin: 2px 0 0 0; font-size: 11px;"><strong>{{ $firma['titulo'] }}</strong></p>
-                    <p style="margin: 2px 0 0 0; font-size: 10px;">{{ $firma['nombre'] }}</p>
-                    <p style="margin: 2px 0 0 0; font-size: 10px;">DNI: {{ $firma['dni'] }}</p>
+                @foreach ($row as $f)
+                <td width="50%" valign="top" style="border: none; padding: 10px;">
+                    <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; text-align: left; min-height: 100px;">
+                        <div style="height: 100px;"></div>
+                        <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 11px; color: #0f172a;">
+                            {{ $f['cargo'] }}
+                        </p>
+                        <p style="margin: 0 0 5px 0; font-size: 10px; color: #0f172a;">
+                            Apellidos y Nombres: {{ $f['nombre'] }}
+                        </p>
+                        <p style="margin: 0; font-size: 10px; color: #0f172a;">
+                            {{ $f['tipo_doc'] }}: {{ $f['dni'] }}
+                        </p>
+                    </div>
                 </td>
                 @endforeach
-                @if(count($fila) == 1)
-                <td width="50%" style="border: none;"></td>
+                @if(count($row) == 1)
+                <td width="50%" style="border: none; padding: 10px;"></td>
                 @endif
             </tr>
             @endforeach
         </table>
     </div>
 
-    <div style="margin-top: 80px;">
+    <div style="margin-top: 30px;">
         <h4><strong>Glosario</strong></h4>
         <p>D.J. : Declaración Jurada </p>
         <p>C.C. : Compromiso de Confidencialidad </p>
@@ -255,7 +267,9 @@
             $y = $pdf->get_height() - 30;
             $font = $fontMetrics->get_font("helvetica", "normal");
             $size = 8;
-            $color = array(0.3, 0.3, 0.3);
+            $color = array(0, 0, 0);
+            $pdf->page_script('$pdf->line(40, $pdf->get_height() - 40, $pdf->get_width() - 40, $pdf->get_height() - 40, array(0,0,0), 1);');
+            
             $pdf->page_text(40, $y, "HERRAMIENTAS DE IMPLEMENTACION SIHCE", $font, $size, $color);
             $text = "PAG: {PAGE_NUM} / {PAGE_COUNT}";
             $dummyText = "PAG: 10 / 10";

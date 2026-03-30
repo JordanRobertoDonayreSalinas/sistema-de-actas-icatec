@@ -292,7 +292,8 @@ class ImplementacionController extends Controller
         return view('usuario.implementacion.edit', [
             'acta' => $acta,
             'moduloKey' => $modulo,
-            'moduloConfig' => $config
+            'moduloConfig' => $config,
+            'modulos' => $modulos
         ]);
     }
 
@@ -442,7 +443,77 @@ class ImplementacionController extends Controller
         $acta->implementadores()->delete();
         $acta->delete();
 
+        // Reajustar AUTO_INCREMENT para evitar saltos en la numeración
+        $tableName = (new $ModeloActa)->getTable();
+        $maxId = $ModeloActa::max('id') ?? 0;
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `{$tableName}` AUTO_INCREMENT = " . ($maxId + 1));
+
         return redirect()->back()->with('success', 'Acta eliminada correctamente.');
+    }
+
+    /**
+     * Cambia el acta de un módulo a otro, migrando sus datos básicos.
+     */
+    public function cambiar_modulo(Request $request, $modulo, $id)
+    {
+        $modulos = ImplementacionHelper::getModulos();
+        $nuevoModulo = $request->input('nuevo_modulo');
+        
+        if (!isset($modulos[$modulo]) || !isset($modulos[$nuevoModulo])) abort(404);
+
+        $ModeloViejo = $modulos[$modulo]['modelo'];
+        $actaVieja = $ModeloViejo::with(['usuarios', 'implementadores'])->findOrFail($id);
+        
+        $ModeloNuevo = $modulos[$nuevoModulo]['modelo'];
+        
+        $datosNuevos = [
+            'modulo' => strtoupper($modulos[$nuevoModulo]['nombre']),
+            'fecha' => $actaVieja->fecha,
+            'codigo_establecimiento' => $actaVieja->codigo_establecimiento,
+            'nombre_establecimiento' => $actaVieja->nombre_establecimiento,
+            'provincia' => $actaVieja->provincia,
+            'distrito' => $actaVieja->distrito,
+            'categoria' => $actaVieja->categoria,
+            'red' => $actaVieja->red,
+            'microred' => $actaVieja->microred,
+            'responsable' => $actaVieja->responsable,
+            'observaciones' => $actaVieja->observaciones,
+            'archivo_pdf' => $actaVieja->archivo_pdf,
+            'foto1' => $actaVieja->foto1,
+            'foto2' => $actaVieja->foto2,
+        ];
+
+        if (in_array($nuevoModulo, ['medicina', 'odontologia', 'nutricion', 'psicologia', 'mental', 'emergencia', 'referencias', 'laboratorio', 'farmacia', 'fua'])) {
+            $datosNuevos['firma_digital'] = $actaVieja->firma_digital ?? 'NO';
+        }
+
+        if ($nuevoModulo === 'citas') {
+            $datosNuevos['modalidad'] = $actaVieja->modalidad ?? 'POR HORARIO';
+        }
+
+        $nuevaActa = $ModeloNuevo::create($datosNuevos);
+        
+        // Copiar usuarios
+        foreach($actaVieja->usuarios as $u) {
+            $nuevaActa->usuarios()->create($u->only(['tipo_doc', 'dni', 'apellido_paterno', 'apellido_materno', 'nombres', 'celular', 'correo', 'permisos']));
+        }
+        
+        // Copiar implementadores
+        foreach($actaVieja->implementadores as $i) {
+            $nuevaActa->implementadores()->create($i->only(['dni', 'apellido_paterno', 'apellido_materno', 'nombres', 'cargo']));
+        }
+        
+        // Eliminar acta vieja y resetear AUTO_INCREMENT
+        $actaVieja->usuarios()->delete();
+        $actaVieja->implementadores()->delete();
+        $actaVieja->delete();
+
+        $tableNameViejo = (new $ModeloViejo)->getTable();
+        $maxIdViejo = $ModeloViejo::max('id') ?? 0;
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `{$tableNameViejo}` AUTO_INCREMENT = " . ($maxIdViejo + 1));
+
+        return redirect()->route('usuario.implementacion.edit', ['modulo' => $nuevoModulo, 'id' => $nuevaActa->id])
+            ->with('success', 'El acta ha sido cambiada al módulo ' . $modulos[$nuevoModulo]['nombre'] . ' exitosamente.');
     }
 
     /**
@@ -535,8 +606,10 @@ class ImplementacionController extends Controller
                     $profesional->email = strtolower($persona['correo']);
                 }
                 
-                // Si es un registro nuevo, establecer valores por defecto
-                if (!$profesional->exists) {
+                // Si es un registro nuevo, o si viene el tipo_doc, actualizarlo
+                if (isset($persona['tipo_doc'])) {
+                    $profesional->tipo_doc = strtoupper($persona['tipo_doc']);
+                } else if (!$profesional->exists) {
                     $profesional->tipo_doc = 'DNI';
                 }
 

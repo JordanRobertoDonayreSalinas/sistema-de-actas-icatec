@@ -67,12 +67,16 @@
                 </a>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {{-- Módulo (readonly en edición) --}}
-                <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                {{-- Selector de módulo --}}
+                <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100 cursor-pointer hover:bg-indigo-100 transition-colors">
                     <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Módulo</label>
                     <div class="flex items-center gap-2">
                         <i data-lucide="grid-2x2" class="w-5 h-5 text-indigo-600 flex-shrink-0"></i>
-                        <span class="text-sm font-black text-indigo-900">{{ $moduloConfig['nombre'] }}</span>
+                        <select name="modulo_key" id="modulo_key_select" class="bg-transparent border-0 p-0 text-sm font-black text-indigo-900 focus:ring-0 w-full cursor-pointer outline-none">
+                            @foreach($modulos as $k => $cfg)
+                                <option value="{{ $k }}" {{ $k == $moduloKey ? 'selected' : '' }}>{{ $cfg['nombre'] }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 {{-- Fecha --}}
@@ -82,34 +86,6 @@
                         <i data-lucide="calendar" class="w-5 h-5 text-slate-500 flex-shrink-0"></i>
                         <input type="date" name="fecha" required value="{{ date('Y-m-d', strtotime($acta->fecha)) }}" class="bg-transparent border-0 p-0 text-sm font-black text-slate-800 focus:ring-0 w-full cursor-pointer outline-none">
                     </div>
-                </div>
-                {{-- PDF --}}
-                <div class="md:col-span-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Acta Firmada (PDF)</label>
-                    @if($acta->archivo_pdf)
-                    <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl mb-3">
-                        <div class="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-                            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-bold text-emerald-700">PDF actual cargado correctamente</p>
-                            <a href="{{ Storage::url($acta->archivo_pdf) }}" target="_blank" class="text-xs text-blue-600 hover:underline font-bold flex items-center gap-1 mt-0.5">
-                                Ver archivo actual <i data-lucide="external-link" class="w-3 h-3"></i>
-                            </a>
-                        </div>
-                        <span class="text-[10px] text-slate-400 font-medium text-right hidden md:block">Sube uno nuevo<br>para reemplazar</span>
-                    </div>
-                    @endif
-                    <label for="archivo_pdf_input" class="flex items-center gap-4 p-4 bg-blue-50/60 border-2 border-dashed border-blue-200 rounded-2xl cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group">
-                        <div class="h-11 w-11 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
-                            <i data-lucide="file-up" class="w-6 h-6 text-blue-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-700" id="pdf_label_text">{{ $acta->archivo_pdf ? 'Subir nuevo PDF (reemplazará el actual)' : 'Haz clic para subir el PDF escaneado con firmas' }}</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Solo archivos PDF. Opcional.</p>
-                        </div>
-                    </label>
-                    <input type="file" id="archivo_pdf_input" name="archivo_pdf" accept="application/pdf" class="hidden" onchange="document.getElementById('pdf_label_text').textContent = this.files[0] ? this.files[0].name : '{{ $acta->archivo_pdf ? 'Subir nuevo PDF (reemplazará el actual)' : 'Haz clic para subir el PDF escaneado con firmas' }}'">
                 </div>
             </div>
         </div>
@@ -304,10 +280,33 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     </button>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">DNI</label><input type="text" name="usuarios[{{$index}}][dni]" value="{{$usu->dni}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white font-bold"></div>
-                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Paterno</label><input type="text" name="usuarios[{{$index}}][apellido_paterno]" value="{{$usu->apellido_paterno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
-                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Materno</label><input type="text" name="usuarios[{{$index}}][apellido_materno]" value="{{$usu->apellido_materno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
-                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Nombres</label><input type="text" name="usuarios[{{$index}}][nombres]" value="{{$usu->nombres}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div>
+                            @php
+                                $profesionalLocal = \App\Models\Profesional::where('doc', $usu->dni)->first();
+                                $localTipoDoc = $profesionalLocal ? $profesionalLocal->tipo_doc : 'DNI';
+                            @endphp
+                            <label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Tipo Doc</label>
+                            <select id="participante_tipodoc_{{$index}}" name="usuarios[{{$index}}][tipo_doc]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white">
+                                <option value="DNI" {{ $localTipoDoc == 'DNI' ? 'selected' : '' }}>DNI</option>
+                                <option value="CE" {{ $localTipoDoc == 'CE' ? 'selected' : '' }}>CE</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">NÚm. Documento</label>
+                            <div class="flex items-center gap-1.5">
+                                <div class="relative flex-1">
+                                    <input type="text" id="participante_dni_{{$index}}" name="usuarios[{{$index}}][dni]" value="{{$usu->dni}}" maxlength="15" required
+                                        class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white font-bold"
+                                        onkeydown="if(event.key === 'Enter'){event.preventDefault(); buscarPersona('participante', {{$index}});}">
+                                </div>
+                                <button type="button" onclick="buscarPersona('participante', {{$index}})" class="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-xl shadow-sm transition-colors flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Paterno</label><input type="text" id="participante_ap_{{$index}}" name="usuarios[{{$index}}][apellido_paterno]" value="{{$usu->apellido_paterno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Materno</label><input type="text" id="participante_am_{{$index}}" name="usuarios[{{$index}}][apellido_materno]" value="{{$usu->apellido_materno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Nombres</label><input type="text" id="participante_nom_{{$index}}" name="usuarios[{{$index}}][nombres]" value="{{$usu->nombres}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
                         <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Celular</label><input type="text" name="usuarios[{{$index}}][celular]" value="{{$usu->celular}}" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
                         <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Correo</label><input type="email" name="usuarios[{{$index}}][correo]" value="{{$usu->correo}}" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
                         <div class="col-span-2">
@@ -345,10 +344,22 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     </button>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">DNI</label><input type="text" name="implementadores[{{$index}}][dni]" value="{{$imp->dni}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white font-bold"></div>
-                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Paterno</label><input type="text" name="implementadores[{{$index}}][apellido_paterno]" value="{{$imp->apellido_paterno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
-                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Materno</label><input type="text" name="implementadores[{{$index}}][apellido_materno]" value="{{$imp->apellido_materno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
-                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Nombres</label><input type="text" name="implementadores[{{$index}}][nombres]" value="{{$imp->nombres}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-black text-purple-600 mb-1">DNI</label>
+                            <div class="flex items-center gap-1.5">
+                                <div class="relative flex-1">
+                                    <input type="text" id="implementador_dni_{{$index}}" name="implementadores[{{$index}}][dni]" value="{{$imp->dni}}" maxlength="15" required
+                                        class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white font-bold"
+                                        onkeydown="if(event.key === 'Enter'){event.preventDefault(); buscarPersona('implementador', {{$index}});}">
+                                </div>
+                                <button type="button" onclick="buscarPersona('implementador', {{$index}})" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-xl shadow-sm transition-colors flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Paterno</label><input type="text" id="implementador_ap_{{$index}}" name="implementadores[{{$index}}][apellido_paterno]" value="{{$imp->apellido_paterno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Materno</label><input type="text" id="implementador_am_{{$index}}" name="implementadores[{{$index}}][apellido_materno]" value="{{$imp->apellido_materno}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                        <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Nombres</label><input type="text" id="implementador_nom_{{$index}}" name="implementadores[{{$index}}][nombres]" value="{{$imp->nombres}}" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
                         <div class="col-span-2"><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[{{$index}}][cargo]" value="{{$imp->cargo}}" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA"></div>
                     </div>
                 </div>
@@ -465,6 +476,42 @@
 <script>
     lucide.createIcons();
 
+    // --- CAMBIAR MÓDULO ---
+    document.getElementById('modulo_key_select').addEventListener('change', function() {
+        const nuevoModulo = this.value;
+        Swal.fire({
+            title: '¿Cambiar módulo?',
+            text: "Esta acta se moverá a un nuevo módulo. Se guardará la información básica y se recargará la página. ¿Desea continuar?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cambiar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route("usuario.implementacion.cambiar_modulo", ["modulo" => $moduloKey, "id" => $acta->id]) }}';
+                
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+
+                const nuevoModInput = document.createElement('input');
+                nuevoModInput.type = 'hidden';
+                nuevoModInput.name = 'nuevo_modulo';
+                nuevoModInput.value = nuevoModulo;
+                form.appendChild(nuevoModInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            } else {
+                this.value = '{{ $moduloKey }}';
+            }
+        });
+    });
+
     // --- ESTABLECIMIENTO AUTOCOMPLETE ---
     const inputEst = document.getElementById('busqueda_establecimiento');
     const listaEst = document.getElementById('sugerencias_establecimiento');
@@ -472,7 +519,7 @@
     inputEst.addEventListener('input', function () {
         const val = this.value.trim();
         if (val.length >= 3) {
-            fetch(`/implementacion/ajax/establecimiento?q=${encodeURIComponent(val)}`)
+            fetch(`{{ route('usuario.implementacion.ajax.establecimiento') }}?q=${encodeURIComponent(val)}`)
                 .then(r => r.json())
                 .then(data => {
                     listaEst.innerHTML = '';
@@ -491,6 +538,7 @@
                                 document.getElementById('categoria').value = est.categoria;
                                 document.getElementById('red').value = est.red ?? '';
                                 document.getElementById('microred').value = est.microred ?? '';
+                                document.getElementById('responsable').value = est.responsable ?? '';
                                 inputEst.value = `${est.codigo_establecimiento} - ${est.nombre_establecimiento}`;
                                 listaEst.classList.add('hidden');
                             });
@@ -518,10 +566,33 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">DNI</label><input type="text" name="usuarios[${idxUsu}][dni]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white font-bold"></div>
-                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Paterno</label><input type="text" name="usuarios[${idxUsu}][apellido_paterno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Materno</label><input type="text" name="usuarios[${idxUsu}][apellido_materno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Nombres</label><input type="text" name="usuarios[${idxUsu}][nombres]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div>
+                    <label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Tipo Doc</label>
+                    <select id="participante_tipodoc_${idxUsu}" name="usuarios[${idxUsu}][tipo_doc]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white">
+                        <option value="DNI">DNI</option>
+                        <option value="CE">CE</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">NÚM. DOCUMENTO</label>
+                    <div class="flex items-center gap-1.5">
+                        <div class="relative flex-1">
+                            <input type="text" id="participante_dni_${idxUsu}" name="usuarios[${idxUsu}][dni]" maxlength="15" required
+                                class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white font-bold"
+                                onkeydown="if(event.key === 'Enter'){event.preventDefault(); buscarPersona('participante', ${idxUsu});}">
+                            <div id="loading_participante_${idxUsu}" class="hidden absolute right-2 top-2">
+                                <svg class="w-4 h-4 animate-spin text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                            </div>
+                        </div>
+                        <button type="button" onclick="buscarPersona('participante', ${idxUsu})" class="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-xl shadow-sm transition-colors flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        </button>
+                    </div>
+                    <p id="msg_participante_${idxUsu}" class="text-[10px] text-red-500 mt-1 hidden"></p>
+                </div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Paterno</label><input type="text" id="participante_ap_${idxUsu}" name="usuarios[${idxUsu}][apellido_paterno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Ap. Materno</label><input type="text" id="participante_am_${idxUsu}" name="usuarios[${idxUsu}][apellido_materno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Nombres</label><input type="text" id="participante_nom_${idxUsu}" name="usuarios[${idxUsu}][nombres]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
                 <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Celular</label><input type="text" name="usuarios[${idxUsu}][celular]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
                 <div><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Correo</label><input type="email" name="usuarios[${idxUsu}][correo]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-emerald-500 bg-white"></div>
                 <div class="col-span-2"><label class="block text-[10px] uppercase font-black text-emerald-600 mb-1">Estado Credencial</label>
@@ -536,6 +607,7 @@
         document.getElementById('usuarios-container').insertAdjacentHTML('beforeend', tpl);
         idxUsu++;
     }
+
 
     // ====== LÓGICA VISUAL UPSS ======
     let upssIndex = 0;
@@ -602,16 +674,120 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">DNI</label><input type="text" name="implementadores[${idxImp}][dni]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white font-bold"></div>
-                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Paterno</label><input type="text" name="implementadores[${idxImp}][apellido_paterno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Materno</label><input type="text" name="implementadores[${idxImp}][apellido_materno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
-                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Nombres</label><input type="text" name="implementadores[${idxImp}][nombres]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                <div>
+                    <label class="block text-[10px] uppercase font-black text-purple-600 mb-1">DNI</label>
+                    <div class="flex items-center gap-1.5">
+                        <div class="relative flex-1">
+                            <input type="text" id="implementador_dni_${idxImp}" name="implementadores[${idxImp}][dni]" maxlength="15" required
+                                class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white font-bold"
+                                onkeydown="if(event.key === 'Enter'){event.preventDefault(); buscarPersona('implementador', ${idxImp});}">
+                            <div id="loading_implementador_${idxImp}" class="hidden absolute right-2 top-2">
+                                <svg class="w-4 h-4 animate-spin text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                            </div>
+                        </div>
+                        <button type="button" onclick="buscarPersona('implementador', ${idxImp})" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-xl shadow-sm transition-colors flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        </button>
+                    </div>
+                    <p id="msg_implementador_${idxImp}" class="text-[10px] text-red-500 mt-1 hidden"></p>
+                </div>
+                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Paterno</label><input type="text" id="implementador_ap_${idxImp}" name="implementadores[${idxImp}][apellido_paterno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Ap. Materno</label><input type="text" id="implementador_am_${idxImp}" name="implementadores[${idxImp}][apellido_materno]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
+                <div><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Nombres</label><input type="text" id="implementador_nom_${idxImp}" name="implementadores[${idxImp}][nombres]" required class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white"></div>
                 <div class="col-span-2"><label class="block text-[10px] uppercase font-black text-purple-600 mb-1">Cargo / Equipo</label><input type="text" name="implementadores[${idxImp}][cargo]" class="w-full border border-slate-200 rounded-xl py-2 px-3 text-sm outline-none focus:border-purple-500 bg-white" placeholder="Ej. Equipo de Implementación MINSA" value="${defaultCargo}"></div>
             </div>
         </div>`;
         document.getElementById('implementadores-container').insertAdjacentHTML('beforeend', tpl);
         idxImp++;
     }
+
+    // --- BÚSQUEDA PERSONA (RENIEC / LOCAL) ---
+    async function buscarPersona(tipo, index) {
+        const docInput = document.getElementById(`${tipo}_dni_${index}`);
+        const tipoDocInput = document.getElementById(`${tipo}_tipodoc_${index}`);
+        
+        const doc = docInput ? docInput.value.trim() : '';
+        const tipoDoc = tipoDocInput ? tipoDocInput.value : 'DNI';
+        
+        const loader = document.getElementById(`loading_${tipo}_${index}`);
+        const msg = document.getElementById(`msg_${tipo}_${index}`);
+        
+        if (doc.length < 5) return;
+        if (loader) loader.classList.remove('hidden');
+        if (msg) msg.classList.add('hidden');
+        
+        const baseUrl = `{{ route('usuario.monitoreo.citas.buscar.profesional') }}`;
+        try {
+            const response = await fetch(`${baseUrl}?type=doc&q=${doc}&tipo_doc=${tipoDoc}&local_only=1`);
+            const data = await response.json();
+            if (data.length > 0) {
+                rellenarPersona(tipo, index, data[0]);
+                if (msg) {
+                    msg.textContent = 'Persona encontrada.';
+                    msg.className = `text-[10px] ${tipo == 'participante' ? 'text-emerald-600' : 'text-purple-600'} mt-1 font-bold`;
+                    msg.classList.remove('hidden');
+                }
+            } else {
+                if (tipoDoc === 'DNI' && doc.length === 8) {
+                    Swal.fire({
+                        html: `<div class="p-4 flex flex-col items-center">
+                            <div class="h-14 w-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center shadow-xl mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white"><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            </div>
+                            <h3 class="text-xl font-black text-blue-900 mb-2">Consultando RENIEC</h3>
+                            <p class="text-xs text-slate-400 text-center">Extrayendo nombres oficiales de la plataforma nacional.</p>
+                        </div>`,
+                        allowOutsideClick: false, showConfirmButton: false,
+                        customClass: { popup: 'rounded-[2rem]' }
+                    });
+                    const responseExt = await fetch(`${baseUrl}?type=doc&q=${doc}&tipo_doc=DNI`);
+                    const dataExt = await responseExt.json();
+                    Swal.close();
+                    if (dataExt.length > 0 && dataExt[0].exists_external) {
+                        rellenarPersona(tipo, index, dataExt[0]);
+                        if (msg) {
+                            msg.textContent = 'Extraído de RENIEC.';
+                            msg.className = 'text-[10px] text-blue-600 mt-1 font-bold';
+                            msg.classList.remove('hidden');
+                        }
+                    } else {
+                        mostrarMsgNuevoPersona(tipo, index, msg);
+                    }
+                } else {
+                    mostrarMsgNuevoPersona(tipo, index, msg);
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            if (Swal.isVisible()) Swal.close();
+        } finally {
+            if (loader) loader.classList.add('hidden');
+        }
+    }
+
+    function mostrarMsgNuevoPersona(tipo, index, msg) {
+        msg.textContent = 'Persona nueva. Complete los datos.';
+        msg.className = 'text-[10px] text-blue-600 mt-1 font-bold';
+        msg.classList.remove('hidden');
+        const ap = document.getElementById(`${tipo}_ap_${index}`);
+        if (ap) ap.focus();
+    }
+
+    function rellenarPersona(tipo, index, prof) {
+        const ap = document.getElementById(`${tipo}_ap_${index}`);
+        const am = document.getElementById(`${tipo}_am_${index}`);
+        const nom = document.getElementById(`${tipo}_nom_${index}`);
+        if (ap && prof.apellido_paterno) ap.value = prof.apellido_paterno;
+        if (am && prof.apellido_materno) am.value = prof.apellido_materno;
+        if (nom && prof.nombres) nom.value = prof.nombres;
+        if (tipo === 'participante') {
+            const cel = document.querySelector(`input[name="usuarios[${index}][celular]"]`);
+            if (cel && (prof.celular || prof.telefono)) cel.value = prof.celular || prof.telefono;
+            const correo = document.querySelector(`input[name="usuarios[${index}][correo]"]`);
+            if (correo && (prof.email || prof.correo)) correo.value = prof.email || prof.correo;
+        }
+    }
+
 
     // ====== EVIDENCIA FOTOGRÁFICA (EDIT) ======
     function previewFotoEdit(slot, input) {

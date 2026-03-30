@@ -374,13 +374,18 @@ class CitaController extends Controller
     {
         $tipo = $request->get('type'); // 'doc' o 'nombre'
         $valor = $request->get('q');
+        $tipoDoc = $request->get('tipo_doc'); // 'DNI' o 'CE'
 
         // Si no hay valor, devolver array vacío
         if (!$valor) return response()->json([]);
 
         if ($tipo === 'doc') {
-            // Busqueda Local
-            $profesional = Profesional::where('doc', $valor)->first();
+            // Busqueda Local (por DNI y Tipo de Documento, si se envía)
+            $query = Profesional::where('doc', $valor);
+            if ($tipoDoc) {
+                $query->where('tipo_doc', $tipoDoc);
+            }
+            $profesional = $query->first();
 
             if ($profesional) {
                 return response()->json([$profesional]);
