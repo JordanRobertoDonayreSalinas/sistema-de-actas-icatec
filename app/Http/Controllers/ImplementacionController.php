@@ -249,7 +249,7 @@ class ImplementacionController extends Controller
                         'apellido_paterno' => strtoupper($user['apellido_paterno'] ?? ''),
                         'apellido_materno' => strtoupper($user['apellido_materno'] ?? ''),
                         'nombres' => strtoupper($user['nombres'] ?? ''),
-                        'celular' => $user['celular'] ?? '',
+                        'celular' => preg_match('/^\d{9,}$/', preg_replace('/[^0-9]/', '', $user['celular'] ?? '')) ? preg_replace('/[^0-9]/', '', $user['celular']) : 999999999,
                         'correo' => strtolower($user['correo'] ?? ''),
                         'permisos' => strtoupper($user['permisos'] ?? ''),
                     ]);
@@ -395,7 +395,7 @@ class ImplementacionController extends Controller
                         'apellido_paterno' => strtoupper($user['apellido_paterno'] ?? ''),
                         'apellido_materno' => strtoupper($user['apellido_materno'] ?? ''),
                         'nombres' => strtoupper($user['nombres'] ?? ''),
-                        'celular' => $user['celular'] ?? '',
+                        'celular' => preg_match('/^\d{9,}$/', preg_replace('/[^0-9]/', '', $user['celular'] ?? '')) ? preg_replace('/[^0-9]/', '', $user['celular']) : 999999999,
                         'correo' => strtolower($user['correo'] ?? ''),
                         'permisos' => strtoupper($user['permisos'] ?? ''),
                     ]);

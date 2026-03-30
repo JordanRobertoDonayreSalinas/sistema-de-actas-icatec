@@ -136,8 +136,8 @@
 
     
 
-    <div style="margin-top: 20px;">
-        <h3>Compromiso</h3>
+    <div style="margin-top: 15px;">
+        <h3 style="margin-bottom: 5px;">Compromiso</h3>
         <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
             <tr>
                 <td style="border: 1px solid #000; padding: 10px; min-height: 60px;">
@@ -162,8 +162,8 @@
         </table>
     </div>
     
-    <div style="margin-top: 20px;">
-        <h3>Observaciones</h3>
+    <div style="margin-top: 15px;">
+        <h3 style="margin-bottom: 5px;">Observaciones</h3>
         <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
             <tr>
                 <td style="border: 1px solid #000; padding: 10px; min-height: 60px;">
@@ -180,12 +180,12 @@
             <tr>
                 @if($acta->foto1)
                 <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
-                    <img src="{{ storage_path('app/public/' . $acta->foto1) }}" style="max-width: 100%; max-height: 200px;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto1) }}" style="max-width: 100%; max-height: 160px;">
                 </td>
                 @endif
                 @if($acta->foto2)
                 <td style="border: 1px solid #000; padding: 5px; width: 50%; text-align: center;">
-                    <img src="{{ storage_path('app/public/' . $acta->foto2) }}" style="max-width: 100%; max-height: 200px;">
+                    <img src="{{ storage_path('app/public/' . $acta->foto2) }}" style="max-width: 100%; max-height: 160px;">
                 </td>
                 @endif
             </tr>
@@ -193,9 +193,7 @@
     </div>
     @endif
 
-    <div class="section">
-        <h3>Firmas.</h3>
-    </div>
+    <div style="margin-top: 15px;"><h3 style="margin-bottom: 5px;">Firmas.</h3></div>
 
 
 
@@ -215,6 +213,8 @@
 
             // 2. Implementadores (dinámicos)
             foreach ($acta->implementadores as $i) {
+                $profI = \App\Models\Profesional::where('doc', $i->dni)->first();
+                $tipoDocI = $profI && !empty($profI->tipo_doc) ? mb_strtoupper($profI->tipo_doc) : 'DNI';
                 $nombreCompleto = trim($i->apellido_paterno . ' ' . $i->apellido_materno . ', ' . $i->nombres);
                 $cargo = trim($i->cargo);
                 if (empty($cargo)) {
@@ -225,7 +225,7 @@
                         'cargo' => mb_strtoupper($cargo),
                         'nombre' => mb_strtoupper($nombreCompleto),
                         'dni' => $i->dni,
-                        'tipo_doc' => 'DNI'
+                        'tipo_doc' => $tipoDocI
                     ];
                 }
             }
@@ -240,13 +240,15 @@
 
             // 4. Usuarios Participantes (dinámicos)
             foreach ($acta->usuarios as $u) {
+                $profU = \App\Models\Profesional::where('doc', $u->dni)->first();
+                $tipoDocU = $profU && !empty($profU->tipo_doc) ? mb_strtoupper($profU->tipo_doc) : (isset($u->tipo_doc) && !empty($u->tipo_doc) ? mb_strtoupper($u->tipo_doc) : 'DNI');
                 $nombreCompleto = trim($u->apellido_paterno . ' ' . $u->apellido_materno . ', ' . $u->nombres);
                 if (!empty($nombreCompleto) && $nombreCompleto != ', ') {
                     $firmantes[] = [
                         'cargo' => 'Participante de Implementación',
                         'nombre' => mb_strtoupper($nombreCompleto),
                         'dni' => $u->dni,
-                        'tipo_doc' => isset($u->tipo_doc) && !empty($u->tipo_doc) ? mb_strtoupper($u->tipo_doc) : 'DNI'
+                        'tipo_doc' => $tipoDocU
                     ];
                 }
             }
@@ -266,9 +268,9 @@
             @foreach (array_chunk($firmantes, 2) as $row)
             <tr>
                 @foreach ($row as $f)
-                <td width="50%" valign="top" style="border: none; padding: 10px;">
-                    <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; text-align: left; min-height: 100px;">
-                        <div style="height: 100px;"></div>
+                <td width="50%" valign="top" style="border: none; padding: 5px;">
+                    <div style="border: 1px solid #000; border-radius: 6px; padding: 8px 12px; text-align: left;">
+                        <div style="height: 85px;"></div>
                         <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 11px; color: #0f172a;">
                             {{ $f['cargo'] }}
                         </p>
@@ -289,10 +291,10 @@
         </table>
     </div>
 
-    <div style="margin-top: 30px;">
-        <h4><strong>Glosario</strong></h4>
-        <p>D.J. : Declaración Jurada </p>
-        <p>C.C. : Compromiso de Confidencialidad </p>
+    <div style="margin-top: 15px;">
+        <h4 style="margin-bottom: 5px;"><strong>Glosario</strong></h4>
+        <p style="margin: 2px 0;">D.J. : Declaración Jurada </p>
+        <p style="margin: 2px 0;">C.C. : Compromiso de Confidencialidad </p>
     </div>
 
 
