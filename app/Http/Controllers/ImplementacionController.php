@@ -8,6 +8,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Establecimiento;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ActaImplementacionMail;
+
 
 class ImplementacionController extends Controller
 {
@@ -656,7 +659,76 @@ class ImplementacionController extends Controller
             ]);
         }
 
+
         return response()->json(['success' => false, 'message' => 'No se recibió ningún archivo.'], 400);
+    }
+
+    /**
+     * Envía el acta firmada por correo a los participantes.
+     * Basado estrictamente en la lógica de Mesa de Ayuda.
+     */
+    public function enviarCorreo(Request $request, $modulo, $id)
+    {
+        try {
+            $modulos = ImplementacionHelper::getModulos();
+            if (!isset($modulos[$modulo])) {
+                return response()->json(['success' => false, 'message' => 'Módulo no válido.'], 404);
+            }
+
+            $config = $modulos[$modulo];
+            $ModeloActa = $config['modelo'];
+            $acta = $ModeloActa::with('usuarios')->findOrFail($id);
+
+            // 1. Verificar si tiene archivo adjunto
+            if (!$acta->archivo_pdf || !Storage::disk('public')->exists($acta->archivo_pdf)) {
+                return response()->json(['success' => false, 'message' => 'No se puede enviar el acta porque no tiene un archivo firmado cargado.'], 400);
+            }
+
+            // 2. Filtrar correos de participantes registrados
+            $correos = $acta->usuarios->pluck('correo')->filter(function ($email) {
+                return !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+            })->unique();
+
+            if ($correos->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No se encontraron participantes con correos electrónicos válidos.'], 400);
+            }
+
+            // 3. Ejecutar envío individual (como en Mesa de Ayuda)
+            $enviados = 0;
+            foreach ($correos as $correo) {
+                try {
+                    // Log previo (útil si el mailer es 'log')
+                    \Illuminate\Support\Facades\Log::info("📨 Preparando envío de acta {$config['nombre']} #{$acta->id} para: {$correo}");
+                    
+                    Mail::to($correo)->send(new ActaImplementacionMail($acta, $config['nombre']));
+                    $enviados++;
+                } catch (\Throwable $mailEx) {
+                    \Illuminate\Support\Facades\Log::warning('⚠️ No se pudo enviar correo de acta de implementación', [
+                        'error'   => $mailEx->getMessage(),
+                        'acta'    => $acta->id,
+                        'email'   => $correo
+                    ]);
+                }
+            }
+
+            if ($enviados > 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "✅ Proceso completado: se enviaron {$enviados} correos exitosamente.",
+                    'destinatarios' => $correos
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'No se pudo completar el envío de ningún correo. Verifique logs del servidor.'], 500);
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('❌ Error crítico en ImplementacionController@enviarCorreo', [
+                'error' => $e->getMessage(),
+                'line'  => $e->getLine(),
+                'file'  => $e->getFile()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
     }
 }
 

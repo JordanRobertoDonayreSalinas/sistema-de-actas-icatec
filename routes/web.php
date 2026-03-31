@@ -226,6 +226,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{modulo}/{id}', [ImplementacionController::class, 'destroy'])->name('destroy');
             Route::get('/{modulo}/{id}/pdf', [ImplementacionController::class, 'pdf'])->name('pdf');
             Route::post('/{modulo}/{id}/subir-pdf', [ImplementacionController::class, 'subirPdf'])->name('subirPdf');
+            Route::post('/{modulo}/{id}/enviar-correo', [ImplementacionController::class, 'enviarCorreo'])->name('enviarCorreo');
             Route::post('/{modulo}/{id}/cambiar-modulo', [ImplementacionController::class, 'cambiar_modulo'])->name('cambiar_modulo');
 
             

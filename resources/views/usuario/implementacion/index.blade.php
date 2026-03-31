@@ -233,6 +233,11 @@
                                     class="p-1.5 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-200" title="Ver Acta Firmada Subida">
                                     <i data-lucide="file-check-2" class="w-4 h-4"></i>
                                 </a>
+                                <button onclick="confirmarEnvioCorreo('{{ $acta['tipo_key'] }}', {{ $acta['id'] }}, '{{ $acta['nombre'] }}')"
+                                    class="p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200" 
+                                    title="Enviar Acta por Correo a Participantes">
+                                    <i data-lucide="mail" class="w-4 h-4"></i>
+                                </button>
                                 @else
                                 <a href="{{ $acta['ruta_pdf'] }}" target="_blank"
                                     class="p-1.5 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors border border-transparent hover:border-purple-200" title="Generar PDF (Temporal)">
@@ -348,6 +353,49 @@
                     text: 'El acta firmada ha sido subida correctamente.',
                     timer: 2000
                 }).then(() => location.reload());
+            }
+        });
+    }
+
+    function confirmarEnvioCorreo(modulo, id, nombreActa) {
+        Swal.fire({
+            title: '¿Enviar Acta por Correo?',
+            text: `Se enviará el acta firmada de ${nombreActa} a todos los participantes con correo registrado.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, enviar ahora',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#64748b',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch(`/usuario/implementacion/${modulo}/${id}/enviar-correo`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.message || 'Error al enviar el correo'); });
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Error: ${error.message}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Correos Enviados!',
+                    text: result.value.message || 'El acta ha sido enviada exitosamente.',
+                    confirmButtonColor: '#3b82f6'
+                });
             }
         });
     }
