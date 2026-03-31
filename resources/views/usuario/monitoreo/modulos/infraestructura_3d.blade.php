@@ -134,6 +134,22 @@
                     _phantomY: 0,
                     _phantomLabel: '',
 
+                    /* ─ Colaboración en Tiempo Real ─ */
+                    colaboradores: [],            // [{ user_id, user_name, color, cursor_x, cursor_y, elements, connections }]
+                    _syncInterval: null,
+                    _cursorSendThrottle: null,
+                    _pendingCursorX: 0,
+                    _pendingCursorY: 0,
+                    _colabActaId: {{ $acta->id }},
+                    _syncUrl: '{{ route("usuario.croquis.sync", ["actaId" => $acta->id]) }}',
+                    _leaveUrl: '{{ route("usuario.croquis.leave", ["actaId" => $acta->id]) }}',
+                    _csrfToken: '{{ csrf_token() }}',
+                    deletedIds: [],              // IDs borrados localmente para sincronizar
+                    _lastColabHash: '',          // Hash del estado remoto para detect cambios
+                    _toastMsg: '',               // Mensaje del toast de colaboración
+                    _toastVisible: false,        // Visibilidad del toast
+                    _toastTimer: null,           // Timer para auto-ocultar el toast
+
                     /* ─── Lifecycle ─── */
                     init() {
                         this.$nextTick(() => {
@@ -147,7 +163,12 @@
                             /* Global pointer listeners for sidebar drag */
                             window.addEventListener('pointermove', (e) => this._onWindowPointerMove(e));
                             window.addEventListener('pointerup',   (e) => this._onWindowPointerUp(e));
+                            /* Colaboración: iniciar polling */
+                            this._startColabSync();
                         });
+
+                        /* Notificar al servidor cuando el usuario cierra/navega */
+                        window.addEventListener('beforeunload', () => this._leaveColab());
 
                         this.$watch('sidebarOpen', () => {
                             this.$nextTick(() => setTimeout(() => { this.resizeCanvas(); this._refreshIcons(); }, 350));
@@ -357,7 +378,8 @@
                             name:    this.name || (type === 'hardware' ? this.hwType.toUpperCase() : (type === 'ambiente' ? (this.roomSubtype?.toUpperCase() || 'AMBIENTE') : (type === 'calle' ? (this.calleSubtype === 'avenida' ? 'Av. ' : (this.calleSubtype === 'jiron' ? 'Jr. ' : 'Psj. ')) : (type === 'sistema' ? this.sistemaType.toUpperCase() : type.toUpperCase())))),
                             x: rx, y: ry, w, h,
                             rot: 0,
-                            attrs: { ...this.attrs }
+                            attrs: { ...this.attrs },
+                            _ts: Date.now(),     /* marca de tiempo para merge en colaboración */
                         };
                         this.elements.push(newEl);
                         this.selectedId = newEl.id;
@@ -601,6 +623,9 @@
 
                         /* End zoom+opacity transform */
                         ctx.restore();
+
+                        /* ── Cursores de colaboradores (fuera del zoom transform) ── */
+                        this._drawRemoteCursors();
                     },
 
                     /* ── 8 resize handles around selected element ── */
@@ -1222,6 +1247,10 @@
                         this._lastMouseClientX = clientX;
                         this._lastMouseClientY = clientY;
 
+                        /* ── Capturar posición para colaboración (en logical canvas coords) ── */
+                        this._pendingCursorX = x;
+                        this._pendingCursorY = y;
+
                         this.checkHover(x, y);
 
                         if (this.isConnecting) { this.draw(); return; }
@@ -1347,7 +1376,10 @@
                             }
                             this.isConnecting = false; this.connectionStart = null; this.draw();
                         }
-                        if (isDragging) this._snapshot();
+                        if (isDragging && dragTarget) {
+                            dragTarget._ts = Date.now(); /* actualizar timestamp al mover */
+                            this._snapshot();
+                        }
                         isDragging = false; dragTarget = null;
                     },
 
@@ -1358,6 +1390,7 @@
                             this._snapshot();
                             el.w = Math.max(20, el.w + dw);
                             el.h = Math.max(20, el.h + dh);
+                            el._ts = Date.now();
                             this.draw();
                         }
                     },
@@ -1367,6 +1400,7 @@
                         if (el) {
                             this._snapshot();
                             el.rot = ((el.rot || 0) + deg + 360) % 360;
+                            el._ts = Date.now();
                             this.draw();
                         }
                     },
@@ -1376,6 +1410,7 @@
                         if (el) {
                             this._snapshot();
                             el.rot = ((+deg) % 360 + 360) % 360;
+                            el._ts = Date.now();
                             this.draw();
                         }
                     },
@@ -1385,12 +1420,14 @@
                         if (el) {
                             this._snapshot();
                             el[prop] = Math.max(20, +val);
+                            el._ts = Date.now();
                             this.draw();
                         }
                     },
 
                     deleteSelected() {
                         this._snapshot();
+                        if (this.selectedId) this.deletedIds.push(this.selectedId); /* registrar para sync */
                         this.elements    = this.elements.filter(e => e.id !== this.selectedId);
                         this.connections = this.connections.filter(c => c.from !== this.selectedId && c.to !== this.selectedId);
                         this.selectedId  = null; this.draw();
@@ -1571,7 +1608,194 @@
                         } finally {
                             this.isSaving = false;
                         }
-                    }
+                    },
+
+                    /* ═══════════════════════════════════════════════════
+                       COLABORACIÓN EN TIEMPO REAL (polling cada 900ms)
+                    ═══════════════════════════════════════════════════ */
+
+                    /** Iniciar el ciclo de sincronización */
+                    _startColabSync() {
+                        if (this._syncInterval) clearInterval(this._syncInterval);
+                        /* Primera sincronización inmediata */
+                        this._syncState();
+                        /* Polling cada 900 ms */
+                        this._syncInterval = setInterval(() => this._syncState(), 900);
+                    },
+
+                    /** Envía el estado propio y recibe el de los otros — con merge de elementos */
+                    async _syncState() {
+                        try {
+                            const body = {
+                                cursor_x:    this._pendingCursorX,
+                                cursor_y:    this._pendingCursorY,
+                                elements:    this.elements,
+                                connections: this.connections,
+                                deletedIds:  this.deletedIds,
+                            };
+                            const res = await fetch(this._syncUrl, {
+                                method:  'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': this._csrfToken,
+                                },
+                                body: JSON.stringify(body),
+                            });
+                            if (!res.ok) return;
+                            const data = await res.json();
+                            if (!data.ok) return;
+
+                            /* Actualizar lista de colaboradores (para cursores) */
+                            this.colaboradores = data.colaboradores;
+
+                            /* ── MERGE DE ELEMENTOS POR TIMESTAMP ── */
+                            let anyElementChange = false;
+                            let authorOfChange   = null;
+
+                            for (const colab of this.colaboradores) {
+
+                                /* 1. Aplicar eliminaciones remotas */
+                                for (const deletedId of (colab.deletedIds || [])) {
+                                    const idx = this.elements.findIndex(e => e.id === deletedId);
+                                    if (idx !== -1) {
+                                        this.elements.splice(idx, 1);
+                                        /* Limpiar conexiones huérfanas */
+                                        this.connections = this.connections.filter(
+                                            c => c.from !== deletedId && c.to !== deletedId
+                                        );
+                                        anyElementChange = true;
+                                        authorOfChange   = colab.user_name;
+                                    }
+                                }
+
+                                /* 2. Merge / upsert de elementos remotos */
+                                for (const remoteEl of (colab.elements || [])) {
+                                    /* Ignorar si el ID está en nuestra lista de borrados locales */
+                                    if (this.deletedIds.includes(remoteEl.id)) continue;
+
+                                    const localIdx = this.elements.findIndex(e => e.id === remoteEl.id);
+                                    if (localIdx === -1) {
+                                        /* Elemento nuevo de otro usuario → agregar */
+                                        this.elements.push(remoteEl);
+                                        anyElementChange = true;
+                                        authorOfChange   = colab.user_name;
+                                    } else {
+                                        const localEl = this.elements[localIdx];
+                                        const remoteTs = remoteEl._ts || 0;
+                                        const localTs  = localEl._ts  || 0;
+                                        if (remoteTs > localTs) {
+                                            /* Versión remota es más reciente → actualizar */
+                                            Object.assign(localEl, remoteEl);
+                                            anyElementChange = true;
+                                            authorOfChange   = colab.user_name;
+                                        }
+                                    }
+                                }
+                            }
+
+                            /* Limpiar deletedIds locales que ya fueron confirmados por el servidor
+                               (después de un ciclo completo, todos los colaboradores los conocen) */
+                            if (this.deletedIds.length > 0 && this.colaboradores.length === 0) {
+                                this.deletedIds = [];
+                            }
+
+                            if (anyElementChange) {
+                                this.draw();
+                                if (authorOfChange) this._showColabToast(authorOfChange);
+                            } else if (this.colaboradores.length > 0) {
+                                /* Solo redibujar cursores */
+                                this.draw();
+                            }
+
+                        } catch (_) {
+                            /* Silencioso — no romper el editor si hay problemas de red */
+                        }
+                    },
+
+                    /** Muestra un toast no intrusivo indicando que un colaborador hizo cambios */
+                    _showColabToast(userName) {
+                        this._toastMsg     = `${userName} actualizó el croquis`;
+                        this._toastVisible = true;
+                        if (this._toastTimer) clearTimeout(this._toastTimer);
+                        this._toastTimer = setTimeout(() => {
+                            this._toastVisible = false;
+                        }, 3500);
+                    },
+
+                    /** Notificar al servidor que el usuario se va */
+                    _leaveColab() {
+                        if (this._syncInterval) clearInterval(this._syncInterval);
+                        /* sendBeacon garantiza que el request sale aunque la página se esté cerrando.
+                           Usa FormData para incluir el CSRF token (sendBeacon no admite headers custom). */
+                        const fd = new FormData();
+                        fd.append('_token', this._csrfToken);
+                        navigator.sendBeacon(this._leaveUrl, fd);
+                    },
+
+                    /** Dibuja los cursores remotos encima del canvas (llamado desde draw()) */
+                    _drawRemoteCursors() {
+                        if (!ctx || !this.colaboradores || this.colaboradores.length === 0) return;
+
+                        const z = this.canvasZoom || 1;
+                        const lw = this.logicalW;
+                        const lh = this.logicalH;
+
+                        this.colaboradores.forEach(colab => {
+                            const rawX = colab.cursor_x;
+                            const rawY = colab.cursor_y;
+                            if (rawX === 0 && rawY === 0) return; /* Sin posición aún */
+
+                            /* Cursor canvas-space → logical canvas-space (aplicar zoom inverso) */
+                            const cx = (rawX - lw / 2) / z + lw / 2;
+                            const cy = (rawY - lh / 2) / z + lh / 2;
+
+                            const color = colab.color || '#ef4444';
+                            const name  = (colab.user_name || '?').substring(0, 20);
+
+                            ctx.save();
+
+                            /* ── Forma del cursor (flecha SVG clásica) ── */
+                            ctx.fillStyle = color;
+                            ctx.strokeStyle = 'white';
+                            ctx.lineWidth = 1.5;
+                            ctx.shadowBlur  = 8;
+                            ctx.shadowColor = color + '80';
+                            ctx.beginPath();
+                            ctx.moveTo(cx,      cy);
+                            ctx.lineTo(cx,      cy + 18);
+                            ctx.lineTo(cx + 4,  cy + 13);
+                            ctx.lineTo(cx + 9,  cy + 20);
+                            ctx.lineTo(cx + 11, cy + 19);
+                            ctx.lineTo(cx + 6,  cy + 12);
+                            ctx.lineTo(cx + 12, cy + 12);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.stroke();
+                            ctx.shadowBlur = 0;
+
+                            /* ── Etiqueta con nombre ── */
+                            ctx.font = 'bold 9px Inter, Arial';
+                            const tw  = ctx.measureText(name).width;
+                            const pw  = tw + 10;
+                            const ph  = 14;
+                            const lx  = cx + 13;
+                            const ly  = cy + 2;
+
+                            /* Fondo redondeado */
+                            ctx.fillStyle = color;
+                            ctx.beginPath();
+                            ctx.roundRect(lx, ly, pw, ph, 4);
+                            ctx.fill();
+
+                            /* Texto */
+                            ctx.fillStyle    = 'white';
+                            ctx.textAlign    = 'left';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(name, lx + 5, ly + ph / 2 + 0.5);
+
+                            ctx.restore();
+                        });
+                    },
                 };
             });
         });
@@ -1591,6 +1815,22 @@
              class="fixed z-[99999] pointer-events-none flex items-center gap-2 bg-indigo-600 text-white text-[9px] font-black uppercase px-3 py-2 rounded-xl shadow-2xl opacity-90 select-none">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
             <span x-text="_phantomLabel"></span>
+        </div>
+
+        <!-- Toast de Colaboración (cambios de otros usuarios) -->
+        <div x-show="_toastVisible"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
+             class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[99998] pointer-events-none flex items-center gap-3 bg-slate-900/95 backdrop-blur-sm text-white px-5 py-3 rounded-2xl shadow-2xl border border-white/10 select-none">
+            <!-- Icono sync animado -->
+            <svg class="w-4 h-4 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span class="text-[11px] font-bold" x-text="_toastMsg"></span>
         </div>
 
         <!-- Barra Superior -->
@@ -1669,6 +1909,47 @@
                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M9 5l7 7-7 7"/></svg>
                     </button>
                 </div>
+
+                <!-- ── Badge Colaboradores en Tiempo Real ── -->
+                <div x-show="colaboradores.length > 0"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 scale-90"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     class="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl"
+                     title="Usuarios editando ahora">
+                    <!-- Pulso animado verde -->
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <!-- Contador -->
+                    <span class="text-[9px] font-black text-emerald-700 uppercase" x-text="colaboradores.length + ' editando'"></span>
+                    <!-- Avatares con colores -->
+                    <div class="flex -space-x-1.5">
+                        <template x-for="colab in colaboradores.slice(0, 4)" :key="colab.user_id">
+                            <div class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[7px] font-black text-white shadow-sm"
+                                 :style="`background-color: ${colab.color}`"
+                                 :title="colab.user_name"
+                                 x-text="colab.user_name.charAt(0).toUpperCase()">
+                            </div>
+                        </template>
+                        <div x-show="colaboradores.length > 4"
+                             class="w-5 h-5 rounded-full border-2 border-white bg-slate-400 flex items-center justify-center text-[7px] font-black text-white shadow-sm"
+                             x-text="'+' + (colaboradores.length - 4)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Sin colaboradores (solo yo) ── -->
+                <div x-show="colaboradores.length === 0"
+                     class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl opacity-60"
+                     title="Solo tú en este croquis">
+                    <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase">Solo</span>
+                </div>
+
                 <!-- Undo / Redo -->
                 <div class="flex items-center gap-1">
                     <button @click="undo()" :disabled="!history.length"

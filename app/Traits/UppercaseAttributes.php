@@ -48,6 +48,7 @@ trait UppercaseAttributes
             'imagen4',
             'imagen5',
             'firmado_pdf',
+            'username',
         ];
 
         // También saltar si es una fecha definida en el modelo

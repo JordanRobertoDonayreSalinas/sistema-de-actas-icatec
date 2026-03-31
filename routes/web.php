@@ -81,6 +81,7 @@ use App\Http\Controllers\ImplementacionController;
 use App\Http\Controllers\Infraestructura3DController;
 use App\Http\Controllers\Infraestructura3DPdfController;
 use App\Http\Controllers\MesaAyudaController;
+use App\Http\Controllers\CroquisColaboracionController;
 
 
 // --- CONFIGURACIÓN DE VERBOS ---
@@ -203,6 +204,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/auditoria-equipos/ajax/distritos', [AuditoriaEquiposController::class, 'ajaxGetDistritos'])->name('auditoria.equipos.ajax.distritos');
             Route::get('/auditoria-equipos/ajax/establecimientos', [AuditoriaEquiposController::class, 'ajaxGetEstablecimientos'])->name('auditoria.equipos.ajax.establecimientos');
         });
+
+        // --- SECCIÓN: COLABORACIÓN EN TIEMPO REAL (Croquis) ---
+        Route::post('/croquis/{actaId}/sync', [CroquisColaboracionController::class, 'sync'])->name('croquis.sync');
+        Route::post('/croquis/{actaId}/leave', [CroquisColaboracionController::class, 'leave'])->name('croquis.leave');
 
         // --- SECCIÓN: MESA DE AYUDA ---
         Route::prefix('incidencias')->name('mesa-ayuda.')->group(function () {
