@@ -51,22 +51,34 @@ class EstablecimientoController extends Controller
 
     public function updateCoordenadas(Request $request, $id)
     {
-        $request->validate([
-            'latitud'  => 'required|numeric|between:-90,90',
-            'longitud' => 'required|numeric|between:-180,180',
-        ]);
+        try {
+            $validated = $request->validate([
+                'latitud'  => 'required|numeric|between:-90,90',
+                'longitud' => 'required|numeric|between:-180,180',
+            ]);
 
-        $establecimiento = Establecimiento::findOrFail($id);
-        $establecimiento->update([
-            'latitud'  => round($request->latitud, 8),
-            'longitud' => round($request->longitud, 8),
-        ]);
+            $establecimiento = Establecimiento::findOrFail($id);
+            $establecimiento->update([
+                'latitud'  => round($validated['latitud'], 8),
+                'longitud' => round($validated['longitud'], 8),
+            ]);
 
-        return response()->json([
-            'ok'       => true,
-            'latitud'  => $establecimiento->latitud,
-            'longitud' => $establecimiento->longitud,
-            'mensaje'  => 'Coordenadas actualizadas correctamente.',
-        ]);
+            return response()->json([
+                'ok'       => true,
+                'latitud'  => $establecimiento->latitud,
+                'longitud' => $establecimiento->longitud,
+                'mensaje'  => 'Coordenadas actualizadas correctamente.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => implode(' ', array_merge(...array_values($e->errors()))),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok'      => false,
+                'mensaje' => 'Error al guardar: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

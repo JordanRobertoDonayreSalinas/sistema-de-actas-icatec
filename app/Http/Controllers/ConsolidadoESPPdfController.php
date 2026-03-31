@@ -43,7 +43,8 @@ class ConsolidadoESPPdfController extends Controller
             'sm_terapias' => 'MODULO: SALUD MENTAL / TERAPIA DE LENGUAJE OCUPACIONAL',
 
             'toma_muestra' => 'MODULO: TOMA DE MUESTRAS',
-            'farmacia_esp' => 'MODULO: FARMACIA'
+            'farmacia_esp' => 'MODULO: FARMACIA',
+            'infraestructura_3d' => 'MODULO: INFRAESTRUCTURA Y CROQUIS 3D'
         ];
 
         // 2. OBTENCIÓN DE DATOS CRUDOS (DESORDENADOS)
