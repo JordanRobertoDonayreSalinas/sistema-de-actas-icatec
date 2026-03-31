@@ -29,15 +29,45 @@ class Infraestructura3DController extends Controller
         try {
             DB::beginTransaction();
 
-            MonitoreoModulos::updateOrCreate(
-                [
+            $moduloNombre = 'infraestructura_3d';
+            $contenido = $request->contenido;
+
+            // Procesar la imagen del croquis si se envía
+            if ($request->has('croquis_image')) {
+                $imageData = $request->croquis_image;
+                $imageData = str_replace('data:image/png;base64,', '', $imageData);
+                $imageData = str_replace(' ', '+', $imageData);
+                $imageName = 'croquis_acta_' . $id . '.png';
+                $path = 'croquis/' . $imageName;
+                
+                // Guardar en storage/app/public/croquis/
+                \Illuminate\Support\Facades\Storage::disk('public')->put($path, base64_decode($imageData));
+                
+                // Guardar la ruta en el JSON para los reportes
+                $contenido['imagen_path'] = $path;
+            }
+            
+            // Buscamos si ya existe el registro
+            $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+                                      ->where('modulo_nombre', $moduloNombre)
+                                      ->first();
+
+            if ($modulo) {
+                // Si existe, actualizamos
+                $modulo->update([
+                    'contenido' => $contenido
+                ]);
+            } else {
+                // Si no existe, insertamos manualmente
+                $nextId = (MonitoreoModulos::max('id') ?? 0) + 1;
+                
+                MonitoreoModulos::create([
+                    'id' => $nextId,
                     'cabecera_monitoreo_id' => $id,
-                    'modulo_nombre' => 'infraestructura_3d'
-                ],
-                [
-                    'contenido' => $request->contenido
-                ]
-            );
+                    'modulo_nombre' => $moduloNombre,
+                    'contenido' => $contenido
+                ]);
+            }
 
             DB::commit();
 
