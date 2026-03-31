@@ -117,6 +117,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [UsuarioController::class, 'index'])->name('general');
             Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
             Route::get('/mapa-asistencias', [UsuarioController::class, 'mapaSoportes'])->name('mapa.soportes'); // Nuevo mapa
+            Route::get('/mapa-implementaciones', [UsuarioController::class, 'mapaImplementaciones'])->name('mapa.implementaciones');
         });
 
         // AJAX para Dashboard - Equipos de Cómputo (Protegidos)
@@ -232,9 +233,13 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{modulo}/{id}', [ImplementacionController::class, 'destroy'])->name('destroy');
             Route::get('/{modulo}/{id}/pdf', [ImplementacionController::class, 'pdf'])->name('pdf');
             Route::post('/{modulo}/{id}/subir-pdf', [ImplementacionController::class, 'subirPdf'])->name('subirPdf');
+            Route::post('/{modulo}/{id}/enviar-correo', [ImplementacionController::class, 'enviarCorreo'])->name('enviarCorreo');
+            Route::post('/{modulo}/{id}/cambiar-modulo', [ImplementacionController::class, 'cambiar_modulo'])->name('cambiar_modulo');
+
             
             // Endpoint AJAX para buscar establecimientos
             Route::get('/ajax/establecimiento', [ImplementacionController::class, 'buscarEstablecimiento'])->name('ajax.establecimiento');
+            Route::get('/ajax/upss-ups', [ImplementacionController::class, 'buscarUpss'])->name('ajax.upss');
         });
 
         // --- SECCIÓN: MONITOREO MODULAR ---

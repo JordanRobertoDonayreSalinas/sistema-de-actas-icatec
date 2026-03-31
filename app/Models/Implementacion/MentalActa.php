@@ -9,9 +9,9 @@ class MentalActa extends Model
     protected $table = 'mental_actas';
     
     protected $fillable = [
-        'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
+        'firma_digital', 'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
         'provincia', 'distrito', 'categoria', 'red', 'microred',
-        'responsable', 'modalidad', 'observaciones'
+        'responsable', 'modalidad', 'observaciones', 'foto1', 'foto2', 'archivo_pdf'
     ];
 
     public function usuarios()
@@ -24,3 +24,4 @@ class MentalActa extends Model
         return $this->hasMany(MentalImplementador::class, 'acta_id');
     }
 }
+

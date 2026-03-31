@@ -8,6 +8,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Establecimiento;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ActaImplementacionMail;
+
 
 class ImplementacionController extends Controller
 {
@@ -145,8 +148,8 @@ class ImplementacionController extends Controller
      */
     public function create(Request $request)
     {
-        $moduloKey = $request->get('modulo', 'citas'); // por defecto citas
         $modulos = ImplementacionHelper::getModulos();
+        $moduloKey = $request->get('modulo', array_key_first($modulos));
         
         if (!isset($modulos[$moduloKey])) {
             abort(404, 'Módulo no válido');
@@ -173,7 +176,7 @@ class ImplementacionController extends Controller
         $config = $modulos[$moduloKey];
         $ModeloActa = $config['modelo'];
 
-        $request->validate([
+        $rules = [
             'fecha' => 'required|date',
             'codigo_establecimiento' => 'required|string',
             'nombre_establecimiento' => 'required|string',
@@ -181,9 +184,16 @@ class ImplementacionController extends Controller
             'distrito' => 'required|string',
             'categoria' => 'required|string',
             'responsable' => 'required|string',
-            'modalidad' => 'required|string',
             'archivo_pdf' => 'nullable|mimes:pdf|max:5120', // Max 5MB
-        ]);
+            'foto1' => 'nullable|image|max:5120',
+            'foto2' => 'nullable|image|max:5120',
+        ];
+
+        if ($moduloKey === 'citas') {
+            $rules['modalidad'] = 'required|string';
+        }
+
+        $request->validate($rules);
 
         $rutaPdf = null;
         if ($request->hasFile('archivo_pdf')) {
@@ -192,8 +202,19 @@ class ImplementacionController extends Controller
             $rutaPdf = $archivo->storeAs('actas_implementacion/' . $moduloKey, $nombreArchivo, 'public');
         }
 
-        // Registrar acta
-        $acta = $ModeloActa::create([
+        $rutaFoto1 = null;
+        if ($request->hasFile('foto1')) {
+            $f = $request->file('foto1');
+            $rutaFoto1 = $f->storeAs('actas_implementacion/' . $moduloKey . '/fotos', 'foto1_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
+        }
+
+        $rutaFoto2 = null;
+        if ($request->hasFile('foto2')) {
+            $f = $request->file('foto2');
+            $rutaFoto2 = $f->storeAs('actas_implementacion/' . $moduloKey . '/fotos', 'foto2_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
+        }
+
+        $actaData = [
             'modulo' => strtoupper($config['nombre']),
             'fecha' => $request->fecha,
             'codigo_establecimiento' => strtoupper($request->codigo_establecimiento),
@@ -204,13 +225,26 @@ class ImplementacionController extends Controller
             'red' => strtoupper($request->red ?? ''),
             'microred' => strtoupper($request->microred ?? ''),
             'responsable' => strtoupper($request->responsable),
-            'modalidad' => strtoupper($request->modalidad),
             'observaciones' => strtoupper($request->observaciones ?? ''),
             'archivo_pdf' => $rutaPdf,
-        ]);
+            'foto1' => $rutaFoto1,
+            'foto2' => $rutaFoto2,
+        ];
+
+        if ($request->has('firma_digital')) {
+            $actaData['firma_digital'] = strtoupper($request->firma_digital);
+        }
+
+        if ($moduloKey === 'citas' && $request->has('modalidad')) {
+            $actaData['modalidad'] = strtoupper($request->modalidad);
+        }
+
+        // Registrar acta
+        $acta = $ModeloActa::create($actaData);
 
         // Registrar participantes (usuarios)
         if ($request->has('usuarios')) {
+            $this->updateGlobalProfesionales($request->usuarios);
             foreach ($request->usuarios as $user) {
                 if (!empty($user['dni'])) {
                     $acta->usuarios()->create([
@@ -218,7 +252,7 @@ class ImplementacionController extends Controller
                         'apellido_paterno' => strtoupper($user['apellido_paterno'] ?? ''),
                         'apellido_materno' => strtoupper($user['apellido_materno'] ?? ''),
                         'nombres' => strtoupper($user['nombres'] ?? ''),
-                        'celular' => $user['celular'] ?? '',
+                        'celular' => preg_match('/^\d{9,}$/', preg_replace('/[^0-9]/', '', $user['celular'] ?? '')) ? preg_replace('/[^0-9]/', '', $user['celular']) : 999999999,
                         'correo' => strtolower($user['correo'] ?? ''),
                         'permisos' => strtoupper($user['permisos'] ?? ''),
                     ]);
@@ -228,6 +262,7 @@ class ImplementacionController extends Controller
 
         // Registrar implementadores
         if ($request->has('implementadores')) {
+            $this->updateGlobalProfesionales($request->implementadores);
             foreach ($request->implementadores as $impl) {
                 if (!empty($impl['dni'])) {
                     $acta->implementadores()->create([
@@ -260,7 +295,8 @@ class ImplementacionController extends Controller
         return view('usuario.implementacion.edit', [
             'acta' => $acta,
             'moduloKey' => $modulo,
-            'moduloConfig' => $config
+            'moduloConfig' => $config,
+            'modulos' => $modulos
         ]);
     }
 
@@ -275,7 +311,7 @@ class ImplementacionController extends Controller
         $config = $modulos[$modulo];
         $ModeloActa = $config['modelo'];
         
-        $request->validate([
+        $rules = [
             'fecha' => 'required|date',
             'codigo_establecimiento' => 'required|string',
             'nombre_establecimiento' => 'required|string',
@@ -283,26 +319,49 @@ class ImplementacionController extends Controller
             'distrito' => 'required|string',
             'categoria' => 'required|string',
             'responsable' => 'required|string',
-            'modalidad' => 'required|string',
             'archivo_pdf' => 'nullable|mimes:pdf|max:5120', // Max 5MB
-        ]);
+            'foto1' => 'nullable|image|max:5120',
+            'foto2' => 'nullable|image|max:5120',
+        ];
+
+        if ($modulo === 'citas') {
+            $rules['modalidad'] = 'required|string';
+        }
+
+        $request->validate($rules);
 
         $acta = $ModeloActa::findOrFail($id);
         
         $rutaPdf = $acta->archivo_pdf;
         if ($request->hasFile('archivo_pdf')) {
-            // Borrar pdf antiguo si existe
             if ($rutaPdf && Storage::disk('public')->exists($rutaPdf)) {
                 Storage::disk('public')->delete($rutaPdf);
             }
-            
             $archivo = $request->file('archivo_pdf');
             $nombreArchivo = 'acta_' . $modulo . '_' . time() . '.' . $archivo->getClientOriginalExtension();
             $rutaPdf = $archivo->storeAs('actas_implementacion/' . $modulo, $nombreArchivo, 'public');
         }
 
+        $rutaFoto1 = $acta->foto1;
+        if ($request->hasFile('foto1')) {
+            if ($rutaFoto1 && Storage::disk('public')->exists($rutaFoto1)) {
+                Storage::disk('public')->delete($rutaFoto1);
+            }
+            $f = $request->file('foto1');
+            $rutaFoto1 = $f->storeAs('actas_implementacion/' . $modulo . '/fotos', 'foto1_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
+        }
+
+        $rutaFoto2 = $acta->foto2;
+        if ($request->hasFile('foto2')) {
+            if ($rutaFoto2 && Storage::disk('public')->exists($rutaFoto2)) {
+                Storage::disk('public')->delete($rutaFoto2);
+            }
+            $f = $request->file('foto2');
+            $rutaFoto2 = $f->storeAs('actas_implementacion/' . $modulo . '/fotos', 'foto2_' . time() . '.' . $f->getClientOriginalExtension(), 'public');
+        }
+
         // 1. Actualizar datos principales
-        $acta->update([
+        $actaData = [
             'fecha' => $request->fecha,
             'codigo_establecimiento' => strtoupper($request->codigo_establecimiento),
             'nombre_establecimiento' => strtoupper($request->nombre_establecimiento),
@@ -312,14 +371,26 @@ class ImplementacionController extends Controller
             'red' => strtoupper($request->red ?? ''),
             'microred' => strtoupper($request->microred ?? ''),
             'responsable' => strtoupper($request->responsable),
-            'modalidad' => strtoupper($request->modalidad),
             'observaciones' => strtoupper($request->observaciones ?? ''),
             'archivo_pdf' => $rutaPdf,
-        ]);
+            'foto1' => $rutaFoto1,
+            'foto2' => $rutaFoto2,
+        ];
+
+        if ($request->has('firma_digital')) {
+            $actaData['firma_digital'] = strtoupper($request->firma_digital);
+        }
+
+        if ($modulo === 'citas' && $request->has('modalidad')) {
+            $actaData['modalidad'] = strtoupper($request->modalidad);
+        }
+
+        $acta->update($actaData);
 
         // Reemplazar usuarios
         $acta->usuarios()->delete();
         if ($request->has('usuarios')) {
+            $this->updateGlobalProfesionales($request->usuarios);
             foreach ($request->usuarios as $user) {
                 if (!empty($user['dni'])) {
                     $acta->usuarios()->create([
@@ -327,7 +398,7 @@ class ImplementacionController extends Controller
                         'apellido_paterno' => strtoupper($user['apellido_paterno'] ?? ''),
                         'apellido_materno' => strtoupper($user['apellido_materno'] ?? ''),
                         'nombres' => strtoupper($user['nombres'] ?? ''),
-                        'celular' => $user['celular'] ?? '',
+                        'celular' => preg_match('/^\d{9,}$/', preg_replace('/[^0-9]/', '', $user['celular'] ?? '')) ? preg_replace('/[^0-9]/', '', $user['celular']) : 999999999,
                         'correo' => strtolower($user['correo'] ?? ''),
                         'permisos' => strtoupper($user['permisos'] ?? ''),
                     ]);
@@ -338,6 +409,7 @@ class ImplementacionController extends Controller
         // Reemplazar implementadores
         $acta->implementadores()->delete();
         if ($request->has('implementadores')) {
+            $this->updateGlobalProfesionales($request->implementadores);
             foreach ($request->implementadores as $impl) {
                 if (!empty($impl['dni'])) {
                     $acta->implementadores()->create([
@@ -374,7 +446,77 @@ class ImplementacionController extends Controller
         $acta->implementadores()->delete();
         $acta->delete();
 
+        // Reajustar AUTO_INCREMENT para evitar saltos en la numeración
+        $tableName = (new $ModeloActa)->getTable();
+        $maxId = $ModeloActa::max('id') ?? 0;
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `{$tableName}` AUTO_INCREMENT = " . ($maxId + 1));
+
         return redirect()->back()->with('success', 'Acta eliminada correctamente.');
+    }
+
+    /**
+     * Cambia el acta de un módulo a otro, migrando sus datos básicos.
+     */
+    public function cambiar_modulo(Request $request, $modulo, $id)
+    {
+        $modulos = ImplementacionHelper::getModulos();
+        $nuevoModulo = $request->input('nuevo_modulo');
+        
+        if (!isset($modulos[$modulo]) || !isset($modulos[$nuevoModulo])) abort(404);
+
+        $ModeloViejo = $modulos[$modulo]['modelo'];
+        $actaVieja = $ModeloViejo::with(['usuarios', 'implementadores'])->findOrFail($id);
+        
+        $ModeloNuevo = $modulos[$nuevoModulo]['modelo'];
+        
+        $datosNuevos = [
+            'modulo' => strtoupper($modulos[$nuevoModulo]['nombre']),
+            'fecha' => $actaVieja->fecha,
+            'codigo_establecimiento' => $actaVieja->codigo_establecimiento,
+            'nombre_establecimiento' => $actaVieja->nombre_establecimiento,
+            'provincia' => $actaVieja->provincia,
+            'distrito' => $actaVieja->distrito,
+            'categoria' => $actaVieja->categoria,
+            'red' => $actaVieja->red,
+            'microred' => $actaVieja->microred,
+            'responsable' => $actaVieja->responsable,
+            'observaciones' => $actaVieja->observaciones,
+            'archivo_pdf' => $actaVieja->archivo_pdf,
+            'foto1' => $actaVieja->foto1,
+            'foto2' => $actaVieja->foto2,
+        ];
+
+        if (in_array($nuevoModulo, ['medicina', 'odontologia', 'nutricion', 'psicologia', 'mental', 'emergencia', 'referencias', 'laboratorio', 'farmacia', 'fua'])) {
+            $datosNuevos['firma_digital'] = $actaVieja->firma_digital ?? 'NO';
+        }
+
+        if ($nuevoModulo === 'citas') {
+            $datosNuevos['modalidad'] = $actaVieja->modalidad ?? 'POR HORARIO';
+        }
+
+        $nuevaActa = $ModeloNuevo::create($datosNuevos);
+        
+        // Copiar usuarios
+        foreach($actaVieja->usuarios as $u) {
+            $nuevaActa->usuarios()->create($u->only(['tipo_doc', 'dni', 'apellido_paterno', 'apellido_materno', 'nombres', 'celular', 'correo', 'permisos']));
+        }
+        
+        // Copiar implementadores
+        foreach($actaVieja->implementadores as $i) {
+            $nuevaActa->implementadores()->create($i->only(['dni', 'apellido_paterno', 'apellido_materno', 'nombres', 'cargo']));
+        }
+        
+        // Eliminar acta vieja y resetear AUTO_INCREMENT
+        $actaVieja->usuarios()->delete();
+        $actaVieja->implementadores()->delete();
+        $actaVieja->delete();
+
+        $tableNameViejo = (new $ModeloViejo)->getTable();
+        $maxIdViejo = $ModeloViejo::max('id') ?? 0;
+        \Illuminate\Support\Facades\DB::statement("ALTER TABLE `{$tableNameViejo}` AUTO_INCREMENT = " . ($maxIdViejo + 1));
+
+        return redirect()->route('usuario.implementacion.edit', ['modulo' => $nuevoModulo, 'id' => $nuevaActa->id])
+            ->with('success', 'El acta ha sido cambiada al módulo ' . $modulos[$nuevoModulo]['nombre'] . ' exitosamente.');
     }
 
     /**
@@ -388,9 +530,30 @@ class ImplementacionController extends Controller
         $ModeloActa = $modulos[$modulo]['modelo'];
         $acta = $ModeloActa::with(['usuarios', 'implementadores'])->findOrFail($id);
 
-        // TODO: Crear vista común del PDF de implementación. Por ahora usa la de Triaje como base.
-        $pdf = Pdf::loadView('Actas.pdf.pdfCitas', ['acta' => $acta]); // temporal
-        return $pdf->stream('Acta_' . $modulos[$modulo]['nombre'] . '_' . $acta->id . '.pdf');
+        // Cargar relaciones adicionales según el módulo (si existen en el modelo)
+        if ($modulo === 'ges_adm') {
+            if (method_exists($acta, 'upss')) {
+                $acta->load('upss');
+            } else {
+                $acta->setRelation('upss', collect());
+            }
+            if (method_exists($acta, 'sugeridas')) {
+                $acta->load('sugeridas');
+            } else {
+                $acta->setRelation('sugeridas', collect());
+            }
+        }
+
+        // Usar la vista específica de cada módulo (impresiones/{modulo})
+        $viewName = 'usuario.implementacion.impresiones.' . $modulo;
+        if (!view()->exists($viewName)) {
+            // Fallback: vista genérica si no existe una específica para el módulo
+            $viewName = 'usuario.implementacion.impresiones.triaje';
+        }
+
+        $pdf = Pdf::loadView($viewName, ['acta' => $acta]);
+        $pdf->getDomPDF()->getOptions()->setIsPhpEnabled(true);
+        return $pdf->stream('AI Nº ' . $acta->id . '-' . $modulos[$modulo]['nombre'] . '-' . $acta->nombre_establecimiento . '.pdf');
     }
 
     /**
@@ -402,6 +565,170 @@ class ImplementacionController extends Controller
         return Establecimiento::where('nombre', 'like', "%$q%")
             ->orWhere('codigo', 'like', "%$q%")
             ->limit(10)
-            ->get(['codigo as codigo_establecimiento', 'nombre as nombre_establecimiento', 'provincia', 'distrito', 'categoria', 'red', 'microred']);
+            ->get(['codigo as codigo_establecimiento', 'nombre as nombre_establecimiento', 'provincia', 'distrito', 'categoria', 'red', 'microred', 'responsable']);
+    }
+
+    /**
+     * Endpoint API para buscar UPSS en la tabla maestra
+     */
+    public function buscarUpss(Request $request)
+    {
+        $q = $request->get('q');
+        return \Illuminate\Support\Facades\DB::table('upss_ups')
+            ->where('codigo_ups', 'like', "%$q%")
+            ->orWhere('descripcion_ups', 'like', "%$q%")
+            ->limit(20)
+            ->get();
+    }
+
+    /**
+     * Helper para guardar o actualizar la tabla global de Profesionales
+     * para facilitar la búsqueda con autocompletado en futuras actas.
+     */
+    private function updateGlobalProfesionales($personas)
+    {
+        if (!$personas || !is_array($personas)) return;
+
+        foreach ($personas as $persona) {
+            if (!empty($persona['dni'])) {
+                $profesional = \App\Models\Profesional::firstOrNew(['doc' => $persona['dni']]);
+                
+                if (!empty($persona['apellido_paterno'])) {
+                    $profesional->apellido_paterno = strtoupper($persona['apellido_paterno']);
+                }
+                if (!empty($persona['apellido_materno'])) {
+                    $profesional->apellido_materno = strtoupper($persona['apellido_materno']);
+                }
+                if (!empty($persona['nombres'])) {
+                    $profesional->nombres = strtoupper($persona['nombres']);
+                }
+                if (!empty($persona['celular'])) {
+                    $profesional->telefono = $persona['celular'];
+                }
+                if (!empty($persona['correo'])) {
+                    $profesional->email = strtolower($persona['correo']);
+                }
+                
+                // Si es un registro nuevo, o si viene el tipo_doc, actualizarlo
+                if (isset($persona['tipo_doc'])) {
+                    $profesional->tipo_doc = strtoupper($persona['tipo_doc']);
+                } else if (!$profesional->exists) {
+                    $profesional->tipo_doc = 'DNI';
+                }
+
+                $profesional->save();
+            }
+        }
+    }
+
+    /**
+     * Sube el acta firmada en formato PDF.
+     */
+    public function subirPdf(Request $request, $modulo, $id)
+    {
+        $modulos = ImplementacionHelper::getModulos();
+        if (!isset($modulos[$modulo])) {
+            return response()->json(['success' => false, 'message' => 'Módulo no válido'], 404);
+        }
+
+        $config = $modulos[$modulo];
+        $ModeloActa = $config['modelo'];
+        $acta = $ModeloActa::findOrFail($id);
+
+        $request->validate([
+            'pdf_firmado' => 'required|mimes:pdf|max:10240', // Máximo 10MB
+        ]);
+
+        if ($request->hasFile('pdf_firmado')) {
+            // Eliminar archivo anterior si existe
+            if ($acta->archivo_pdf && Storage::disk('public')->exists($acta->archivo_pdf)) {
+                Storage::disk('public')->delete($acta->archivo_pdf);
+            }
+
+            $archivo = $request->file('pdf_firmado');
+            $nombreArchivo = 'acta_firmada_' . $modulo . '_' . $id . '_' . time() . '.pdf';
+            $ruta = $archivo->storeAs('actas_implementacion/' . $modulo, $nombreArchivo, 'public');
+
+            // Actualizar registro en la base de datos
+            $acta->update(['archivo_pdf' => $ruta]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'El acta firmada ha sido subida correctamente.',
+                'ruta' => Storage::url($ruta)
+            ]);
+        }
+
+
+        return response()->json(['success' => false, 'message' => 'No se recibió ningún archivo.'], 400);
+    }
+
+    /**
+     * Envía el acta firmada por correo a los participantes.
+     * Basado estrictamente en la lógica de Mesa de Ayuda.
+     */
+    public function enviarCorreo(Request $request, $modulo, $id)
+    {
+        try {
+            $modulos = ImplementacionHelper::getModulos();
+            if (!isset($modulos[$modulo])) {
+                return response()->json(['success' => false, 'message' => 'Módulo no válido.'], 404);
+            }
+
+            $config = $modulos[$modulo];
+            $ModeloActa = $config['modelo'];
+            $acta = $ModeloActa::with('usuarios')->findOrFail($id);
+
+            // 1. Verificar si tiene archivo adjunto
+            if (!$acta->archivo_pdf || !Storage::disk('public')->exists($acta->archivo_pdf)) {
+                return response()->json(['success' => false, 'message' => 'No se puede enviar el acta porque no tiene un archivo firmado cargado.'], 400);
+            }
+
+            // 2. Filtrar correos de participantes registrados
+            $correos = $acta->usuarios->pluck('correo')->filter(function ($email) {
+                return !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+            })->unique();
+
+            if ($correos->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No se encontraron participantes con correos electrónicos válidos.'], 400);
+            }
+
+            // 3. Ejecutar envío individual (como en Mesa de Ayuda)
+            $enviados = 0;
+            foreach ($correos as $correo) {
+                try {
+                    // Log previo (útil si el mailer es 'log')
+                    \Illuminate\Support\Facades\Log::info("📨 Preparando envío de acta {$config['nombre']} #{$acta->id} para: {$correo}");
+                    
+                    Mail::to($correo)->send(new ActaImplementacionMail($acta, $config['nombre']));
+                    $enviados++;
+                } catch (\Throwable $mailEx) {
+                    \Illuminate\Support\Facades\Log::warning('⚠️ No se pudo enviar correo de acta de implementación', [
+                        'error'   => $mailEx->getMessage(),
+                        'acta'    => $acta->id,
+                        'email'   => $correo
+                    ]);
+                }
+            }
+
+            if ($enviados > 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "✅ Proceso completado: se enviaron {$enviados} correos exitosamente.",
+                    'destinatarios' => $correos
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'No se pudo completar el envío de ningún correo. Verifique logs del servidor.'], 500);
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('❌ Error crítico en ImplementacionController@enviarCorreo', [
+                'error' => $e->getMessage(),
+                'line'  => $e->getLine(),
+                'file'  => $e->getFile()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
     }
 }
+

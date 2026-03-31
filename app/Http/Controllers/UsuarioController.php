@@ -99,6 +99,63 @@ class UsuarioController extends Controller
     }
 
     /**
+     * MAPA DE IMPLEMENTACIONES
+     * Muestra las actas de implementación realizadas en cada establecimiento.
+     */
+    public function mapaImplementaciones()
+    {
+        // Obtener todos los módulos de implementación
+        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
+        
+        $implementacionesPorEstablecimiento = [];
+        
+        foreach ($modulos as $key => $config) {
+            $modelo = $config['modelo'];
+            if (class_exists($modelo)) {
+                $actas = $modelo::select('codigo_establecimiento')->get();
+                foreach ($actas as $acta) {
+                    $codigo = $acta->codigo_establecimiento;
+                    if (!isset($implementacionesPorEstablecimiento[$codigo])) {
+                        $implementacionesPorEstablecimiento[$codigo] = [];
+                    }
+                    if (!in_array($config['nombre'], $implementacionesPorEstablecimiento[$codigo])) {
+                        $implementacionesPorEstablecimiento[$codigo][] = $config['nombre'];
+                    }
+                }
+            }
+        }
+        
+        // Obtenemos todos los establecimientos con coordenadas
+        $establecimientosMap = \App\Models\Establecimiento::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->get(['id', 'codigo', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
+            ->map(function ($est) use ($implementacionesPorEstablecimiento) {
+                // Agregar las actas implementadas (por código de establecimiento)
+                $est->actas_implementadas = $implementacionesPorEstablecimiento[$est->codigo] ?? [];
+                $est->has_implementacion = count($est->actas_implementadas) > 0;
+                return $est;
+            });
+            
+        // Lista de provincias, categorías y distritos para filtros
+        $provincias = \App\Models\Establecimiento::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->whereNotNull('provincia')
+            ->distinct()
+            ->orderBy('provincia')
+            ->pluck('provincia');
+
+        $categorias = \App\Models\Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
+        $distritos = \App\Models\Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
+
+        return view('usuario.dashboard.mapa_implementaciones', compact(
+            'establecimientosMap',
+            'provincias',
+            'categorias',
+            'distritos'
+        ));
+    }
+
+    /**
      * Dashboard de Equipos de Cómputo
      */
     public function dashboardEquipos()
