@@ -235,7 +235,8 @@
             'referencias'            => 'REFERENCIAS Y CONTRAREFERENCIAS',
             'refcon'                 => 'REFERENCIAS Y CONTRAREFERENCIAS', // Fallback
             'laboratorio'            => 'LABORATORIO',
-            'urgencias'              => 'URGENCIAS Y EMERGENCIAS'
+            'urgencias'              => 'URGENCIAS Y EMERGENCIAS',
+            'infraestructura_3d'     => 'INFRAESTRUCTURA Y CROQUIS 3D'
         ];
         
         $impresos = []; // Control para no repetir módulos
@@ -342,6 +343,189 @@
             @php $contadorModulo++; @endphp
         @endif
     @endforeach
+
+    {{-- SECCIÓN ESPECIAL PARA CROQUIS 3D (Si existe) --}}
+    @php
+        $mod3d = $modulos->firstWhere('modulo_nombre', 'infraestructura_3d');
+        $cont3d = $mod3d ? (is_string($mod3d->contenido) ? json_decode($mod3d->contenido, true) : $mod3d->contenido) : null;
+    @endphp
+
+    @if($cont3d && !empty($cont3d['elementos']))
+        <div class="no-break">
+            <div style="background-color: #f1f5f9; padding: 4px 10px; font-weight: bold; font-size: 9px; margin-bottom: 2px; border: 1px solid #e2e8f0; text-transform: uppercase;">
+                MÓDULO 19: INFRAESTRUCTURA Y CROQUIS 3D
+            </div>
+
+            @php
+                $elementos = $cont3d['elementos'] ?? [];
+                $conexiones = $cont3d['conexiones'] ?? [];
+                $conteo = ['ambiente' => 0, 'hardware' => 0, 'puerta' => 0, 'calle' => 0, 'sistema' => 0, 'pasillo' => 0];
+                foreach($elementos as $el) {
+                    $t = strtolower($el['type'] ?? 'otro');
+                    if(isset($conteo[$t])) $conteo[$t]++;
+                }
+            @endphp
+
+            {{-- Resumen --}}
+            <table>
+                <tr>
+                    <td class="bg-label">RESUMEN DEL DISEÑO:</td>
+                    <td class="uppercase">
+                        {{ $conteo['ambiente'] }} AMBIENTES,
+                        {{ $conteo['hardware'] }} EQUIPOS TI,
+                        {{ $conteo['puerta'] }} PUERTAS,
+                        {{ $conteo['sistema'] }} SISTEMAS,
+                        {{ $conteo['calle'] }} CALLES REFERENCIALES.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="bg-label">TOTAL ELEMENTOS / CONEXIONES:</td>
+                    <td>{{ count($elementos) }} elementos registrados · {{ count($conexiones) }} conexiones de red.</td>
+                </tr>
+            </table>
+
+            {{-- ── AMBIENTES ── --}}
+            @php $ambientes = array_values(array_filter($elementos, fn($e) => strtolower($e['type'] ?? '') === 'ambiente')); @endphp
+            @if(count($ambientes) > 0)
+                <div style="font-weight:bold; font-size:9px; margin:10px 0 4px 0; color:#1e293b; text-transform:uppercase;">
+                    Ambientes ({{ count($ambientes) }})
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="5%">N°</th>
+                            <th width="35%">NOMBRE</th>
+                            <th width="25%">TIPO</th>
+                            <th width="17%">WIFI</th>
+                            <th width="18%">LUZ ELÉCTRICA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($ambientes as $i => $el)
+                        <tr style="font-size:8px;">
+                            <td style="text-align:center;">{{ $i + 1 }}</td>
+                            <td class="uppercase">{{ $el['name'] ?? '-' }}</td>
+                            <td class="uppercase">{{ str_replace('_', ' ', $el['subtype'] ?? '-') }}</td>
+                            <td style="text-align:center;">{{ (!empty($el['attrs']['wifi'])) ? 'SÍ' : 'NO' }}</td>
+                            <td style="text-align:center;">{{ (!empty($el['attrs']['light'])) ? 'SÍ' : 'NO' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            {{-- ── EQUIPAMIENTO TI ── --}}
+            @php $hardwares = array_values(array_filter($elementos, fn($e) => strtolower($e['type'] ?? '') === 'hardware')); @endphp
+            @if(count($hardwares) > 0)
+                <div style="font-weight:bold; font-size:9px; margin:10px 0 4px 0; color:#1e293b; text-transform:uppercase;">
+                    Equipamiento TI ({{ count($hardwares) }})
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="5%">N°</th>
+                            <th width="50%">NOMBRE / ETIQUETA</th>
+                            <th width="45%">TIPO DE EQUIPAMIENTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($hardwares as $i => $el)
+                        <tr style="font-size:8px;">
+                            <td style="text-align:center;">{{ $i + 1 }}</td>
+                            <td class="uppercase">{{ $el['name'] ?? '-' }}</td>
+                            <td class="uppercase">{{ str_replace('_', ' ', $el['subtype'] ?? '-') }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            {{-- ── SISTEMAS INFORMÁTICOS ── --}}
+            @php $sistemas = array_values(array_filter($elementos, fn($e) => strtolower($e['type'] ?? '') === 'sistema')); @endphp
+            @if(count($sistemas) > 0)
+                <div style="font-weight:bold; font-size:9px; margin:10px 0 4px 0; color:#1e293b; text-transform:uppercase;">
+                    Sistemas Informáticos ({{ count($sistemas) }})
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="5%">N°</th>
+                            <th width="50%">ETIQUETA</th>
+                            <th width="45%">SISTEMA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($sistemas as $i => $el)
+                        <tr style="font-size:8px;">
+                            <td style="text-align:center;">{{ $i + 1 }}</td>
+                            <td class="uppercase">{{ $el['name'] ?? '-' }}</td>
+                            <td class="uppercase">{{ strtoupper($el['subtype'] ?? '-') }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            {{-- ── PUERTAS / ACCESOS ── --}}
+            @php $puertas = array_values(array_filter($elementos, fn($e) => strtolower($e['type'] ?? '') === 'puerta')); @endphp
+            @if(count($puertas) > 0)
+                <div style="font-weight:bold; font-size:9px; margin:10px 0 4px 0; color:#1e293b; text-transform:uppercase;">
+                    Accesos y Puertas ({{ count($puertas) }})
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="5%">N°</th>
+                            <th width="55%">IDENTIFICACIÓN</th>
+                            <th width="40%">TIPO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($puertas as $i => $el)
+                        <tr style="font-size:8px;">
+                            <td style="text-align:center;">{{ $i + 1 }}</td>
+                            <td class="uppercase">{{ $el['name'] ?? '-' }}</td>
+                            <td class="uppercase">{{ str_replace('_', ' ', $el['subtype'] ?? '-') }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            {{-- ── CONEXIONES DE RED ── --}}
+            @if(count($conexiones) > 0)
+                @php
+                    $elMap = [];
+                    foreach($elementos as $elItem) { $elMap[$elItem['id']] = strtoupper($elItem['name'] ?? $elItem['type'] ?? '?'); }
+                @endphp
+                <div style="font-weight:bold; font-size:9px; margin:10px 0 4px 0; color:#1e293b; text-transform:uppercase;">
+                    Conexiones de Red ({{ count($conexiones) }})
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="5%">N°</th>
+                            <th width="47%">ORIGEN</th>
+                            <th width="48%">DESTINO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($conexiones as $ci => $conn)
+                        <tr style="font-size:8px;">
+                            <td style="text-align:center;">{{ $ci + 1 }}</td>
+                            <td>{{ $elMap[$conn['from']] ?? '—' }}</td>
+                            <td>{{ $elMap[$conn['to']] ?? '—' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            <div style="font-size:7px; color:#64748b; font-style:italic; margin:10px 0 15px 0;">
+                * Ver el reporte individual del Módulo de Infraestructura para el diagrama gráfico completo y las dimensiones de cada elemento.
+            </div>
+        </div>
+    @endif
 
     {{-- HE ELIMINADO EL BLOQUE "RED DE SEGURIDAD (EXTRA)" PARA EVITAR QUE APAREZCA 'CONFIG MODULOS' O BASURA --}}
 

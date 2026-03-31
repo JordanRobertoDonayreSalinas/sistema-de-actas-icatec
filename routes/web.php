@@ -79,7 +79,9 @@ use App\Http\Controllers\ReporteMonitoreoController;
 use App\Http\Controllers\ReporteImplementacionController;
 use App\Http\Controllers\ImplementacionController;
 use App\Http\Controllers\Infraestructura3DController;
+use App\Http\Controllers\Infraestructura3DPdfController;
 use App\Http\Controllers\MesaAyudaController;
+
 
 // --- CONFIGURACIÓN DE VERBOS ---
 Route::resourceVerbs([
@@ -519,6 +521,7 @@ Route::middleware(['auth'])->group(function () {
             Route::prefix('modulo/infraestructura-3d')->name('infraestructura-3d.')->group(function () {
                 Route::get('/{id}', [Infraestructura3DController::class, 'index'])->name('index');
                 Route::post('/{id}', [Infraestructura3DController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [Infraestructura3DPdfController::class, 'generar'])->name('pdf');
             });
 
             // MOTOR DE CONSOLIDADO

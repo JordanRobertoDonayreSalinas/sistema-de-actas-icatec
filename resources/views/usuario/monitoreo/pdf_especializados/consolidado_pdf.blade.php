@@ -160,100 +160,162 @@
         <div class="module-container">
             <div class="module-header">{{ $modulo->modulo_nombre }}</div>
 
-            {{-- Bloque 1: Consultorio y Profesional --}}
-            <table class="data-table" style="margin-bottom: 0;">
-                <tr>
-                    <td width="50%" style="border:none; padding: 0 5px 0 0;">
-                        <div class="section-title">Detalle del Consultorio</div>
-                        <table class="data-table">
-                            <tr><th>Fecha Monitoreo</th><td>{{ $consultorio['fecha_monitoreo'] ?? '-' }}</td></tr>
-                            <tr><th>Turno</th><td>{{ $consultorio['turno'] ?? '-' }}</td></tr>
-                            <tr><th>N° Consultorios</th><td>{{ $consultorio['num_consultorios'] ?? '-' }}</td></tr>
-                            <tr><th>Denominación</th><td>{{ $consultorio['denominacion'] ?? '-' }}</td></tr>
-                        </table>
-                    </td>
-                    <td width="50%" style="border:none; padding: 0 0 0 5px;">
-                        <div class="section-title">Datos del Profesional</div>
-                        <table class="data-table">
-                            <tr><th>Profesional</th><td>{{ $profesional['apellido_paterno'] ?? '' }} {{ $profesional['apellido_materno'] ?? '' }}, {{ $profesional['nombres'] ?? '' }}</td></tr>
-                            <tr><th>Documento</th><td><span class="badge">{{ $profesional['tipo_doc'] ?? 'DNI' }}</span> {{ $profesional['doc'] ?? '-' }}</td></tr>
-                            <tr><th>Cargo</th><td>{{ $profesional['cargo'] ?? '-' }}</td></tr>
-                            <tr><th>Contacto</th><td>{{ $profesional['email'] ?? '-' }} <br> {{ $profesional['telefono'] ?? '' }}</td></tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-
-            {{-- Bloque 2: Admin y DNI --}}
-            <div class="section-title">Documentación y Firma Digital</div>
-            <table class="data-table">
-                <thead>
+            @if(str_contains(strtolower($modulo->modulo_nombre), 'infraestructura') || str_contains(strtolower($modulo->modulo_nombre), 'croquis'))
+                {{-- Renderizado especial para Infraestructura 3D --}}
+                @php
+                    $elementos = $contenido['elementos'] ?? [];
+                    $conteo = ['ambiente' => 0, 'hardware' => 0, 'puerta' => 0, 'calle' => 0, 'sistema' => 0];
+                    foreach($elementos as $el) {
+                        $t = strtolower($el['type'] ?? 'otro');
+                        if(isset($conteo[$t])) $conteo[$t]++;
+                    }
+                @endphp
+                <div class="section-title">Resumen del Diseño 3D</div>
+                <table class="data-table">
                     <tr>
-                        <th class="text-center" style="width: 20%;">Utiliza SIHCE</th>
-                        <th class="text-center" style="width: 20%;">Firmó DJ</th>
-                        <th class="text-center" style="width: 20%;">Firmó Confidencialidad</th>
-                        <th class="text-center" style="width: 20%;">Firma Digital Activa</th>
-                        <th class="text-center" style="width: 20%;">Tipo DNI</th>
+                        <th>Ambientes Registrados</th>
+                        <td>{{ $conteo['ambiente'] }} unidades</td>
                     </tr>
-                </thead>
-                <tbody>
                     <tr>
-                        <td class="text-center">{{ $admin['utiliza_sihce'] ?? '-' }}</td>
-                        <td class="text-center">{{ $admin['firmo_dj'] ?? '-' }}</td>
-                        <td class="text-center">{{ $admin['firmo_confidencialidad'] ?? '-' }}</td>
-                        <td class="text-center">{{ $dni['firma_digital_sihce'] ?? '-' }}</td>
-                        <td class="text-center">{{ $dni['tipo_dni'] ?? '-' }}</td>
+                        <th>Equipamiento TI / Hardware</th>
+                        <td>{{ $conteo['hardware'] }} elementos</td>
                     </tr>
-                </tbody>
-            </table>
-            @if(!empty($dni['observaciones_dni']))
-            <div style="background: #f8fafc; padding: 4px; border: 1px dashed #cbd5e1; font-size: 9px; margin-bottom: 5px;">
-                <strong>Obs. DNI:</strong> {{ $dni['observaciones_dni'] }}
-            </div>
-            @endif
+                    <tr>
+                        <th>Accesos / Puertas</th>
+                        <td>{{ $conteo['puerta'] }} unidades</td>
+                    </tr>
+                    <tr>
+                        <th>Sistemas / Software</th>
+                        <td>{{ $conteo['sistema'] }} aplicaciones</td>
+                    </tr>
+                    <tr>
+                        <th>Conexiones de Red</th>
+                        <td>{{ count($contenido['conexiones'] ?? []) }} enlaces establecidos</td>
+                    </tr>
+                </table>
+                @if(!empty($contenido['imagen_path']))
+                    <div style="text-align: center; margin-top: 5px;">
+                        @php
+                            $path_rel = $contenido['imagen_path'] ?? '';
+                            $possible_paths = [
+                                storage_path('app/public/' . $path_rel),
+                                public_path('storage/' . $path_rel),
+                                base_path('storage/app/public/' . $path_rel),
+                            ];
+                            
+                            $img_final = null;
+                            foreach($possible_paths as $p) {
+                                if(!empty($path_rel) && file_exists($p)) {
+                                    $img_final = $p;
+                                    break;
+                                }
+                            }
 
-            {{-- >>>> BLOQUE 3 MEJORADO: CAPACITACIÓN Y SOPORTE (Lado a Lado) <<<< --}}
-            <table style="width: 100%; border-collapse: collapse; margin-top: 5px; border: none;">
-                <tr>
-                    {{-- COLUMNA IZQUIERDA: CAPACITACIÓN --}}
-                    <td width="49%" style="vertical-align: top; border: none; padding-right: 5px;">
-                        <div class="section-title">DETALLE DE CAPACITACIÓN</div>
-                        <table class="data-table">
-                            <tr>
-                                <th>¿El personal ha recibido capacitación?</th>
-                                <td class="text-center">{{ $capacitacion['recibio_capacitacion'] ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <th>Entidad que capacitó</th>
-                                <td class="text-center">{{ $capacitacion['inst_que_lo_capacito'] ?? '-' }}</td>
-                            </tr>
-                        </table>
-                    </td>
+                            $base64 = null;
+                            if($img_final) {
+                                $type = pathinfo($img_final, PATHINFO_EXTENSION);
+                                $data = file_get_contents($img_final);
+                                $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                            }
+                        @endphp
+                        @if($base64)
+                            <img src="{{ $base64 }}" style="width: 100%; border: 1px solid #ccfbf1; border-radius: 5px;">
+                        @endif
+                    </div>
+                @endif
+                <p style="font-size: 8px; font-style: italic; color: #666; margin-top: 5px;">* Consulte el reporte individual del módulo para el detalle gráfico y tablas de dimensiones.</p>
+            @else
+                {{-- Bloque 1: Consultorio y Profesional (Original) --}}
+                <table class="data-table" style="margin-bottom: 0;">
+                    <tr>
+                        <td width="50%" style="border:none; padding: 0 5px 0 0;">
+                            <div class="section-title">Detalle del Consultorio</div>
+                            <table class="data-table">
+                                <tr><th>Fecha Monitoreo</th><td>{{ $consultorio['fecha_monitoreo'] ?? '-' }}</td></tr>
+                                <tr><th>Turno</th><td>{{ $consultorio['turno'] ?? '-' }}</td></tr>
+                                <tr><th>N° Consultorios</th><td>{{ $consultorio['num_consultorios'] ?? '-' }}</td></tr>
+                                <tr><th>Denominación</th><td>{{ $consultorio['denominacion'] ?? '-' }}</td></tr>
+                            </table>
+                        </td>
+                        <td width="50%" style="border:none; padding: 0 0 0 5px;">
+                            <div class="section-title">Datos del Profesional</div>
+                            <table class="data-table">
+                                <tr><th>Profesional</th><td>{{ $profesional['apellido_paterno'] ?? '' }} {{ $profesional['apellido_materno'] ?? '' }}, {{ $profesional['nombres'] ?? '' }}</td></tr>
+                                <tr><th>Documento</th><td><span class="badge">{{ $profesional['tipo_doc'] ?? 'DNI' }}</span> {{ $profesional['doc'] ?? '-' }}</td></tr>
+                                <tr><th>Cargo</th><td>{{ $profesional['cargo'] ?? '-' }}</td></tr>
+                                <tr><th>Contacto</th><td>{{ $profesional['email'] ?? '-' }} <br> {{ $profesional['telefono'] ?? '' }}</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
 
-                    <td width="2%" style="border: none;"></td> {{-- Espaciador --}}
-
-                    {{-- COLUMNA DERECHA: SOPORTE --}}
-                    <td width="49%" style="vertical-align: top; border: none; padding-left: 5px;">
-                        <div class="section-title">SOPORTE</div>
-                        <table class="data-table">
-                            <tr>
-                                <th>Ante Dificultades ¿A quién comunica?</th>
-                                <td class="text-center">{{ $soporte['inst_a_quien_comunica'] ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <th>¿Qué medio utiliza?</th>
-                                <td class="text-center">{{ $soporte['medio_que_utiliza'] ?? '-' }}</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-            
-            @if(!empty($evidencias['comentarios']))
-                <div class="section-title">Observaciones / Comentarios</div>
-                <div style="background: #fff; padding: 5px; border: 1px solid #ddd; font-style: italic;">
-                    {{ $evidencias['comentarios'] }}
+                {{-- Bloque 2: Admin y DNI --}}
+                <div class="section-title">Documentación y Firma Digital</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 20%;">Utiliza SIHCE</th>
+                            <th class="text-center" style="width: 20%;">Firmó DJ</th>
+                            <th class="text-center" style="width: 20%;">Firmó Confidencialidad</th>
+                            <th class="text-center" style="width: 20%;">Firma Digital Activa</th>
+                            <th class="text-center" style="width: 20%;">Tipo DNI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center">{{ $admin['utiliza_sihce'] ?? '-' }}</td>
+                            <td class="text-center">{{ $admin['firmo_dj'] ?? '-' }}</td>
+                            <td class="text-center">{{ $admin['firmo_confidencialidad'] ?? '-' }}</td>
+                            <td class="text-center">{{ $dni['firma_digital_sihce'] ?? '-' }}</td>
+                            <td class="text-center">{{ $dni['tipo_dni'] ?? '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                @if(!empty($dni['observaciones_dni']))
+                <div style="background: #f8fafc; padding: 4px; border: 1px dashed #cbd5e1; font-size: 9px; margin-bottom: 5px;">
+                    <strong>Obs. DNI:</strong> {{ $dni['observaciones_dni'] }}
                 </div>
+                @endif
+
+                {{-- Bloque 3 mejorado: Capacitación y Soporte --}}
+                <table style="width: 100%; border-collapse: collapse; margin-top: 5px; border: none;">
+                    <tr>
+                        <td width="49%" style="vertical-align: top; border: none; padding-right: 5px;">
+                            <div class="section-title">DETALLE DE CAPACITACIÓN</div>
+                            <table class="data-table">
+                                <tr>
+                                    <th>¿El personal ha recibido capacitación?</th>
+                                    <td class="text-center">{{ $capacitacion['recibio_capacitacion'] ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Entidad que capacitó</th>
+                                    <td class="text-center">{{ $capacitacion['inst_que_lo_capacito'] ?? '-' }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td width="2%" style="border: none;"></td>
+                        <td width="49%" style="vertical-align: top; border: none; padding-left: 5px;">
+                            <div class="section-title">SOPORTE</div>
+                            <table class="data-table">
+                                <tr>
+                                    <th>Ante Dificultades ¿A quién comunica?</th>
+                                    <td class="text-center">{{ $soporte['inst_a_quien_comunica'] ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>¿Qué medio utiliza?</th>
+                                    <td class="text-center">{{ $soporte['medio_que_utiliza'] ?? '-' }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                
+                @if(!empty($evidencias['comentarios']))
+                    <div class="section-title">Observaciones / Comentarios</div>
+                    <div style="background: #fff; padding: 5px; border: 1px solid #ddd; font-style: italic;">
+                        {{ $evidencias['comentarios'] }}
+                    </div>
+                @endif
             @endif
         </div>
     @empty

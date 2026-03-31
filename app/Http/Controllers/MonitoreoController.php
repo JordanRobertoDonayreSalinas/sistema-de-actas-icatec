@@ -528,14 +528,31 @@ class MonitoreoController extends Controller
     public function generarPDF($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'user', 'equipo'])->findOrFail($id);
-        $detalles = MonitoreoModulos::where('cabecera_monitoreo_id', $id)->where('modulo_nombre', '!=', 'config_modulos')->get()->keyBy('modulo_nombre');
+        
+        // Obtenemos los módulos y los renombramos a $modulos para que coincidan con la vista consolidado_pdf
+        $modulos = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+            ->where('modulo_nombre', '!=', 'config_modulos')
+            ->get();
 
         $prefijo = $acta->tipo_origen === 'ESPECIALIZADA' ? 'ACTA_CSMC_' : 'ACTA_IPRESS_';
         $numero = str_pad($acta->numero_acta ?? $acta->id, 5, '0', STR_PAD_LEFT);
 
-        return Pdf::loadView('usuario.monitoreo.pdf.acta_consolidada', compact('acta', 'detalles'))
-            ->setPaper('a4', 'portrait')
-            ->stream("{$prefijo}{$numero}.pdf");
+        // Usamos la vista real: consolidado_pdf
+        return Pdf::loadView('usuario.monitoreo.pdf.consolidado_pdf', [
+            'acta'    => $acta,
+            'modulos' => $modulos,
+            // Variables adicionales que espera la vista (basado en ConsolidadoPdfController)
+            'monitor' => [
+                'nombre' => $acta->user ? mb_strtoupper("{$acta->user->apellido_paterno} {$acta->user->apellido_materno} {$acta->user->name}", 'UTF-8') : 'N/A'
+            ],
+            'jefe' => [
+                'nombre' => mb_strtoupper($acta->responsable ?? 'N/A', 'UTF-8')
+            ],
+            'equipoMonitoreo' => $acta->equipo,
+            'equipos'         => \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $id)->get()
+        ])
+        ->setPaper('a4', 'portrait')
+        ->stream("{$prefijo}{$numero}.pdf");
     }
 
     public function subirPDF(Request $request, $id)
