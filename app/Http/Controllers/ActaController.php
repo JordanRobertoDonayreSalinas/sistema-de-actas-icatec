@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Acta;
 use App\Models\Establecimiento;
+use App\Models\Profesional;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -119,18 +120,22 @@ class ActaController extends Controller
         try {
             DB::beginTransaction();
 
-            $acta = Acta::create($request->only([
+            $data = $request->only([
                 'fecha',
                 'establecimiento_id',
                 'responsable',
-                'tema',
                 'modalidad',
                 'implementador'
-            ]));
+            ]);
+            $data['tema'] = ($request->tema === 'Otros' && $request->filled('tema_otro'))
+                            ? $request->tema_otro
+                            : $request->tema;
+
+            $acta = Acta::create($data);
 
             if ($request->hasFile('imagenes')) {
                 foreach ($request->file('imagenes') as $index => $file) {
-                    if ($index < 5) {
+                    if ($index < 2) {
                         $campo = 'imagen' . ($index + 1);
                         $acta->$campo = $file->store('evidencias', 'public');
                     }
@@ -141,6 +146,24 @@ class ActaController extends Controller
             if ($request->has('participantes')) {
                 foreach ($request->participantes as $p) {
                     $acta->participantes()->create($p);
+
+                    // Auto-guardar en maestro mon_profesionales si no existe
+                    $docNum = trim($p['dni'] ?? '');
+                    if ($docNum !== '') {
+                        $existeEnMaestro = Profesional::where('doc', $docNum)->exists();
+                        if (!$existeEnMaestro) {
+                            Profesional::create([
+                                'tipo_doc'         => 'DNI',
+                                'doc'              => $docNum,
+                                'apellido_paterno' => $p['apellidos'] ?? '',
+                                'apellido_materno' => '',
+                                'nombres'          => $p['nombres'] ?? '',
+                                'cargo'            => $p['cargo'] ?? null,
+                                'email'            => null,
+                                'telefono'         => null,
+                            ]);
+                        }
+                    }
                 }
             }
             if ($request->has('actividades')) {
@@ -185,7 +208,11 @@ class ActaController extends Controller
 
         try {
             DB::beginTransaction();
-            $acta->update($request->only(['fecha', 'establecimiento_id', 'responsable', 'tema', 'modalidad', 'implementador']));
+            $data = $request->only(['fecha', 'establecimiento_id', 'responsable', 'modalidad', 'implementador']);
+            $data['tema'] = ($request->tema === 'Otros' && $request->filled('tema_otro'))
+                            ? $request->tema_otro
+                            : $request->tema;
+            $acta->update($data);
 
             if ($request->has('eliminar_imagenes')) {
                 foreach ($request->eliminar_imagenes as $campo) {
@@ -199,7 +226,7 @@ class ActaController extends Controller
             if ($request->hasFile('imagenes')) {
                 $nuevosArchivos = $request->file('imagenes');
                 $archivoIndex = 0;
-                for ($i = 1; $i <= 5; $i++) {
+                for ($i = 1; $i <= 2; $i++) {
                     $campo = 'imagen' . $i;
                     if (is_null($acta->$campo) && isset($nuevosArchivos[$archivoIndex])) {
                         $path = $nuevosArchivos[$archivoIndex]->store('evidencias', 'public');
@@ -252,8 +279,13 @@ class ActaController extends Controller
     public function generarPDF($id)
     {
         $acta = Acta::with(['establecimiento', 'participantes', 'actividades', 'acuerdos', 'observaciones'])->findOrFail($id);
-        $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))->setPaper('a4', 'portrait');
-        return $pdf->stream("acta_{$acta->id}.pdf");
+        $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))
+                  ->setOptions(['isRemoteEnabled' => true])
+                  ->setPaper('a4', 'portrait');
+        $nombreEstablecimiento = mb_strtoupper($acta->establecimiento->nombre ?? 'SIN ESTABLECIMIENTO');
+        $correlativo = str_pad($acta->id, 3, '0', STR_PAD_LEFT);
+        $fileName = "AAT Nº {$correlativo} - {$nombreEstablecimiento}.pdf";
+        return $pdf->stream($fileName);
     }
 
     public function subirPDF(Request $request, $id)

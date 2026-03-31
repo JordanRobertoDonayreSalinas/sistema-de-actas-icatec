@@ -36,9 +36,7 @@ class LoginController extends Controller
             if ($user->role === 'admin') {
                 $rutaDestino = route('admin.users.index');
             } else {
-                // CAMBIO: Ahora apunta a la ruta del dashboard de usuario normal
-                // Asegúrate de haber definido 'usuario.dashboard' en web.php
-                $rutaDestino = route('usuario.dashboard.general');
+                $rutaDestino = route('usuario.mesa-ayuda.index');
             }
 
             // --- RESPUESTA PARA AJAX (JSON) ---

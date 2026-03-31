@@ -79,6 +79,7 @@
             </div>
 
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scroll">
+                @if(Auth::user()->role === 'admin')
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">Plataforma</p>
 
                 {{-- Dashboard Dropdown --}}
@@ -111,6 +112,7 @@
                         </a>
                     </div>
                 </div>
+                @endif
 
                 <a href="{{ route('usuario.perfil') }}"
                     class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.perfil') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
@@ -118,6 +120,7 @@
                     <span class="font-semibold">Mi Perfil</span>
                 </a>
 
+                @if(Auth::user()->role === 'admin')
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Operaciones</p>
 
                 {{-- IMPLEMENTACIÓN --}}
@@ -211,6 +214,36 @@
                         </a>
                     </div>
                 </div>
+                @endif
+
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Mesa de Ayuda</p>
+
+                {{-- INCIDENCIAS --}}
+                <a href="{{ route('usuario.mesa-ayuda.index') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.mesa-ayuda.index', 'usuario.mesa-ayuda.responder') ? 'bg-orange-600/10 text-orange-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="headphones" class="w-5 h-5"></i>
+                    <span class="font-medium flex-1">Gestión de Incidencias</span>
+                    @php
+                        if(Auth::user()->role === 'admin') {
+                            $pendientes = \App\Models\Incidencia::where('estado', 'Pendiente')->count();
+                        } else {
+                            $pendientes = \App\Models\Incidencia::where('estado', 'Pendiente')->where('dni', Auth::user()->username)->count();
+                        }
+                    @endphp
+                    @if($pendientes > 0)
+                        <span class="text-[10px] font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                            {{ $pendientes }}
+                        </span>
+                    @endif
+                </a>
+
+                {{-- FORMULARIO PÚBLICO --}}
+                <a href="{{ route('usuario.mesa-ayuda.form') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.mesa-ayuda.form') ? 'bg-orange-600/10 text-orange-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="external-link" class="w-5 h-5"></i>
+                    <span class="font-medium">Registro de Incidencias</span>
+                </a>
+
             </nav>
         </aside>
 
