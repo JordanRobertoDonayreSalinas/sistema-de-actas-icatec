@@ -114,6 +114,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [UsuarioController::class, 'index'])->name('general');
             Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
             Route::get('/mapa-asistencias', [UsuarioController::class, 'mapaSoportes'])->name('mapa.soportes'); // Nuevo mapa
+            Route::get('/mapa-implementaciones', [UsuarioController::class, 'mapaImplementaciones'])->name('mapa.implementaciones');
         });
 
         // AJAX para Dashboard - Equipos de Cómputo (Protegidos)
