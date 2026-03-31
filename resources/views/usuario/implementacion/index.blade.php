@@ -244,10 +244,6 @@
                                     class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-200">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
                                 </a>
-                                <button type="button" onclick="confirmarEliminacion('{{ $acta['ruta_eliminar'] }}', '{{ $acta['nombre'] }}')"
-                                    class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
                             </div>
                         </td>
                     </tr>

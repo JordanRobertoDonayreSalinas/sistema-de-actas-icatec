@@ -617,4 +617,46 @@ class ImplementacionController extends Controller
             }
         }
     }
+
+    /**
+     * Sube el acta firmada en formato PDF.
+     */
+    public function subirPdf(Request $request, $modulo, $id)
+    {
+        $modulos = ImplementacionHelper::getModulos();
+        if (!isset($modulos[$modulo])) {
+            return response()->json(['success' => false, 'message' => 'Módulo no válido'], 404);
+        }
+
+        $config = $modulos[$modulo];
+        $ModeloActa = $config['modelo'];
+        $acta = $ModeloActa::findOrFail($id);
+
+        $request->validate([
+            'pdf_firmado' => 'required|mimes:pdf|max:10240', // Máximo 10MB
+        ]);
+
+        if ($request->hasFile('pdf_firmado')) {
+            // Eliminar archivo anterior si existe
+            if ($acta->archivo_pdf && Storage::disk('public')->exists($acta->archivo_pdf)) {
+                Storage::disk('public')->delete($acta->archivo_pdf);
+            }
+
+            $archivo = $request->file('pdf_firmado');
+            $nombreArchivo = 'acta_firmada_' . $modulo . '_' . $id . '_' . time() . '.pdf';
+            $ruta = $archivo->storeAs('actas_implementacion/' . $modulo, $nombreArchivo, 'public');
+
+            // Actualizar registro en la base de datos
+            $acta->update(['archivo_pdf' => $ruta]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'El acta firmada ha sido subida correctamente.',
+                'ruta' => Storage::url($ruta)
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No se recibió ningún archivo.'], 400);
+    }
 }
+

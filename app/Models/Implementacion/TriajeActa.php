@@ -11,7 +11,7 @@ class TriajeActa extends Model
     protected $fillable = [
         'modulo', 'fecha', 'codigo_establecimiento', 'nombre_establecimiento',
         'provincia', 'distrito', 'categoria', 'red', 'microred',
-        'responsable', 'modalidad', 'observaciones', 'foto1', 'foto2'
+        'responsable', 'modalidad', 'observaciones', 'foto1', 'foto2', 'archivo_pdf'
     ];
 
     public function usuarios()
