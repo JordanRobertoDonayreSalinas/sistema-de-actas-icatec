@@ -1,337 +1,522 @@
 @extends('layouts.usuario')
-
 @section('title', 'Editar acta')
-
-{{-- 1. ESTILOS: Copiados exactamente de tu Create --}}
+{{-- 1. ESTILOS: Tailwind y jQuery UI --}}
 @push('styles')
-    {{-- jQuery UI para Autocomplete --}}
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Animación para el Toast y elementos dinámicos */
-        @keyframes fade-in { 
-            from {opacity:0; transform:translateY(10px);} 
-            to {opacity:1; transform:translateY(0);} 
+        body { font-family: 'Inter', sans-serif; }
+
+        @keyframes fade-in {
+            from { opacity:0; transform:translateY(8px); }
+            to   { opacity:1; transform:translateY(0); }
         }
         .animate-fade-in { animation: fade-in 0.3s ease forwards; }
 
-        /* Estilos personalizados para el Autocomplete */
-        .ui-autocomplete { 
-            border-radius: 0.75rem; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-            border: 1px solid #e2e8f0; 
-            z-index: 9999 !important;
+        @keyframes slide-down {
+            from { opacity:0; transform:translateY(-6px); max-height:0; }
+            to   { opacity:1; transform:translateY(0);  max-height:120px; }
         }
-        .ui-menu-item-wrapper.ui-state-active { 
-            background-color: #10b981 !important; 
-            border: none !important; 
-            color: white !important;
-        }
-        
-        /* Inputs readonly para que no parezcan editables */
-        input:read-only { background-color: #f8fafc; cursor: not-allowed; }
+        .slide-down { animation: slide-down 0.25s ease forwards; overflow:hidden; }
 
-        /* Sistema de Slots para Edición: Integrado en el estilo original */
-        .slot-foto {
-            aspect-ratio: 1 / 1;
-            border: 2px dashed #cbd5e1;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        /* Card de sección */
+        .section-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
             overflow: hidden;
-            background-color: #f9fafb;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .slot-foto.occupied { border: 2px solid #4f46e5; background-color: white; }
-        .slot-foto.marked-delete { filter: grayscale(1); opacity: 0.25; pointer-events: none; transform: scale(0.96); }
-        
-        .btn-delete-action {
-            position: absolute;
-            top: 0.4rem;
-            right: 0.4rem;
-            background-color: #ef4444;
-            color: white;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
+        .section-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 40;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 10px;
+            gap: 0.75rem;
+            padding: 0.85rem 1.5rem;
+            background: #1e293b;
+            color: #f8fafc;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.025em;
         }
+        .section-body { padding: 1.5rem; }
 
-        /* Estilos de tabla del Create */
-        .tabla-asistencia { width: 100%; border-collapse: collapse; }
-        .tabla-asistencia thead th { 
-            background-color: #f3f4f6; 
-            border: 1px solid #9ca3af; 
-            padding: 8px; 
-            text-align: center;
+        .inp {
+            width: 100%;
+            border: 1px solid #94a3b8;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            background: #fff;
+            color: #1e293b;
+            font-weight: 500;
         }
-        .tabla-asistencia tbody td { border: 1px solid #9ca3af; padding: 4px; }
+        .inp:focus { outline:none; border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.15); }
+        .inp:read-only { background:#f1f5f9; color:#64748b; cursor:not-allowed; }
+        select.inp { cursor:pointer; appearance:auto; }
+
+        /* Labels */
+        .lbl { display:block; font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
+
+        /* Tabla participantes */
+        .tbl { width:100%; border-collapse:collapse; font-size:0.85rem; }
+        .tbl th { background: #f1f5f9; border-bottom: 1px solid #e2e8f0; color:#475569; padding:0.6rem 0.4rem; font-weight:700; text-align:center; font-size:0.75rem; letter-spacing:0.02em; white-space:nowrap; text-transform: uppercase;}
+        .tbl td { border-bottom:1px solid #e2e8f0; padding:0.4rem 0.4rem; vertical-align:middle; }
+        .tbl tbody tr:hover td { background:#f8fafc; }
+        .tbl input, .tbl select { border:1px solid #cbd5e1; border-radius:0.375rem; padding:0.35rem 0.45rem; width:100%; font-size:0.85rem; background:#fff; transition:all 0.15s; }
+        .tbl input:focus, .tbl select:focus { outline:none; border-color:#10b981; box-shadow:0 0 0 2px rgba(16,185,129,0.15); }
+
+        /* Botones acción tabla */
+        .btn-lupa { background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:0.375rem; padding:0.3rem 0.5rem; cursor:pointer; font-size:0.85rem; transition:all 0.15s; }
+        .btn-lupa:hover { background:#e2e8f0; color:#0f172a; border-color:#94a3b8; }
+        .btn-del { background:#fff1f2; color:#be123c; border:1px solid #fecdd3; border-radius:0.375rem; padding:0.3rem 0.5rem; cursor:pointer; font-size:0.85rem; transition:all 0.15s; }
+        .btn-del:hover { background:#fecdd3; color:#9f1239; }
+
+        /* Autocomplete */
+        .ui-autocomplete { border-radius:0.375rem; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); border:1px solid #e2e8f0; z-index:9999 !important; }
+        .ui-menu-item-wrapper.ui-state-active { background-color:#1e293b !important; border:none !important; color:white !important; }
+
+        /* Botones principales */
+        .btn-add { display:inline-flex; align-items:center; gap:0.4rem; padding:0.45rem 1rem; border-radius:0.375rem; font-size:0.85rem; font-weight:600; cursor:pointer; border:1px solid transparent; transition:all 0.2s; background:#10b981; color:#fff; }
+        .btn-add:hover { background:#059669; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); }
+
+        /* Radio modernos */
+        .radio-group { display:flex; flex-wrap:wrap; gap:0.75rem; }
+        .radio-opt { display:flex; align-items:center; gap:0.5rem; padding:0.5rem 1.2rem; border-radius:3rem; border:1px solid #cbd5e1; background:#f8fafc; cursor:pointer; font-size:0.875rem; font-weight:600; transition:all 0.2s; user-select:none; color:#475569; }
+        .radio-opt:hover { border-color:#94a3b8; background:#f1f5f9; }
+        .radio-opt:has(input:checked) { background:#1e293b; color:#fff; border-color:#1e293b; }
+        .radio-opt input { accent-color:#fff; width:16px; height:16px; margin:0; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 @endpush
 
+{{-- 2. CONTENIDO: El formulario completo --}}
 @section('header-content')
-    <div class="flex flex-col">
-        <h1 class="text-xl font-bold text-slate-800 tracking-tight">Editar acta</h1>
-        <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-            <span>Plataforma</span>
-            <span class="text-slate-300">•</span>
+    <div>
+        <h2 class="text-2l font-bold text-slate-800 tracking-tight">Editar Acta</h2>
+        <div class="flex items-center gap-2 text-xs text-slate-500 mt-1 font-medium">
+            <span class="text-emerald-600">Operaciones</span>
+            <span>&bull;</span>
+            <span>Asistencia Técnica</span>
+            <span>&bull;</span>
             <span>ID: {{ $acta->id }}</span>
         </div>
     </div>
 @endsection
 
-{{-- 2. CONTENIDO: Espejo total del formulario Create --}}
 @section('content')
-    <div class="py-10 bg-gradient-to-r from-blue-50 to-indigo-50 min-h-screen">
+    <div class="min-h-screen pb-10 pt-4 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
+
+            {{-- Título principal --}}
+            <div class="mb-10 text-center">
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Editar Acta de Asistencia Técnica</h2>
+                <p class="text-slate-500 text-sm mt-2 max-w-2xl mx-auto">Complete todos los requerimientos para el registro del acta</p>
+            </div>
+
             <form id="actaForm"
                   action="{{ route('usuario.actas.update', $acta->id) }}"
                   method="POST"
-                  enctype="multipart/form-data"
-                  class="bg-white shadow-2xl rounded-xl p-8 w-full border border-gray-300">
-
+                  id="actaFormEdit"
+                  enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
-                <h1 class="text-3xl font-extrabold text-center uppercase text-indigo-700 underline mb-8">
-                    Acta de Asistencia Técnica
-                </h1>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label class="block text-gray-700 font-semibold">Fecha:</label>
-                        <input type="date" name="fecha" value="{{ old('fecha', $acta->fecha) }}" required
-                               class="mt-1 block w-full border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold">Establecimiento:</label>
-                        <input type="text" id="establecimiento" name="establecimiento" placeholder="Código o nombre..." required autocomplete="off"
-                               value="{{ old('establecimiento', $acta->establecimiento->nombre ?? '') }}"
-                               class="mt-1 block w-full border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                        <input type="hidden" id="establecimiento_id" name="establecimiento_id" value="{{ $acta->establecimiento_id }}">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-                    <div>
-                        <label class="block text-gray-700 font-semibold">Distrito:</label>
-                        <input type="text" id="distrito" name="distrito" readonly required value="{{ $acta->establecimiento->distrito ?? '' }}" class="mt-1 block w-full border border-gray-300 rounded-lg bg-gray-100 p-2">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold">Provincia:</label>
-                        <input type="text" id="provincia" name="provincia" readonly required value="{{ $acta->establecimiento->provincia ?? '' }}" class="mt-1 block w-full border border-gray-300 rounded-lg bg-gray-100 p-2">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold">Microred:</label>
-                        <input type="text" id="microred" name="microred" readonly required value="{{ $acta->establecimiento->microred ?? '' }}" class="mt-1 block w-full border border-gray-300 rounded-lg bg-gray-100 p-2">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold">Red:</label>
-                        <input type="text" id="red" name="red" readonly required value="{{ $acta->establecimiento->red ?? '' }}" class="mt-1 block w-full border border-gray-300 rounded-lg bg-gray-100 p-2">
-                    </div>
-                    <div class="col-span-2 md:col-span-4">
-                        <label class="block text-gray-700 font-semibold">Responsable:</label>
-                        <input type="text" id="responsable" name="responsable" placeholder="Nombre del responsable" required
-                               value="{{ old('responsable', $acta->responsable) }}"
-                               class="mt-1 block w-full border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-semibold">Tema / Motivo:</label>
-                    <select name="tema" required class="mt-1 block w-full border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                        <option value="">Seleccione un motivo...</option>
-                        <option value="Reactivación de módulo" {{ old('tema', $acta->tema) == 'Reactivación de módulo' ? 'selected' : '' }}>Reactivación de módulo</option>
-                        <option value="Cambio de responsable del módulo" {{ old('tema', $acta->tema) == 'Cambio de responsable del módulo' ? 'selected' : '' }}>Cambio de responsable del módulo</option>
-                        <option value="Ingreso de nuevo personal" {{ old('tema', $acta->tema) == 'Ingreso de nuevo personal' ? 'selected' : '' }}>Ingreso de nuevo personal</option>
-                        <option value="Actualización de cartera de servicios" {{ old('tema', $acta->tema) == 'Actualización de cartera de servicios' ? 'selected' : '' }}>Actualización de cartera de servicios</option>
-                        <option value="Otros" {{ old('tema', $acta->tema) == 'Otros' ? 'selected' : '' }}>Otros</option>
-                    </select>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-semibold mb-2">Modalidad de asistencia:</label>
-                    <div class="flex space-x-6">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="modalidad" value="Presencial" required {{ old('modalidad', $acta->modalidad) == 'Presencial' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                            <span>Presencial</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="modalidad" value="Virtual" required {{ old('modalidad', $acta->modalidad) == 'Virtual' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                            <span>Virtual</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="modalidad" value="Telefónica" required {{ old('modalidad', $acta->modalidad) == 'Telefónica' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
-                            <span>Telefónica</span>
-                        </label>
+                {{-- ===========================
+                     DATOS GENERALES
+                     =========================== --}}
+                <div class="section-card">
+                    <div class="section-header">&#128197; Datos Generales</div>
+                    <div class="section-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                            <div>
+                                <label class="lbl">Fecha</label>
+                                <input type="date" name="fecha" value="{{ old('fecha', date('Y-m-d')) }}" required class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl">Establecimiento</label>
+                                <input type="text" id="establecimiento" name="establecimiento"
+                                       placeholder="Código o nombre..." required autocomplete="off"
+                                       value="{{ old('establecimiento', $acta->establecimiento->nombre ?? '') }}"
+                                       class="inp">
+                                <input type="hidden" id="establecimiento_id" name="establecimiento_id"
+                                       value="{{ old('establecimiento_id', $acta->establecimiento_id ?? '') }}">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <label class="lbl">Distrito</label>
+                                <input type="text" id="distrito" name="distrito" readonly required
+                                       value="{{ old('distrito', $acta->establecimiento->distrito ?? '') }}" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl">Provincia</label>
+                                <input type="text" id="provincia" name="provincia" readonly required
+                                       value="{{ old('provincia', $acta->establecimiento->provincia ?? '') }}" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl">Microred</label>
+                                <input type="text" id="microred" name="microred" readonly required
+                                       value="{{ old('microred', $acta->establecimiento->microred ?? '') }}" class="inp">
+                            </div>
+                            <div>
+                                <label class="lbl">Red</label>
+                                <input type="text" id="red" name="red" readonly required
+                                       value="{{ old('red', $acta->establecimiento->red ?? '') }}" class="inp">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="lbl">Responsable</label>
+                            <input type="text" id="responsable" name="responsable"
+                                   placeholder="Nombre del responsable" required
+                                   value="{{ old('responsable', $acta->responsable ?? '') }}" class="inp">
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-semibold">Implementador(a):</label>
-                    <select name="implementador" required class="mt-1 block w-full border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-2">
-                        <option value="">Seleccione un implementador...</option>
-                        @foreach($usuariosRegistrados as $u)
-                            @php $nombreComp = trim("{$u->apellido_paterno} {$u->apellido_materno} {$u->name}"); @endphp
-                            <option value="{{ $nombreComp }}" {{ old('implementador', $acta->implementador) == $nombreComp ? 'selected' : '' }}>{{ $nombreComp }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold text-lg mb-2 underline">Participantes:</label>
-                    <div class="overflow-x-auto">
-                        <table class="w-full border border-gray-400">
-                            <thead class="bg-gray-200">
-                                <tr>
-                                    <th class="border border-gray-400 px-2 py-1 w-12 text-center text-xs">N°</th>
-                                    <th class="border border-gray-400 px-2 py-1 text-xs">DNI</th>
-                                    <th class="border border-gray-400 px-2 py-1 text-xs">Apellidos</th>
-                                    <th class="border border-gray-400 px-2 py-1 text-xs">Nombres</th>
-                                    <th class="border border-gray-400 px-2 py-1 text-xs">Cargo</th>
-                                    <th class="border border-gray-400 px-2 py-1 text-xs">Módulo</th>
-                                    <th class="border border-gray-400 px-2 py-1 text-xs">Unidad Ejecutora</th>
-                                    <th class="border border-gray-400 px-2 py-1 w-16 text-center text-xs">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-participantes">
+                {{-- ===========================
+                     TEMA / MODALIDAD / IMPLEMENTADOR
+                     =========================== --}}
+                <div class="section-card">
+                    <div class="section-header">&#128203; Tema y Modalidad</div>
+                    <div class="section-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                            <div>
+                                <label class="lbl">Tema / Motivo</label>
                                 @php
-                                    $modulosSalud = ["Atencion Prenatal", "Citas", "Consulta Externa: Medicina", "Consulta Externa: Nutricion", "Consulta Externa: Odontologia", "Consulta Externa: Psicologia", "Cred", "Farmacia", "FUA", "Gestión Administrativa", "Inmunizaciones", "Laboratorio", "Parto", "Planificacion Familiar", "Puerperio", "Teleatiendo", "Triaje", "VIH"];
-                                    $unidadesEjecutoras = ["DIRESA ICA","RED DE SALUD ICA","HOSPITAL SAN JOSE DE CHINCHA","HOSPITAL SAN JUAN DE DIOS PISCO","HOSPITAL DE APOYO PALPA","HOSPITAL DE APOYO NAZCA"];
+                                    $opcionesTema = [
+                                        'Reactivación de módulo',
+                                        'Cambio de responsable del módulo',
+                                        'Ingreso de nuevo personal',
+                                        'Actualización de cartera de servicios'
+                                    ];
+                                    $valTema = old('tema', $acta->tema ?? '');
+                                    $valOtro = old('tema_otro', '');
+                                    
+                                    if($valTema !== '' && !in_array($valTema, $opcionesTema)) {
+                                        if ($valTema !== 'Otros') {
+                                            $valOtro = $valTema; 
+                                            $valTema = 'Otros';
+                                        }
+                                    }
+                                    $esOtro = ($valTema === 'Otros');
                                 @endphp
-                                @foreach(old('participantes', $acta->participantes) as $i => $p)
+                                <select id="selectTema" name="tema" required class="inp">
+                                    <option value="">Seleccione un motivo...</option>
+                                    <option value="Reactivación de módulo" {{ $valTema == 'Reactivación de módulo' ? 'selected' : '' }}>Reactivación de módulo</option>
+                                    <option value="Cambio de responsable del módulo" {{ $valTema == 'Cambio de responsable del módulo' ? 'selected' : '' }}>Cambio de responsable del módulo</option>
+                                    <option value="Ingreso de nuevo personal" {{ $valTema == 'Ingreso de nuevo personal' ? 'selected' : '' }}>Ingreso de nuevo personal</option>
+                                    <option value="Actualización de cartera de servicios" {{ $valTema == 'Actualización de cartera de servicios' ? 'selected' : '' }}>Actualización de cartera de servicios</option>
+                                    <option value="Otros" {{ $esOtro ? 'selected' : '' }}>Otros</option>
+                                </select>
+                                <div id="divTemaOtro" class="mt-2 {{ $esOtro ? '' : 'hidden' }}">
+                                    <input type="text" name="tema_otro" id="temaOtro"
+                                           placeholder="Especifique el motivo..."
+                                           value="{{ $valOtro }}"
+                                           class="inp slide-down"
+                                           {{ $esOtro ? 'required' : '' }}>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="lbl">Implementador(a)</label>
+                                <select name="implementador" required class="inp">
+                                    <option value="">Seleccione un implementador...</option>
+                                    @php
+                                        $usuariosRegistrados = \App\Models\User::where('status','active')->orderBy('apellido_paterno')->get();
+                                    @endphp
+                                    @foreach($usuariosRegistrados as $u)
+                                        @php
+                                            $nombreAMostrar = trim("{$u->apellido_paterno} {$u->apellido_materno} {$u->name}");
+                                            $selected = (old('implementador', $acta->implementador ?? '') == $nombreAMostrar);
+                                        @endphp
+                                        <option value="{{ $nombreAMostrar }}" {{ $selected ? 'selected' : '' }}>{{ $nombreAMostrar }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="lbl">Modalidad de asistencia</label>
+                            <div class="radio-group mt-1">
+                                <label class="radio-opt">
+                                    <input type="radio" name="modalidad" value="Presencial" required {{ old('modalidad', $acta->modalidad ?? '') == 'Presencial' ? 'checked' : '' }}>
+                                    &#128205; Presencial
+                                </label>
+                                <label class="radio-opt">
+                                    <input type="radio" name="modalidad" value="Virtual" {{ old('modalidad', $acta->modalidad ?? '') == 'Virtual' ? 'checked' : '' }}>
+                                    &#128187; Virtual
+                                </label>
+                                <label class="radio-opt">
+                                    <input type="radio" name="modalidad" value="Telefónica" {{ old('modalidad', $acta->modalidad ?? '') == 'Telefónica' ? 'checked' : '' }}>
+                                    &#128222; Telefónica
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ===========================
+                     SECCIÓN: PARTICIPANTES
+                     =========================== --}}
+                <div class="section-card">
+                    <div class="section-header">&#128101; Participantes</div>
+                    <div class="section-body" style="padding:1rem">
+                        <div class="overflow-x-auto">
+                            <table class="tbl">
+                                <thead>
                                     <tr>
-                                        <td class="border border-gray-400 px-2 py-1 text-center font-bold">{{ $i + 1 }}</td>
-                                        <td class="border border-gray-400 px-2 py-1"><input type="text" name="participantes[{{ $i }}][dni]" data-base="dni" value="{{ $p['dni'] ?? $p->dni }}" required class="w-full border-gray-300 rounded-md p-1 text-sm"></td>
-                                        <td class="border border-gray-400 px-2 py-1"><input type="text" name="participantes[{{ $i }}][apellidos]" data-base="apellidos" value="{{ $p['apellidos'] ?? $p->apellidos }}" required class="w-full border-gray-300 rounded-md p-1 text-sm uppercase"></td>
-                                        <td class="border border-gray-400 px-2 py-1"><input type="text" name="participantes[{{ $i }}][nombres]" data-base="nombres" value="{{ $p['nombres'] ?? $p->nombres }}" required class="w-full border-gray-300 rounded-md p-1 text-sm uppercase"></td>
-                                        <td class="border border-gray-400 px-2 py-1"><input type="text" name="participantes[{{ $i }}][cargo]" data-base="cargo" value="{{ $p['cargo'] ?? $p->cargo }}" required class="w-full border-gray-300 rounded-md p-1 text-sm"></td>
-                                        <td class="border border-gray-400 px-2 py-1">
-                                            <select name="participantes[{{ $i }}][modulo]" data-base="modulo" class="w-full border-gray-300 rounded-md p-1 text-sm bg-white">
-                                                <option value="">-- No aplica --</option>
-                                                @foreach($modulosSalud as $opcion) <option value="{{ $opcion }}" {{ ($p['modulo'] ?? $p->modulo) == $opcion ? 'selected' : '' }}>{{ $opcion }}</option> @endforeach
-                                            </select>
-                                        </td>
-                                        <td class="border border-gray-400 px-2 py-1">
-                                            <select name="participantes[{{ $i }}][unidad_ejecutora]" data-base="unidad_ejecutora" class="w-full border-gray-300 rounded-md p-1 text-sm bg-white">
-                                                <option value="">-- No aplica --</option>
-                                                @foreach($unidadesEjecutoras as $opcion) <option value="{{ $opcion }}" {{ ($p['unidad_ejecutora'] ?? $p->unidad_ejecutora) == $opcion ? 'selected' : '' }}>{{ $opcion }}</option> @endforeach
-                                            </select>
-                                        </td>
-                                        <td class="border border-gray-400 px-2 py-1 text-center"><button type="button" class="text-red-600 font-bold eliminar-fila">✖</button></td>
+                                        <th style="width:36px">N°</th>
+                                        <th style="width:170px">Documento</th>
+                                        <th>Apellidos</th>
+                                        <th>Nombres</th>
+                                        <th style="width:200px">Cargo</th>
+                                        <th style="width:260px">Módulo</th>
+                                        <th style="width:52px">Acc.</th>
                                     </tr>
-                                @endforeach
+                                </thead>
+                                <tbody id="tabla-participantes">
+                                    @php
+                                        $participantes = old('participantes', $acta->participantes ?? []);
+                                        $modulos = ["Atencion Prenatal","Citas","Consulta Externa: Medicina","Consulta Externa: Nutricion","Consulta Externa: Odontologia","Consulta Externa: Psicologia","Cred","Farmacia","FUA","Gestión Administrativa","Inmunizaciones","Laboratorio","Parto","Planificacion Familiar","Puerperio","Teleatiendo","Triaje","VIH"];
+                                        $unidades = ["DIRESA ICA","RED DE SALUD ICA","HOSPITAL SAN JOSE DE CHINCHA","HOSPITAL SAN JUAN DE DIOS PISCO","HOSPITAL DE APOYO PALPA","HOSPITAL DE APOYO NAZCA"];
+                                    @endphp
+                                    @if(count($participantes) === 0)
+                                        <tr>
+                                            <td class="text-center font-bold text-indigo-600">1</td>
+                                            <td>
+                                                <div style="display:flex;gap:3px;align-items:center">
+                                                    <input type="text" name="participantes[0][dni]" data-base="dni" placeholder="Documento" class="" style="flex:1;min-width:70px">
+                                                    <button type="button" class="btn-lupa buscar-participante" title="Buscar">&#128269;</button>
+                                                </div>
+                                            </td>
+                                            <td><input type="text" name="participantes[0][apellidos]" data-base="apellidos" placeholder="Apellidos" required></td>
+                                            <td><input type="text" name="participantes[0][nombres]" data-base="nombres" placeholder="Nombres" required></td>
+                                            <td><input type="text" name="participantes[0][cargo]" data-base="cargo" placeholder="Cargo"></td>
+                                            <td>
+                                                <select name="participantes[0][modulo]" data-base="modulo">
+                                                    <option value="">-- No aplica --</option>
+                                                    @foreach($modulos as $op) <option value="{{ $op }}">{{ $op }}</option> @endforeach
+                                                </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-del eliminar-fila" title="Eliminar">&#10006;</button>
+                                            </td>
+                                        </tr>
+                                    @else
+                                        @foreach($participantes as $i => $p)
+                                            <tr>
+                                                <td class="text-center font-bold text-indigo-600">{{ $i+1 }}</td>
+                                                <td>
+                                                    <div style="display:flex;gap:3px;align-items:center">
+                                                        <input type="text" name="participantes[{{ $i }}][dni]" data-base="dni" value="{{ $p['dni'] ?? $p->dni ?? '' }}" style="flex:1;min-width:70px">
+                                                        <button type="button" class="btn-lupa buscar-participante" title="Buscar">&#128269;</button>
+                                                    </div>
+                                                </td>
+                                                <td><input type="text" name="participantes[{{ $i }}][apellidos]" data-base="apellidos" value="{{ $p['apellidos'] ?? $p->apellidos ?? '' }}" required></td>
+                                                <td><input type="text" name="participantes[{{ $i }}][nombres]" data-base="nombres" value="{{ $p['nombres'] ?? $p->nombres ?? '' }}" required></td>
+                                                <td><input type="text" name="participantes[{{ $i }}][cargo]" data-base="cargo" value="{{ $p['cargo'] ?? $p->cargo ?? '' }}"></td>
+                                                <td>
+                                                    <select name="participantes[{{ $i }}][modulo]" data-base="modulo">
+                                                        <option value="">-- No aplica --</option>
+                                                        @foreach($modulos as $op) <option value="{{ $op }}" {{ ($p['modulo'] ?? $p->modulo ?? '') == $op ? 'selected' : '' }}>{{ $op }}</option> @endforeach
+                                                    </select>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn-del eliminar-fila" title="Eliminar">&#10006;</button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="agregar-participante" class="btn-add mt-3">
+                            &#43; Agregar participante
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Template fila participante --}}
+                <template id="fila-participante">
+                    <tr>
+                        <td class="text-center font-bold text-indigo-600"></td>
+                        <td>
+                            <div style="display:flex;gap:3px;align-items:center">
+                                <input type="text" data-base="dni" placeholder="Doc..." style="flex:1;min-width:70px">
+                                <button type="button" class="btn-lupa buscar-participante" title="Buscar">&#128269;</button>
+                            </div>
+                        </td>
+                        <td><input type="text" data-base="apellidos" placeholder="Apellidos" required></td>
+                        <td><input type="text" data-base="nombres" placeholder="Nombres" required></td>
+                        <td><input type="text" data-base="cargo" placeholder="Cargo"></td>
+                        <td>
+                            <select data-base="modulo">
+                                <option value="">-- No aplica --</option>
+                                @foreach($modulos as $op) <option value="{{ $op }}">{{ $op }}</option> @endforeach
+                            </select>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn-del eliminar-fila" title="Eliminar">&#10006;</button>
+                        </td>
+                    </tr>
+                </template>
+
+                <!-- ============================
+                     SECCIÓN: ACTIVIDADES
+                     ============================ -->
+                {{-- ===========================
+                     SECCIÓN: ACTIVIDADES
+                     =========================== --}}
+                <div class="section-card">
+                    <div class="section-header">&#9998; Actividades desarrolladas</div>
+                    <div class="section-body" style="padding:1rem">
+                        <table class="tbl">
+                            <thead><tr>
+                                <th style="width:36px">N°</th>
+                                <th>Descripción</th>
+                                <th style="width:52px">Acc.</th>
+                            </tr></thead>
+                            <tbody id="tabla-actividades">
+                                @php $actividades = old('actividades', $acta->actividades ?? []); @endphp
+                                @if(count($actividades) === 0)
+                                    <tr>
+                                        <td class="text-center font-bold text-indigo-600">1</td>
+                                        <td><input type="text" name="actividades[0][descripcion]" required placeholder="Describa la actividad..."></td>
+                                        <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                                    </tr>
+                                @else
+                                    @foreach($actividades as $i => $a)
+                                        <tr>
+                                            <td class="text-center font-bold text-indigo-600">{{ $i+1 }}</td>
+                                            <td><input type="text" name="actividades[{{ $i }}][descripcion]" value="{{ $a['descripcion'] ?? $a->descripcion ?? '' }}" required></td>
+                                            <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                                        </tr>
+                                    @endforeach
+                                @endif
                             </tbody>
                         </table>
+                        <button type="button" id="agregar-actividad" class="btn-add mt-3">
+                            &#43; Actividad
+                        </button>
                     </div>
-                    <button type="button" id="agregar-participante" class="mt-2 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700">+ Agregar participante</button>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold text-lg mb-2 underline text-blue-700 uppercase">Actividades desarrolladas:</label>
-                    <table class="w-full border border-gray-400 shadow-sm">
-                        <thead class="bg-gray-200">
-                            <tr><th class="border border-gray-400 px-2 py-1 w-12 text-center text-xs">N°</th><th class="border border-gray-400 px-2 py-1 text-xs">Descripción</th><th class="border border-gray-400 px-2 py-1 w-16 text-center text-xs">Acciones</th></tr>
-                        </thead>
-                        <tbody id="tabla-actividades">
-                            @foreach(old('actividades', $acta->actividades) as $i => $a)
-                                <tr>
-                                    <td class="border border-gray-400 px-2 py-1 text-center font-bold text-indigo-600 bg-gray-50">{{ $i + 1 }}</td>
-                                    <td class="border border-gray-400 px-2 py-1"><input type="text" name="actividades[{{ $i }}][descripcion]" value="{{ $a['descripcion'] ?? $a->descripcion }}" required class="w-full border-gray-300 rounded-md p-1 text-sm"></td>
-                                    <td class="border border-gray-400 px-2 py-1 text-center"><button type="button" class="text-red-600 font-bold eliminar-fila-generica">✖</button></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <button type="button" id="agregar-actividad" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">+ Agregar actividad</button>
-                </div>
-
-                <div class="mb-10 p-6 bg-slate-50 border-2 border-indigo-100 rounded-2xl shadow-inner">
-                    <label class="block text-indigo-800 font-black text-xl mb-6 underline tracking-tight">Adjuntar Imágenes (máx. 5):</label>
-                    
-                    <div id="grid-evidencias" class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-6">
-                        @for($i = 1; $i <= 5; $i++)
-                            @php $campoSql = "imagen$i"; @endphp
-                            <div class="slot-foto {{ $acta->$campoSql ? 'occupied' : '' }}" id="slot-{{ $i }}" data-slot="{{ $i }}" data-occupied="{{ $acta->$campoSql ? 'true' : 'false' }}">
+                {{-- ===========================
+                     SECCIÓN: IMÁGENES (máx. 2)
+                     =========================== --}}
+                <div class="section-card">
+                    <div class="section-header">&#128247; Imágenes (máx. 2)</div>
+                    <div class="section-body">
+                        <div id="grid-evidencias" class="grid grid-cols-2 gap-4 mb-4">
+                            @for($i = 1; $i <= 2; $i++)
+                                @php $campoSql = "imagen" . $i; @endphp
+                                <div class="slot-foto {{ $acta->$campoSql ? 'occupied' : '' }}" id="slot-{{ $i }}" data-slot="{{ $i }}" data-occupied="{{ $acta->$campoSql ? 'true' : 'false' }}" style="position:relative;border:2px dashed #cbd5e1;border-radius:0.5rem;display:flex;align-items:center;justify-content:center;background:#f8fafc;aspect-ratio:3/2;overflow:hidden">
+                                    @if($acta->$campoSql)
+                                        <img src="{{ asset('storage/' . $acta->$campoSql) }}" style="width:100%;height:100%;object-fit:cover" class="btn-ver-imagen cursor-zoom-in">
+                                        <button type="button" class="btn-eliminar-existente" data-campo="{{ $campoSql }}" data-slot="{{ $i }}" style="position:absolute;top:5px;right:5px;background:#ef4444;color:#fff;border-radius:50%;width:24px;height:24px;font-size:12px;font-weight:bold;cursor:pointer">&#10006;</button>
+                                    @else
+                                        <div style="text-align:center;color:#94a3b8">
+                                            <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase">Espacio {{ $i }}</span>
+                                        </div>
+                                    @endif
+                                </div>
                                 @if($acta->$campoSql)
-                                    {{-- Previsualización servidor --}}
-                                    <img src="{{ asset('storage/' . $acta->$campoSql) }}" class="w-full h-full object-cover btn-ver-imagen cursor-zoom-in">
-                                    <button type="button" class="btn-delete-action btn-eliminar-existente" data-campo="{{ $campoSql }}" data-slot="{{ $i }}">✖</button>
-                                    <input type="hidden" name="eliminar_imagenes[]" id="input-eliminar-{{ $campoSql }}" value="" disabled>
-                                @else
-                                    {{-- Placeholder visual --}}
-                                    <div class="flex flex-col items-center gap-2 text-slate-300 placeholder-info">
-                                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span class="text-[9px] font-black uppercase tracking-widest text-center">Espacio {{ $i }}</span>
-                                    </div>
+                                <input type="hidden" name="eliminar_imagenes[]" id="input-eliminar-{{ $campoSql }}" value="" disabled>
                                 @endif
-                            </div>
-                        @endfor
-                    </div>
+                            @endfor
+                        </div>
 
-                    <div id="drop-area" class="w-full p-8 border-2 border-dashed border-indigo-400 rounded-3xl cursor-pointer text-center bg-white hover:bg-indigo-50 transition-all group relative">
-                        <input type="file" id="input-files" name="imagenes[]" accept="image/*" multiple class="hidden">
-                        <p class="text-indigo-900 font-bold text-lg">Haz clic o arrastra nuevas fotos aquí</p>
-                        <p class="text-xs text-indigo-400 italic uppercase">Los espacios libres se ocuparán automáticamente</p>
-                    </div>
-                    <div class="flex items-center justify-between mt-2">
-                        <p id="file-counter" class="text-sm text-gray-500 italic">0 nuevas imágenes seleccionadas</p>
-                        <button type="button" id="clear-all" class="text-xs text-red-600 font-semibold hover:underline hidden">Quitar todas las nuevas</button>
+                        <div id="drop-area"
+                             style="border:2px dashed #cbd5e1;border-radius:0.5rem;padding:2rem;text-align:center;background:#f8fafc;cursor:pointer;transition:all 0.2s">
+                            <p style="color:#475569;font-weight:600">&#128247; Haz clic o arrastra nuevas fotos aquí</p>
+                            <input type="file" id="imagenes" name="imagenes[]" accept="image/*" multiple class="hidden">
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                            <p id="file-counter" style="font-size:0.82rem;color:#64748b">0 nuevas seleccionadas</p>
+                            <button type="button" id="clear-all" class="hidden" style="font-size:0.78rem;color:#e11d48;font-weight:600">Quitar nuevas</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold text-lg mb-2 underline text-purple-700 uppercase">Acuerdos y compromisos:</label>
-                    <table class="w-full border border-gray-400 shadow-sm">
-                        <thead class="bg-gray-200">
-                            <tr><th class="border border-gray-400 px-2 py-1 w-12 text-center text-xs">N°</th><th class="border border-gray-400 px-2 py-1 text-xs">Descripción</th><th class="border border-gray-400 px-2 py-1 w-16 text-center text-xs">Acciones</th></tr>
-                        </thead>
-                        <tbody id="tabla-acuerdos">
-                            @foreach(old('acuerdos', $acta->acuerdos) as $i => $ac)
-                                <tr>
-                                    <td class="border border-gray-400 px-2 py-1 text-center font-bold text-indigo-600 bg-gray-50">{{ $i + 1 }}</td>
-                                    <td class="border border-gray-400 px-2 py-1"><input type="text" name="acuerdos[{{ $i }}][descripcion]" value="{{ $ac['descripcion'] ?? $ac->descripcion }}" required class="w-full border-gray-300 rounded-md p-1 text-sm"></td>
-                                    <td class="border border-gray-400 px-2 py-1 text-center"><button type="button" class="text-red-600 font-bold eliminar-fila-generica">✖</button></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <button type="button" id="agregar-acuerdo" class="mt-2 px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700">+ Agregar acuerdo</button>
+                {{-- ===========================
+                     SECCIÓN: ACUERDOS
+                     =========================== --}}
+                <div class="section-card">
+                    <div class="section-header">&#129309; Acuerdos y compromisos</div>
+                    <div class="section-body" style="padding:1rem">
+                        <table class="tbl">
+                            <thead><tr>
+                                <th style="width:36px">N°</th>
+                                <th>Descripción</th>
+                                <th style="width:52px">Acc.</th>
+                            </tr></thead>
+                            <tbody id="tabla-acuerdos">
+                                @php $acuerdos = old('acuerdos', $acta->acuerdos ?? []); @endphp
+                                @if(count($acuerdos) === 0)
+                                    <tr>
+                                        <td class="text-center font-bold text-indigo-600">1</td>
+                                        <td><input type="text" name="acuerdos[0][descripcion]" required placeholder="Describa el acuerdo..."></td>
+                                        <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                                    </tr>
+                                @else
+                                    @foreach($acuerdos as $i => $ac)
+                                        <tr>
+                                            <td class="text-center font-bold text-indigo-600">{{ $i+1 }}</td>
+                                            <td><input type="text" name="acuerdos[{{ $i }}][descripcion]" value="{{ $ac['descripcion'] ?? $ac->descripcion ?? '' }}" required></td>
+                                            <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                        <button type="button" id="agregar-acuerdo" class="btn-add mt-3">
+                            &#43; Acuerdo
+                        </button>
+                    </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold text-lg mb-2 underline text-yellow-700 uppercase">Observaciones:</label>
-                    <table class="w-full border border-gray-400 shadow-sm">
-                        <thead class="bg-gray-200">
-                            <tr><th class="border border-gray-400 px-2 py-1 w-12 text-center text-xs">N°</th><th class="border border-gray-400 px-2 py-1 text-xs">Descripción</th><th class="border border-gray-400 px-2 py-1 w-16 text-center text-xs">Acciones</th></tr>
-                        </thead>
-                        <tbody id="tabla-observaciones">
-                            @foreach(old('observaciones', $acta->observaciones) as $i => $o)
-                                <tr>
-                                    <td class="border border-gray-400 px-2 py-1 text-center font-bold text-indigo-600 bg-gray-50">{{ $i + 1 }}</td>
-                                    <td class="border border-gray-400 px-2 py-1"><input type="text" name="observaciones[{{ $i }}][descripcion]" value="{{ $o['descripcion'] ?? $o->descripcion }}" required class="w-full border-gray-300 rounded-md p-1 text-sm"></td>
-                                    <td class="border border-gray-400 px-2 py-1 text-center"><button type="button" class="text-red-600 font-bold eliminar-fila-generica">✖</button></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <button type="button" id="agregar-observacion" class="mt-2 px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">+ Agregar observación</button>
+                {{-- ===========================
+                     SECCIÓN: OBSERVACIONES
+                     =========================== --}}
+                <div class="section-card">
+                    <div class="section-header">&#128203; Observaciones</div>
+                    <div class="section-body" style="padding:1rem">
+                        <table class="tbl">
+                            <thead><tr>
+                                <th style="width:36px">N°</th>
+                                <th>Descripción</th>
+                                <th style="width:52px">Acc.</th>
+                            </tr></thead>
+                            <tbody id="tabla-observaciones">
+                                @php $observaciones = old('observaciones', $acta->observaciones ?? []); @endphp
+                                @if(count($observaciones) === 0)
+                                    <tr>
+                                        <td class="text-center font-bold text-indigo-600">1</td>
+                                        <td><input type="text" name="observaciones[0][descripcion]" required placeholder="Escriba la observación..."></td>
+                                        <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                                    </tr>
+                                @else
+                                    @foreach($observaciones as $i => $o)
+                                        <tr>
+                                            <td class="text-center font-bold text-indigo-600">{{ $i+1 }}</td>
+                                            <td><input type="text" name="observaciones[{{ $i }}][descripcion]" value="{{ $o['descripcion'] ?? $o->descripcion ?? '' }}" required></td>
+                                            <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                        <button type="button" id="agregar-observacion" class="btn-add mt-3">
+                            &#43; Observación
+                        </button>
+                    </div>
                 </div>
 
-                <div class="text-center mt-12">
-                    <button type="button" id="btnGuardar" 
-                        class="px-12 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-2xl shadow-indigo-200 text-xl transition-all active:scale-95 flex items-center justify-center mx-auto gap-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        GUARDAR CAMBIOS DEL ACTA
+                {{-- Botón Guardar --}}
+                <div class="text-center mt-6 pb-4">
+                    <button type="button" id="btnActualizar" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md text-lg transition-colors">
+                        &#128190; Actualizar Acta
                     </button>
                 </div>
 
@@ -339,251 +524,517 @@
         </div>
     </div>
 
-    <div id="image-modal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[500] backdrop-blur-sm p-4">
-        <span id="close-modal" class="absolute top-6 right-8 text-white text-6xl cursor-pointer font-thin hover:text-indigo-400 transition-all">&times;</span>
-        <img id="modal-img" class="max-w-full max-h-full rounded-lg shadow-2xl border-4 border-white/10" src="">
+    {{-- Modales fuera del form --}}
+    <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
+        <span id="close-modal" class="absolute top-4 right-6 text-white text-3xl cursor-pointer font-bold">&times;</span>
+        <img id="modal-img" class="max-w-[90%] max-h-[90%] rounded-lg shadow-lg" src="">
     </div>
-    <div id="toast-container" class="fixed bottom-10 right-10 space-y-4 z-[1000]"></div>
-
-    <template id="fila-participante">
-        <tr>
-            <td class="border border-gray-400 px-2 py-1 text-center font-bold text-indigo-600 bg-gray-50"></td>
-            <td class="border border-gray-400 px-2 py-1"><input type="text" data-base="dni" class="w-full border-gray-300 rounded p-1 text-sm"></td>
-            <td class="border border-gray-400 px-2 py-1"><input type="text" data-base="apellidos" class="w-full border-gray-300 rounded p-1 text-sm uppercase"></td>
-            <td class="border border-gray-400 px-2 py-1"><input type="text" data-base="nombres" class="w-full border-gray-300 rounded p-1 text-sm uppercase"></td>
-            <td class="border border-gray-400 px-2 py-1"><input type="text" data-base="cargo" class="w-full border-gray-300 rounded p-1 text-sm"></td>
-            <td class="border border-gray-400 px-2 py-1">
-                <select data-base="modulo" class="w-full border-gray-300 p-1 text-sm bg-white">
-                    <option value="">-- No aplica --</option>
-                    @foreach($modulosSalud as $opcion) <option value="{{ $opcion }}">{{ $opcion }}</option> @endforeach
-                </select>
-            </td>
-            <td class="border border-gray-400 px-2 py-1">
-                <select data-base="unidad_ejecutora" class="w-full border-gray-300 p-1 text-sm bg-white">
-                    <option value="">-- No aplica --</option>
-                    @foreach($unidadesEjecutoras as $opcion) <option value="{{ $opcion }}">{{ $opcion }}</option> @endforeach
-                </select>
-            </td>
-            <td class="border border-gray-400 px-2 py-1 text-center"><button type="button" class="text-red-600 font-bold eliminar-fila">✖</button></td>
-        </tr>
-    </template>
-
-    <template id="fila-generica">
-        <tr>
-            <td class="border border-gray-400 px-2 py-1 text-center font-bold text-indigo-600 bg-gray-50"></td>
-            <td class="border border-gray-400 px-2 py-1">
-                <input type="text" required class="w-full border-gray-300 rounded-md p-1 text-sm">
-            </td>
-            <td class="border border-gray-400 px-2 py-1 text-center">
-                <button type="button" class="text-red-600 font-bold eliminar-fila-generica">✖</button>
-            </td>
-        </tr>
-    </template>
+    <div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 
 @endsection
 
-{{-- 3. SCRIPTS: Lógica detallada (Aprox. 400+ líneas de JS puro) --}}
+{{-- 3. SCRIPTS: Toda tu lógica JavaScript aquí abajo --}}
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-$(function() {
-    const buscarUrl = "{{ route('establecimientos.buscar') }}";
-    let bufferNuevasFotos = []; 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    const prefixMap = {
-        '#tabla-participantes': 'participantes',
-        '#tabla-actividades': 'actividades',
-        '#tabla-acuerdos': 'acuerdos',
-        '#tabla-observaciones': 'observaciones'
-    };
+    <!-- Script de Actividades -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabla = document.getElementById('tabla-actividades');
+            const btnAgregar = document.getElementById('agregar-actividad');
 
-    // ---------- UTILIDADES DE REINDEXADO ----------
-    function reindexRows(tbodySelector) {
-        $(tbodySelector).find('tr').each(function(i){
-            $(this).find('td').first().text(i + 1);
-            $(this).find('input, select, textarea').each(function(){
-                const $el = $(this);
-                const name = $el.attr('name');
-                if (name) {
-                    const nuevo = name.replace(/\[\d+\]/, '[' + i + ']');
-                    $el.attr('name', nuevo);
-                } else if ($el.data('base')) {
-                    const base = $el.data('base');
-                    const prefix = prefixMap[tbodySelector] || 'items';
-                    $el.attr('name', `${prefix}[${i}][${base}]`);
+            function actualizarNumeracion() {
+                tabla.querySelectorAll('tr').forEach((tr, index) => {
+                    tr.querySelector('td:first-child').textContent = index + 1;
+                    tr.querySelector('input').name = `actividades[${index}][descripcion]`;
+                });
+            }
+
+            if(btnAgregar) {
+                btnAgregar.addEventListener('click', () => {
+                    const nuevaFila = document.createElement('tr');
+                    nuevaFila.innerHTML = `
+                        <td class="text-center font-bold text-indigo-600"></td>
+                        <td><input type="text" name="" required style="width:100%;border:1px solid #c7d2fe;border-radius:0.45rem;padding:0.3rem 0.4rem"></td>
+                        <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                    `;
+                    tabla.appendChild(nuevaFila);
+                    actualizarNumeracion();
+                });
+            }
+
+            if(tabla) {
+                tabla.addEventListener('click', function(e) {
+                    if(e.target.classList.contains('eliminar-fila-generica')) {
+                        e.target.closest('tr').remove();
+                        actualizarNumeracion();
+                    }
+                });
+            }
+
+            // Inicializar numeración
+            if(tabla) actualizarNumeracion();
+        });
+    </script>
+
+    <!-- Script de Imágenes (Edición) -->
+    <style>
+        .slot-foto.marked-delete { filter: grayscale(1); opacity: 0.25; pointer-events: none; transform: scale(0.96); transition: all 0.3s }
+        @keyframes fade-in { from {opacity:0} to {opacity:1} }
+    </style>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const input = document.getElementById("imagenes");
+        const dropArea = document.getElementById("drop-area");
+        const counter = document.getElementById("file-counter");
+        const clearBtn = document.getElementById("clear-all");
+        
+        let bufferNuevasFotos = [];
+        const maxFiles = 2; // Fixed to 2 for edit
+
+        if(dropArea) {
+            dropArea.addEventListener("click", () => input.click());
+            ["dragenter","dragover"].forEach(e => dropArea.addEventListener(e, ev => { ev.preventDefault(); dropArea.style.background = "#e2e8f0"; }));
+            ["dragleave","drop"].forEach(e => dropArea.addEventListener(e, ev => { ev.preventDefault(); dropArea.style.background = "#f8fafc"; }));
+            dropArea.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
+            input.addEventListener("change", e => handleFiles(e.target.files));
+        }
+
+        function handleFiles(files) {
+            const countOcupadas = $('.slot-foto[data-occupied="true"]').length;
+            const disponibles = maxFiles - countOcupadas;
+            const toastContainer = document.getElementById("toast-container");
+            
+            function showToast(msg) {
+                const toast = document.createElement("div");
+                toast.textContent = msg;
+                toast.className = "bg-red-600 text-white px-4 py-2 rounded shadow-md animate-fade-in";
+                toastContainer.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            if (disponibles <= 0) {
+                showToast(`⚠️ Solo puedes subir un máximo de ${maxFiles} imágenes.`);
+                input.value = "";
+                return;
+            }
+            if (files.length > disponibles) {
+                showToast(`⚠️ Solo puedes subir un máximo de ${maxFiles} imágenes.`);
+                files = Array.from(files).slice(0, disponibles);
+            }
+
+            for (const file of files) {
+                if (!file.type.startsWith("image/")) continue;
+                
+                // Find next empty slot
+                const nextSlot = $('.slot-foto[data-occupied="false"]').first();
+                if(nextSlot.length > 0) {
+                    // Marcamos de INMEDIATO de forma síncrona para que la siguiente iteración no pise este mismo slot
+                    nextSlot.attr('data-occupied', 'true').css('background', '#fff');
+                    const sId = nextSlot.data('slot');
+                    bufferNuevasFotos.push({ id: sId, file: file });
+                    
+                    const reader = new FileReader();
+                    reader.onload = (fileEv) => {
+                        nextSlot.html(`
+                            <img src="${fileEv.target.result}" style="width:100%;height:100%;object-fit:cover" class="cursor-zoom-in">
+                            <button type="button" class="btn-quitar-nueva" data-slot="${sId}" style="position:absolute;top:5px;right:5px;background:#f97316;color:#fff;border-radius:50%;width:24px;height:24px;font-size:12px;font-weight:bold;cursor:pointer">&#10006;</button>
+                        `);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            actualizarUIFotos();
+            input.value = "";
+        }
+
+        $(document).on('click', '.btn-quitar-nueva', function(e) {
+            e.stopPropagation();
+            const idS = $(this).data('slot');
+            bufferNuevasFotos = bufferNuevasFotos.filter(i => i.id !== idS);
+            $(`#slot-${idS}`).attr('data-occupied', 'false').html(
+                `<div style="text-align:center;color:#94a3b8"><span style="font-size:0.75rem;font-weight:700;text-transform:uppercase">Espacio ${idS}</span></div>`
+            );
+            actualizarUIFotos();
+        });
+
+        if(clearBtn) {
+            clearBtn.addEventListener("click", () => {
+                bufferNuevasFotos.forEach(item => {
+                    $(`#slot-${item.id}`).attr('data-occupied', 'false').html(
+                        `<div style="text-align:center;color:#94a3b8"><span style="font-size:0.75rem;font-weight:700;text-transform:uppercase">Espacio ${item.id}</span></div>`
+                    );
+                });
+                bufferNuevasFotos = [];
+                input.value = "";
+                actualizarUIFotos();
+            });
+        }
+
+        function actualizarUIFotos() {
+            if(counter) counter.textContent = `${bufferNuevasFotos.length} nuevas seleccionadas`;
+            if(clearBtn) clearBtn.classList.toggle("hidden", bufferNuevasFotos.length === 0);
+        }
+
+        // --- SISTEMA DE BORRADO DE EXISTENTES ---
+        $('.btn-eliminar-existente').click(function(e) {
+            e.stopPropagation();
+            const btn = $(this); const campo = btn.data('campo'); const slot = btn.data('slot');
+            
+            // Borrado directo sin Swal.fire de confirmación
+            const slotEl = $(`#slot-${slot}`);
+            slotEl.removeClass('marked-delete').attr('data-occupied', 'false');
+            slotEl.html(`<div style="text-align:center;color:#94a3b8"><span style="font-size:0.75rem;font-weight:700;text-transform:uppercase">Espacio ${slot}</span></div>`);
+            $(`#input-eliminar-${campo}`).val(campo).prop('disabled', false);
+            btn.hide();
+        });
+
+        // --- ENVIO FORM ACTUALIZADO ---
+        $('#btnActualizar').click(function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: "¿Actualizar Acta?",
+                text: "Se guardarán los cambios y los nuevos participantes serán registrados.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#10b981",
+                cancelButtonText: "Cancelar",
+                confirmButtonText: "Sí, Actualizar"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const dt = new DataTransfer();
+                    bufferNuevasFotos.forEach(item => dt.items.add(item.file));
+                    input.files = dt.files;
+                    document.getElementById('actaFormEdit').submit();
                 }
             });
         });
-    }
+        
+        // Disable original btnGuardar if it exists to prevent conflict
+        $('#actaForm').attr('id', 'actaFormEdit');
+    });
+    </script>
 
-    // ---------- AUTOCOMPLETE ----------
-    $("#establecimiento").autocomplete({
-        minLength: 1,
-        delay: 200,
-        source: function(request, response) {
-            $.getJSON(buscarUrl, { term: request.term }, response);
-        },
-        select: function(event, ui) {
-            event.preventDefault();
-            $("#establecimiento_id").val(ui.item.id);
-            $("#establecimiento").val(ui.item.value);
-            $("#provincia").val(ui.item.provincia);
-            $("#distrito").val(ui.item.distrito);
-            $("#microred").val(ui.item.microred);
-            $("#red").val(ui.item.red);
-            $("#responsable").val(ui.item.responsable);
-            $(this).data('selected', ui.item.value);
-            return false;
+    <!-- Script de Acuerdos -->
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tabla = document.getElementById("tabla-acuerdos");
+        const btnAgregar = document.getElementById("agregar-acuerdo");
+
+        function actualizarNumeros() {
+            if(!tabla) return;
+            const filas = tabla.querySelectorAll("tr");
+            filas.forEach((fila, idx) => {
+                fila.querySelector("td:first-child").textContent = idx + 1;
+                const input = fila.querySelector("input");
+                if(input) input.name = `acuerdos[${idx}][descripcion]`;
+            });
+        }
+
+        function eliminarFila(fila) {
+            fila.remove();
+            actualizarNumeros();
+        }
+
+        if(tabla) {
+            tabla.addEventListener("click", (e) => {
+                if (e.target.classList.contains("eliminar-fila-generica")) {
+                    const fila = e.target.closest("tr");
+                    eliminarFila(fila);
+                }
+            });
+        }
+
+        if(btnAgregar) {
+            btnAgregar.addEventListener("click", () => {
+                const index = tabla.querySelectorAll("tr").length;
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td class="text-center font-bold text-indigo-600">${index + 1}</td>
+                    <td><input type="text" name="acuerdos[${index}][descripcion]" required style="width:100%;border:1px solid #c7d2fe;border-radius:0.45rem;padding:0.3rem 0.4rem"></td>
+                    <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                `;
+                tabla.appendChild(tr);
+            });
         }
     });
+    </script>
 
-    $("#establecimiento").on('input', function(){
-        const v = $(this).val().trim();
-        if (v.length === 0 || v !== $(this).data('selected')) {
-            $("#establecimiento_id").val('');
-            $("#provincia, #distrito, #microred, #red, #responsable").val('');
+    <!-- Script de Observaciones -->
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tablaObs = document.getElementById("tabla-observaciones");
+        const btnAgregarObs = document.getElementById("agregar-observacion");
+
+        function actualizarNumerosObs() {
+            if(!tablaObs) return;
+            const filas = tablaObs.querySelectorAll("tr");
+            filas.forEach((fila, idx) => {
+                fila.querySelector("td:first-child").textContent = idx + 1;
+                const input = fila.querySelector("input");
+                if(input) input.name = `observaciones[${idx}][descripcion]`;
+            });
+        }
+
+        function eliminarFilaObs(fila) {
+            fila.remove();
+            actualizarNumerosObs();
+        }
+
+        if(tablaObs) {
+            tablaObs.addEventListener("click", (e) => {
+                if (e.target.classList.contains("eliminar-fila-generica")) {
+                    const fila = e.target.closest("tr");
+                    eliminarFilaObs(fila);
+                }
+            });
+        }
+
+        if(btnAgregarObs) {
+            btnAgregarObs.addEventListener("click", () => {
+                const index = tablaObs.querySelectorAll("tr").length;
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td class="text-center font-bold text-indigo-600">${index + 1}</td>
+                    <td><input type="text" name="observaciones[${index}][descripcion]" required style="width:100%;border:1px solid #c7d2fe;border-radius:0.45rem;padding:0.3rem 0.4rem"></td>
+                    <td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td>
+                `;
+                tablaObs.appendChild(tr);
+            });
         }
     });
+    </script>
 
-    // ---------- DINAMISMO TABLAS ----------
-    $('#agregar-participante').on('click', function(e){
-        e.preventDefault();
-        $('#tabla-participantes').append($('#fila-participante').html());
+    <!-- Script Guardar (SweetAlert) -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnGuardar = document.getElementById('btnGuardar');
+        const formActa = document.getElementById('actaForm');
+
+        if(btnGuardar) {
+            btnGuardar.addEventListener('click', function(e) {
+                e.preventDefault(); 
+                Swal.fire({
+                    title: '¿Está seguro(a) de guardar el acta?',
+                    text: "En caso de no estar seguro(a), revise los datos antes de confirmar.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    cancelButtonColor: '#ef4444', 
+                    confirmButtonText: 'Sí, guardar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        formActa.submit();
+                    }
+                });
+            });
+        }
+    });
+    </script>
+
+    <!-- Scripts Generales (Autocomplete y Reindexado) -->
+    <script>
+    $(function() {
+        // ---------- CONFIG ----------
+        const buscarUrl = "{{ route('establecimientos.buscar') }}";
+
+        const prefixMap = {
+            '#tabla-participantes': 'participantes',
+            '#tabla-actividades': 'actividades',
+            '#tabla-acuerdos': 'acuerdos',
+            '#tabla-observaciones': 'observaciones'
+        };
+
+        // ---------- UTIL ----------
+        function reindexRows(tbodySelector) {
+            $(tbodySelector).find('tr').each(function(i){
+                $(this).find('td').first().text(i + 1);
+                $(this).find('input, select, textarea').each(function(){
+                    const $el = $(this);
+                    const name = $el.attr('name');
+                    if (name) {
+                        const nuevo = name.replace(/\[\d+\]/, '[' + i + ']');
+                        $el.attr('name', nuevo);
+                    } else if ($el.data('base')) {
+                        const base = $el.data('base');
+                        const prefix = prefixMap[tbodySelector] || 'items';
+                        $el.attr('name', `${prefix}[${i}][${base}]`);
+                    }
+                });
+            });
+        }
+
+        // ---------- AUTOCOMPLETE ----------
+        let xhrAutocomplete = null;
+        $("#establecimiento").autocomplete({
+            minLength: 1,
+            delay: 200,
+            source: function(request, response) {
+                if (xhrAutocomplete && xhrAutocomplete.readyState !== 4) xhrAutocomplete.abort();
+                xhrAutocomplete = $.ajax({
+                    url: buscarUrl,
+                    method: "GET",
+                    dataType: "json",
+                    data: { term: request.term },
+                    success: function(data) {
+                        if (data && data.data && Array.isArray(data.data)) data = data.data;
+                        if (!Array.isArray(data)) { response([]); return; }
+                        const items = data.map(item => ({
+                            id: item.id || '',
+                            label: (item.label || ((item.codigo ? item.codigo + ' - ' : '') + (item.nombre || ''))).trim(),
+                            value: item.value || item.nombre || item.label || '',
+                            provincia: item.provincia || '',
+                            distrito: item.distrito || '',
+                            categoria: item.categoria || '',
+                            red: item.red || '',
+                            microred: item.microred || '',
+                            responsable: item.responsable || ''
+                        }));
+                        response(items);
+                    },
+                    error: function(xhr, status, err) {
+                        if (status !== 'abort') response([]);
+                    }
+                });
+            },
+            select: function(event, ui) {
+                event.preventDefault();
+                $("#establecimiento_id").val(ui.item.id || '');
+                $("#establecimiento").val(ui.item.value || ui.item.label || '');
+                $("#provincia").val(ui.item.provincia || '');
+                $("#distrito").val(ui.item.distrito || '');
+                $("#microred").val(ui.item.microred || '');
+                $("#red").val(ui.item.red || '');
+                $("#responsable").val(ui.item.responsable || '');
+                $(this).data('selected', $("#establecimiento").val());
+                return false;
+            }
+        });
+
+        // Limpiar campos si borran establecimiento
+        $("#establecimiento").on('input', function(){
+            const v = $(this).val().trim();
+            const selected = $(this).data('selected') || '';
+            if (v.length === 0 || v !== selected) {
+                $("#establecimiento_id").val('');
+                $("#provincia, #distrito, #microred, #red, #responsable").val('');
+            }
+        });
+
+        // ---------- TABLA PARTICIPANTES (Usando Template) ----------
+        const tplPart = document.getElementById('fila-participante');
+        
+        $('#agregar-participante').on('click', function(e){
+            e.preventDefault();
+            const clone = tplPart.content.cloneNode(true);
+            $('#tabla-participantes').append(clone);
+            reindexRows('#tabla-participantes');
+        });
+
+        $(document).on('click', '.eliminar-fila', function(e){
+            e.preventDefault();
+            $(this).closest('tr').remove();
+            reindexRows('#tabla-participantes');
+        });
+
+        // Reindex inicial
         reindexRows('#tabla-participantes');
-    });
-
-    $('#agregar-actividad').on('click', function(e){
-        e.preventDefault();
-        $('#tabla-actividades').append($('#fila-generica').html());
         reindexRows('#tabla-actividades');
-    });
-
-    $('#agregar-acuerdo').on('click', function(e){
-        e.preventDefault();
-        $('#tabla-acuerdos').append($('#fila-generica').html());
         reindexRows('#tabla-acuerdos');
-    });
-
-    $('#agregar-observacion').on('click', function(e){
-        e.preventDefault();
-        $('#tabla-observaciones').append($('#fila-generica').html());
         reindexRows('#tabla-observaciones');
-    });
 
-    $(document).on('click', '.eliminar-fila, .eliminar-fila-generica', function(e){
-        e.preventDefault();
-        const tbody = $(this).closest('tbody');
-        $(this).closest('tr').fadeOut(200, function() { 
-            $(this).remove(); 
-            reindexRows('#' + tbody.attr('id'));
-        });
-    });
+        // ---------- TEMA / OTRO ----------
+        const selectTema = document.getElementById('selectTema');
+        const divTemaOtro = document.getElementById('divTemaOtro');
+        if (selectTema && divTemaOtro) {
+            selectTema.addEventListener('change', function() {
+                if (this.value === 'Otros') {
+                    divTemaOtro.classList.remove('hidden');
+                    document.getElementById('temaOtro').focus();
+                } else {
+                    divTemaOtro.classList.add('hidden');
+                    document.getElementById('temaOtro').value = '';
+                }
+            });
+        }
 
-    // ---------- LÓGICA DE IMÁGENES (SISTEMA DE SLOTS) ----------
-    $('.btn-eliminar-existente').click(function(e) {
-        e.stopPropagation();
-        const btn = $(this); const campo = btn.data('campo'); const slot = btn.data('slot');
-        Swal.fire({
-            title: '¿Marcar para eliminar?',
-            text: "Se borrará físicamente de los archivos al actualizar.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Sí, marcar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const slotEl = $(`#slot-${slot}`);
-                slotEl.addClass('marked-delete').attr('data-occupied', 'false');
-                $(`#input-eliminar-${campo}`).val(campo).prop('disabled', false);
-                btn.hide();
-                showToast("Evidencia marcada para borrado");
+        // ---------- BUSCAR PARTICIPANTE (botón lupa) ----------
+        $(document).on('click', '.buscar-participante', function() {
+            const fila = $(this).closest('tr');
+            const dniInput = fila.find('input[data-base="dni"]');
+            const doc = dniInput.val().trim();
+
+            if (doc.length < 6) {
+                Swal.fire({ icon:'warning', title:'Documento muy corto', text:'Ingrese al menos 6 caracteres.', confirmButtonColor:'#4f46e5' });
+                return;
             }
+
+            // Mostrar loader
+            Swal.fire({
+                html: `<div style="display:flex;align-items:center;gap:16px;padding:8px">
+                           <div style="width:36px;height:36px;border:4px solid #4f46e5;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite"></div>
+                           <div><b style="color:#1e1b4b">Buscando en base local...</b></div>
+                       </div>`,
+                showConfirmButton: false, allowOutsideClick: false,
+                customClass: { popup: 'rounded-2xl' }
+            });
+
+            // 1ro: buscar local en mon_profesionales (sin filtro tipo_doc)
+            fetch(`/usuario/monitoreo/profesional/buscar/${encodeURIComponent(doc)}?local_only=1`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.exists) {
+                        Swal.close();
+                        fila.find('input[data-base="apellidos"]').val(
+                            ((data.apellido_paterno || '') + ' ' + (data.apellido_materno || '')).trim()
+                        );
+                        fila.find('input[data-base="nombres"]').val(data.nombres || '');
+                        fila.find('input[data-base="cargo"]').val(data.cargo || '');
+                        Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:2500 })
+                            .fire({ icon:'success', title:'Datos cargados correctamente' });
+                    } else {
+                        // 2do: intentar RENIEC solo si son exactamente 8 dígitos
+                        if (doc.length === 8 && /^\d{8}$/.test(doc)) {
+                            Swal.update({
+                                html: `<div style="display:flex;align-items:center;gap:16px;padding:8px">
+                                           <div style="width:36px;height:36px;border:4px solid #6366f1;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite"></div>
+                                           <div><b style="color:#1e1b4b">Consultando RENIEC...</b></div>
+                                       </div>`
+                            });
+                            fetch(`/usuario/monitoreo/profesional/buscar/${encodeURIComponent(doc)}`)
+                                .then(r => r.json())
+                                .then(ext => {
+                                    Swal.close();
+                                    if (ext.quota_exceeded) {
+                                        Swal.fire({ icon:'warning', title:'Límite RENIEC excedido', text:'Ingrese los datos manualmente.', confirmButtonColor:'#4f46e5' });
+                                        return;
+                                    }
+                                    if (ext.exists_external) {
+                                        fila.find('input[data-base="apellidos"]').val(
+                                            ((ext.apellido_paterno || '') + ' ' + (ext.apellido_materno || '')).trim()
+                                        );
+                                        fila.find('input[data-base="nombres"]').val(ext.nombres || '');
+                                        Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000 })
+                                            .fire({ icon:'info', title:'Encontrado en RENIEC. Complete el cargo.' });
+                                    } else {
+                                        Swal.fire({ icon:'info', title:'No encontrado', text:'No figura en RENIEC. Ingrese datos manualmente.', confirmButtonColor:'#4f46e5' });
+                                    }
+                                })
+                                .catch(() => Swal.fire({ icon:'error', title:'Error de conexión con RENIEC' }));
+                        } else {
+                            Swal.close();
+                            Swal.fire({ icon:'info', title:'No encontrado', text:'No figura en el maestro. Ingrese los datos manualmente.', confirmButtonColor:'#4f46e5' });
+                        }
+                    }
+                })
+                .catch(() => { Swal.close(); Swal.fire({ icon:'error', title:'Error de conexión' }); });
         });
     });
-
-    const inputFiles = document.getElementById('input-files');
-    $('#drop-area').click(() => inputFiles.click());
-
-    inputFiles.onchange = function(e) {
-        const files = Array.from(e.target.files);
-        files.forEach(file => {
-            // Buscamos el primer slot que NO esté ocupado (ni original ni por una foto nueva)
-            const nextSlot = $('.slot-foto[data-occupied="false"]').not('.marked-delete').first();
-            
-            if(nextSlot.length > 0) {
-                const sId = nextSlot.data('slot');
-                bufferNuevasFotos.push({ id: sId, file: file });
-                
-                const reader = new FileReader();
-                reader.onload = (fileEv) => {
-                    nextSlot.attr('data-occupied', 'true').addClass('occupied animate-fade-in');
-                    nextSlot.html(`
-                        <img src="${fileEv.target.result}" class="w-full h-full object-cover">
-                        <button type="button" class="absolute top-1 right-1 bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs btn-quitar-nueva" data-slot="${sId}">✖</button>
-                    `);
-                    actualizarUIFotos();
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        inputFiles.value = ""; 
-    };
-
-    $(document).on('click', '.btn-quitar-nueva', function(e) {
-        e.stopPropagation();
-        const idS = $(this).data('slot');
-        bufferNuevasFotos = bufferNuevasFotos.filter(i => i.id !== idS);
-        $(`#slot-${idS}`).attr('data-occupied', 'false').removeClass('occupied').html(`<div class="flex flex-col items-center gap-2 text-slate-300 placeholder-info"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span class="text-[9px] font-bold uppercase tracking-tighter text-center">Espacio {{ $i }}</span></div>`);
-        actualizarUIFotos();
-    });
-
-    function actualizarUIFotos() {
-        $('#file-counter').text(`${bufferNuevasFotos.length} nuevas fotos seleccionadas`);
-        $('#clear-all').toggleClass('hidden', bufferNuevasFotos.length === 0);
-    }
-
-    $('#clear-all').click(function() {
-        bufferNuevasFotos = [];
-        $('.slot-foto.occupied').not('.marked-delete').each(function() {
-            const id = $(this).data('slot');
-            $(this).attr('data-occupied', 'false').removeClass('occupied').html(`<div class="flex flex-col items-center gap-2 text-slate-300 placeholder-info"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg><span class="text-[9px] font-bold uppercase tracking-tighter text-center">Espacio Disponible</span></div>`);
-        });
-        actualizarUIFotos();
-    });
-
-    // ---------- ENVÍO FINAL ----------
-    $('#btnGuardar').click(function(e) {
-        e.preventDefault();
-        Swal.fire({
-            title: '¿Confirmar actualización?',
-            text: "Se guardarán todos los cambios en el acta.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#4f46e5',
-            confirmButtonText: 'Sí, Actualizar'
-        }).then((res) => {
-            if (res.isConfirmed) {
-                const dt = new DataTransfer();
-                bufferNuevasFotos.forEach(item => dt.items.add(item.file));
-                inputFiles.files = dt.files;
-                $('#actaForm').submit();
-            }
-        });
-    });
-
-    $(document).on('click', '.btn-ver-imagen', function() { $('#modal-img').attr('src', $(this).attr('src')); $('#image-modal').removeClass('hidden').addClass('flex'); });
-    $('#close-modal, #image-modal').click(function(e) { if(e.target !== $('#modal-img')[0]) $('#image-modal').addClass('hidden'); });
-
-    function showToast(msg) {
-        const toast = $(`<div class="bg-indigo-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-black text-sm animate-fade-in border-b-4 border-black/10">${msg}</div>`);
-        $('#toast-container').append(toast);
-        setTimeout(() => toast.fadeOut(() => toast.remove()), 4000);
-    }
-
-    // Inicialización inicial
-    reindexRows('#tabla-participantes'); reindexRows('#tabla-actividades'); reindexRows('#tabla-acuerdos'); reindexRows('#tabla-observaciones');
-});
-</script>
+    </script>
 @endpush
