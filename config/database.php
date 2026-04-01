@@ -63,6 +63,34 @@ return [
             ]) : [],
         ],
 
+        'mysql_temp_ai' => [
+            'driver' => 'mysql',
+            'host' => env('DB_TEMP_AI_HOST', '127.0.0.1'),
+            'port' => env('DB_TEMP_AI_PORT', '3306'),
+            'database' => env('DB_TEMP_AI_DATABASE', 'temp_ai'),
+            'username' => env('DB_TEMP_AI_USERNAME', 'root'),
+            'password' => env('DB_TEMP_AI_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
+        'mysql_temp_sa' => [
+            'driver' => 'mysql',
+            'host' => env('DB_TEMP_SA_HOST', '127.0.0.1'),
+            'port' => env('DB_TEMP_SA_PORT', '3306'),
+            'database' => env('DB_TEMP_SA_DATABASE', 'temp_sa'),
+            'username' => env('DB_TEMP_SA_USERNAME', 'root'),
+            'password' => env('DB_TEMP_SA_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

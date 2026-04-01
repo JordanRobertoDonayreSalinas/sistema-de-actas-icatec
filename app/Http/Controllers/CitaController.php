@@ -83,7 +83,7 @@ class CitaController extends Controller
 
             // 3. Actualizar Nombres (Separación Inteligente)
             if (!empty($input['personal_nombre'])) {
-                $nombreCompleto = mb_strtoupper(trim($input['personal_nombre']), 'UTF-8');
+                $nombreCompleto = mb_mb_strtoupper(trim($input['personal_nombre'], 'UTF-8'), 'UTF-8');
 
                 // Solo procesamos si el nombre cambió o es un registro nuevo
                 $nombreActual = trim(($profesional->apellido_paterno ?? '') . ' ' . ($profesional->apellido_materno ?? '') . ' ' . ($profesional->nombres ?? ''));

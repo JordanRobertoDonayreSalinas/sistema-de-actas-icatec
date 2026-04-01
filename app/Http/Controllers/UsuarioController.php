@@ -156,6 +156,111 @@ class UsuarioController extends Controller
     }
 
     /**
+     * MAPA DE PROGRESIÓN (Pipeline: Implementación → Asistencia Técnica → Monitoreo)
+     * Muestra en qué etapa del proceso se encuentra cada establecimiento.
+     */
+    public function mapaProgresion()
+    {
+        // ── 1. Códigos que tienen al menos 1 acta de implementación ──────────
+        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
+        $codigosConImplementacion = collect();
+        $modulosPorCodigo = [];   // ['COD' => ['Medicina', 'Citas', ...]]
+
+        foreach ($modulos as $key => $config) {
+            $modelo = $config['modelo'];
+            if (!class_exists($modelo)) continue;
+            $actas = $modelo::select('codigo_establecimiento', 'nombre_establecimiento')->get();
+            foreach ($actas as $acta) {
+                $cod = $acta->codigo_establecimiento;
+                if (!$cod) continue;
+                $codigosConImplementacion->push($cod);
+                if (!isset($modulosPorCodigo[$cod])) $modulosPorCodigo[$cod] = [];
+                if (!in_array($config['nombre'], $modulosPorCodigo[$cod])) {
+                    $modulosPorCodigo[$cod][] = $config['nombre'];
+                }
+            }
+        }
+        $codigosConImplementacion = $codigosConImplementacion->unique()->values();
+
+        // ── 2. IDs que tienen al menos 1 acta de asistencia técnica ──────────
+        $idsConAsistencia = Acta::where('tipo', 'asistencia')
+            ->distinct()
+            ->pluck('establecimiento_id')
+            ->toArray();
+        $totalAsistenciaPorId = Acta::where('tipo', 'asistencia')
+            ->select('establecimiento_id', DB::raw('count(*) as total'))
+            ->groupBy('establecimiento_id')
+            ->pluck('total', 'establecimiento_id');
+
+        // ── 3. IDs que tienen al menos 1 acta de monitoreo ───────────────────
+        $idsConMonitoreo = \App\Models\CabeceraMonitoreo::distinct()
+            ->pluck('establecimiento_id')
+            ->toArray();
+        $totalMonitoreoPorId = \App\Models\CabeceraMonitoreo::select(
+                'establecimiento_id', DB::raw('count(*) as total'))
+            ->groupBy('establecimiento_id')
+            ->pluck('total', 'establecimiento_id');
+
+        // ── 4. Unificar en establecimientos con coordenadas ───────────────────
+        $establecimientosMap = Establecimiento::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->get(['id', 'codigo', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
+            ->map(function ($est) use (
+                $codigosConImplementacion, $modulosPorCodigo,
+                $idsConAsistencia, $totalAsistenciaPorId,
+                $idsConMonitoreo, $totalMonitoreoPorId
+            ) {
+                $tieneImpl      = $codigosConImplementacion->contains($est->codigo);
+                $tieneAsist     = in_array($est->id, $idsConAsistencia);
+                $tieneMonitoreo = in_array($est->id, $idsConMonitoreo);
+
+                // Etapa de progresión (0-3)
+                if ($tieneImpl && $tieneAsist && $tieneMonitoreo) {
+                    $etapa = 3; // Ciclo completo
+                } elseif ($tieneImpl && $tieneAsist) {
+                    $etapa = 2; // Listo para Monitoreo
+                } elseif ($tieneImpl) {
+                    $etapa = 1; // Listo para Asistencia
+                } else {
+                    $etapa = 0; // Sin inicio
+                }
+
+                $est->etapa              = $etapa;
+                $est->tiene_impl         = $tieneImpl;
+                $est->tiene_asist        = $tieneAsist;
+                $est->tiene_monitoreo    = $tieneMonitoreo;
+                $est->modulos_impl       = $modulosPorCodigo[$est->codigo] ?? [];
+                $est->total_impl         = count($est->modulos_impl);
+                $est->total_asistencias  = (int)($totalAsistenciaPorId[$est->id] ?? 0);
+                $est->total_monitoreos   = (int)($totalMonitoreoPorId[$est->id] ?? 0);
+                return $est;
+            });
+
+        // ── 5. Contadores por etapa ───────────────────────────────────────────
+        $contadores = [
+            'total'     => $establecimientosMap->count(),
+            'etapa0'    => $establecimientosMap->where('etapa', 0)->count(),
+            'etapa1'    => $establecimientosMap->where('etapa', 1)->count(),
+            'etapa2'    => $establecimientosMap->where('etapa', 2)->count(),
+            'etapa3'    => $establecimientosMap->where('etapa', 3)->count(),
+        ];
+
+        // ── 6. Filtros ────────────────────────────────────────────────────────
+        $provincias = Establecimiento::whereNotNull('latitud')->whereNotNull('longitud')
+            ->whereNotNull('provincia')->distinct()->orderBy('provincia')->pluck('provincia');
+        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
+        $distritos  = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
+
+        return view('usuario.dashboard.mapa_progresion', compact(
+            'establecimientosMap',
+            'contadores',
+            'provincias',
+            'categorias',
+            'distritos'
+        ));
+    }
+
+    /**
      * Dashboard de Equipos de Cómputo
      */
     public function dashboardEquipos()

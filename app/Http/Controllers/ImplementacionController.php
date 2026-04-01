@@ -215,28 +215,28 @@ class ImplementacionController extends Controller
         }
 
         $actaData = [
-            'modulo' => strtoupper($config['nombre']),
+            'modulo' => mb_strtoupper($config['nombre'], 'UTF-8'),
             'fecha' => $request->fecha,
-            'codigo_establecimiento' => strtoupper($request->codigo_establecimiento),
-            'nombre_establecimiento' => strtoupper($request->nombre_establecimiento),
-            'provincia' => strtoupper($request->provincia),
-            'distrito' => strtoupper($request->distrito),
-            'categoria' => strtoupper($request->categoria),
-            'red' => strtoupper($request->red ?? ''),
-            'microred' => strtoupper($request->microred ?? ''),
-            'responsable' => strtoupper($request->responsable),
-            'observaciones' => strtoupper($request->observaciones ?? ''),
+            'codigo_establecimiento' => mb_strtoupper($request->codigo_establecimiento, 'UTF-8'),
+            'nombre_establecimiento' => mb_strtoupper($request->nombre_establecimiento, 'UTF-8'),
+            'provincia' => mb_strtoupper($request->provincia, 'UTF-8'),
+            'distrito' => mb_strtoupper($request->distrito, 'UTF-8'),
+            'categoria' => mb_strtoupper($request->categoria, 'UTF-8'),
+            'red' => mb_strtoupper($request->red ?? '', 'UTF-8'),
+            'microred' => mb_strtoupper($request->microred ?? '', 'UTF-8'),
+            'responsable' => mb_strtoupper($request->responsable, 'UTF-8'),
+            'observaciones' => mb_strtoupper($request->observaciones ?? '', 'UTF-8'),
             'archivo_pdf' => $rutaPdf,
             'foto1' => $rutaFoto1,
             'foto2' => $rutaFoto2,
         ];
 
         if ($request->has('firma_digital')) {
-            $actaData['firma_digital'] = strtoupper($request->firma_digital);
+            $actaData['firma_digital'] = mb_strtoupper($request->firma_digital, 'UTF-8');
         }
 
         if ($moduloKey === 'citas' && $request->has('modalidad')) {
-            $actaData['modalidad'] = strtoupper($request->modalidad);
+            $actaData['modalidad'] = mb_strtoupper($request->modalidad, 'UTF-8');
         }
 
         // Registrar acta
@@ -249,12 +249,12 @@ class ImplementacionController extends Controller
                 if (!empty($user['dni'])) {
                     $acta->usuarios()->create([
                         'dni' => $user['dni'],
-                        'apellido_paterno' => strtoupper($user['apellido_paterno'] ?? ''),
-                        'apellido_materno' => strtoupper($user['apellido_materno'] ?? ''),
-                        'nombres' => strtoupper($user['nombres'] ?? ''),
+                        'apellido_paterno' => mb_strtoupper($user['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper($user['apellido_materno'] ?? '', 'UTF-8'),
+                        'nombres' => mb_strtoupper($user['nombres'] ?? '', 'UTF-8'),
                         'celular' => preg_match('/^\d{9,}$/', preg_replace('/[^0-9]/', '', $user['celular'] ?? '')) ? preg_replace('/[^0-9]/', '', $user['celular']) : 999999999,
                         'correo' => strtolower($user['correo'] ?? ''),
-                        'permisos' => strtoupper($user['permisos'] ?? ''),
+                        'permisos' => mb_strtoupper($user['permisos'] ?? '', 'UTF-8'),
                     ]);
                 }
             }
@@ -267,10 +267,10 @@ class ImplementacionController extends Controller
                 if (!empty($impl['dni'])) {
                     $acta->implementadores()->create([
                         'dni' => $impl['dni'],
-                        'apellido_paterno' => strtoupper($impl['apellido_paterno'] ?? ''),
-                        'apellido_materno' => strtoupper($impl['apellido_materno'] ?? ''),
-                        'nombres' => strtoupper($impl['nombres'] ?? ''),
-                        'cargo' => strtoupper($impl['cargo'] ?? ''),
+                        'apellido_paterno' => mb_strtoupper($impl['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper($impl['apellido_materno'] ?? '', 'UTF-8'),
+                        'nombres' => mb_strtoupper($impl['nombres'] ?? '', 'UTF-8'),
+                        'cargo' => mb_strtoupper($impl['cargo'] ?? '', 'UTF-8'),
                     ]);
                 }
             }
@@ -363,26 +363,26 @@ class ImplementacionController extends Controller
         // 1. Actualizar datos principales
         $actaData = [
             'fecha' => $request->fecha,
-            'codigo_establecimiento' => strtoupper($request->codigo_establecimiento),
-            'nombre_establecimiento' => strtoupper($request->nombre_establecimiento),
-            'provincia' => strtoupper($request->provincia),
-            'distrito' => strtoupper($request->distrito),
-            'categoria' => strtoupper($request->categoria),
-            'red' => strtoupper($request->red ?? ''),
-            'microred' => strtoupper($request->microred ?? ''),
-            'responsable' => strtoupper($request->responsable),
-            'observaciones' => strtoupper($request->observaciones ?? ''),
+            'codigo_establecimiento' => mb_strtoupper($request->codigo_establecimiento, 'UTF-8'),
+            'nombre_establecimiento' => mb_strtoupper($request->nombre_establecimiento, 'UTF-8'),
+            'provincia' => mb_strtoupper($request->provincia, 'UTF-8'),
+            'distrito' => mb_strtoupper($request->distrito, 'UTF-8'),
+            'categoria' => mb_strtoupper($request->categoria, 'UTF-8'),
+            'red' => mb_strtoupper($request->red ?? '', 'UTF-8'),
+            'microred' => mb_strtoupper($request->microred ?? '', 'UTF-8'),
+            'responsable' => mb_strtoupper($request->responsable, 'UTF-8'),
+            'observaciones' => mb_strtoupper($request->observaciones ?? '', 'UTF-8'),
             'archivo_pdf' => $rutaPdf,
             'foto1' => $rutaFoto1,
             'foto2' => $rutaFoto2,
         ];
 
         if ($request->has('firma_digital')) {
-            $actaData['firma_digital'] = strtoupper($request->firma_digital);
+            $actaData['firma_digital'] = mb_strtoupper($request->firma_digital, 'UTF-8');
         }
 
         if ($modulo === 'citas' && $request->has('modalidad')) {
-            $actaData['modalidad'] = strtoupper($request->modalidad);
+            $actaData['modalidad'] = mb_strtoupper($request->modalidad, 'UTF-8');
         }
 
         $acta->update($actaData);
@@ -395,12 +395,12 @@ class ImplementacionController extends Controller
                 if (!empty($user['dni'])) {
                     $acta->usuarios()->create([
                         'dni' => $user['dni'],
-                        'apellido_paterno' => strtoupper($user['apellido_paterno'] ?? ''),
-                        'apellido_materno' => strtoupper($user['apellido_materno'] ?? ''),
-                        'nombres' => strtoupper($user['nombres'] ?? ''),
+                        'apellido_paterno' => mb_strtoupper($user['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper($user['apellido_materno'] ?? '', 'UTF-8'),
+                        'nombres' => mb_strtoupper($user['nombres'] ?? '', 'UTF-8'),
                         'celular' => preg_match('/^\d{9,}$/', preg_replace('/[^0-9]/', '', $user['celular'] ?? '')) ? preg_replace('/[^0-9]/', '', $user['celular']) : 999999999,
                         'correo' => strtolower($user['correo'] ?? ''),
-                        'permisos' => strtoupper($user['permisos'] ?? ''),
+                        'permisos' => mb_strtoupper($user['permisos'] ?? '', 'UTF-8'),
                     ]);
                 }
             }
@@ -414,10 +414,10 @@ class ImplementacionController extends Controller
                 if (!empty($impl['dni'])) {
                     $acta->implementadores()->create([
                         'dni' => $impl['dni'],
-                        'apellido_paterno' => strtoupper($impl['apellido_paterno'] ?? ''),
-                        'apellido_materno' => strtoupper($impl['apellido_materno'] ?? ''),
-                        'nombres' => strtoupper($impl['nombres'] ?? ''),
-                        'cargo' => strtoupper($impl['cargo'] ?? ''),
+                        'apellido_paterno' => mb_strtoupper($impl['apellido_paterno'] ?? '', 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper($impl['apellido_materno'] ?? '', 'UTF-8'),
+                        'nombres' => mb_strtoupper($impl['nombres'] ?? '', 'UTF-8'),
+                        'cargo' => mb_strtoupper($impl['cargo'] ?? '', 'UTF-8'),
                     ]);
                 }
             }
@@ -470,7 +470,7 @@ class ImplementacionController extends Controller
         $ModeloNuevo = $modulos[$nuevoModulo]['modelo'];
         
         $datosNuevos = [
-            'modulo' => strtoupper($modulos[$nuevoModulo]['nombre']),
+            'modulo' => mb_strtoupper($modulos[$nuevoModulo]['nombre'], 'UTF-8'),
             'fecha' => $actaVieja->fecha,
             'codigo_establecimiento' => $actaVieja->codigo_establecimiento,
             'nombre_establecimiento' => $actaVieja->nombre_establecimiento,
@@ -594,13 +594,13 @@ class ImplementacionController extends Controller
                 $profesional = \App\Models\Profesional::firstOrNew(['doc' => $persona['dni']]);
                 
                 if (!empty($persona['apellido_paterno'])) {
-                    $profesional->apellido_paterno = strtoupper($persona['apellido_paterno']);
+                    $profesional->apellido_paterno = mb_strtoupper($persona['apellido_paterno'], 'UTF-8');
                 }
                 if (!empty($persona['apellido_materno'])) {
-                    $profesional->apellido_materno = strtoupper($persona['apellido_materno']);
+                    $profesional->apellido_materno = mb_strtoupper($persona['apellido_materno'], 'UTF-8');
                 }
                 if (!empty($persona['nombres'])) {
-                    $profesional->nombres = strtoupper($persona['nombres']);
+                    $profesional->nombres = mb_strtoupper($persona['nombres'], 'UTF-8');
                 }
                 if (!empty($persona['celular'])) {
                     $profesional->telefono = $persona['celular'];
@@ -611,7 +611,7 @@ class ImplementacionController extends Controller
                 
                 // Si es un registro nuevo, o si viene el tipo_doc, actualizarlo
                 if (isset($persona['tipo_doc'])) {
-                    $profesional->tipo_doc = strtoupper($persona['tipo_doc']);
+                    $profesional->tipo_doc = mb_strtoupper($persona['tipo_doc'], 'UTF-8');
                 } else if (!$profesional->exists) {
                     $profesional->tipo_doc = 'DNI';
                 }

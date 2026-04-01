@@ -70,8 +70,8 @@ class AuditoriaEquiposController extends Controller
                 $conectividad = data_get($contenido, 'conectividad.tipo');
             }
 
-            $tiene_data_conectividad = !empty($conectividad) && strtoupper($conectividad) !== 'N/A';
-            $tiene_conexion_activa = ($tiene_data_conectividad && strtoupper($conectividad) !== 'SIN CONECTIVIDAD');
+            $tiene_data_conectividad = !empty($conectividad) && mb_strtoupper($conectividad, 'UTF-8') !== 'N/A';
+            $tiene_conexion_activa = ($tiene_data_conectividad && mb_strtoupper($conectividad, 'UTF-8') !== 'SIN CONECTIVIDAD');
 
             // 2. Contar equipos en la tabla SQL para ese monitoreo y módulo
             $equipos_count = EquipoComputo::where('cabecera_monitoreo_id', $reg->cabecera_monitoreo_id)

@@ -110,6 +110,12 @@
                             <i data-lucide="map-pin" class="w-4 h-4"></i>
                             <span class="text-sm font-medium">Mapa de Implementaciones</span>
                         </a>
+                        <a href="{{ route('usuario.dashboard.mapa.progresion') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.mapa.progresion') ? 'bg-amber-600/10 text-amber-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="git-merge" class="w-4 h-4"></i>
+                            <span class="text-sm font-medium">Mapa de Progresión</span>
+                            <span class="ml-auto text-[8px] font-black bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full uppercase">Nuevo</span>
+                        </a>
                         <a href="{{ route('usuario.dashboard.equipos') }}"
                             class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.equipos') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="monitor" class="w-4 h-4"></i>

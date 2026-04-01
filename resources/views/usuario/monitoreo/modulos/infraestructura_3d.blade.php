@@ -249,6 +249,25 @@
                         if (!this.history.length) return;
                         this.future.push(JSON.stringify({ elements: this.elements, connections: this.connections }));
                         const prev = JSON.parse(this.history.pop());
+                        const now = Date.now();
+
+                        /* Detectar elementos borrados por el undo y notificarlos */
+                        this.elements.forEach(cEl => {
+                            if (!prev.elements.find(e => e.id === cEl.id)) {
+                                if (!this.deletedIds.includes(cEl.id)) this.deletedIds.push(cEl.id);
+                            }
+                        });
+
+                        /* Actualizar timestamp solo de los elementos que cambian */
+                        prev.elements = prev.elements.map(pEl => {
+                            const cEl = this.elements.find(e => e.id === pEl.id);
+                            if (!cEl) { pEl._ts = now; return pEl; }
+                            const attrs = ['x', 'y', 'w', 'h', 'rot', 'name', 'type', 'subtype', 'piso'];
+                            let changed = attrs.some(attr => pEl[attr] !== cEl[attr]);
+                            pEl._ts = changed ? now : cEl._ts; /* mantener ts actual si no hubo cambio */
+                            return pEl;
+                        });
+
                         this.elements    = prev.elements;
                         this.connections = prev.connections;
                         this.selectedId  = null;
@@ -258,6 +277,25 @@
                         if (!this.future.length) return;
                         this.history.push(JSON.stringify({ elements: this.elements, connections: this.connections }));
                         const next = JSON.parse(this.future.pop());
+                        const now = Date.now();
+
+                        /* Detectar elementos borrados por el redo y notificarlos */
+                        this.elements.forEach(cEl => {
+                            if (!next.elements.find(e => e.id === cEl.id)) {
+                                if (!this.deletedIds.includes(cEl.id)) this.deletedIds.push(cEl.id);
+                            }
+                        });
+
+                        /* Actualizar timestamp solo de los elementos que cambian */
+                        next.elements = next.elements.map(nEl => {
+                            const cEl = this.elements.find(e => e.id === nEl.id);
+                            if (!cEl) { nEl._ts = now; return nEl; }
+                            const attrs = ['x', 'y', 'w', 'h', 'rot', 'name', 'type', 'subtype', 'piso'];
+                            let changed = attrs.some(attr => nEl[attr] !== cEl[attr]);
+                            nEl._ts = changed ? now : cEl._ts;
+                            return nEl;
+                        });
+
                         this.elements    = next.elements;
                         this.connections = next.connections;
                         this.selectedId  = null;
@@ -1651,6 +1689,8 @@
                             /* ── MERGE DE ELEMENTOS POR TIMESTAMP ── */
                             let anyElementChange = false;
                             let authorOfChange   = null;
+                            let actionName       = 'actualizó';
+                            let elementName      = 'el croquis';
 
                             for (const colab of this.colaboradores) {
 
@@ -1658,6 +1698,7 @@
                                 for (const deletedId of (colab.deletedIds || [])) {
                                     const idx = this.elements.findIndex(e => e.id === deletedId);
                                     if (idx !== -1) {
+                                        elementName = this.elements[idx].name || 'un elemento';
                                         this.elements.splice(idx, 1);
                                         /* Limpiar conexiones huérfanas */
                                         this.connections = this.connections.filter(
@@ -1665,6 +1706,7 @@
                                         );
                                         anyElementChange = true;
                                         authorOfChange   = colab.user_name;
+                                        actionName       = 'eliminó';
                                     }
                                 }
 
@@ -1679,6 +1721,8 @@
                                         this.elements.push(remoteEl);
                                         anyElementChange = true;
                                         authorOfChange   = colab.user_name;
+                                        actionName       = 'agregó';
+                                        elementName      = remoteEl.name || 'un elemento';
                                     } else {
                                         const localEl = this.elements[localIdx];
                                         const remoteTs = remoteEl._ts || 0;
@@ -1688,6 +1732,8 @@
                                             Object.assign(localEl, remoteEl);
                                             anyElementChange = true;
                                             authorOfChange   = colab.user_name;
+                                            actionName       = 'modificó';
+                                            elementName      = remoteEl.name || 'un elemento';
                                         }
                                     }
                                 }
@@ -1701,7 +1747,7 @@
 
                             if (anyElementChange) {
                                 this.draw();
-                                if (authorOfChange) this._showColabToast(authorOfChange);
+                                if (authorOfChange) this._showColabToast(authorOfChange, actionName, elementName);
                             } else if (this.colaboradores.length > 0) {
                                 /* Solo redibujar cursores */
                                 this.draw();
@@ -1713,8 +1759,8 @@
                     },
 
                     /** Muestra un toast no intrusivo indicando que un colaborador hizo cambios */
-                    _showColabToast(userName) {
-                        this._toastMsg     = `${userName} actualizó el croquis`;
+                    _showColabToast(userName, action = 'actualizó', target = 'el croquis') {
+                        this._toastMsg     = `${userName} ${action} ${target}`;
                         this._toastVisible = true;
                         if (this._toastTimer) clearTimeout(this._toastTimer);
                         this._toastTimer = setTimeout(() => {
