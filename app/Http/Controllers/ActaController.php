@@ -17,7 +17,7 @@ class ActaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Acta::with('establecimiento');
+        $query = Acta::with(['establecimiento', 'participantes']);
 
         if ($request->filled('implementador')) {
             $query->where('implementador', $request->input('implementador'));

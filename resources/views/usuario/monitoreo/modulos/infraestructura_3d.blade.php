@@ -500,7 +500,7 @@
                         ctx.restore();
 
                         /* ── Only draw elements of the current floor ── */
-                        const floorEls = this.elements.filter(e => (e.piso || 1) === this.currentPiso);
+                        const floorEls = this.elements.filter(e => (e.piso || 1) == this.currentPiso);
 
                         floorEls.forEach(el => {
                             ctx.save();
@@ -1611,12 +1611,31 @@
                         if (this.isSaving) return;
                         this.isSaving = true;
 
-                        /* Capture the canvas as an image (deselect first for a clean shot) */
+                        /* Capture the canvas for EACH floor as an image */
                         const prevSelected = this.selectedId;
+                        const prevPiso = this.currentPiso;
+                        const prevGhost = this.showGhostFloor;
+                        
                         this.selectedId = null;
-                        this.draw();
-                        const croquisImage = canvas.toDataURL('image/png');
+                        this.showGhostFloor = false; // Disable ghost floor for clean capture
+                        
+                        const croquisImages = {};
+                        for (let p = 1; p <= this.totalPisos; p++) {
+                            this.currentPiso = p;
+                            this.draw();
+                            const dataUrl = canvas.toDataURL('image/png');
+                            
+                            // Basic validation: ensure it's not a tiny empty-ish image
+                            if (dataUrl && dataUrl.length > 1000) {
+                                croquisImages[p] = dataUrl;
+                            } else {
+                                console.warn(`Piso ${p} capture seems empty or invalid.`);
+                            }
+                        }
+                        
+                        this.currentPiso = prevPiso;
                         this.selectedId = prevSelected;
+                        this.showGhostFloor = prevGhost;
                         this.draw();
 
                         try {
@@ -1631,7 +1650,8 @@
                                         mapOffsetX: this.mapOffsetX, 
                                         mapOffsetY: this.mapOffsetY 
                                     },
-                                    croquis_image: croquisImage
+                                    croquis_images: croquisImages,
+                                    croquis_image: croquisImages[prevPiso] || Object.values(croquisImages)[0] // fallback
                                 })
                             });
                             if (res.ok) {

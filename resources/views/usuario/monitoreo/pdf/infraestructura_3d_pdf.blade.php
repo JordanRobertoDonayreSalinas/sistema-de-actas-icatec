@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Módulo 19: Infraestructura 3D - Acta {{ $acta->numero_acta }}</title>
+    <title>Módulo 19: Infraestructura 2D - Acta {{ $acta->numero_acta }}</title>
     <style>
         @page { margin: 1.2cm 1.5cm 2.5cm 1.5cm; }
         body { font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: #1e293b; line-height: 1.4; }
@@ -69,7 +69,7 @@
 
     {{-- ENCABEZADO --}}
     <div class="header">
-        <h1>Módulo 19: Infraestructura y Croquis 3D</h1>
+        <h1>Módulo 19: Infraestructura y Croquis 2D</h1>
         <div class="acta-info">
             ACTA N° {{ str_pad($acta->numero_acta, 3, '0', STR_PAD_LEFT) }} |
             {{ $acta->establecimiento->codigo ?? 'S/C' }} - {{ strtoupper($acta->establecimiento->nombre) }} |
@@ -144,46 +144,9 @@
         </tr>
     </table>
 
-    {{-- 3. REPRESENTACIÓN GRÁFICA --}}
-    @if(!empty($contenido['imagen_path']))
-        <div class="section-title">{{ $n++ }}. Representación Gráfica del Croquis</div>
-        <div style="text-align: center; margin-top: 5px; margin-bottom: 10px;">
-            @php
-                $path_rel = $contenido['imagen_path'] ?? '';
-                $possible_paths = [
-                    storage_path('app/public/' . $path_rel),
-                    public_path('storage/' . $path_rel),
-                    base_path('storage/app/public/' . $path_rel),
-                ];
-                
-                $img_final = null;
-                foreach($possible_paths as $p) {
-                    if(!empty($path_rel) && file_exists($p)) {
-                        $img_final = $p;
-                        break;
-                    }
-                }
-
-                $base64 = null;
-                if($img_final) {
-                    $type = pathinfo($img_final, PATHINFO_EXTENSION);
-                    $data = file_get_contents($img_final);
-                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                }
-            @endphp
-            @if($base64)
-                <img src="{{ $base64 }}" style="width: 100%; max-width: 700px; border: 1px solid #e2e8f0; border-radius: 5px;">
-            @else
-                <div style="padding: 15px; border: 1px dashed #cbd5e1; color: #94a3b8; font-style: italic; background: #f8fafc;">
-                    [ La imagen del croquis no pudo renderizarse o no existe en el servidor ]
-                </div>
-            @endif
-        </div>
-    @endif
-
-    {{-- 3. DETALLE POR TIPO --}}
+    {{-- 3. DETALLE POR PISO (GRÁFICO + TABLAS) --}}
     @if(count($elementos) > 0)
-    <div class="section-title">{{ $n++ }}. Detalle de Elementos del Croquis</div>
+    <div class="section-title">{{ $n++ }}. Representación Gráfica y Detalle por Piso</div>
 
     @php
         $tipoBadgeClass = [
@@ -194,46 +157,107 @@
             'calle'     => 'badge-calle',
             'sistema'   => 'badge-sistema',
         ];
+        
+        // Agrupar elementos por piso
+        $elementosPorPiso = [];
+        foreach ($elementos as $el) {
+            $pisoNum = $el['piso'] ?? 1;
+            $elementosPorPiso[$pisoNum][] = $el;
+        }
+        ksort($elementosPorPiso);
+
+        // Imágenes por piso
+        $pisoImages = $contenido['piso_images'] ?? [];
     @endphp
 
-    <table>
-        <thead>
-            <tr>
-                <th width="5%">#</th>
-                <th width="18%">Tipo</th>
-                <th width="18%">Subtipo</th>
-                <th width="29%">Nombre / Etiqueta</th>
-                <th width="15%" class="text-center">Dimensiones (px)</th>
-                <th width="15%" class="text-center">Atributos</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($elementos as $i => $el)
-            @php
-                $tipo    = strtolower($el['type']    ?? 'otro');
-                $subtype = strtolower($el['subtype'] ?? '---');
-                $nombre  = strtoupper($el['name']    ?? $subtype);
-                $attrs   = $el['attrs'] ?? [];
-                $attrStr = [];
-                if (!empty($attrs['wifi']))  $attrStr[] = 'WiFi';
-                if (!empty($attrs['light'])) $attrStr[] = 'Luz';
-                $badgeClass = $tipoBadgeClass[$tipo] ?? '';
-            @endphp
-            <tr>
-                <td class="text-center">{{ $i + 1 }}</td>
-                <td><span class="badge {{ $badgeClass }}">{{ $tipo }}</span></td>
-                <td class="uppercase">{{ $subtype }}</td>
-                <td class="uppercase font-bold">{{ $nombre }}</td>
-                <td class="text-center">{{ round($el['w'] ?? 0) }} × {{ round($el['h'] ?? 0) }}</td>
-                <td class="text-center">{{ implode(', ', $attrStr) ?: '—' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    @foreach($elementosPorPiso as $pisoNum => $els)
+    <div style="page-break-inside: avoid; margin-bottom: 25px;">
+        <div style="background-color: #f1f5f9; padding: 6px 12px; font-weight: bold; font-size: 11px; color: #334155; margin-bottom: 10px; border-left: 4px solid #7c3aed;">
+            PISO {{ $pisoNum }} ({{ count($els) }} elementos registrados)
+        </div>
+
+        {{-- Imagen del Croquis del Piso --}}
+        @php
+            $path_rel = $pisoImages[$pisoNum] ?? ($pisoNum == 1 ? ($contenido['imagen_path'] ?? null) : null);
+            $base64 = null;
+            
+            if ($path_rel) {
+                // Limpiar la ruta de posibles slashes duplicados o invertidos
+                $path_rel = str_replace(['\\', '//'], '/', $path_rel);
+                
+                $possible_paths = [
+                    storage_path('app/public/' . $path_rel),
+                    public_path('storage/' . $path_rel),
+                    base_path('storage/app/public/' . $path_rel),
+                    // Intento directo en public/storage
+                    public_path() . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $path_rel),
+                ];
+                
+                foreach($possible_paths as $p) {
+                    if(file_exists($p) && !is_dir($p)) {
+                        $type = pathinfo($p, PATHINFO_EXTENSION);
+                        $data = @file_get_contents($p);
+                        if ($data) {
+                            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                            break;
+                        }
+                    }
+                }
+            }
+        @endphp
+
+        @if($base64)
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img src="{{ $base64 }}" style="width: 100%; max-width: 650px; border: 1px solid #e2e8f0; border-radius: 5px; background: #fff;">
+                <div style="font-size: 8px; color: #94a3b8; margin-top: 2px;">VISTA PLANTA - PISO {{ $pisoNum }}</div>
+            </div>
+        @else
+            <div style="padding: 15px; border: 1px dashed #cbd5e1; color: #94a3b8; font-style: italic; background: #f8fafc; text-align: center; margin-bottom: 10px;">
+                [ Croquis del Piso {{ $pisoNum }} no disponible ]
+            </div>
+        @endif
+
+        {{-- Tabla de Elementos del Piso --}}
+        <table>
+            <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="18%">Tipo</th>
+                    <th width="18%">Subtipo</th>
+                    <th width="29%">Nombre / Etiqueta</th>
+                    <th width="15%" class="text-center">Dimensiones</th>
+                    <th width="15%" class="text-center">Atributos</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($els as $i => $el)
+                @php
+                    $tipo    = strtolower($el['type']    ?? 'otro');
+                    $subtype = strtolower($el['subtype'] ?? '---');
+                    $nombre  = strtoupper($el['name']    ?? $subtype);
+                    $attrs   = $el['attrs'] ?? [];
+                    $attrStr = [];
+                    if (!empty($attrs['wifi']))  $attrStr[] = 'WiFi';
+                    if (!empty($attrs['light'])) $attrStr[] = 'Luz';
+                    $badgeClass = $tipoBadgeClass[$tipo] ?? '';
+                @endphp
+                <tr>
+                    <td class="text-center">{{ $i + 1 }}</td>
+                    <td><span class="badge {{ $badgeClass }}">{{ $tipo }}</span></td>
+                    <td class="uppercase">{{ $subtype }}</td>
+                    <td class="uppercase font-bold">{{ $nombre }}</td>
+                    <td class="text-center">{{ round($el['w'] ?? 0) }}×{{ round($el['h'] ?? 0) }}px</td>
+                    <td class="text-center">{{ implode(', ', $attrStr) ?: '—' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endforeach
 
     @if($totalConexiones > 0)
     <div class="leyenda-box">
-        <strong>Conexiones de Red:</strong> {{ $totalConexiones }} conexión(es) registradas entre elementos de hardware.
+        <strong>Conexiones de Red:</strong> Se han registrado {{ $totalConexiones }} interconexiones físicas/lógicas entre dispositivos de hardware.
     </div>
     @endif
 

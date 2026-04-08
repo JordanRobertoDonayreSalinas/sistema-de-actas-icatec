@@ -170,7 +170,7 @@
                         if(isset($conteo[$t])) $conteo[$t]++;
                     }
                 @endphp
-                <div class="section-title">Resumen del Diseño 3D</div>
+                <div class="section-title">Resumen del Diseño 2D</div>
                 <table class="data-table">
                     <tr>
                         <th>Ambientes Registrados</th>

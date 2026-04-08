@@ -19,7 +19,12 @@ class Participante extends Model
         'nombres',
         'cargo',
         'modulo',
+        'es_implementador',
         'unidad_ejecutora', // ⚠ agregado para que se guarde correctamente
+    ];
+
+    protected $casts = [
+        'es_implementador' => 'boolean',
     ];
 
     /**

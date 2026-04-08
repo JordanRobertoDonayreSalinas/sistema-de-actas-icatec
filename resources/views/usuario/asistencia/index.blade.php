@@ -171,7 +171,7 @@
                             <th class="px-3 py-3 text-[10px] font-bold uppercase text-center">Fecha</th>
                             <th class="px-3 py-3 text-[10px] font-bold uppercase">Establecimiento</th>
                             <th class="px-3 py-3 text-[10px] font-bold uppercase">Modalidad</th>
-                            <th class="px-3 py-3 text-[10px] font-bold uppercase">Implementador</th>
+                            <th class="px-3 py-3 text-[10px] font-bold uppercase">Implementadores</th>
                             <th class="px-3 py-3 text-[10px] font-bold uppercase text-center">Estado</th>
                             <th class="px-3 py-3 text-[10px] font-bold uppercase text-right">Acciones</th>
                         </tr>
@@ -183,7 +183,36 @@
                                 <td class="px-3 py-3 text-center font-bold">{{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}</td>
                                 <td class="px-3 py-3 font-semibold text-slate-800">{{ $acta->establecimiento->nombre ?? '—' }}</td>
                                 <td class="px-3 py-3">{{ $acta->modalidad }}</td>
-                                <td class="px-3 py-3 text-slate-500">{{ $acta->implementador }}</td>
+                                <td class="px-3 py-3 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5 flex-wrap w-48">
+                                        @php 
+                                            // Recopilar implementadores únicos
+                                            $listaImpl = collect([$acta->implementador])->filter();
+                                            foreach ($acta->participantes ?? [] as $p) {
+                                                if (!empty($p->es_implementador)) {
+                                                    $nombreCompleto = trim(($p->apellidos ?? '') . ' ' . ($p->nombres ?? ''));
+                                                    if (!empty($nombreCompleto) && !$listaImpl->contains($nombreCompleto)) {
+                                                        $listaImpl->push($nombreCompleto);
+                                                    }
+                                                }
+                                            }
+                                            $count = 0; 
+                                        @endphp
+                                        @foreach($listaImpl as $imp)
+                                            @if($count < 2)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200 truncate max-w-[180px]" title="{{ $imp }}">
+                                                    {{ $imp }}
+                                                </span>
+                                            @endif
+                                            @php $count++; @endphp
+                                        @endforeach
+                                        @if($count > 2)
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-500 border border-slate-300" title="Ver detalle para la lista completa">
+                                                +{{ $count - 2 }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td class="px-3 py-3 text-center whitespace-nowrap">
                                     <div class="flex items-center justify-center gap-1">
                                         @if ($acta->firmado)

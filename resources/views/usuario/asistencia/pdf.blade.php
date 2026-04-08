@@ -278,14 +278,14 @@
                     <tr>
                         <td>
                             <div class="linea-firma"></div>
-                            <span class="nombre-firma">{{ $participantes[$i]->nombres }} {{ $participantes[$i]->apellidos }}</span>
-                            <span class="detalles-firma">{{ $participantes[$i]->modulo ?? 'PARTICIPANTE' }}</span>
+                            <span class="nombre-firma">{{ $participantes[$i]->apellidos }} {{ $participantes[$i]->nombres }}</span>
+                            <span class="detalles-firma">{{ $participantes[$i]->es_implementador ? 'IMPLEMENTADOR(A)' : ($participantes[$i]->modulo ?? 'PARTICIPANTE') }}</span>
                         </td>
                         @if(isset($participantes[$i+1]))
                             <td>
                                 <div class="linea-firma"></div>
-                                <span class="nombre-firma">{{ $participantes[$i+1]->nombres }} {{ $participantes[$i+1]->apellidos }}</span>
-                                <span class="detalles-firma">{{ $participantes[$i+1]->modulo ?? 'PARTICIPANTE' }}</span>
+                                <span class="nombre-firma">{{ $participantes[$i+1]->apellidos }} {{ $participantes[$i+1]->nombres }}</span>
+                                <span class="detalles-firma">{{ $participantes[$i+1]->es_implementador ? 'IMPLEMENTADOR(A)' : ($participantes[$i+1]->modulo ?? 'PARTICIPANTE') }}</span>
                             </td>
                         @else
                             <td style="border: none;"></td>

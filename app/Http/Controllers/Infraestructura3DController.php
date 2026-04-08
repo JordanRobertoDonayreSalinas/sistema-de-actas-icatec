@@ -32,19 +32,45 @@ class Infraestructura3DController extends Controller
             $moduloNombre = 'infraestructura_3d';
             $contenido = $request->contenido;
 
-            // Procesar la imagen del croquis si se envía
+            // Asegurar que el directorio de croquis existe
+            if (!\Illuminate\Support\Facades\Storage::disk('public')->exists('croquis')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory('croquis');
+            }
+
+            // Procesar imágenes de los pisos si se envían (Multi-piso)
+            if ($request->has('croquis_images')) {
+                $images = $request->croquis_images;
+                $floorPaths = [];
+                foreach ($images as $piso => $imageData) {
+                    $imageData = preg_replace('/^data:image\/\w+;base64,/', '', $imageData);
+                    $imageData = str_replace(' ', '+', $imageData);
+                    $imageName = 'croquis_acta_' . $id . '_piso_' . $piso . '.png';
+                    $path = 'croquis/' . $imageName;
+                    
+                    $success = \Illuminate\Support\Facades\Storage::disk('public')->put($path, base64_decode($imageData));
+                    if ($success) {
+                        $floorPaths[$piso] = $path;
+                        \Illuminate\Support\Facades\Log::info("Croquis PISO $piso guardado en: $path");
+                    } else {
+                        \Illuminate\Support\Facades\Log::error("Fallo al guardar croquis PISO $piso en: $path");
+                    }
+                }
+                $contenido['piso_images'] = $floorPaths;
+            }
+
+            // Procesar la imagen del croquis principal (para compatibilidad)
             if ($request->has('croquis_image')) {
                 $imageData = $request->croquis_image;
-                $imageData = str_replace('data:image/png;base64,', '', $imageData);
+                $imageData = preg_replace('/^data:image\/\w+;base64,/', '', $imageData);
                 $imageData = str_replace(' ', '+', $imageData);
                 $imageName = 'croquis_acta_' . $id . '.png';
                 $path = 'croquis/' . $imageName;
                 
-                // Guardar en storage/app/public/croquis/
-                \Illuminate\Support\Facades\Storage::disk('public')->put($path, base64_decode($imageData));
-                
-                // Guardar la ruta en el JSON para los reportes
-                $contenido['imagen_path'] = $path;
+                $success = \Illuminate\Support\Facades\Storage::disk('public')->put($path, base64_decode($imageData));
+                if ($success) {
+                    $contenido['imagen_path'] = $path;
+                    \Illuminate\Support\Facades\Log::info("Croquis PRINCIPAL guardado en: $path");
+                }
             }
             
             // Buscamos si ya existe el registro
@@ -73,7 +99,7 @@ class Infraestructura3DController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Croquis 3D guardado correctamente.'
+                'message' => 'Croquis 2D guardado correctamente.'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

@@ -270,8 +270,9 @@
                                         <th style="width:170px">Documento</th>
                                         <th>Apellidos</th>
                                         <th>Nombres</th>
-                                        <th style="width:200px">Cargo</th>
-                                        <th style="width:260px">Módulo</th>
+                                        <th style="width:180px">Cargo</th>
+                                        <th style="width:200px">Módulo</th>
+                                        <th style="width:70px" title="¿Es Implementador?">¿Impl.?</th>
                                         <th style="width:52px">Acc.</th>
                                     </tr>
                                 </thead>
@@ -299,6 +300,9 @@
                                                     @foreach($modulos as $op) <option value="{{ $op }}">{{ $op }}</option> @endforeach
                                                 </select>
                                             </td>
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer;" name="participantes[0][es_implementador]" value="1" data-base="es_implementador">
+                                            </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn-del eliminar-fila" title="Eliminar">&#10006;</button>
                                             </td>
@@ -321,6 +325,9 @@
                                                         <option value="">-- No aplica --</option>
                                                         @foreach($modulos as $op) <option value="{{ $op }}" {{ ($p['modulo'] ?? $p->modulo ?? '') == $op ? 'selected' : '' }}>{{ $op }}</option> @endforeach
                                                     </select>
+                                                </td>
+                                                <td class="text-center" style="vertical-align: middle;">
+                                                    <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer;" name="participantes[{{ $i }}][es_implementador]" value="1" data-base="es_implementador" {{ (!empty($p['es_implementador']) || !empty($p->es_implementador)) ? 'checked' : '' }}>
                                                 </td>
                                                 <td class="text-center">
                                                     <button type="button" class="btn-del eliminar-fila" title="Eliminar">&#10006;</button>
@@ -355,6 +362,9 @@
                                 <option value="">-- No aplica --</option>
                                 @foreach($modulos as $op) <option value="{{ $op }}">{{ $op }}</option> @endforeach
                             </select>
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                            <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer;" value="1" data-base="es_implementador">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn-del eliminar-fila" title="Eliminar">&#10006;</button>
