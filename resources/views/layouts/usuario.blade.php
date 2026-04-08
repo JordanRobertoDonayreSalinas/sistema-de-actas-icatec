@@ -66,21 +66,31 @@
 
         {{-- ================= SIDEBAR USUARIO ================= --}}
         <aside class="w-72 shrink-0 bg-slate-900 text-white hidden md:flex flex-col shadow-2xl relative z-30">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500">
-            </div>
+        <div class="absolute top-0 left-0 w-full h-[2px] bg-cyan-500"></div>
 
-            <div class="h-20 flex items-center px-8 bg-slate-900/50 backdrop-blur-sm border-b border-white/5 shrink-0">
+            <div class="h-20 flex items-center px-5 border-b border-white/[0.07] shrink-0">
                 <div class="flex items-center gap-3">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-emerald-500/40">
-                        U</div>
-                    <div><span class="font-bold text-lg tracking-wide block leading-tight">Panel de Usuario</span></div>
+                    <div class="w-9 h-9 rounded-md border border-cyan-500/20 bg-cyan-500/10 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-6 14h-2v-4H7v-2h4V7h2v4h4v2h-4v4z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="font-black text-[11px] tracking-[0.08em] text-white uppercase block leading-tight">Herramientas de Implementación SIHCE</span>
+                    </div>
                 </div>
             </div>
 
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scroll">
                 @if(Auth::user()->role === 'admin')
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-2">Plataforma</p>
+
+                {{-- GESTIONAR USUARIOS --}}
+                <a href="{{ route('admin.users.index') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('admin.users.*') ? 'bg-indigo-600/10 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="font-medium">Gestionar Usuarios</span>
+                </a>
 
                 {{-- Dashboard Dropdown --}}
                 <div x-data="{ open: {{ request()->routeIs('usuario.dashboard*') ? 'true' : 'false' }} }">
@@ -96,28 +106,12 @@
 
                     <div x-show="open" x-collapse class="ml-4 mt-1 space-y-1">
                         <a href="{{ route('usuario.dashboard.general') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.general') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                            <i data-lucide="activity" class="w-4 h-4"></i>
-                            <span class="text-sm font-medium">Mapa de Monitoreo</span>
-                        </a>
-                        <a href="{{ route('usuario.dashboard.mapa.soportes') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.mapa.soportes') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                            <i data-lucide="map" class="w-4 h-4"></i>
-                            <span class="text-sm font-medium">Mapa de Asistencias Técnicas</span>
-                        </a>
-                        <a href="{{ route('usuario.dashboard.mapa.implementaciones') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.mapa.implementaciones') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                            <i data-lucide="map-pin" class="w-4 h-4"></i>
-                            <span class="text-sm font-medium">Mapa de Implementaciones</span>
-                        </a>
-                        <a href="{{ route('usuario.dashboard.mapa.progresion') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.mapa.progresion') ? 'bg-amber-600/10 text-amber-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.general') ? 'bg-teal-600/10 text-teal-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="git-merge" class="w-4 h-4"></i>
                             <span class="text-sm font-medium">Mapa de Progresión</span>
-                            <span class="ml-auto text-[8px] font-black bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full uppercase">Nuevo</span>
                         </a>
                         <a href="{{ route('usuario.dashboard.equipos') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.equipos') ? 'bg-emerald-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.equipos') ? 'bg-teal-600/10 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                             <i data-lucide="monitor" class="w-4 h-4"></i>
                             <span class="text-sm font-medium">Equipos de Cómputo</span>
                         </a>
@@ -163,10 +157,10 @@
                 </a>
 
                 {{-- REPORTES (Desplegable) --}}
-                <div x-data="{ open: {{ request()->routeIs('usuario.reportes.*') ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ request()->routeIs('usuario.reportes.*', 'usuario.auditoria.*') ? 'true' : 'false' }} }">
                     {{-- Botón Principal --}}
                     <button @click="open = !open" type="button"
-                        class="w-full group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.reportes.*') ? 'bg-purple-600/10 text-purple-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        class="w-full group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.reportes.*', 'usuario.auditoria.*') ? 'bg-purple-600/10 text-purple-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                         <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                         <span class="font-medium flex-1 text-left">Reportes</span>
                         <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"
@@ -189,26 +183,7 @@
                             <span class="font-medium text-sm">Equipos de Cómputo</span>
                         </a>
 
-                        {{-- Actas de Asistencia Técnica --}}
-                        <a href="{{ route('usuario.reportes.actas.asistencia') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.actas.asistencia') ? 'bg-emerald-600/10 text-emerald-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                            <i data-lucide="clipboard-list" class="w-4 h-4"></i>
-                            <span class="font-medium text-sm">Actas Asistencia Técnica</span>
-                        </a>
 
-                        {{-- Actas de Monitoreo --}}
-                        <a href="{{ route('usuario.reportes.actas.monitoreo') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.actas.monitoreo') ? 'bg-blue-600/10 text-blue-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                            <i data-lucide="activity" class="w-4 h-4"></i>
-                            <span class="font-medium text-sm">Actas de Monitoreo</span>
-                        </a>
-
-                        {{-- Actas de Implementación --}}
-                        <a href="{{ route('usuario.reportes.actas.implementacion') }}"
-                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.actas.implementacion') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                            <i data-lucide="pen-tool" class="w-4 h-4"></i>
-                            <span class="font-medium text-sm">Actas de Implementación</span>
-                        </a>
 
                         {{-- Auditoría de Consistencia SIHCE --}}
                         <a href="{{ route('usuario.auditoria.index') }}"
@@ -276,8 +251,8 @@
 
                             <div class="text-right hidden sm:block">
                                 <p class="text-sm font-bold text-slate-700 leading-tight">{{ Auth::user()->name }}</p>
-                                <p class="text-[10px] text-emerald-600 uppercase tracking-wider font-black">
-                                    {{ Auth::user()->role === 'admin' ? 'Admin / Usuario' : 'Usuario' }}
+                                <p class="text-[11px] text-cyan-600 font-semibold">
+                                    {{ Auth::user()->role === 'admin' ? 'Administrador' : (Auth::user()->role === 'operador' ? 'Operador' : 'Usuario') }}
                                 </p>
                             </div>
 
@@ -296,30 +271,16 @@
                             x-transition:leave="transition ease-in duration-75"
                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                             x-transition:leave-end="opacity-0 scale-95 translate-y-2"
-                            class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50"
+                            class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50"
                             x-cloak>
-
-                            @if(Auth::user()->role === 'admin')
-                                <div class="px-4 py-2">
-                                    <a href="{{ route('admin.users.index') }}"
-                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors font-bold rounded-xl">
-                                        <i data-lucide="shield" class="w-4 h-4"></i>
-                                        <span>Panel de Administrador</span>
-                                    </a>
-                                </div>
-                                <div class="border-t border-slate-100 mx-4"></div>
-                            @endif
-
-                            <div class="border-t border-slate-50 mt-1 pt-1">
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit"
-                                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold text-left">
-                                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                                        <span>Cerrar Sesión</span>
-                                    </button>
-                                </form>
-                            </div>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold text-left">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                                    <span>Cerrar Sesión</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -347,6 +308,9 @@
 
     {{-- Chart.js para gráficos estadísticos --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @stack('scripts')
 </body>

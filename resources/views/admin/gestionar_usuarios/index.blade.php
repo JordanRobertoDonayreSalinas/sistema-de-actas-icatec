@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.usuario')
 
 @section('title', 'Gestionar usuarios')
 
@@ -79,8 +79,10 @@
                                 <td class="px-6 py-4 text-center">
                                     @if($user->role === 'admin')
                                         <span class="inline-flex px-3 py-1 rounded-full text-[9px] font-black bg-violet-50 text-violet-600 border border-violet-100 tracking-tighter">ADMINISTRADOR</span>
+                                    @elseif($user->role === 'operador')
+                                        <span class="inline-flex px-3 py-1 rounded-full text-[9px] font-black bg-cyan-50 text-cyan-600 border border-cyan-100 tracking-tighter">OPERADOR</span>
                                     @else
-                                        <span class="inline-flex px-3 py-1 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-600 border border-emerald-100 tracking-tighter">OPERADOR</span>
+                                        <span class="inline-flex px-3 py-1 rounded-full text-[9px] font-black bg-slate-100 text-slate-500 border border-slate-200 tracking-tighter">USUARIO</span>
                                     @endif
                                 </td>
 

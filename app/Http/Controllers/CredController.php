@@ -110,7 +110,7 @@ class CredController extends Controller
             $datosForm['documentacion'] = $docData;
 
             // --- 3. GUARDAR EN mon_detalle_modulos ---
-            $nombreFull = mb_mb_strtoupper(($personal['apellido_paterno'] ?? '', 'UTF-8').' '.($personal['apellido_materno'] ?? '').' '.($personal['nombre'] ?? ''), 'UTF-8');
+            $nombreFull = mb_strtoupper(($personal['apellido_paterno'] ?? '').' '.($personal['apellido_materno'] ?? '').' '.($personal['nombre'] ?? ''), 'UTF-8');
             
             DB::table('mon_detalle_modulos')->updateOrInsert(
                 ['cabecera_monitoreo_id' => $id, 'modulo_nombre' => $this->modulo],

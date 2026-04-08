@@ -49,6 +49,11 @@ class MonitoreoController extends Controller
 
         $query = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'detalles', 'user']);
 
+        // El operador solo ve sus propias actas
+        if (Auth::user()->role === 'operador') {
+            $query->where('user_id', Auth::id());
+        }
+
         if ($request->filled('implementador')) {
             $query->where('implementador', $request->input('implementador'));
         }
@@ -364,6 +369,11 @@ class MonitoreoController extends Controller
     public function gestionarModulos($id)
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo'])->findOrFail($id);
+
+        // El operador solo puede acceder al módulo de Infraestructura 3D / Croquis
+        if (Auth::user()->role === 'operador') {
+            return redirect()->route('usuario.monitoreo.infraestructura-3d.index', $id);
+        }
 
         $esEspecializada = ($acta->tipo_origen === 'ESPECIALIZADA') || $this->esEspecializada($acta->establecimiento);
 

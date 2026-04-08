@@ -94,7 +94,7 @@ class AdminController extends Controller
             'username' => 'required|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6|confirmed',
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:admin,user,operador',
         ]);
 
         User::create([
@@ -129,7 +129,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => "required|email|unique:users,email,{$user->id}",
             'username' => "required|unique:users,username,{$user->id}",
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:admin,user,operador',
             'status' => 'required|in:active,inactive',
         ]);
 
@@ -140,6 +140,95 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.users.index')->with('success', 'Usuario actualizado correctamente.');
+    }
+
+    /**
+     * Búsqueda de documento para creación de usuarios.
+     * Replica el patrón de GestionAdministrativaController@buscarProfesional:
+     *   - ?local_only=1  → solo consulta la tabla local mon_profesionales
+     *   - Sin parámetro  → local + DecolectaService (RENIEC) si es DNI de 8 dígitos
+     * GET /admin/buscar-dni?tipo_doc=DNI&dni=12345678[&local_only=1]
+     */
+    public function buscarDni(Request $request)
+    {
+        $tipoDoc   = strtoupper(trim($request->input('tipo_doc', 'DNI')));
+        $doc       = trim($request->input('dni', ''));
+        $localOnly = $request->has('local_only');
+
+        if (empty($doc)) {
+            return response()->json(['exists' => false, 'exists_external' => false]);
+        }
+
+        // Verificar si ya existe un usuario del sistema con ese documento
+        $usuarioExistente = \App\Models\User::where('username', $doc)->first();
+        $existingUser = $usuarioExistente ? [
+            'nombre' => trim(($usuarioExistente->apellido_paterno ?? '') . ' ' . ($usuarioExistente->name ?? '')),
+            'role'   => $usuarioExistente->role,
+            'status' => $usuarioExistente->status,
+            'id'     => $usuarioExistente->id,
+        ] : null;
+
+        // 1. Buscar en mon_profesionales (tabla local)
+        $profesional = \App\Models\Profesional::where('doc', $doc)->first();
+
+        if ($profesional) {
+            return response()->json([
+                'exists'           => true,
+                'exists_external'  => false,
+                'existing_user'    => $existingUser,
+                'tipo_doc'         => $profesional->tipo_doc,
+                'apellido_paterno' => $profesional->apellido_paterno,
+                'apellido_materno' => $profesional->apellido_materno,
+                'nombres'          => $profesional->nombres,
+                'email'            => $profesional->email ?? '',
+            ]);
+        }
+
+        // Retornar solo local si se indica (flujo en 2 pasos del frontend)
+        if ($localOnly) {
+            return response()->json([
+                'exists'          => false,
+                'exists_external' => false,
+                'existing_user'   => $existingUser,
+            ]);
+        }
+
+        // 2. API externa (DecolectaService) – solo para DNI de 8 dígitos
+        if ($tipoDoc === 'DNI' && preg_match('/^\d{8}$/', $doc)) {
+            $decolecta = new \App\Services\DecolectaService();
+            $result    = $decolecta->consultarDni($doc);
+
+            if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
+                return response()->json([
+                    'exists'          => false,
+                    'exists_external' => false,
+                    'quota_exceeded'  => true,
+                    'existing_user'   => $existingUser,
+                    'message'         => 'Límite mensual de validaciones RENIEC excedido.',
+                ]);
+            }
+
+            if (isset($result['success']) && $result['success']) {
+                $data = $result['data'];
+                return response()->json([
+                    'exists'           => false,
+                    'exists_external'  => true,
+                    'existing_user'    => $existingUser,
+                    'tipo_doc'         => 'DNI',
+                    'apellido_paterno' => $data['apellido_paterno'],
+                    'apellido_materno' => $data['apellido_materno'],
+                    'nombres'          => $data['nombres'],
+                    'email'            => '',
+                    'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                ]);
+            }
+        }
+
+        return response()->json([
+            'exists'          => false,
+            'exists_external' => false,
+            'existing_user'   => $existingUser,
+        ]);
     }
 
     /**

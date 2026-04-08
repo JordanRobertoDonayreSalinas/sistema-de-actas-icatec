@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.usuario')
 
 @section('title', 'Editar Usuario - ' . $user->apellido_paterno . ' ' . $user->name)
 
@@ -121,7 +121,8 @@
                                         <i data-lucide="shield-check" class="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
                                     </div>
                                     <select name="role" id="role" class="block w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all sm:text-sm appearance-none cursor-pointer">
-                                        <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>Usuario (Operador)</option>
+                                        <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>Usuario</option>
+                                        <option value="operador" {{ old('role', $user->role) == 'operador' ? 'selected' : '' }}>Operador (Monitoreo)</option>
                                         <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Administrador (Total)</option>
                                     </select>
                                     <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
@@ -171,24 +172,66 @@
                             <p class="text-xs text-blue-700 leading-tight font-medium">Deje la contraseña en blanco si no desea cambiarla.</p>
                         </div>
 
-                        <div class="space-y-6 flex-1">
+                        <div class="space-y-4 flex-1">
+                            {{-- Nueva contraseña --}}
                             <div>
                                 <label for="password" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nueva Contraseña</label>
                                 <div class="relative group">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="lock" class="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i></div>
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i data-lucide="lock" class="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                    </div>
                                     <input type="password" name="password" id="password" autocomplete="new-password"
-                                        class="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all sm:text-sm"
-                                        placeholder="••••••••">
+                                        class="block w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
+                                        placeholder="Dejar en blanco para no cambiar">
+                                    <button type="button" id="toggle-pass"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-slate-500 transition-colors">
+                                        <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
+                                    </button>
                                 </div>
                             </div>
 
+                            {{-- Confirmar --}}
                             <div>
                                 <label for="password_confirmation" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Confirmar</label>
                                 <div class="relative group">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="check-circle-2" class="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i></div>
-                                    <input type="password" name="password_confirmation" id="password_confirmation" 
-                                        class="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all sm:text-sm"
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i data-lucide="check-circle-2" class="h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                    </div>
+                                    <input type="password" name="password_confirmation" id="password_confirmation"
+                                        class="block w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
                                         placeholder="••••••••">
+                                    <button type="button" id="toggle-confirm"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-slate-500 transition-colors">
+                                        <i data-lucide="eye" class="w-4 h-4" id="eye-icon-confirm"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Acciones rápidas --}}
+                            <div class="pt-2 space-y-2">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Accesos rápidos</p>
+                                <div class="flex gap-2">
+                                    <button type="button" id="btn-generar-pass"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-all">
+                                        <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                                        Generar segura
+                                    </button>
+                                    <button type="button" id="btn-usar-dni"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded-xl hover:bg-amber-100 transition-all">
+                                        <i data-lucide="fingerprint" class="w-3.5 h-3.5"></i>
+                                        Usar DNI
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Indicador de fortaleza --}}
+                            <div id="strength-wrap" class="hidden">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fortaleza</span>
+                                    <span id="strength-label" class="text-[10px] font-bold"></span>
+                                </div>
+                                <div class="h-1 bg-slate-100 rounded-full overflow-hidden">
+                                    <div id="strength-bar" class="h-full rounded-full transition-all duration-300" style="width:0"></div>
                                 </div>
                             </div>
                         </div>
@@ -211,3 +254,108 @@
         </form>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const passEl    = document.getElementById('password');
+    const confirmEl = document.getElementById('password_confirmation');
+    const strengthWrap = document.getElementById('strength-wrap');
+    const strengthBar  = document.getElementById('strength-bar');
+    const strengthLbl  = document.getElementById('strength-label');
+    const dniActual    = '{{ $user->username }}';
+
+    // Toggle visibilidad
+    function makeToggle(btnId, inputEl, iconId) {
+        const btn  = document.getElementById(btnId);
+        const icon = document.getElementById(iconId);
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            const isPass = inputEl.type === 'password';
+            inputEl.type = isPass ? 'text' : 'password';
+            icon.setAttribute('data-lucide', isPass ? 'eye-off' : 'eye');
+            if (window.refreshLucide) window.refreshLucide();
+        });
+    }
+    makeToggle('toggle-pass',    passEl,    'eye-icon');
+    makeToggle('toggle-confirm', confirmEl, 'eye-icon-confirm');
+
+    // Indicador de fortaleza
+    function evalStrength(pwd) {
+        let score = 0;
+        if (pwd.length >= 8)  score++;
+        if (pwd.length >= 12) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+        return score;
+    }
+
+    passEl.addEventListener('input', function () {
+        const val = this.value;
+        if (!val) { strengthWrap.classList.add('hidden'); return; }
+        strengthWrap.classList.remove('hidden');
+        const score = evalStrength(val);
+        const levels = [
+            { label: 'Muy débil', color: '#ef4444', width: '20%' },
+            { label: 'Débil',    color: '#f97316', width: '40%' },
+            { label: 'Media',    color: '#eab308', width: '60%' },
+            { label: 'Fuerte',   color: '#22c55e', width: '80%' },
+            { label: 'Excelente',color: '#10b981', width: '100%' },
+        ];
+        const lvl = levels[Math.min(score, 4)];
+        strengthBar.style.width = lvl.width;
+        strengthBar.style.background = lvl.color;
+        strengthLbl.textContent = lvl.label;
+        strengthLbl.style.color = lvl.color;
+    });
+
+    // Generar contraseña segura
+    document.getElementById('btn-generar-pass')?.addEventListener('click', function () {
+        const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789@#$!';
+        let pwd = '';
+        for (let i = 0; i < 12; i++) {
+            pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        Swal.fire({
+            icon: 'info',
+            title: 'Contraseña generada',
+            html: `<div style="font-family:monospace;font-size:22px;font-weight:bold;letter-spacing:3px;padding:12px;background:#f1f5f9;border-radius:8px;margin:10px 0">${pwd}</div>
+                   <p style="font-size:12px;color:#64748b">Copia y comparte esta contraseña con el usuario de forma segura.</p>`,
+            confirmButtonColor: '#4f46e5',
+            confirmButtonText: 'Usar esta contraseña',
+            showCancelButton: true,
+            cancelButtonText: 'Generar otra',
+            cancelButtonColor: '#94a3b8',
+        }).then(result => {
+            if (result.isConfirmed) {
+                passEl.value    = pwd;
+                confirmEl.value = pwd;
+                passEl.dispatchEvent(new Event('input'));
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                document.getElementById('btn-generar-pass').click();
+            }
+        });
+    });
+
+    // Usar DNI como contraseña
+    document.getElementById('btn-usar-dni')?.addEventListener('click', function () {
+        Swal.fire({
+            icon: 'warning',
+            title: '¿Usar DNI como contraseña?',
+            html: `La contraseña será el DNI <b>${dniActual}</b>.<br><span style="font-size:12px;color:#94a3b8">Recomendado solo para acceso temporal. El usuario debe cambiarla luego.</span>`,
+            confirmButtonColor: '#d97706',
+            confirmButtonText: 'Sí, usar DNI',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+        }).then(result => {
+            if (result.isConfirmed) {
+                passEl.value    = dniActual;
+                confirmEl.value = dniActual;
+                passEl.dispatchEvent(new Event('input'));
+            }
+        });
+    });
+})();
+</script>
+@endpush

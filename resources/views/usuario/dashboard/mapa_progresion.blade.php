@@ -45,7 +45,7 @@
     <div class="max-w-7xl mx-auto space-y-5">
 
         {{-- ══ PANEL SUPERIOR: KPIs de Progresión ══ --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 
             {{-- Etapa 0 --}}
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
@@ -90,16 +90,30 @@
             </div>
 
             {{-- Etapa 3 --}}
+            <div class="bg-white rounded-2xl border border-violet-100 p-5 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[9px] font-black text-violet-500 uppercase tracking-widest">Con Monitoreo</span>
+                    <span class="w-3 h-3 rounded-full bg-violet-500 shadow-sm"></span>
+                </div>
+                <div class="text-3xl font-black text-violet-700">{{ $contadores['etapa3'] }}</div>
+                <div class="text-[10px] text-violet-400 mt-1">monitoreo activo</div>
+                <div class="mt-3 bg-violet-50 rounded-full h-1.5 overflow-hidden">
+                    <div class="stage-bar h-full bg-violet-500 rounded-full"
+                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa3'] / $contadores['total'] * 100) : 0 }}%"></div>
+                </div>
+            </div>
+
+            {{-- Etapa 4 --}}
             <div class="bg-white rounded-2xl border border-emerald-100 p-5 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Ciclo Completo</span>
                     <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm animate-pulse"></span>
                 </div>
-                <div class="text-3xl font-black text-emerald-700">{{ $contadores['etapa3'] }}</div>
+                <div class="text-3xl font-black text-emerald-700">{{ $contadores['etapa4'] }}</div>
                 <div class="text-[10px] text-emerald-400 mt-1">de {{ $contadores['total'] }} totales</div>
                 <div class="mt-3 bg-emerald-50 rounded-full h-1.5 overflow-hidden">
                     <div class="stage-bar h-full bg-emerald-500 rounded-full"
-                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa3'] / $contadores['total'] * 100) : 0 }}%"></div>
+                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa4'] / $contadores['total'] * 100) : 0 }}%"></div>
                 </div>
             </div>
         </div>
@@ -126,14 +140,27 @@
                         <button data-etapa="2" class="btn-etapa px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span> Con Asistencia
                         </button>
-                        <button data-etapa="3" class="btn-etapa px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex items-center gap-1.5">
+                        <button data-etapa="3" class="btn-etapa px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-violet-50 text-violet-700 hover:bg-violet-100 transition-all flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-violet-500"></span> Con Monitoreo
+                        </button>
+                        <button data-etapa="4" class="btn-etapa px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Ciclo Completo
                         </button>
                     </div>
                 </div>
 
-                {{-- Filtros geográficos --}}
+                {{-- Filtros geográficos y de año --}}
                 <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex flex-col gap-1 border-r border-slate-200 pr-3 mr-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase">Año</label>
+                        <select id="filtro-anio" class="text-xs border-slate-200 rounded-xl px-3 py-2 focus:ring-violet-500 transition font-bold text-slate-700 bg-slate-50">
+                            <option value="todos" {{ $anioFiltro == 'todos' ? 'selected' : '' }}>Todos los años</option>
+                            @foreach($aniosDisponibles as $anio)
+                                <option value="{{ $anio }}" {{ $anioFiltro == $anio ? 'selected' : '' }}>{{ $anio }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
                     <div class="flex flex-col gap-1">
                         <label class="text-[9px] font-black text-slate-400 uppercase">Provincia</label>
                         <select id="filtro-provincia" class="text-xs border-slate-200 rounded-xl px-3 py-2 focus:ring-indigo-500 transition">
@@ -211,7 +238,14 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white shadow-sm flex-shrink-0 animate-pulse"></span>
+                        <span class="w-6 h-6 rounded-full bg-violet-500 border-2 border-white shadow-sm flex-shrink-0"></span>
+                        <div>
+                            <p class="text-[10px] font-bold text-violet-700 leading-none">Con Monitoreo</p>
+                            <p class="text-[9px] text-violet-400">Monitoreo activo</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-full bg-emerald-500 border-2 border-white shadow-sm flex-shrink-0 animate-pulse"></span>
                         <div>
                             <p class="text-[10px] font-bold text-emerald-700 leading-none">⭐ Ciclo Completo</p>
                             <p class="text-[9px] text-emerald-400">Las 3 etapas cubiertas</p>
@@ -219,22 +253,6 @@
                     </div>
                 </div>
 
-                {{-- Navigación a mapas individuales --}}
-                <div class="mt-4 pt-3 border-t border-slate-100 space-y-1.5">
-                    <p class="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Ver detalle</p>
-                    <a href="{{ route('usuario.dashboard.mapa.implementaciones') }}"
-                       class="flex items-center gap-2 text-[9px] font-bold text-blue-600 hover:text-blue-800 transition-colors">
-                        <i data-lucide="file-check-2" class="w-3 h-3"></i> Mapa Implementaciones
-                    </a>
-                    <a href="{{ route('usuario.dashboard.mapa.soportes') }}"
-                       class="flex items-center gap-2 text-[9px] font-bold text-amber-600 hover:text-amber-800 transition-colors">
-                        <i data-lucide="headphones" class="w-3 h-3"></i> Mapa Asistencias
-                    </a>
-                    <a href="{{ route('usuario.dashboard.general') }}"
-                       class="flex items-center gap-2 text-[9px] font-bold text-violet-600 hover:text-violet-800 transition-colors">
-                        <i data-lucide="activity" class="w-3 h-3"></i> Mapa Monitoreo
-                    </a>
-                </div>
             </div>
 
             {{-- Conteo flotante superior izquierdo --}}
@@ -268,7 +286,8 @@
             0: { color: '#94a3b8', size: 9,  label: 'Sin Inicio' },
             1: { color: '#3b82f6', size: 13, label: 'Implementado' },
             2: { color: '#f59e0b', size: 17, label: 'Con Asistencia' },
-            3: { color: '#22c55e', size: 22, label: 'Ciclo Completo' },
+            3: { color: '#8b5cf6', size: 21, label: 'Con Monitoreo' },
+            4: { color: '#22c55e', size: 26, label: 'Ciclo Completo' },
         };
 
         /* ── Popup HTML por establecimiento ── */
@@ -296,7 +315,7 @@
             }
 
             /* Etiqueta de etapa */
-            var colorClass = { 0: 'bg-slate-100 text-slate-600', 1: 'bg-blue-100 text-blue-700', 2: 'bg-amber-100 text-amber-700', 3: 'bg-emerald-100 text-emerald-700 font-black' };
+            var colorClass = { 0: 'bg-slate-100 text-slate-600', 1: 'bg-blue-100 text-blue-700', 2: 'bg-amber-100 text-amber-700', 3: 'bg-violet-100 text-violet-700', 4: 'bg-emerald-100 text-emerald-700 font-black' };
 
             return `
             <div class="bg-white min-w-[240px] max-w-[280px]">
@@ -313,7 +332,7 @@
                     ${check(e.tiene_asist, 'Asistencia Técnica' + (e.total_asistencias > 0 ? ' (' + e.total_asistencias + ' actas)' : ''))}
                     ${check(e.tiene_monitoreo, 'Monitoreo' + (e.total_monitoreos > 0 ? ' (' + e.total_monitoreos + ' actas)' : ''))}
                 </div>
-                ${e.etapa < 3 ? `<div class="px-4 pb-3"><p class="text-[9px] text-slate-400 bg-slate-50 px-2.5 py-1.5 rounded-lg">Siguiente: ${e.etapa === 0 ? '→ Necesita Implementación' : e.etapa === 1 ? '→ Programar Asistencia Técnica' : '→ Programar Monitoreo'}</p></div>` : `<div class="px-4 pb-3"><p class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-lg">⭐ Ciclo completo alcanzado</p></div>`}
+                ${e.etapa < 4 ? `<div class="px-4 pb-3"><p class="text-[9px] text-slate-400 bg-slate-50 px-2.5 py-1.5 rounded-lg">Siguiente: ${e.etapa === 0 ? '→ Necesita Implementación' : e.etapa === 1 ? '→ Programar Asistencia Técnica' : e.etapa === 2 ? '→ Programar Monitoreo' : '→ Monitoreo / Continuar'}</p></div>` : `<div class="px-4 pb-3"><p class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-lg">⭐ Ciclo completo alcanzado</p></div>`}
             </div>`;
         }
 
@@ -331,10 +350,10 @@
                 radius:      cfg.size / 2,
                 fillColor:   cfg.color,
                 color:       '#fff',
-                weight:      e.etapa === 3 ? 3 : 2,
+                weight:      e.etapa === 4 ? 3 : 2,
                 opacity:     1,
                 fillOpacity: 0.9,
-                className:   e.etapa === 3 ? 'marker-completo' : ''
+                className:   e.etapa === 4 ? 'marker-completo' : ''
             }).addTo(map).bindPopup(buildPopup(e), { className: 'custom-popup', maxWidth: 300 });
 
             markers.push({
@@ -436,6 +455,11 @@
                 }
             });
         }
+
+        document.getElementById('filtro-anio').addEventListener('change', function () {
+            // Este filtro recarga la página porque afecta la consulta a base de datos
+            window.location.href = "{{ route('usuario.dashboard.general') }}?anio=" + this.value;
+        });
 
         document.getElementById('filtro-provincia').addEventListener('change', function () {
             filtroProvincia = this.value; filtroDistrito = ''; filtroCategoria = ''; filtroEstId = '';

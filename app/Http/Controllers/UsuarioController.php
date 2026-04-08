@@ -16,151 +16,24 @@ use Carbon\Carbon;
 class UsuarioController extends Controller
 {
     /**
-     * DASHBOARD DEL USUARIO
-     * Muestra estadísticas GLOBALES e HISTÓRICAS ordenadas por fecha reciente.
-     * Vista: resources/views/usuario/dashboard/dashboard.blade.php
-     */
-    public function index()
-    {
-        // 1. IDs de establecimientos con actas de monitoreo (tabla mon_cabecera_monitoreo)
-        $idsConMonitoreo = \App\Models\CabeceraMonitoreo::distinct()
-            ->pluck('establecimiento_id')
-            ->toArray();
-
-        // 2. Establecimientos con coordenadas para el mapa (con flag de monitoreo y provincia)
-        $establecimientosMap = Establecimiento::whereNotNull('latitud')
-            ->whereNotNull('longitud')
-            ->get(['id', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
-            ->map(function ($est) use ($idsConMonitoreo) {
-                $est->has_monitoreo = in_array($est->id, $idsConMonitoreo);
-                return $est;
-            });
-
-        // 3. Lista de provincias únicas para el filtro
-        $provincias = Establecimiento::whereNotNull('latitud')
-            ->whereNotNull('longitud')
-            ->whereNotNull('provincia')
-            ->distinct()
-            ->orderBy('provincia')
-            ->pluck('provincia');
-
-        // 4. Categorías y Distritos para filtros
-        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
-        $distritos = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
-
-        return view('usuario.dashboard.dashboard', compact(
-            'establecimientosMap',
-            'provincias',
-            'categorias',
-            'distritos'
-        ));
-    }
-
-    /**
-     * MAPA DE ASISTENCIAS TÉCNICAS
-     * Muestra la intensidad de asistencias técnicas por establecimiento.
-     */
-    public function mapaSoportes()
-    {
-        // 1. Obtener conteo de asistencias (Soportes) por establecimiento
-        // Filtramos por tema 'Asistencia' o similar si es necesario
-        $asistenciasCount = Acta::select('establecimiento_id', DB::raw('count(*) as total'))
-            ->where('tipo', 'asistencia')
-            ->groupBy('establecimiento_id')
-            ->pluck('total', 'establecimiento_id');
-
-        // 2. Obtener establecimientos con coordenadas
-        $establecimientosMap = Establecimiento::whereNotNull('latitud')
-            ->whereNotNull('longitud')
-            ->get(['id', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
-            ->map(function ($est) use ($asistenciasCount) {
-                $est->total_asistencias = $asistenciasCount[$est->id] ?? 0;
-                return $est;
-            });
-
-        // 3. Lista de provincias para el filtro
-        $provincias = Establecimiento::whereNotNull('latitud')
-            ->whereNotNull('longitud')
-            ->whereNotNull('provincia')
-            ->distinct()
-            ->orderBy('provincia')
-            ->pluck('provincia');
-
-        // 4. Categorías y Distritos para filtros
-        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
-        $distritos = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
-
-        return view('usuario.dashboard.mapa_soportes', compact(
-            'establecimientosMap',
-            'provincias',
-            'categorias',
-            'distritos'
-        ));
-    }
-
-    /**
-     * MAPA DE IMPLEMENTACIONES
-     * Muestra las actas de implementación realizadas en cada establecimiento.
-     */
-    public function mapaImplementaciones()
-    {
-        // Obtener todos los módulos de implementación
-        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
-        
-        $implementacionesPorEstablecimiento = [];
-        
-        foreach ($modulos as $key => $config) {
-            $modelo = $config['modelo'];
-            if (class_exists($modelo)) {
-                $actas = $modelo::select('codigo_establecimiento')->get();
-                foreach ($actas as $acta) {
-                    $codigo = $acta->codigo_establecimiento;
-                    if (!isset($implementacionesPorEstablecimiento[$codigo])) {
-                        $implementacionesPorEstablecimiento[$codigo] = [];
-                    }
-                    if (!in_array($config['nombre'], $implementacionesPorEstablecimiento[$codigo])) {
-                        $implementacionesPorEstablecimiento[$codigo][] = $config['nombre'];
-                    }
-                }
-            }
-        }
-        
-        // Obtenemos todos los establecimientos con coordenadas
-        $establecimientosMap = \App\Models\Establecimiento::whereNotNull('latitud')
-            ->whereNotNull('longitud')
-            ->get(['id', 'codigo', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
-            ->map(function ($est) use ($implementacionesPorEstablecimiento) {
-                // Agregar las actas implementadas (por código de establecimiento)
-                $est->actas_implementadas = $implementacionesPorEstablecimiento[$est->codigo] ?? [];
-                $est->has_implementacion = count($est->actas_implementadas) > 0;
-                return $est;
-            });
-            
-        // Lista de provincias, categorías y distritos para filtros
-        $provincias = \App\Models\Establecimiento::whereNotNull('latitud')
-            ->whereNotNull('longitud')
-            ->whereNotNull('provincia')
-            ->distinct()
-            ->orderBy('provincia')
-            ->pluck('provincia');
-
-        $categorias = \App\Models\Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
-        $distritos = \App\Models\Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
-
-        return view('usuario.dashboard.mapa_implementaciones', compact(
-            'establecimientosMap',
-            'provincias',
-            'categorias',
-            'distritos'
-        ));
-    }
-
-    /**
-     * MAPA DE PROGRESIÓN (Pipeline: Implementación → Asistencia Técnica → Monitoreo)
+     * DASHBOARD DEL USUARIO (Mapa de Progresión)
      * Muestra en qué etapa del proceso se encuentra cada establecimiento.
+     * Sirve como Dashboard General.
      */
-    public function mapaProgresion()
+    public function index(\Illuminate\Http\Request $request)
     {
+        $anioFiltro = $request->input('anio', 'todos');
+
+        // Años disponibles
+        $aniosMonitoreo = \App\Models\CabeceraMonitoreo::whereNotNull('fecha')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio')->toArray();
+        $aniosAsistencia = Acta::whereNotNull('fecha')->where('tipo', 'asistencia')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio')->toArray();
+        
+        $aniosDisponibles = collect(array_merge($aniosMonitoreo, $aniosAsistencia, [date('Y')]))
+            ->filter()
+            ->unique()
+            ->sortDesc()
+            ->values();
+
         // ── 1. Códigos que tienen al menos 1 acta de implementación ──────────
         $modulos = \App\Helpers\ImplementacionHelper::getModulos();
         $codigosConImplementacion = collect();
@@ -169,7 +42,13 @@ class UsuarioController extends Controller
         foreach ($modulos as $key => $config) {
             $modelo = $config['modelo'];
             if (!class_exists($modelo)) continue;
-            $actas = $modelo::select('codigo_establecimiento', 'nombre_establecimiento')->get();
+            
+            $query = $modelo::select('codigo_establecimiento', 'nombre_establecimiento');
+            if ($anioFiltro !== 'todos') {
+                $query->whereYear('fecha', $anioFiltro);
+            }
+            
+            $actas = $query->get();
             foreach ($actas as $acta) {
                 $cod = $acta->codigo_establecimiento;
                 if (!$cod) continue;
@@ -183,23 +62,30 @@ class UsuarioController extends Controller
         $codigosConImplementacion = $codigosConImplementacion->unique()->values();
 
         // ── 2. IDs que tienen al menos 1 acta de asistencia técnica ──────────
-        $idsConAsistencia = Acta::where('tipo', 'asistencia')
-            ->distinct()
-            ->pluck('establecimiento_id')
-            ->toArray();
-        $totalAsistenciaPorId = Acta::where('tipo', 'asistencia')
-            ->select('establecimiento_id', DB::raw('count(*) as total'))
-            ->groupBy('establecimiento_id')
-            ->pluck('total', 'establecimiento_id');
+        $queryAsistencia = Acta::where('tipo', 'asistencia');
+        if ($anioFiltro !== 'todos') {
+            $queryAsistencia->whereYear('fecha', $anioFiltro);
+        }
+        $idsConAsistencia = $queryAsistencia->distinct()->pluck('establecimiento_id')->toArray();
+
+        $queryTotalAsistencia = Acta::where('tipo', 'asistencia')->select('establecimiento_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))->groupBy('establecimiento_id');
+        if ($anioFiltro !== 'todos') {
+            $queryTotalAsistencia->whereYear('fecha', $anioFiltro);
+        }
+        $totalAsistenciaPorId = $queryTotalAsistencia->pluck('total', 'establecimiento_id');
 
         // ── 3. IDs que tienen al menos 1 acta de monitoreo ───────────────────
-        $idsConMonitoreo = \App\Models\CabeceraMonitoreo::distinct()
-            ->pluck('establecimiento_id')
-            ->toArray();
-        $totalMonitoreoPorId = \App\Models\CabeceraMonitoreo::select(
-                'establecimiento_id', DB::raw('count(*) as total'))
-            ->groupBy('establecimiento_id')
-            ->pluck('total', 'establecimiento_id');
+        $queryMonitoreo = \App\Models\CabeceraMonitoreo::query();
+        if ($anioFiltro !== 'todos') {
+            $queryMonitoreo->whereYear('fecha', $anioFiltro);
+        }
+        $idsConMonitoreo = $queryMonitoreo->distinct()->pluck('establecimiento_id')->toArray();
+
+        $queryTotalMonitoreo = \App\Models\CabeceraMonitoreo::select('establecimiento_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))->groupBy('establecimiento_id');
+        if ($anioFiltro !== 'todos') {
+            $queryTotalMonitoreo->whereYear('fecha', $anioFiltro);
+        }
+        $totalMonitoreoPorId = $queryTotalMonitoreo->pluck('total', 'establecimiento_id');
 
         // ── 4. Unificar en establecimientos con coordenadas ───────────────────
         $establecimientosMap = Establecimiento::whereNotNull('latitud')
@@ -214,13 +100,15 @@ class UsuarioController extends Controller
                 $tieneAsist     = in_array($est->id, $idsConAsistencia);
                 $tieneMonitoreo = in_array($est->id, $idsConMonitoreo);
 
-                // Etapa de progresión (0-3)
+                // Etapa de progresión (0-4)
                 if ($tieneImpl && $tieneAsist && $tieneMonitoreo) {
-                    $etapa = 3; // Ciclo completo
-                } elseif ($tieneImpl && $tieneAsist) {
-                    $etapa = 2; // Listo para Monitoreo
+                    $etapa = 4; // Ciclo completo
+                } elseif ($tieneMonitoreo) {
+                    $etapa = 3; // Con Monitoreo
+                } elseif ($tieneAsist) {
+                    $etapa = 2; // Con Asistencia
                 } elseif ($tieneImpl) {
-                    $etapa = 1; // Listo para Asistencia
+                    $etapa = 1; // Solo Implementado
                 } else {
                     $etapa = 0; // Sin inicio
                 }
@@ -243,6 +131,7 @@ class UsuarioController extends Controller
             'etapa1'    => $establecimientosMap->where('etapa', 1)->count(),
             'etapa2'    => $establecimientosMap->where('etapa', 2)->count(),
             'etapa3'    => $establecimientosMap->where('etapa', 3)->count(),
+            'etapa4'    => $establecimientosMap->where('etapa', 4)->count(),
         ];
 
         // ── 6. Filtros ────────────────────────────────────────────────────────
@@ -256,7 +145,9 @@ class UsuarioController extends Controller
             'contadores',
             'provincias',
             'categorias',
-            'distritos'
+            'distritos',
+            'aniosDisponibles',
+            'anioFiltro'
         ));
     }
 
@@ -457,6 +348,7 @@ class UsuarioController extends Controller
             $anio = $request->input('anio');
             $tipo = $request->input('tipo');
             $provincia = $request->input('provincia');
+            $distrito = $request->input('distrito');
             $establecimientoId = $request->input('establecimiento_id');
             $modulo = $request->input('modulo');
             $descripcion = $request->input('descripcion');
@@ -518,6 +410,13 @@ class UsuarioController extends Controller
             if ($provincia) {
                 $query->whereHas('cabecera.establecimiento', function ($q) use ($provincia) {
                     $q->where('provincia', $provincia);
+                });
+            }
+
+            // Filtro por Distrito
+            if ($distrito) {
+                $query->whereHas('cabecera.establecimiento', function ($q) use ($distrito) {
+                    $q->where('distrito', $distrito);
                 });
             }
 
@@ -727,6 +626,7 @@ class UsuarioController extends Controller
             $anio = $request->input('anio');
             $tipo = $request->input('tipo');
             $provincia = $request->input('provincia');
+            $distrito = $request->input('distrito');
             $establecimientoId = $request->input('establecimiento_id');
             $modulos = $request->input('modulos', []);
 
@@ -785,6 +685,13 @@ class UsuarioController extends Controller
                 });
             }
 
+            // Aplicar filtro por Distrito
+            if ($distrito) {
+                $query->whereHas('cabecera.establecimiento', function ($q) use ($distrito) {
+                    $q->where('distrito', $distrito);
+                });
+            }
+
             // Aplicar filtro por Establecimiento
             if ($establecimientoId) {
                 $query->whereHas('cabecera', function ($q) use ($establecimientoId) {
@@ -811,6 +718,17 @@ class UsuarioController extends Controller
                 ->orderBy('provincia')
                 ->pluck('provincia')
                 ->values();
+
+            // Obtener distritos disponibles (filtrados por provincia si aplica)
+            $distritosQuery = \App\Models\Establecimiento::select('distrito')
+                ->distinct()
+                ->whereNotNull('distrito')
+                ->whereIn('id', $establecimientosIds)
+                ->orderBy('distrito');
+            if ($provincia) {
+                $distritosQuery->where('provincia', $provincia);
+            }
+            $distritos = $distritosQuery->pluck('distrito')->values();
 
             // Obtener establecimientos disponibles
             $establecimientos = \App\Models\Establecimiento::select('id', 'nombre', 'codigo')
@@ -853,6 +771,7 @@ class UsuarioController extends Controller
             return response()->json([
                 'success' => true,
                 'provincias' => $provincias,
+                'distritos' => $distritos,
                 'establecimientos' => $establecimientos,
                 'modulos' => $modulosDisponibles,
                 'descripciones' => $descripciones

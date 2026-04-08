@@ -205,11 +205,18 @@
                                 <a href="{{ route('usuario.mesa-ayuda.responder', $inc->id) }}"
                                     class="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
                                     title="Responder / Atender">
-                                    <i data-lucide="message-square-reply" class="w-4 h-4"></i>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                    </svg>
                                 </a>
-                                @else
-                                <span class="text-xs text-slate-400 italic">Solo lectura</span>
                                 @endif
+                                <a href="{{ route('usuario.mesa-ayuda.pdf', $inc->id) }}" target="_blank"
+                                    class="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                                    title="Descargar PDF">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                </a>
                             </div>
                         </td>
                     </tr>

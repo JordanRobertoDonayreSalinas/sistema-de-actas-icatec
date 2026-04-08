@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MesaAyudaController extends Controller
 {
@@ -356,6 +357,35 @@ class MesaAyudaController extends Controller
                 'line'  => $e->getLine(),
             ]);
             return back()->withInput()->with('error', 'Error al guardar la respuesta. Intente nuevamente.');
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // PROTEGIDO: Generar PDF de la incidencia
+    // ─────────────────────────────────────────────────────────
+    public function verPdf($id)
+    {
+        try {
+            $incidencia = Incidencia::findOrFail($id);
+            $respuestas = $incidencia->respuestas()->with('usuario')->orderBy('created_at', 'asc')->get();
+
+            $pdf = Pdf::loadView('usuario.mesa-ayuda.pdf', compact('incidencia', 'respuestas'));
+
+            // Opciones del PDF para mejorar renderizado de imágenes
+            $pdf->setPaper('a4', 'portrait');
+            $pdf->setOptions([
+                'isRemoteEnabled' => true,
+                'defaultFont'     => 'sans-serif',
+            ]);
+
+            return $pdf->stream("Incidencia_#{$incidencia->id}.pdf");
+
+        } catch (\Throwable $e) {
+            Log::error('❌ Error al generar PDF de incidencia', [
+                'error' => $e->getMessage(),
+                'id'    => $id,
+            ]);
+            return back()->with('error', 'Error al generar el documento PDF.');
         }
     }
 }

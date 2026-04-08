@@ -102,9 +102,11 @@ Route::controller(LoginController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/', function () {
-        return Auth::user()->role === 'admin'
-            ? redirect()->route('admin.users.index')
-            : redirect()->route('usuario.mesa-ayuda.index');
+        return match(Auth::user()->role) {
+            'admin'    => redirect()->route('usuario.dashboard.general'),
+            'operador' => redirect()->route('usuario.monitoreo.index'),
+            default    => redirect()->route('usuario.mesa-ayuda.index'),
+        };
     });
 
     Route::get('/establecimientos/buscar', [EstablecimientoController::class, 'buscar'])->name('establecimientos.buscar');
@@ -116,9 +118,6 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('dashboard')->name('dashboard.')->middleware('is_admin')->group(function () {
             Route::get('/', [UsuarioController::class, 'index'])->name('general');
             Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
-            Route::get('/mapa-asistencias', [UsuarioController::class, 'mapaSoportes'])->name('mapa.soportes');
-            Route::get('/mapa-implementaciones', [UsuarioController::class, 'mapaImplementaciones'])->name('mapa.implementaciones');
-            Route::get('/mapa-progresion', [UsuarioController::class, 'mapaProgresion'])->name('mapa.progresion');
         });
 
         // AJAX para Dashboard - Equipos de Cómputo (Protegidos)
@@ -220,6 +219,7 @@ Route::middleware(['auth'])->group(function () {
             // Rutas de reporte (ahora protegidas)
             Route::get('/formulario', [MesaAyudaController::class, 'formulario'])->name('form');
             Route::post('/store', [MesaAyudaController::class, 'store'])->name('store');
+            Route::get('/{id}/pdf', [MesaAyudaController::class, 'verPdf'])->name('pdf');
             Route::get('/buscar-establecimiento', [MesaAyudaController::class, 'buscarEstablecimiento'])->name('buscar');
             Route::get('/buscar-dni', [MesaAyudaController::class, 'buscarDni'])->name('buscar-dni');
         });
@@ -244,7 +244,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // --- SECCIÓN: MONITOREO MODULAR ---
-        Route::prefix('monitoreo')->name('monitoreo.')->middleware('is_admin')->group(function () {
+        Route::prefix('monitoreo')->name('monitoreo.')->middleware('is_operador_or_admin')->group(function () {
             Route::get('/ajax/distritos', [MonitoreoController::class, 'ajaxGetDistritos'])->name('ajax.distritos');
             Route::get('/ajax/establecimientos', [MonitoreoController::class, 'ajaxGetEstablecimientos'])->name('ajax.establecimientos');
 
@@ -561,5 +561,6 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{user}', [AdminController::class, 'usersDestroy'])->name('destroy');
             Route::patch('/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggleStatus');
         });
+        Route::get('/buscar-dni', [AdminController::class, 'buscarDni'])->name('buscarDni');
     });
 });

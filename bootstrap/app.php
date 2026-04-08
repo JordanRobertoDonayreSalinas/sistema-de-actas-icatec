@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'is_admin' => \App\Http\Middleware\IsAdmin::class,
+            'is_admin'              => \App\Http\Middleware\IsAdmin::class,
+            'is_operador_or_admin'  => \App\Http\Middleware\IsOperadorOrAdmin::class,
         ]);
         $middleware->validateCsrfTokens(except: [
             '/logout',

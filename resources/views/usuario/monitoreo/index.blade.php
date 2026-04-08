@@ -82,11 +82,13 @@
                 </div>
 
                 <div class="flex items-center gap-3 w-full lg:w-auto justify-center lg:justify-end mt-2 lg:mt-0">
+                    @if(Auth::user()->role !== 'operador')
                     <button @click="open = !open" type="button"
                         class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg border border-white/20 text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm">
                         <i data-lucide="filter" class="w-4 h-4"></i>
                         <span x-text="open ? 'Ocultar Filtros' : 'Mostrar Filtros'"></span>
                     </button>
+                    @endif
 
                     <a href="{{ route('usuario.monitoreo.create') }}"
                         class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg bg-white text-blue-700 hover:bg-blue-50 border border-transparent">
@@ -98,6 +100,7 @@
         </div>
 
         {{-- FILTROS ACTUALIZADOS --}}
+        @if(Auth::user()->role !== 'operador')
         <form x-show="open" x-cloak 
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
@@ -162,17 +165,26 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 shrink-0">
-                    <button type="submit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105">
+                <div class="flex items-center gap-2 shrink-0 mt-3 md:mt-0">
+                    <button type="submit" class="w-full lg:w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105 text-sm" title="Filtrar">
                         <i data-lucide="search" class="w-4 h-4"></i>
+                        <span class="block lg:hidden ml-2 font-bold">Buscar</span>
                     </button>
                     <a href="{{ route('usuario.monitoreo.index') }}" 
-                        class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-sm transition-all hover:scale-105 border border-slate-200">
+                        class="w-full lg:w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-sm transition-all hover:scale-105 border border-slate-200 text-sm" title="Limpiar">
                         <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+                        <span class="block lg:hidden ml-2 font-bold">Limpiar</span>
                     </a>
+                    @if($monitoreos->total() > 0)
+                    <button type="button" onclick="exportarExcel()" class="h-10 px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 font-bold text-xs rounded-xl flex items-center justify-center lg:justify-start gap-2 transition-all border border-green-200 w-full lg:w-auto" title="Exportar a Excel">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 
+                        <span class="lg:hidden xl:inline">EXPORTAR EXCEL</span>
+                    </button>
+                    @endif
                 </div>
             </div>
         </form>
+        @endif
 
         {{-- TABLA --}}
         <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
@@ -389,6 +401,18 @@
             <div class="mt-4">{{ $monitoreos->appends(request()->query())->links() }}</div>
         @endif
     </div>
+
+    {{-- Formulario oculto para exportar Excel --}}
+    <form id="excelForm" method="POST" action="{{ route('usuario.reportes.actas.monitoreo.excel') }}" style="display:none;">
+        @csrf
+        <input type="hidden" name="fecha_inicio"       value="{{ $valInicio }}">
+        <input type="hidden" name="fecha_fin"           value="{{ $valFin }}">
+        <input type="hidden" name="implementador"       value="{{ request('implementador') }}">
+        <input type="hidden" name="provincia"           value="{{ request('provincia') }}">
+        <input type="hidden" name="distrito"            value="{{ request('distrito') }}">
+        <input type="hidden" name="establecimiento_id"  value="{{ request('establecimiento_id') }}">
+        <input type="hidden" name="firmado"             value="{{ request('estado') === 'firmada' ? '1' : (request('estado') === 'pendiente' ? '0' : '') }}">
+    </form>
 @endsection
 
 @push('scripts')

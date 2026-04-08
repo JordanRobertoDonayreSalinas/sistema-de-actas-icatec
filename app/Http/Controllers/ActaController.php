@@ -282,7 +282,7 @@ class ActaController extends Controller
         $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))
                   ->setOptions(['isRemoteEnabled' => true])
                   ->setPaper('a4', 'portrait');
-        $nombreEstablecimiento = mb_mb_strtoupper($acta->establecimiento->nombre ?? 'SIN ESTABLECIMIENTO', 'UTF-8');
+        $nombreEstablecimiento = mb_strtoupper($acta->establecimiento->nombre ?? 'SIN ESTABLECIMIENTO', 'UTF-8');
         $correlativo = str_pad($acta->id, 3, '0', STR_PAD_LEFT);
         $fileName = "AAT Nº {$correlativo} - {$nombreEstablecimiento}.pdf";
         return $pdf->stream($fileName);

@@ -126,6 +126,7 @@
             const anio = document.getElementById('eq_anio')?.value || '{{ now()->year }}';
             const tipo = document.getElementById('eq_tipo')?.value || '';
             const provincia = document.getElementById('eq_provincia')?.value || '';
+            const distrito = document.getElementById('eq_distrito')?.value || '';
             const establecimientoId = document.getElementById('eq_establecimiento')?.value || '';
             const descripcion = document.getElementById('eq_descripcion')?.value || '';
 
@@ -133,7 +134,7 @@
             const modulosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
 
             const params = new URLSearchParams({
-                mes: mes, anio: anio, tipo: tipo, provincia: provincia,
+                mes: mes, anio: anio, tipo: tipo, provincia: provincia, distrito: distrito,
                 establecimiento_id: establecimientoId, descripcion: descripcion
             });
 
@@ -161,21 +162,40 @@
     }
 
     function actualizarDashboard(data) {
-        if (document.getElementById('eq_totalEquipos')) {
-            document.getElementById('eq_totalEquipos').textContent = data.totalEquipos || '0';
+        // --- ACTUALIZAR KPIs ---
+        if (document.getElementById('eq_kpi_total')) {
+            document.getElementById('eq_kpi_total').textContent = data.totalEquipos || '0';
         }
-        if (document.getElementById('eq_periodoTexto')) {
-            document.getElementById('eq_periodoTexto').textContent = data.periodoTexto || 'Sin período';
+        
+        if (document.getElementById('eq_kpi_operativos')) {
+            let operativos = (data.equiposPorEstado && data.equiposPorEstado['OPERATIVO']) ? data.equiposPorEstado['OPERATIVO'] : 0;
+            let pctOperativos = data.totalEquipos > 0 ? Math.round((operativos / data.totalEquipos) * 100) : 0;
+            document.getElementById('eq_kpi_operativos').textContent = operativos;
+            document.getElementById('eq_kpi_operativos_pct').textContent = `(${pctOperativos}%)`;
+        }
+        
+        if (document.getElementById('eq_kpi_sedes')) {
+            let sedesCount = Object.keys(data.equiposPorEstablecimiento || {}).length;
+            document.getElementById('eq_kpi_sedes').textContent = sedesCount;
         }
 
+        if (document.getElementById('eq_kpi_nolan')) {
+            let sinRed = (data.equiposPorConectividad && data.equiposPorConectividad['SIN RED']) ? data.equiposPorConectividad['SIN RED'] : 0; 
+            let noAplica = (data.equiposPorConectividad && data.equiposPorConectividad['NO APLICA']) ? data.equiposPorConectividad['NO APLICA'] : 0;
+            document.getElementById('eq_kpi_nolan').textContent = sinRed + noAplica;
+        }
+
+        // --- ACTUALIZAR GRÁFICOS ---
         try { renderizarGraficoEstado(data.equiposPorEstado || {}); } catch (e) { console.error(e); }
         try { renderizarGraficoTipo(data.equiposPorTipo || {}); } catch (e) { console.error(e); }
-        try { renderizarGraficoModulo(data.equiposPorModulo || {}); } catch (e) { console.error(e); }
-        try { renderizarGraficoDescripcion(data.topDescripciones || {}); } catch (e) { console.error(e); }
+        try { chartModulo = renderizarBarrasHorizontales('chartModulo', data.equiposPorModulo || {}, chartModulo, THEME.purple); } catch (e) { console.error(e); }
+        try { chartDescripcion = renderizarBarrasHorizontales('chartDescripcion', data.topDescripciones || {}, chartDescripcion, THEME.warning); } catch (e) { console.error(e); }
         try { renderizarGraficoEstablecimiento(data.equiposPorEstablecimiento || {}); } catch (e) { console.error(e); }
-        try { renderizarGraficoConectividad(data.equiposPorConectividad || {}); } catch (e) { console.error(e); }
-        try { renderizarGraficoFuenteWifi(data.equiposPorFuenteWifi || {}); } catch (e) { console.error(e); }
-        try { renderizarGraficoProveedor(data.equiposPorProveedor || {}); } catch (e) { console.error(e); }
+        
+        // --- ACTUALIZAR BARRAS HTML ---
+        try { renderizarBarrasProgreso('html_conectividad', data.equiposPorConectividad || {}); } catch (e) { console.error(e); }
+        try { renderizarBarrasProgreso('html_fuente_wifi', data.equiposPorFuenteWifi || {}); } catch (e) { console.error(e); }
+        try { renderizarBarrasProgreso('html_proveedor', data.equiposPorProveedor || {}); } catch (e) { console.error(e); }
     }
 
     // ============================================
@@ -225,126 +245,79 @@
         });
     }
 
-    function renderizarGraficoModulo(datos) {
-        const ctx = document.getElementById('chartModulo');
-        if (!ctx) return;
-        if (chartModulo) chartModulo.destroy();
+    function renderizarBarrasHorizontales(ctxId, dataObj, chartRef, colorPrincipal) {
+        const ctx = document.getElementById(ctxId);
+        if (!ctx) return chartRef;
+        if (chartRef) chartRef.destroy();
 
-        chartModulo = new Chart(ctx, {
-            type: 'doughnut',
+        let entries = Object.entries(dataObj).sort((a,b) => b[1] - a[1]).slice(0, 10); // Mostrar Top 10
+        let labels = entries.map(e => e[0].length > 22 ? e[0].substring(0,19)+'...' : e[0]);
+        let values = entries.map(e => e[1]);
+
+        return new Chart(ctx, {
+            type: 'bar',
             data: {
-                labels: Object.keys(datos),
+                labels: labels,
                 datasets: [{
-                    data: Object.values(datos),
-                    backgroundColor: [THEME.purple, THEME.fuchsia, THEME.primary, THEME.teal, THEME.info],
-                    hoverOffset: 15, borderWidth: 3, borderColor: '#ffffff'
+                    data: values,
+                    backgroundColor: colorPrincipal,
+                    borderRadius: 4,
+                    barThickness: 14,
+                    hoverBackgroundColor: THEME.primary
                 }]
             },
-            options: doughnutBaseOptions
+            options: {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)', padding: 10, cornerRadius: 8, displayColors: false,
+                        callbacks: { title: () => '', label: (context) => ` ${entries[context.dataIndex][0]}: ${context.raw} equipos` }
+                    }
+                },
+                scales: {
+                    x: { display: false, beginAtZero: true },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#475569', font: { size: 10, weight: '600' } }
+                    }
+                }
+            }
         });
     }
 
-    function renderizarGraficoDescripcion(datos) {
-        const ctx = document.getElementById('chartDescripcion');
-        if (!ctx) return;
-        if (chartDescripcion) chartDescripcion.destroy();
+    function renderizarBarrasProgreso(containerId, dataObj) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        let total = Object.values(dataObj).reduce((sum, val) => sum + val, 0);
+        if (total === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400">Sin datos registrados</p>';
+            return;
+        }
 
-        chartDescripcion = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(datos),
-                datasets: [{
-                    data: Object.values(datos),
-                    backgroundColor: [THEME.warning, THEME.danger, THEME.success, THEME.info, THEME.secondary],
-                    hoverOffset: 15, borderWidth: 3, borderColor: '#ffffff'
-                }]
-            },
-            options: doughnutBaseOptions
+        let html = '';
+        let entries = Object.entries(dataObj).sort((a,b) => b[1] - a[1]).slice(0, 5); // Mostrar Top 5 para conectividad
+        const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-400', 'bg-cyan-500', 'bg-slate-400'];
+
+        entries.forEach(([label, count], index) => {
+            let pct = Math.round((count / total) * 100);
+            let bgClass = colors[index % colors.length];
+            
+            html += `
+            <div class="mb-3 last:mb-0">
+                <div class="flex justify-between items-baseline text-[10px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                    <span class="truncate max-w-[70%] text-slate-800" title="${label}">${label}</span>
+                    <span>${count} <span class="text-slate-400 font-normal">(${pct}%)</span></span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                    <div class="${bgClass} h-1.5 rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
+                </div>
+            </div>`;
         });
-    }
-
-    function renderizarGraficoConectividad(stats) {
-        const ctx = document.getElementById('chartConectividad');
-        if (!ctx) return;
-        if (chartConectividad) chartConectividad.destroy();
-
-        chartConectividad = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(stats),
-                datasets: [{
-                    data: Object.values(stats),
-                    backgroundColor: [THEME.info, THEME.teal, THEME.warning, THEME.secondary],
-                    hoverOffset: 12, borderWidth: 3, borderColor: '#ffffff'
-                }]
-            },
-            options: Object.assign({}, doughnutBaseOptions, {
-                cutout: '70%',
-                plugins: Object.assign({}, doughnutBaseOptions.plugins, {
-                    legend: Object.assign({}, doughnutBaseOptions.plugins.legend, {
-                        labels: Object.assign({}, doughnutBaseOptions.plugins.legend.labels, {
-                            font: { size: 9, weight: '700' }
-                        })
-                    })
-                })
-            })
-        });
-    }
-
-    function renderizarGraficoFuenteWifi(stats) {
-        const ctx = document.getElementById('chartFuenteWifi');
-        if (!ctx) return;
-        if (chartFuenteWifi) chartFuenteWifi.destroy();
-
-        chartFuenteWifi = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(stats),
-                datasets: [{
-                    data: Object.values(stats),
-                    backgroundColor: [THEME.purple, THEME.fuchsia, THEME.teal],
-                    hoverOffset: 12, borderWidth: 3, borderColor: '#ffffff'
-                }]
-            },
-            options: Object.assign({}, doughnutBaseOptions, {
-                cutout: '70%',
-                plugins: Object.assign({}, doughnutBaseOptions.plugins, {
-                    legend: Object.assign({}, doughnutBaseOptions.plugins.legend, {
-                        labels: Object.assign({}, doughnutBaseOptions.plugins.legend.labels, {
-                            font: { size: 9, weight: '700' }
-                        })
-                    })
-                })
-            })
-        });
-    }
-
-    function renderizarGraficoProveedor(stats) {
-        const ctx = document.getElementById('chartProveedor');
-        if (!ctx) return;
-        if (chartProveedor) chartProveedor.destroy();
-
-        chartProveedor = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(stats),
-                datasets: [{
-                    data: Object.values(stats),
-                    backgroundColor: [THEME.danger, THEME.warning, THEME.info, THEME.purple, THEME.success],
-                    hoverOffset: 12, borderWidth: 3, borderColor: '#ffffff'
-                }]
-            },
-            options: Object.assign({}, doughnutBaseOptions, {
-                cutout: '70%',
-                plugins: Object.assign({}, doughnutBaseOptions.plugins, {
-                    legend: Object.assign({}, doughnutBaseOptions.plugins.legend, {
-                        labels: Object.assign({}, doughnutBaseOptions.plugins.legend.labels, {
-                            font: { size: 9, weight: '700' }
-                        })
-                    })
-                })
-            })
-        });
+        
+        container.innerHTML = html;
     }
 
     function renderizarGraficoEstablecimiento(data) {
@@ -444,11 +417,12 @@
             const anio = document.getElementById('eq_anio')?.value || '{{ now()->year }}';
             const tipo = document.getElementById('eq_tipo')?.value || '';
             const provincia = document.getElementById('eq_provincia')?.value || '';
+            const distrito = document.getElementById('eq_distrito')?.value || '';
             const establecimientoId = document.getElementById('eq_establecimiento')?.value || '';
             const checkboxes = document.querySelectorAll('.eq_modulo_checkbox:checked');
             const modulosSeleccionados = Array.from(checkboxes).map(cb => cb.value);
 
-            const params = new URLSearchParams({ mes, anio, tipo, provincia, establecimiento_id: establecimientoId });
+            const params = new URLSearchParams({ mes, anio, tipo, provincia, distrito, establecimiento_id: establecimientoId });
             modulosSeleccionados.forEach(m => params.append('modulos[]', m));
 
             fetch('{{ route("usuario.dashboard.ajax.equipos.filter-options") }}?' + params.toString())
@@ -456,6 +430,7 @@
                 .then(data => {
                     if (data.success) {
                         actualizarSelectProvincias(data.provincias);
+                        actualizarSelectDistritos(data.distritos || []);
                         actualizarSelectEstablecimientos(data.establecimientos);
                         actualizarCheckboxesModulos(data.modulos);
                         actualizarSelectDescripciones(data.descripciones);
@@ -473,6 +448,19 @@
             const opt = document.createElement('option');
             opt.value = p; opt.textContent = p;
             if (p === val) opt.selected = true;
+            select.appendChild(opt);
+        });
+    }
+
+    function actualizarSelectDistritos(distritos) {
+        const select = document.getElementById('eq_distrito');
+        if (!select) return;
+        const val = select.value;
+        select.innerHTML = '<option value="">Todos</option>';
+        distritos.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d; opt.textContent = d;
+            if (d === val) opt.selected = true;
             select.appendChild(opt);
         });
     }
@@ -568,7 +556,7 @@
             actualizarContador();
         });
 
-        ['eq_mes', 'eq_anio', 'eq_tipo', 'eq_provincia', 'eq_establecimiento'].forEach(id => {
+        ['eq_mes', 'eq_anio', 'eq_tipo', 'eq_provincia', 'eq_distrito', 'eq_establecimiento'].forEach(id => {
             document.getElementById(id)?.addEventListener('change', actualizarFiltros);
         });
     });

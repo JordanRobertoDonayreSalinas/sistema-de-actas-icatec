@@ -144,13 +144,20 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-2 border-t border-slate-50">
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50 w-full">
                 <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 transition-all">
                     <i data-lucide="search" class="w-4 h-4"></i> FILTRAR
                 </button>
                 <a href="{{ route('usuario.actas.index') }}" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs flex items-center gap-2 transition-all">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i> LIMPIAR
                 </a>
+                <div class="ml-auto w-full sm:w-auto mt-2 sm:mt-0">
+                    @if($actas->total() > 0)
+                    <button type="button" onclick="exportarExcel()" class="w-full sm:w-auto px-5 py-2.5 bg-green-50 text-green-700 hover:bg-green-100 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all border border-green-200">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> EXPORTAR EXCEL
+                    </button>
+                    @endif
+                </div>
             </div>
         </form>
 
@@ -215,12 +222,28 @@
             @if ($actas->hasPages()) <div class="p-4 border-t border-slate-50 text-xs">{{ $actas->appends(request()->query())->links() }}</div> @endif
         </div>
     </div>
+
+    {{-- Formulario oculto para exportar Excel --}}
+    <form id="excelForm" method="POST" action="{{ route('usuario.reportes.actas.asistencia.excel') }}" style="display:none;">
+        @csrf
+        <input type="hidden" name="fecha_inicio"       value="{{ $valInicio }}">
+        <input type="hidden" name="fecha_fin"           value="{{ $valFin }}">
+        <input type="hidden" name="implementador"       value="{{ request('implementador') }}">
+        <input type="hidden" name="provincia"           value="{{ request('provincia') }}">
+        <input type="hidden" name="distrito"            value="{{ request('distrito') }}">
+        <input type="hidden" name="establecimiento_id"  value="{{ request('establecimiento_id') }}">
+        <input type="hidden" name="firmado"             value="{{ request('firmado') }}">
+    </form>
 @endsection
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => { if (window.lucide) window.lucide.createIcons(); });
+
+        function exportarExcel() {
+            document.getElementById('excelForm').submit();
+        }
 
         const provinciaSelect = document.getElementById('provincia');
         const distritoSelect = document.getElementById('distrito');

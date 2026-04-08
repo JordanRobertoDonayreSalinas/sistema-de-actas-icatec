@@ -152,15 +152,21 @@
                     </div>
                     
                     <div class="flex items-end gap-2 shrink-0">
-                        <button type="submit" class="w-full lg:w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105">
+                        <button type="submit" class="w-full lg:w-10 h-10 flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105" title="Filtrar">
                             <i data-lucide="search" class="w-4 h-4"></i>
                             <span class="block lg:hidden ml-2 text-xs font-bold">Buscar</span>
                         </button>
                         <a href="{{ route('usuario.implementacion.index') }}" 
-                            class="w-full lg:w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-sm transition-all hover:scale-105 border border-slate-200">
+                            class="w-full lg:w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 shadow-sm transition-all hover:scale-105 border border-slate-200" title="Limpiar">
                             <i data-lucide="rotate-cw" class="w-4 h-4"></i>
                             <span class="block lg:hidden ml-2 text-xs font-bold">Limpiar</span>
                         </a>
+                        @if($totalActas > 0)
+                        <button type="button" onclick="exportarExcel()" class="w-full lg:w-auto h-10 px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 font-bold text-xs rounded-xl flex items-center justify-center lg:justify-start gap-2 transition-all border border-green-200" title="Exportar a Excel">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 
+                            <span class="lg:hidden xl:inline">EXPORTAR EXCEL</span>
+                        </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -265,15 +271,31 @@
         </div>
     </div>
     
-    @if ($actas->hasPages())
+    @if (method_exists($actas, 'hasPages') && $actas->hasPages())
         <div class="mt-4">{{ $actas->appends(request()->query())->links() }}</div>
     @endif
 </div>
+
+{{-- Formulario oculto para exportar Excel --}}
+<form id="excelForm" method="POST" action="{{ route('usuario.reportes.actas.implementacion.excel') }}" style="display:none;">
+    @csrf
+    <input type="hidden" name="fecha_inicio"       value="{{ $valInicio }}">
+    <input type="hidden" name="fecha_fin"           value="{{ $valFin }}">
+    <input type="hidden" name="implementador"       value="{{ request('implementador') }}">
+    <input type="hidden" name="provincia"           value="{{ request('provincia') }}">
+    <input type="hidden" name="distrito"            value="{{ request('distrito') }}">
+    <input type="hidden" name="modulo_key"          value="{{ request('modulo_key') }}">
+    <input type="hidden" name="estado"              value="{{ request('estado') === 'firmada' ? '1' : (request('estado') === 'pendiente' ? '0' : '') }}">
+</form>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    function exportarExcel() {
+        document.getElementById('excelForm').submit();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
