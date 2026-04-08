@@ -50,71 +50,65 @@
             {{-- Etapa 0 --}}
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sin Inicio</span>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</span>
                     <span class="w-3 h-3 rounded-full bg-slate-400 shadow-sm"></span>
                 </div>
-                <div class="text-3xl font-black text-slate-700">{{ $contadores['etapa0'] }}</div>
-                <div class="text-[10px] text-slate-400 mt-1">establecimientos</div>
+                <div id="stats-total" class="text-3xl font-black text-slate-700">{{ $contadores['total'] }}</div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total IPRESS</div>
                 <div class="mt-3 bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div class="stage-bar h-full bg-slate-400 rounded-full"
-                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa0'] / $contadores['total'] * 100) : 0 }}%"></div>
+                         style="width: 100%"></div>
                 </div>
+            </div>
+
+            {{-- Sin Inicio --}}
+            <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm group">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest">Sin Inicio</span>
+                    <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                </div>
+                <div id="stats-etapa0" class="text-2xl font-black text-slate-400 group-hover:text-slate-500 transition-colors">{{ $contadores['etapa0'] }}</div>
+                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Sin Inicio</div>
             </div>
 
             {{-- Etapa 1 --}}
-            <div class="bg-white rounded-2xl border border-blue-100 p-5 shadow-sm">
+            <div class="bg-white rounded-2xl border border-blue-100 p-5 shadow-sm group">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Implementados</span>
-                    <span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></span>
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                 </div>
-                <div class="text-3xl font-black text-blue-700">{{ $contadores['etapa1'] }}</div>
-                <div class="text-[10px] text-blue-400 mt-1">listos para asistencia</div>
-                <div class="mt-3 bg-blue-50 rounded-full h-1.5 overflow-hidden">
-                    <div class="stage-bar h-full bg-blue-500 rounded-full"
-                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa1'] / $contadores['total'] * 100) : 0 }}%"></div>
-                </div>
+                <div id="stats-etapa1" class="text-2xl font-black text-blue-500 group-hover:text-blue-600 transition-colors">{{ $contadores['etapa1'] }}</div>
+                <div class="text-[9px] font-bold text-blue-400 uppercase tracking-tight">Implementado</div>
             </div>
 
             {{-- Etapa 2 --}}
-            <div class="bg-white rounded-2xl border border-amber-100 p-5 shadow-sm">
+            <div class="bg-white rounded-2xl border border-amber-100 p-5 shadow-sm group">
                 <div class="flex items-center justify-between mb-3">
-                    <span class="text-[9px] font-black text-amber-500 uppercase tracking-widest">Con Asistencia</span>
+                    <span class="text-[9px] font-black text-amber-500 uppercase tracking-widest">Asistencia</span>
                     <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm"></span>
                 </div>
-                <div class="text-3xl font-black text-amber-700">{{ $contadores['etapa2'] }}</div>
-                <div class="text-[10px] text-amber-400 mt-1">listos para monitoreo</div>
-                <div class="mt-3 bg-amber-50 rounded-full h-1.5 overflow-hidden">
-                    <div class="stage-bar h-full bg-amber-500 rounded-full"
-                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa2'] / $contadores['total'] * 100) : 0 }}%"></div>
-                </div>
+                <div id="stats-etapa2" class="text-3xl font-black text-amber-500 group-hover:text-amber-600 transition-colors">{{ $contadores['etapa2'] }}</div>
+                <div class="text-[10px] text-amber-400 mt-1">con asistencia</div>
             </div>
 
             {{-- Etapa 3 --}}
-            <div class="bg-white rounded-2xl border border-violet-100 p-5 shadow-sm">
+            <div class="bg-white rounded-2xl border border-violet-100 p-5 shadow-sm group">
                 <div class="flex items-center justify-between mb-3">
-                    <span class="text-[9px] font-black text-violet-500 uppercase tracking-widest">Con Monitoreo</span>
+                    <span class="text-[9px] font-black text-violet-500 uppercase tracking-widest">Monitoreo</span>
                     <span class="w-3 h-3 rounded-full bg-violet-500 shadow-sm"></span>
                 </div>
-                <div class="text-3xl font-black text-violet-700">{{ $contadores['etapa3'] }}</div>
+                <div id="stats-etapa3" class="text-3xl font-black text-violet-500 group-hover:text-violet-600 transition-colors">{{ $contadores['etapa3'] }}</div>
                 <div class="text-[10px] text-violet-400 mt-1">monitoreo activo</div>
-                <div class="mt-3 bg-violet-50 rounded-full h-1.5 overflow-hidden">
-                    <div class="stage-bar h-full bg-violet-500 rounded-full"
-                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa3'] / $contadores['total'] * 100) : 0 }}%"></div>
-                </div>
             </div>
 
             {{-- Etapa 4 --}}
-            <div class="bg-white rounded-2xl border border-emerald-100 p-5 shadow-sm">
+            <div class="bg-white rounded-2xl border border-emerald-100 p-5 shadow-sm group">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Ciclo Completo</span>
-                    <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm animate-pulse"></span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 </div>
-                <div class="text-3xl font-black text-emerald-700">{{ $contadores['etapa4'] }}</div>
-                <div class="text-[10px] text-emerald-400 mt-1">de {{ $contadores['total'] }} totales</div>
-                <div class="mt-3 bg-emerald-50 rounded-full h-1.5 overflow-hidden">
-                    <div class="stage-bar h-full bg-emerald-500 rounded-full"
-                         style="width: {{ $contadores['total'] > 0 ? round($contadores['etapa4'] / $contadores['total'] * 100) : 0 }}%"></div>
-                </div>
+                <div id="stats-etapa4" class="text-2xl font-black text-emerald-500 group-hover:text-emerald-600 transition-colors">{{ $contadores['etapa4'] }}</div>
+                <div class="text-[9px] font-bold text-emerald-500 uppercase tracking-tight">Ciclo Completo</div>
             </div>
         </div>
 
@@ -161,6 +155,24 @@
                         </select>
                     </div>
                     
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase">Red</label>
+                        <select id="filtro-red" class="text-xs border-slate-200 rounded-xl px-3 py-2 focus:ring-indigo-500 transition">
+                            <option value="">Todas</option>
+                            @foreach($redes as $red)
+                                <option value="{{ $red }}">{{ $red }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase">Microred</label>
+                        <select id="filtro-microred" class="text-xs border-slate-200 rounded-xl px-3 py-2 focus:ring-indigo-500 transition">
+                            <option value="">Todas</option>
+                            @foreach($microredes as $mred)
+                                <option value="{{ $mred }}">{{ $mred }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-[9px] font-black text-slate-400 uppercase">Provincia</label>
                         <select id="filtro-provincia" class="text-xs border-slate-200 rounded-xl px-3 py-2 focus:ring-indigo-500 transition">
@@ -360,6 +372,11 @@
                 marker:    m,
                 id:        e.id,
                 etapa:     e.etapa,
+                tiene_impl:      !!e.tiene_impl,
+                tiene_asist:     !!e.tiene_asist,
+                tiene_monitoreo: !!e.tiene_monitoreo,
+                red:       e.red       || '',
+                microred:  e.microred  || '',
                 provincia: e.provincia  || '',
                 distrito:  e.distrito   || '',
                 categoria: e.categoria  || '',
@@ -368,6 +385,8 @@
 
         /* ── FILTROS ── */
         var filtroEtapa     = '';
+        var filtroRed       = '';
+        var filtroMicrored  = '';
         var filtroProvincia = '';
         var filtroDistrito  = '';
         var filtroCategoria = '';
@@ -378,22 +397,39 @@
         function applyFilters() {
             var group      = L.featureGroup();
             var visibleCnt = 0;
+            var counts = { 0:0, 1:0, 2:0, 3:0, 4:0 };
 
             markers.forEach(function (m) {
                 var matchEtapa = (filtroEtapa === '' || String(m.etapa) === filtroEtapa);
+                var matchRed   = (filtroRed   === '' || m.red   === filtroRed);
+                var matchMRed  = (filtroMicrored === '' || m.microred === filtroMicrored);
                 var matchProv  = (filtroProvincia === '' || m.provincia === filtroProvincia);
                 var matchDist  = (filtroDistrito === ''  || m.distrito  === filtroDistrito);
                 var matchCat   = (filtroCategoria === '' || m.categoria  === filtroCategoria);
                 var matchEst   = (filtroEstId === ''     || String(m.id) === filtroEstId);
 
-                if (matchEtapa && matchProv && matchDist && matchCat && matchEst) {
+                if (matchEtapa && matchRed && matchMRed && matchProv && matchDist && matchCat && matchEst) {
                     if (!map.hasLayer(m.marker)) map.addLayer(m.marker);
                     group.addLayer(m.marker);
                     visibleCnt++;
+                    if (m.etapa === 0) counts[0]++;
+                    if (m.tiene_impl) counts[1]++;
+                    if (m.tiene_asist) counts[2]++;
+                    if (m.tiene_monitoreo) counts[3]++;
+                    if (m.etapa === 4) counts[4]++;
                 } else {
                     if (map.hasLayer(m.marker)) map.removeLayer(m.marker);
+                    group.removeLayer(m.marker);
                 }
             });
+
+            // Actualizar números en cards Superiores
+            document.getElementById('stats-total').textContent  = visibleCnt;
+            document.getElementById('stats-etapa0').textContent = counts[0];
+            document.getElementById('stats-etapa1').textContent = counts[1];
+            document.getElementById('stats-etapa2').textContent = counts[2];
+            document.getElementById('stats-etapa3').textContent = counts[3];
+            document.getElementById('stats-etapa4').textContent = counts[4];
 
             badgeCount.textContent = visibleCnt;
 
@@ -403,7 +439,7 @@
                         if (String(m.id) === filtroEstId) { map.setView(m.marker.getLatLng(), 15); m.marker.openPopup(); }
                     });
                 } else if (group.getLayers().length > 0) {
-                    var anyFilter = filtroEtapa || filtroProvincia || filtroDistrito || filtroCategoria;
+                    var anyFilter = filtroEtapa || filtroRed || filtroMicrored || filtroProvincia || filtroDistrito || filtroCategoria;
                     if (anyFilter) map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
                 }
             }
@@ -422,36 +458,53 @@
         });
 
         /* Selects geográficos */
-        function updateDistritosyCategorias() {
+        function updateRelationalOptions() {
+            var selectMRed = document.getElementById('filtro-microred');
             var selectDist = document.getElementById('filtro-distrito');
             var selectCat  = document.getElementById('filtro-categoria');
             var selectEst  = document.getElementById('filtro-establecimiento');
 
-            var distSet = new Set(), catSet = new Set();
+            var mredSet = new Set(), distSet = new Set(), catSet = new Set();
             establecimientos.forEach(function (e) {
-                if (filtroProvincia === '' || e.provincia === filtroProvincia) {
+                var matchRed = (filtroRed === '' || e.red === filtroRed);
+                var matchMRed = (filtroMicrored === '' || e.microred === filtroMicrored);
+                var matchProv = (filtroProvincia === '' || e.provincia === filtroProvincia);
+
+                if (matchRed && matchProv) {
+                    if (e.microred) mredSet.add(e.microred);
+                }
+                if (matchRed && matchMRed && matchProv) {
                     if (e.distrito) distSet.add(e.distrito);
                     if (e.categoria) catSet.add(e.categoria);
                 }
             });
 
+            // Conservar valores seleccionados si siguen siendo válidos lo omito para simplicidad
+            
+            selectMRed.innerHTML = '<option value="">Todas</option>';
+            Array.from(mredSet).sort().forEach(function (mr) {
+                selectMRed.innerHTML += `<option value="${mr}" ${mr === filtroMicrored ? 'selected' : ''}>${mr}</option>`;
+            });
+
             selectDist.innerHTML = '<option value="">Todos</option>';
             Array.from(distSet).sort().forEach(function (d) {
-                selectDist.innerHTML += `<option value="${d}">${d}</option>`;
+                selectDist.innerHTML += `<option value="${d}" ${d === filtroDistrito ? 'selected' : ''}>${d}</option>`;
             });
 
             selectCat.innerHTML = '<option value="">Todas</option>';
             Array.from(catSet).sort().forEach(function (c) {
-                selectCat.innerHTML += `<option value="${c}">${c}</option>`;
+                selectCat.innerHTML += `<option value="${c}" ${c === filtroCategoria ? 'selected' : ''}>${c}</option>`;
             });
 
             selectEst.innerHTML = '<option value="">Todos</option>';
             establecimientos.forEach(function (e) {
+                var matchRed = (filtroRed === '' || e.red === filtroRed);
+                var matchMRed = (filtroMicrored === '' || e.microred === filtroMicrored);
                 var matchProv = (filtroProvincia === '' || e.provincia === filtroProvincia);
                 var matchDist = (filtroDistrito === ''  || e.distrito  === filtroDistrito);
                 var matchCat  = (filtroCategoria === '' || e.categoria  === filtroCategoria);
-                if (matchProv && matchDist && matchCat) {
-                    selectEst.innerHTML += `<option value="${e.id}">${e.nombre}</option>`;
+                if (matchRed && matchMRed && matchProv && matchDist && matchCat) {
+                    selectEst.innerHTML += `<option value="${e.id}" ${String(e.id) === filtroEstId ? 'selected' : ''}>${e.nombre}</option>`;
                 }
             });
         }
@@ -461,17 +514,25 @@
             window.location.href = "{{ route('usuario.dashboard.general') }}?anio=" + this.value;
         });
 
+        document.getElementById('filtro-red').addEventListener('change', function () {
+            filtroRed = this.value; filtroMicrored = ''; filtroDistrito = ''; filtroCategoria = ''; filtroEstId = '';
+            updateRelationalOptions(); applyFilters();
+        });
+        document.getElementById('filtro-microred').addEventListener('change', function () {
+            filtroMicrored = this.value; filtroDistrito = ''; filtroCategoria = ''; filtroEstId = '';
+            updateRelationalOptions(); applyFilters();
+        });
         document.getElementById('filtro-provincia').addEventListener('change', function () {
             filtroProvincia = this.value; filtroDistrito = ''; filtroCategoria = ''; filtroEstId = '';
-            updateDistritosyCategorias(); applyFilters();
+            updateRelationalOptions(); applyFilters();
         });
         document.getElementById('filtro-distrito').addEventListener('change', function () {
             filtroDistrito = this.value; filtroEstId = '';
-            updateDistritosyCategorias(); applyFilters();
+            updateRelationalOptions(); applyFilters();
         });
         document.getElementById('filtro-categoria').addEventListener('change', function () {
             filtroCategoria = this.value; filtroEstId = '';
-            updateDistritosyCategorias(); applyFilters();
+            updateRelationalOptions(); applyFilters();
         });
         document.getElementById('filtro-establecimiento').addEventListener('change', function () {
             filtroEstId = this.value; applyFilters();

@@ -23,19 +23,27 @@ class UsuarioController extends Controller
     public function index(\Illuminate\Http\Request $request)
     {
         $anioFiltro = $request->input('anio', 'todos');
+        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
 
-        // Años disponibles
-        $aniosMonitoreo = \App\Models\CabeceraMonitoreo::whereNotNull('fecha')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio')->toArray();
-        $aniosAsistencia = Acta::whereNotNull('fecha')->where('tipo', 'asistencia')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio')->toArray();
+        // Años disponibles (incluyendo monitoreo, asistencia y TODOS los módulos de implementación)
+        $aniosCollector = collect([date('Y')]);
         
-        $aniosDisponibles = collect(array_merge($aniosMonitoreo, $aniosAsistencia, [date('Y')]))
-            ->filter()
-            ->unique()
-            ->sortDesc()
-            ->values();
+        $aniosMonitoreo = \App\Models\CabeceraMonitoreo::whereNotNull('fecha')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
+        $aniosAsistencia = Acta::whereNotNull('fecha')->where('tipo', 'asistencia')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
+        
+        $aniosCollector = $aniosCollector->merge($aniosMonitoreo)->merge($aniosAsistencia);
+        
+        foreach ($modulos as $mod) {
+            $modelo = $mod['modelo'];
+            if (class_exists($modelo)) {
+                $aniosMod = $modelo::whereNotNull('fecha')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
+                $aniosCollector = $aniosCollector->merge($aniosMod);
+            }
+        }
+        
+        $aniosDisponibles = $aniosCollector->filter()->unique()->sortDesc()->values();
 
         // ── 1. Códigos que tienen al menos 1 acta de implementación ──────────
-        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
         $codigosConImplementacion = collect();
         $modulosPorCodigo = [];   // ['COD' => ['Medicina', 'Citas', ...]]
 
@@ -45,7 +53,7 @@ class UsuarioController extends Controller
             
             $query = $modelo::select('codigo_establecimiento', 'nombre_establecimiento');
             if ($anioFiltro !== 'todos') {
-                $query->whereYear('fecha', $anioFiltro);
+                $query->whereYear('fecha', '<=', $anioFiltro);
             }
             
             $actas = $query->get();
@@ -64,33 +72,33 @@ class UsuarioController extends Controller
         // ── 2. IDs que tienen al menos 1 acta de asistencia técnica ──────────
         $queryAsistencia = Acta::where('tipo', 'asistencia');
         if ($anioFiltro !== 'todos') {
-            $queryAsistencia->whereYear('fecha', $anioFiltro);
+            $queryAsistencia->whereYear('fecha', '<=', $anioFiltro);
         }
         $idsConAsistencia = $queryAsistencia->distinct()->pluck('establecimiento_id')->toArray();
 
         $queryTotalAsistencia = Acta::where('tipo', 'asistencia')->select('establecimiento_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))->groupBy('establecimiento_id');
         if ($anioFiltro !== 'todos') {
-            $queryTotalAsistencia->whereYear('fecha', $anioFiltro);
+            $queryTotalAsistencia->whereYear('fecha', '<=', $anioFiltro);
         }
         $totalAsistenciaPorId = $queryTotalAsistencia->pluck('total', 'establecimiento_id');
 
         // ── 3. IDs que tienen al menos 1 acta de monitoreo ───────────────────
         $queryMonitoreo = \App\Models\CabeceraMonitoreo::query();
         if ($anioFiltro !== 'todos') {
-            $queryMonitoreo->whereYear('fecha', $anioFiltro);
+            $queryMonitoreo->whereYear('fecha', '<=', $anioFiltro);
         }
         $idsConMonitoreo = $queryMonitoreo->distinct()->pluck('establecimiento_id')->toArray();
 
         $queryTotalMonitoreo = \App\Models\CabeceraMonitoreo::select('establecimiento_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))->groupBy('establecimiento_id');
         if ($anioFiltro !== 'todos') {
-            $queryTotalMonitoreo->whereYear('fecha', $anioFiltro);
+            $queryTotalMonitoreo->whereYear('fecha', '<=', $anioFiltro);
         }
         $totalMonitoreoPorId = $queryTotalMonitoreo->pluck('total', 'establecimiento_id');
 
         // ── 4. Unificar en establecimientos con coordenadas ───────────────────
         $establecimientosMap = Establecimiento::whereNotNull('latitud')
             ->whereNotNull('longitud')
-            ->get(['id', 'codigo', 'nombre', 'distrito', 'provincia', 'categoria', 'latitud', 'longitud'])
+            ->get(['id', 'codigo', 'nombre', 'distrito', 'provincia', 'categoria', 'red', 'microred', 'latitud', 'longitud'])
             ->map(function ($est) use (
                 $codigosConImplementacion, $modulosPorCodigo,
                 $idsConAsistencia, $totalAsistenciaPorId,
@@ -124,19 +132,21 @@ class UsuarioController extends Controller
                 return $est;
             });
 
-        // ── 5. Contadores por etapa ───────────────────────────────────────────
+        // ── 5. Contadores acumulativos por etapa ──────────────────────────────
         $contadores = [
             'total'     => $establecimientosMap->count(),
             'etapa0'    => $establecimientosMap->where('etapa', 0)->count(),
-            'etapa1'    => $establecimientosMap->where('etapa', 1)->count(),
-            'etapa2'    => $establecimientosMap->where('etapa', 2)->count(),
-            'etapa3'    => $establecimientosMap->where('etapa', 3)->count(),
+            'etapa1'    => $establecimientosMap->where('tiene_impl', true)->count(),
+            'etapa2'    => $establecimientosMap->where('tiene_asist', true)->count(),
+            'etapa3'    => $establecimientosMap->where('tiene_monitoreo', true)->count(),
             'etapa4'    => $establecimientosMap->where('etapa', 4)->count(),
         ];
 
         // ── 6. Filtros ────────────────────────────────────────────────────────
         $provincias = Establecimiento::whereNotNull('latitud')->whereNotNull('longitud')
             ->whereNotNull('provincia')->distinct()->orderBy('provincia')->pluck('provincia');
+        $redes      = Establecimiento::whereNotNull('red')->distinct()->orderBy('red')->pluck('red');
+        $microredes = Establecimiento::whereNotNull('microred')->distinct()->orderBy('microred')->pluck('microred');
         $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
         $distritos  = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
 
@@ -144,6 +154,8 @@ class UsuarioController extends Controller
             'establecimientosMap',
             'contadores',
             'provincias',
+            'redes',
+            'microredes',
             'categorias',
             'distritos',
             'aniosDisponibles',
