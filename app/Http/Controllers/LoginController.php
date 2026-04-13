@@ -35,6 +35,8 @@ class LoginController extends Controller
             // --- LÓGICA DE REDIRECCIÓN POR ROLES ---
             if ($user->role === 'admin') {
                 $rutaDestino = route('admin.users.index');
+            } elseif ($user->role === 'operador') {
+                $rutaDestino = route('usuario.monitoreo.index');
             } else {
                 $rutaDestino = route('usuario.mesa-ayuda.index');
             }

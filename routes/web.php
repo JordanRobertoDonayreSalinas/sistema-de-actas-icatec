@@ -236,11 +236,14 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{modulo}/{id}/subir-pdf', [ImplementacionController::class, 'subirPdf'])->name('subirPdf');
             Route::post('/{modulo}/{id}/enviar-correo', [ImplementacionController::class, 'enviarCorreo'])->name('enviarCorreo');
             Route::post('/{modulo}/{id}/cambiar-modulo', [ImplementacionController::class, 'cambiar_modulo'])->name('cambiar_modulo');
+            Route::post('/{modulo}/{id}/anular', [ImplementacionController::class, 'anular'])->name('anular');
 
             
             // Endpoint AJAX para buscar establecimientos
             Route::get('/ajax/establecimiento', [ImplementacionController::class, 'buscarEstablecimiento'])->name('ajax.establecimiento');
             Route::get('/ajax/upss-ups', [ImplementacionController::class, 'buscarUpss'])->name('ajax.upss');
+            Route::get('/ajax/renipress-sync', [ImplementacionController::class, 'syncRenipress'])->name('ajax.renipress-sync');
+            Route::get('/ajax/check-duplicado', [ImplementacionController::class, 'checkDuplicado'])->name('ajax.check-duplicado');
         });
 
         // --- SECCIÓN: MONITOREO MODULAR ---

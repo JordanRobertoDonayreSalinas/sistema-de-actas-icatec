@@ -274,7 +274,68 @@
 
     
 
-    <div style="margin-top: 15px;">
+    
+    {{-- === SECCIÓN RENIPRESS (AUTOMÁTICO) === --}}
+    @if(!empty($acta->renipress_data))
+    <div class="section">
+        <div class="section-header"><span style="color:#6b21a8;">&#9432;</span> SERVICIOS AUTORIZADOS (RENIPRESS)</div>
+        <table style="table-layout: fixed;">
+            <tr>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">UPSS</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['upss'] ?? [] as $u)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $u['codigo'] }}</td><td style="font-size: 7px;">{{ $u['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">Servicios Autorizados</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['servicios'] ?? [] as $u)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $u['codigo'] }}</td><td style="font-size: 7px;">{{ $u['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">Especialidades</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['especialidades'] ?? [] as $e)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $e['codigo'] }}</td><td style="font-size: 7px;">{{ $e['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">Cartera de Servicios</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['cartera'] ?? [] as $c)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $c['codigo'] }}</td><td style="font-size: 7px;">{{ $c['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+<div style="margin-top: 15px;">
         <div class="section-header"><span style="color:#6b21a8;">&#10004;</span> COMPROMISO</div>
         <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
             <tr>

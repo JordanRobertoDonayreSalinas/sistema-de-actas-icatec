@@ -10,6 +10,7 @@ use App\Models\Establecimiento;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ActaImplementacionMail;
+use App\Services\RenipressService;
 
 
 class ImplementacionController extends Controller
@@ -55,12 +56,17 @@ class ImplementacionController extends Controller
                 }
             }
             
-            // Filtro por implementador
+            // Filtro por implementador mejorado
             if ($request->filled('implementador')) {
                 $query->whereHas('implementadores', function ($q) use ($request) {
-                    $q->where('nombres', 'like', '%' . $request->implementador . '%')
-                      ->orWhere('apellido_paterno', 'like', '%' . $request->implementador . '%')
-                      ->orWhere('apellido_materno', 'like', '%' . $request->implementador . '%');
+                    $search = $request->implementador;
+                    $q->where(function ($sub) use ($search) {
+                        $sub->where('nombres', 'like', '%' . $search . '%')
+                            ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
+                            ->orWhere('apellido_materno', 'like', '%' . $search . '%')
+                            ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT(nombres, ' ', apellido_paterno, ' ', IFNULL(apellido_materno, ''))"), 'like', '%' . $search . '%')
+                            ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT(apellido_paterno, ' ', IFNULL(apellido_materno, ''), ' ', nombres)"), 'like', '%' . $search . '%');
+                    });
                 });
             }
 
@@ -79,9 +85,11 @@ class ImplementacionController extends Controller
                     'implementadores' => $implementadores,
                     'implementadores_data' => $acta->implementadores,
                     'archivo_pdf' => $acta->archivo_pdf,
+                    'anulado' => (bool)$acta->anulado,
                     'ruta_pdf' => route('usuario.implementacion.pdf', ['modulo' => $key, 'id' => $acta->id]),
                     'ruta_editar' => route('usuario.implementacion.edit', ['modulo' => $key, 'id' => $acta->id]),
                     'ruta_eliminar' => route('usuario.implementacion.destroy', ['modulo' => $key, 'id' => $acta->id]),
+                    'ruta_anular' => route('usuario.implementacion.anular', ['modulo' => $key, 'id' => $acta->id]),
                     'created_at' => $acta->created_at,
                     'tipo_key' => $key,
                     'tipo_nombre' => $config['nombre'],
@@ -108,7 +116,9 @@ class ImplementacionController extends Controller
         $implementadoresUnicos = collect();
         if ($actasTodas->count() > 0) {
             $implementadoresUnicos = $actasTodas->pluck('implementadores_data')->flatten()
-                ->map(function($i) { return $i->nombres . ' ' . $i->apellido_paterno; })
+                ->map(function($i) { 
+                    return mb_strtoupper(trim($i->apellido_paterno . ' ' . ($i->apellido_materno ?? '') . ', ' . $i->nombres), 'UTF-8'); 
+                })
                 ->filter()->unique()->sort()->values();
         }
 
@@ -176,6 +186,13 @@ class ImplementacionController extends Controller
         $config = $modulos[$moduloKey];
         $ModeloActa = $config['modelo'];
 
+        // REGLA: Un acta activa por establecimiento y módulo
+        if ($ModeloActa::where('codigo_establecimiento', $request->codigo_establecimiento)->where('anulado', 0)->exists()) {
+            return redirect()->back()
+                ->with('error', 'Ya existe un acta activa y válida para este establecimiento en este módulo. No es necesario registrar una nueva.')
+                ->withInput();
+        }
+
         $rules = [
             'fecha' => 'required|date',
             'codigo_establecimiento' => 'required|string',
@@ -237,6 +254,10 @@ class ImplementacionController extends Controller
 
         if ($moduloKey === 'citas' && $request->has('modalidad')) {
             $actaData['modalidad'] = mb_strtoupper($request->modalidad, 'UTF-8');
+        }
+
+        if ($request->filled('renipress_data')) {
+            $actaData['renipress_data'] = json_decode($request->renipress_data, true);
         }
 
         // Registrar acta
@@ -383,6 +404,10 @@ class ImplementacionController extends Controller
 
         if ($modulo === 'citas' && $request->has('modalidad')) {
             $actaData['modalidad'] = mb_strtoupper($request->modalidad, 'UTF-8');
+        }
+
+        if ($request->filled('renipress_data')) {
+            $actaData['renipress_data'] = json_decode($request->renipress_data, true);
         }
 
         $acta->update($actaData);
@@ -582,7 +607,69 @@ class ImplementacionController extends Controller
     }
 
     /**
-     * Helper para guardar o actualizar la tabla global de Profesionales
+     * Endpoint AJAX para verificar si ya existe un acta activa
+     */
+    public function checkDuplicado(Request $request)
+    {
+        $codigo = $request->get('codigo');
+        $moduloKey = $request->get('modulo');
+        $modulos = ImplementacionHelper::getModulos();
+        
+        if (!isset($modulos[$moduloKey])) {
+            return response()->json(['exists' => false]);
+        }
+        
+        $ModeloActa = $modulos[$moduloKey]['modelo'];
+        $acta = $ModeloActa::where('codigo_establecimiento', $codigo)
+            ->where('anulado', 0)
+            ->first();
+
+        if ($acta) {
+            return response()->json([
+                'exists' => true,
+                'id' => $acta->id,
+                'fecha' => $acta->fecha,
+                'nombre' => $acta->nombre_establecimiento
+            ]);
+        }
+
+        return response()->json(['exists' => false]);
+    }
+
+    /**
+     * Endpoint API para sincronizar datos desde RENIPRESS (Susalud)
+     */
+    public function syncRenipress(Request $request)
+    {
+        $codigo = $request->get('codigo');
+        if (empty($codigo)) {
+            return response()->json(['success' => false, 'message' => 'Código IPRESS requerido'], 400);
+        }
+
+        try {
+            $service = new RenipressService();
+            $data = $service->getDatosEstablecimiento($codigo);
+
+            if (!$data) {
+                // Retornamos 200 con success false para que el frontend abra el modo manual sin errores de consola
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'SUSALUD ha bloqueado el acceso automático momentáneamente. Por favor, use el modo manual.'
+                ], 200);
+            }
+
+            return response()->json(['success' => true, 'data' => $data]);
+        } catch (\Exception $e) {
+            Log::error("Error en syncRenipress para {$codigo}: " . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error de conexión con SUSALUD. Se ha habilitado el modo manual.',
+                'error' => $e->getMessage()
+            ], 200);
+        }
+    }
+    /**
+     * Actualiza o crea registros en la tabla global de profesionales
      * para facilitar la búsqueda con autocompletado en futuras actas.
      */
     private function updateGlobalProfesionales($personas)
@@ -728,6 +815,38 @@ class ImplementacionController extends Controller
                 'file'  => $e->getFile()
             ]);
             return response()->json(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Anula el acta cambiando su estado.
+     */
+    public function anular($modulo, $id)
+    {
+        try {
+            $modulos = ImplementacionHelper::getModulos();
+            if (!isset($modulos[$modulo])) abort(404);
+
+            $ModeloActa = $modulos[$modulo]['modelo'];
+            $acta = $ModeloActa::findOrFail($id);
+            
+            // Alternar estado de anulación
+            $nuevoEstado = !$acta->anulado;
+            $acta->update(['anulado' => $nuevoEstado]);
+
+            $mensaje = $nuevoEstado ? 'Acta anulada correctamente.' : 'Acta reactivada correctamente.';
+
+            return response()->json([
+                'success' => true,
+                'message' => $mensaje,
+                'anulado' => $nuevoEstado
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al anular el acta: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

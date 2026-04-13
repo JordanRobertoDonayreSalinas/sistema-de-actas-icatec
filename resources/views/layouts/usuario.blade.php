@@ -125,9 +125,11 @@
                     <span class="font-semibold">Mi Perfil</span>
                 </a>
 
-                @if(Auth::user()->role === 'admin')
+                @if(Auth::user()->role === 'admin' || Auth::user()->role === 'operador')
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 mt-6">Operaciones</p>
+                @endif
 
+                @if(Auth::user()->role === 'admin')
                 {{-- IMPLEMENTACIÓN --}}
                 <a href="{{ route('usuario.implementacion.index') }}"
                     class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.implementacion.*') ? 'bg-purple-600/10 text-purple-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
@@ -141,13 +143,18 @@
                     <i data-lucide="file-text" class="w-5 h-5"></i>
                     <span class="font-medium">Actas de Asistencia Técnica</span>
                 </a>
+                @endif
 
+                @if(Auth::user()->role === 'admin' || Auth::user()->role === 'operador')
                 {{-- MONITOREO --}}
                 <a href="{{ route('usuario.monitoreo.index') }}"
                     class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.monitoreo.*') ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
                     <i data-lucide="activity" class="w-5 h-5"></i>
                     <span class="font-medium">Actas de Monitoreo</span>
                 </a>
+                @endif
+
+                @if(Auth::user()->role === 'admin')
 
                 {{-- DOCUMENTOS ADMINISTRATIVOS --}}
                 <a href="{{ route('usuario.documentos.index') }}"

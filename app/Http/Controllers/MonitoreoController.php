@@ -370,10 +370,6 @@ class MonitoreoController extends Controller
     {
         $acta = CabeceraMonitoreo::with(['establecimiento', 'equipo'])->findOrFail($id);
 
-        // El operador solo puede acceder al módulo de Infraestructura 3D / Croquis
-        if (Auth::user()->role === 'operador') {
-            return redirect()->route('usuario.monitoreo.infraestructura-3d.index', $id);
-        }
 
         $esEspecializada = ($acta->tipo_origen === 'ESPECIALIZADA') || $this->esEspecializada($acta->establecimiento);
 
