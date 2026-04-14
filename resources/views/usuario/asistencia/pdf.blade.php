@@ -232,7 +232,7 @@
         @if(count($imagenesSrc) > 0)
             <div style="page-break-inside: avoid;">
                 <h3>
-                    <span class="icon"><span class="icon-line"></span></span>Evidencias Fotográficas
+                    <span class="icon"><span class="icon-line"></span></span>Fotografías
                 </h3>
                 <table class="evidencias-table">
                     @foreach(array_chunk($imagenesSrc, 2) as $fila)
@@ -241,7 +241,7 @@
                                 <td>
                                     <div class="foto-item">
                                         <img src="{{ $src }}">
-                                        <div class="foto-caption">EVIDENCIA {{ $loop->parent->index * 2 + $loop->iteration }}</div>
+                                        <div class="foto-caption">FOTO {{ $loop->parent->index * 2 + $loop->iteration }}</div>
                                     </div>
                                 </td>
                             @endforeach

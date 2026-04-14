@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -339,14 +339,14 @@
 
         @if($acta->foto1 || $acta->foto2)
     <div style="margin-top: 20px;">
-        <div class="section-header"><span style="color:#6b21a8;">&#9635;</span> EVIDENCIA FOTOGRÁFICA</div>
+        <div class="section-header"><span style="color:#6b21a8;">&#9635;</span> FOTOGRAF&#205;AS</div>
         <table class="foto-table">
             <tr>
                 @if($acta->foto1)
                 <td>
                     <div class="foto-wrapper">
                         <img src="{{ storage_path('app/public/' . $acta->foto1) }}">
-                        <div class="foto-caption">EVIDENCIA 01</div>
+                        <div class="foto-caption">FOTO 01</div>
                     </div>
                 </td>
                 @endif
@@ -354,7 +354,7 @@
                 <td>
                     <div class="foto-wrapper">
                         <img src="{{ storage_path('app/public/' . $acta->foto2) }}">
-                        <div class="foto-caption">EVIDENCIA 02</div>
+                        <div class="foto-caption">FOTO 02</div>
                     </div>
                 </td>
                 @endif
