@@ -267,7 +267,8 @@
             'referencias'            => 'REFERENCIAS Y CONTRAREFERENCIAS',
             'refcon'                 => 'REFERENCIAS Y CONTRAREFERENCIAS', 
             'laboratorio'            => 'LABORATORIO',
-            'urgencias'              => 'URGENCIAS Y EMERGENCIAS'
+            'urgencias'              => 'URGENCIAS Y EMERGENCIAS',
+            'infraestructura_2d'     => 'INFRAESTRUCTURA Y CROQUIS 2D'
         ];
         
         $impresos = []; 

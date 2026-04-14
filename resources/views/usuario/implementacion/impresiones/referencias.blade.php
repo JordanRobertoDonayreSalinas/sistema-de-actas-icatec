@@ -431,6 +431,11 @@
                 <div class="firmas-grid">
             @foreach ($firmantes as $f)
                 <div class="firma-card no-break">
+                    @if(isset($digital) && $digital && isset($firmas[$f['dni']]))
+                        <div style="height: 60px; margin-bottom: -35px; text-align: center;">
+                            <img src="{{ $firmas[$f['dni']]['url'] }}" style="max-height: 60px; max-width: 140px; object-contain: contain;">
+                        </div>
+                    @endif
                     <div class="linea-firma"></div>
                     <span class="nombre-firma">{{ $f['nombre'] }}</span>
                     <span class="cargo-firma">{{ $f['cargo'] }}</span>

@@ -133,12 +133,30 @@
                             </div>
                             <div>
                                 <label class="lbl">Establecimiento</label>
-                                <input type="text" id="establecimiento" name="establecimiento"
-                                       placeholder="Código o nombre..." required autocomplete="off"
-                                       value="{{ old('establecimiento', $acta->establecimiento->nombre ?? '') }}"
-                                       class="inp">
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <input type="text" id="establecimiento" name="establecimiento"
+                                               placeholder="Código o nombre..." required autocomplete="off"
+                                               value="{{ old('establecimiento', $acta->establecimiento->nombre ?? '') }}"
+                                               class="inp pr-10">
+                                        <div id="establecimiento-spinner" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                                            <i data-lucide="loader-2" class="w-4 h-4 text-emerald-600 animate-spin"></i>
+                                        </div>
+                                    </div>
+                                    <button type="button" ontouchstart="syncEstablecimiento()" onclick="syncEstablecimiento()" id="btn-sync-renipress" 
+                                            class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-all flex items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Sincronizar con Susalud (Renipress)">
+                                        <i data-lucide="refresh-cw" class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500"></i>
+                                        <span class="hidden sm:inline text-xs font-bold uppercase tracking-wider">Sincronizar</span>
+                                    </button>
+                                </div>
                                 <input type="hidden" id="establecimiento_id" name="establecimiento_id"
                                        value="{{ old('establecimiento_id', $acta->establecimiento_id ?? '') }}">
+                                
+                                {{-- Campos para data Susalud (JSON) --}}
+                                <input type="hidden" name="servicios_renipress" id="servicios_renipress" value="{{ old('servicios_renipress', $acta->servicios_renipress ?? '') }}">
+                                <input type="hidden" name="especialidades_renipress" id="especialidades_renipress" value="{{ old('especialidades_renipress', $acta->especialidades_renipress ?? '') }}">
+                                <input type="hidden" name="cartera_renipress" id="cartera_renipress" value="{{ old('cartera_renipress', $acta->cartera_renipress ?? '') }}">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -1021,4 +1039,71 @@
         });
     });
     </script>
+
+    <!-- Script Renipress Sync -->
+    <script>
+        async function syncEstablecimiento() {
+            const idEst = document.getElementById('establecimiento_id').value;
+            const btn = document.getElementById('btn-sync-renipress');
+            const spinner = document.getElementById('establecimiento-spinner');
+            const baseUrl = "{{ url('/') }}";
+
+            if (!idEst) {
+                Swal.fire({ icon: 'warning', title: 'Atención', text: 'Primero debe seleccionar un establecimiento de la lista.' });
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                spinner.classList.remove('hidden');
+
+                // Necesitamos el código del establecimiento (el ID de la tabla no es el código Renipress necesariamente)
+                // Usaremos un truco: el input de establecimiento suele tener el código si se buscó por código.
+                // Pero lo ideal es que el autocomplete devuelva el código.
+                // Por ahora, buscaremos el código de 8 dígitos en el texto del input.
+                const texto = document.getElementById('establecimiento').value;
+                const match = texto.match(/\b\d{8}\b/);
+                const codigo = match ? match[0] : null;
+
+                if (!codigo) {
+                    throw new Error('No se pudo determinar el código Renipress del establecimiento seleccionado.');
+                }
+
+                const response = await fetch(`${baseUrl}/usuario/listado-actas/sync-renipress`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ codigo: codigo })
+                });
+
+                const data = await response.json();
+
+                if (data && !data.error) {
+                    // Guardar en campos ocultos (JSON)
+                    document.getElementById('servicios_renipress').value = JSON.stringify(data.servicios || []);
+                    document.getElementById('especialidades_renipress').value = JSON.stringify(data.especialidades || []);
+                    document.getElementById('cartera_renipress').value = JSON.stringify(data.cartera || []);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sincronización Exitosa',
+                        text: `Se han obtenido ${data.servicios?.length || 0} servicios de Susalud.`,
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error(data.error || 'Error desconocido al sincronizar.');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Sincronización', text: error.message });
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        }
+    </script>
 @endpush
+@endsection

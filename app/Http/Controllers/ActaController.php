@@ -13,8 +13,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use App\Services\SignatureService;
+
 class ActaController extends Controller
 {
+    protected $signatureService;
+    protected $renipressService;
+
+    public function __construct(SignatureService $signatureService, \App\Services\RenipressService $renipressService)
+    {
+        $this->signatureService = $signatureService;
+        $this->renipressService = $renipressService;
+    }
     public function index(Request $request)
     {
         $query = Acta::with(['establecimiento', 'participantes']);
@@ -46,6 +56,24 @@ class ActaController extends Controller
             }
         }
 
+        if ($request->filled('estado_anulado')) {
+            $val = $request->input('estado_anulado');
+            if ($val == 'anulado') {
+                $query->where('anulado', 1);
+            } else {
+                $query->where(function ($q) {
+                    $q->where('anulado', 0)->orWhereNull('anulado');
+                });
+            }
+        } else {
+            // Por defecto ocultar anuladas en el listado inicial
+            if (!$request->filled('search')) {
+                $query->where(function ($q) {
+                    $q->where('anulado', 0)->orWhereNull('anulado');
+                });
+            }
+        }
+
         // Fechas por defecto: primer día del año actual y hoy
         $fechaInicioDefault = Carbon::now()->startOfYear()->format('Y-m-d');
         $fechaFinDefault = Carbon::now()->format('Y-m-d');
@@ -56,10 +84,11 @@ class ActaController extends Controller
         $query->whereDate('fecha', '>=', $valInicio);
         $query->whereDate('fecha', '<=', $valFin);
 
-        $countFirmadas = (clone $query)->where('firmado', 1)->count();
+        $countFirmadas = (clone $query)->where('firmado', 1)->where('anulado', 0)->count();
         $countPendientes = (clone $query)->where(function ($q) {
             $q->where('firmado', 0)->orWhereNull('firmado');
-        })->count();
+        })->where('anulado', 0)->count();
+        $countAnuladas = (clone $query)->where('anulado', 1)->count();
 
         $actas = $query->orderByDesc('id')->paginate(10)->appends($request->query());
         $implementadores = Acta::distinct()->orderBy('implementador')->pluck('implementador');
@@ -94,6 +123,7 @@ class ActaController extends Controller
             'establecimientos',
             'countFirmadas',
             'countPendientes',
+            'countAnuladas',
             'valInicio',
             'valFin'
         ));
@@ -125,7 +155,10 @@ class ActaController extends Controller
                 'establecimiento_id',
                 'responsable',
                 'modalidad',
-                'implementador'
+                'implementador',
+                'servicios_renipress',
+                'especialidades_renipress',
+                'cartera_renipress'
             ]);
             $data['tema'] = ($request->tema === 'Otros' && $request->filled('tema_otro'))
                             ? $request->tema_otro
@@ -208,7 +241,16 @@ class ActaController extends Controller
 
         try {
             DB::beginTransaction();
-            $data = $request->only(['fecha', 'establecimiento_id', 'responsable', 'modalidad', 'implementador']);
+            $data = $request->only([
+                'fecha', 
+                'establecimiento_id', 
+                'responsable', 
+                'modalidad', 
+                'implementador',
+                'servicios_renipress',
+                'especialidades_renipress',
+                'cartera_renipress'
+            ]);
             $data['tema'] = ($request->tema === 'Otros' && $request->filled('tema_otro'))
                             ? $request->tema_otro
                             : $request->tema;
@@ -276,10 +318,30 @@ class ActaController extends Controller
         return view('usuario.asistencia.show', compact('acta'));
     }
 
-    public function generarPDF($id)
+    public function generarPDF(Request $request, $id)
     {
         $acta = Acta::with(['establecimiento', 'participantes', 'actividades', 'acuerdos', 'observaciones'])->findOrFail($id);
-        $pdf = Pdf::loadView('usuario.asistencia.pdf', compact('acta'))
+        
+        $data = ['acta' => $acta];
+
+        if ($request->has('digital') && $request->digital == 1) {
+            $dnis = $acta->participantes->pluck('dni')->filter()->unique()->toArray();
+            
+            // También incluir al implementador si tiene DNI en mon_profesionales
+            // (Nota: En Acta, implementador es un string con el nombre, pero buscaremos si hay un profesional con ese nombre)
+            $profImplementador = Profesional::where('apellido_paterno', 'LIKE', '%' . explode(' ', $acta->implementador)[0] . '%')
+                ->where('nombres', 'LIKE', '%' . (explode(', ', $acta->implementador)[1] ?? '') . '%')
+                ->first();
+            
+            if ($profImplementador) {
+                $dnis[] = $profImplementador->doc;
+            }
+
+            $data['firmas'] = $this->signatureService->getSignaturesForDnis($dnis);
+            $data['digital'] = true;
+        }
+
+        $pdf = Pdf::loadView('usuario.asistencia.pdf', $data)
                   ->setOptions(['isRemoteEnabled' => true])
                   ->setPaper('a4', 'portrait');
         $nombreEstablecimiento = mb_strtoupper($acta->establecimiento->nombre ?? 'SIN ESTABLECIMIENTO', 'UTF-8');
@@ -321,5 +383,27 @@ class ActaController extends Controller
         }
         $establecimientos = $query->orderBy('nombre', 'asc')->get(['id', 'nombre']);
         return response()->json($establecimientos);
+    }
+
+    public function anular($id)
+    {
+        $acta = Acta::findOrFail($id);
+        $acta->anulado = !$acta->anulado;
+        $acta->save();
+
+        return response()->json([
+            'success' => true,
+            'anulado' => $acta->anulado,
+            'message' => $acta->anulado ? 'Acta anulada correctamente' : 'Acta reactivada correctamente'
+        ]);
+    }
+
+    public function syncRenipress(Request $request)
+    {
+        $codigo = $request->codigo;
+        if (!$codigo) return response()->json(['error' => 'Código no proporcionado'], 400);
+
+        $data = $this->renipressService->getDatosEstablecimiento($codigo);
+        return response()->json($data);
     }
 }

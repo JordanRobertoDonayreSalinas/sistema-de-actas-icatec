@@ -78,10 +78,11 @@ use App\Http\Controllers\ReporteActasController;
 use App\Http\Controllers\ReporteMonitoreoController;
 use App\Http\Controllers\ReporteImplementacionController;
 use App\Http\Controllers\ImplementacionController;
-use App\Http\Controllers\Infraestructura3DController;
-use App\Http\Controllers\Infraestructura3DPdfController;
+use App\Http\Controllers\Infraestructura2DController;
+use App\Http\Controllers\Infraestructura2DPdfController;
 use App\Http\Controllers\MesaAyudaController;
 use App\Http\Controllers\CroquisColaboracionController;
+use App\Http\Controllers\SignatureBankController;
 
 
 // --- CONFIGURACIÓN DE VERBOS ---
@@ -143,6 +144,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{acta}', [ActaController::class, 'show'])->name('show');
             Route::get('/{id}/pdf', [ActaController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
+            Route::post('/{id}/anular', [ActaController::class, 'anular'])->name('anular');
+            Route::post('/sync-renipress', [ActaController::class, 'syncRenipress'])->name('sync-renipress');
 
             // AJAX endpoints para filtros dinámicos
             Route::get('/ajax/distritos', [ActaController::class, 'ajaxGetDistritos'])->name('ajax.distritos');
@@ -531,11 +534,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf', [UrgenciasPdfController::class, 'generar'])->name('pdf');
             });
 
-            // Módulo 19: Infraestructura 3D
-            Route::prefix('modulo/infraestructura-3d')->name('infraestructura-3d.')->group(function () {
-                Route::get('/{id}', [Infraestructura3DController::class, 'index'])->name('index');
-                Route::post('/{id}', [Infraestructura3DController::class, 'store'])->name('store');
-                Route::get('/{id}/pdf', [Infraestructura3DPdfController::class, 'generar'])->name('pdf');
+            // Módulo 19: Infraestructura 2D
+            Route::prefix('modulo/infraestructura-2d')->name('infraestructura-2d.')->group(function () {
+                Route::get('/{id}', [Infraestructura2DController::class, 'index'])->name('index');
+                Route::post('/{id}', [Infraestructura2DController::class, 'store'])->name('store');
+                Route::get('/{id}/pdf', [Infraestructura2DPdfController::class, 'generar'])->name('pdf');
             });
 
             // MOTOR DE CONSOLIDADO
@@ -565,5 +568,16 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggleStatus');
         });
         Route::get('/buscar-dni', [AdminController::class, 'buscarDni'])->name('buscarDni');
+
+        // --- BANCO DE FIRMAS ---
+        Route::prefix('banco-firmas')->name('firmas.')->group(function () {
+            Route::get('/', [SignatureBankController::class, 'index'])->name('index');
+            Route::post('/{id}/upload', [SignatureBankController::class, 'upload'])->name('upload');
+            Route::post('/harvest', [SignatureBankController::class, 'harvest'])->name('harvest');
+            Route::delete('/{id}', [SignatureBankController::class, 'destroy'])->name('destroy');
+        });
     });
+
+    // Búsqueda de firmas (accesible para todos los usuarios autenticados)
+    Route::get('/banco-firmas/search-ajax', [SignatureBankController::class, 'search'])->name('admin.firmas.ajax.search');
 });

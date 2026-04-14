@@ -69,7 +69,14 @@ class TriajePdfController extends Controller
             'operador_servicio' => $contenidoJson['operador_servicio'] ?? null,
         ];
 
-        // 4. Preparar el PDF
+        // 4. Preparar Firmas
+        $signatureService = app(\App\Services\SignatureService::class);
+        $firmaEntrevistado = null;
+        if ($prof && $prof->doc) {
+            $firmaEntrevistado = $signatureService->getSignatureByDni($prof->doc);
+        }
+
+        // 5. Preparar el PDF
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.triaje_pdf', compact(
             'acta', 
             'dbCapacitacion', 
@@ -78,9 +85,9 @@ class TriajePdfController extends Controller
             'dbInicioLabores',
             'dbDni',
             'dbFotos',
-            'dbConectividad'
+            'dbConectividad',
+            'firmaEntrevistado'
         ));
-
 
         $pdf->setOption('isPhpEnabled', true);
 

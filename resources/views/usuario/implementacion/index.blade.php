@@ -312,6 +312,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
+        const baseUrl = "{{ url('/') }}";
+
         const provinciaSelect = document.getElementById('provinciaSelect');
         const distritoSelect = document.getElementById('distritoSelect');
 
@@ -361,7 +363,8 @@
                 formData.append('pdf_firmado', file);
                 formData.append('_token', '{{ csrf_token() }}');
 
-                return fetch(`/usuario/implementacion/${modulo}/${id}/subir-pdf`, {
+                const baseUrl = "{{ url('/') }}";
+                return fetch(`${baseUrl}/usuario/implementacion/${modulo}/${id}/subir-pdf`, {
                     method: 'POST',
                     body: formData,
                     headers: { 
@@ -404,7 +407,8 @@
             cancelButtonColor: '#64748b',
             showLoaderOnConfirm: true,
             preConfirm: () => {
-                return fetch(`/usuario/implementacion/${modulo}/${id}/enviar-correo`, {
+                const baseUrl = "{{ url('/') }}";
+                return fetch(`${baseUrl}/usuario/implementacion/${modulo}/${id}/enviar-correo`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -450,7 +454,8 @@
             confirmButtonColor: color,
             showLoaderOnConfirm: true,
             preConfirm: () => {
-                return fetch(`/usuario/implementacion/${modulo}/${id}/anular`, {
+                const baseUrl = "{{ url('/') }}";
+                return fetch(`${baseUrl}/usuario/implementacion/${modulo}/${id}/anular`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

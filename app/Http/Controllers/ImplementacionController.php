@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ActaImplementacionMail;
 use App\Services\RenipressService;
+use App\Services\SignatureService;
 
 
 class ImplementacionController extends Controller
@@ -547,7 +548,7 @@ class ImplementacionController extends Controller
     /**
      * Genera el PDF del acta.
      */
-    public function pdf($modulo, $id)
+    public function pdf(Request $request, $modulo, $id)
     {
         $modulos = ImplementacionHelper::getModulos();
         if (!isset($modulos[$modulo])) abort(404);
@@ -555,7 +556,7 @@ class ImplementacionController extends Controller
         $ModeloActa = $modulos[$modulo]['modelo'];
         $acta = $ModeloActa::with(['usuarios', 'implementadores'])->findOrFail($id);
 
-        // Cargar relaciones adicionales según el módulo (si existen en el modelo)
+        // Cargar relaciones adicionales según el módulo
         if ($modulo === 'ges_adm') {
             if (method_exists($acta, 'upss')) {
                 $acta->load('upss');
@@ -569,15 +570,44 @@ class ImplementacionController extends Controller
             }
         }
 
-        // Usar la vista específica de cada módulo (impresiones/{modulo})
+        // --- SISTEMA DE FIRMAS ---
+        $firmas = collect();
+        if ($request->get('digital') == '1') {
+            $service = app(SignatureService::class);
+            
+            // 1. Obtener DNI de todos los involucrados
+            $dnis = array_merge(
+                $acta->usuarios->pluck('dni')->toArray(),
+                $acta->implementadores->pluck('dni')->toArray()
+            );
+
+            // 2. Buscar firmas en el banco
+            $firmasResult = $service->getMultipleSignatures($dnis);
+            
+            // 3. Mapear por DNI para la vista
+            foreach ($firmasResult as $dni => $profesional) {
+                $firmas->put($dni, [
+                    'url' => Storage::disk('public')->path($profesional->firma_path), // Usar path absoluto para DomPDF
+                    'profesional' => $profesional->apellido_paterno . ' ' . $profesional->nombres
+                ]);
+            }
+        }
+
+        // Usar la vista específica de cada módulo
         $viewName = 'usuario.implementacion.impresiones.' . $modulo;
         if (!view()->exists($viewName)) {
-            // Fallback: vista genérica si no existe una específica para el módulo
             $viewName = 'usuario.implementacion.impresiones.triaje';
         }
 
-        $pdf = Pdf::loadView($viewName, ['acta' => $acta]);
+        $pdf = Pdf::loadView($viewName, [
+            'acta' => $acta,
+            'firmas' => $firmas,
+            'digital' => $request->get('digital') == '1'
+        ]);
+        
         $pdf->getDomPDF()->getOptions()->setIsPhpEnabled(true);
+        $pdf->getDomPDF()->getOptions()->setIsRemoteEnabled(true);
+        
         return $pdf->stream('AI Nº ' . $acta->id . '-' . $modulos[$modulo]['nombre'] . '-' . $acta->nombre_establecimiento . '.pdf');
     }
 
