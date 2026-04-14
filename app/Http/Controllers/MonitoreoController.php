@@ -82,6 +82,20 @@ class MonitoreoController extends Controller
             }
         }
 
+        // Filtro de visibilidad (anulado)
+        if ($request->filled('estado_anulado')) {
+            $val = $request->input('estado_anulado');
+            if ($val == 'anulado') {
+                $query->where('anulado', 1);
+            } elseif ($val == 'activo') {
+                $query->where(function ($q) {
+                    $q->where('anulado', 0)->orWhereNull('anulado');
+                });
+            }
+            // 'todos' = sin filtro, muestra todo
+        }
+        // Sin filtro: muestra todo (incluyendo anuladas con estilo especial)
+
         $query->whereBetween('fecha', [$fecha_inicio, $fecha_fin]);
 
         $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
@@ -90,8 +104,9 @@ class MonitoreoController extends Controller
         $totalActas = $monitoreos->total();
         $queryCount = clone $query;
         $queryCount->getQuery()->orders = null;
-        $countCompletados = (clone $queryCount)->where('firmado', 1)->count();
-        $countPendientes = $totalActas - $countCompletados;
+        $countCompletados = (clone $queryCount)->where('firmado', 1)->where(function($q){ $q->where('anulado',0)->orWhereNull('anulado'); })->count();
+        $countPendientes  = (clone $queryCount)->where(function($q){ $q->where('firmado',0)->orWhereNull('firmado'); })->where(function($q){ $q->where('anulado',0)->orWhereNull('anulado'); })->count();
+        $countAnuladas    = (clone $queryCount)->where('anulado', 1)->count();
 
         $implementadores = CabeceraMonitoreo::distinct()->pluck('implementador');
         $provincias = Establecimiento::whereHas('monitoreos.detalles')
@@ -117,6 +132,7 @@ class MonitoreoController extends Controller
             'monitoreos',
             'countCompletados',
             'countPendientes',
+            'countAnuladas',
             'implementadores',
             'provincias',
             'distritos',
@@ -124,6 +140,29 @@ class MonitoreoController extends Controller
             'fecha_inicio',
             'fecha_fin'
         ));
+    }
+
+    /**
+     * Anula o reactiva un acta de monitoreo.
+     */
+    public function anular($id)
+    {
+        try {
+            $monitoreo = CabeceraMonitoreo::findOrFail($id);
+            $monitoreo->anulado = !$monitoreo->anulado;
+            $monitoreo->save();
+
+            return response()->json([
+                'success' => true,
+                'anulado' => $monitoreo->anulado,
+                'message' => $monitoreo->anulado ? 'Acta anulada correctamente.' : 'Acta reactivada correctamente.'
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function ajaxGetDistritos(Request $request)

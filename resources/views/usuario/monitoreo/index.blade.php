@@ -78,6 +78,10 @@
                             <span class="text-2xl font-bold leading-none text-amber-400">{{ $countPendientes ?? 0 }}</span>
                             <span class="text-[0.65rem] uppercase tracking-widest text-amber-100 font-semibold mt-1">Pendientes</span>
                         </div>
+                        <div class="bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg border border-slate-700 flex flex-col items-center min-w-[100px]">
+                            <span class="text-2xl font-bold leading-none">{{ $countAnuladas ?? 0 }}</span>
+                            <span class="text-[0.65rem] uppercase tracking-widest text-slate-400 font-semibold mt-1">Anuladas</span>
+                        </div>
                     </div>
                 </div>
 
@@ -151,6 +155,14 @@
                             <option value="">TODOS</option>
                             <option value="firmada" {{ request('estado') == 'firmada' ? 'selected' : '' }}>FIRMADO</option>
                             <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>PENDIENTE</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">Visibilidad</label>
+                        <select name="estado_anulado" class="w-full text-[11px] font-bold text-slate-700 border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 py-2">
+                            <option value="todos" {{ request('estado_anulado', 'todos') == 'todos' ? 'selected' : '' }}>Todas</option>
+                            <option value="activo" {{ request('estado_anulado') == 'activo' ? 'selected' : '' }}>Activas</option>
+                            <option value="anulado" {{ request('estado_anulado') == 'anulado' ? 'selected' : '' }}>Anuladas</option>
                         </select>
                     </div>
                     <div>
@@ -253,15 +265,20 @@
                                 $porcentaje = $totalHabilitados > 0 ? ($firmadosCount / $totalHabilitados) * 100 : 0;
                             @endphp
 
-                            <tr class="hover:bg-blue-50/30 transition-colors group">
+                            <tr class="hover:bg-blue-50/30 transition-colors group {{ $monitoreo->anulado ? 'bg-slate-50 opacity-65 grayscale-[0.5]' : '' }}">
                                 <td class="px-3 py-3 font-mono font-bold text-slate-700">{{ $monitoreo->id }}</td>
                                 <td class="px-3 py-3 text-slate-600">{{ \Carbon\Carbon::parse($monitoreo->fecha)->format('d/m/Y') }}</td>
                                 <td class="px-3 py-3">
                                     <div class="flex flex-col">
                                         <span class="font-semibold text-slate-800">{{ $monitoreo->establecimiento->nombre ?? '—' }}</span>
-                                        <span class="text-[9px] w-fit px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200 mt-1">
-                                            {{ $monitoreo->categoria_congelada ?? '—' }}
-                                        </span>
+                                        <div class="flex items-center gap-1 mt-1">
+                                            <span class="text-[9px] w-fit px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200">
+                                                {{ $monitoreo->categoria_congelada ?? '—' }}
+                                            </span>
+                                            @if($monitoreo->anulado)
+                                                <span class="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-black border border-red-200 uppercase">ANULADA</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-3 py-3 text-center">
@@ -334,6 +351,7 @@
 
                                 <td class="px-3 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
+                                        @if(!$monitoreo->anulado)
                                         <button onclick="abrirModalSubir({{ $monitoreo->id }})" 
                                             class="p-1.5 rounded-lg {{ $monitoreo->firmado ? 'text-emerald-500 bg-emerald-50' : 'text-slate-400 hover:bg-slate-50' }} transition-all" 
                                             title="Subir acta consolidada firmada">
@@ -352,30 +370,18 @@
 
                                          @if($monitoreo->firmado_pdf)
                                             @php
-                                                // 1. Extraemos la carpeta y la pasamos a minúsculas
                                                 $carpeta = strtolower(dirname($monitoreo->firmado_pdf));
-                                                
-                                                // 2. Nombre en la base de datos (todo en mayúsculas), lo pasamos a minúsculas para comparar
                                                 $archivoBuscado = strtolower(basename($monitoreo->firmado_pdf));
-                                                
-                                                // 3. Definimos un valor por defecto
                                                 $archivoReal = basename($monitoreo->firmado_pdf);
-                                                
-                                                // 4. Leemos los archivos reales dentro de esa carpeta en el servidor
                                                 $archivosEnServidor = \Illuminate\Support\Facades\Storage::disk('public')->files($carpeta);
-                                                
                                                 foreach($archivosEnServidor as $archivoFisico) {
-                                                    // Si el nombre coincide ignorando mayúsculas/minúsculas...
                                                     if (strtolower(basename($archivoFisico)) === $archivoBuscado) {
-                                                        // ¡Capturamos el nombre exacto con sus mayúsculas y minúsculas originales!
                                                         $archivoReal = basename($archivoFisico); 
                                                         break;
                                                     }
                                                 }
-                                                
                                                 $rutaFinal = ($carpeta === '.') ? $archivoReal : $carpeta . '/' . $archivoReal;
                                             @endphp
-
                                             <a href="{{ asset('storage/' . $rutaFinal) }}" target="_blank" 
                                             class="p-1.5 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all" 
                                             title="Ver acta consolidada firmada">
@@ -386,6 +392,13 @@
                                         <a href="{{ route('usuario.monitoreo.edit', $monitoreo->id) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Editar acta">
                                             <i data-lucide="pencil" class="w-4 h-4"></i>
                                         </a>
+                                        @endif
+
+                                        <button onclick="confirmarAnulacion({{ $monitoreo->id }}, {{ $monitoreo->anulado ? 'true' : 'false' }})"
+                                            class="p-1.5 {{ $monitoreo->anulado ? 'text-emerald-500 hover:bg-emerald-50' : 'text-red-400 hover:bg-red-50' }} transition-all rounded-lg"
+                                            title="{{ $monitoreo->anulado ? 'Reactivar Acta' : 'Anular Acta' }}">
+                                            <i data-lucide="{{ $monitoreo->anulado ? 'rotate-ccw' : 'ban' }}" class="w-4 h-4"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -522,6 +535,50 @@
                         text: 'El acta consolidada ha sido registrada correctamente.',
                         timer: 2000
                     }).then(() => location.reload());
+                }
+            });
+        }
+
+        function confirmarAnulacion(id, esAnulada) {
+            const accion = esAnulada ? 'Reactivar' : 'Anular';
+            const icono = esAnulada ? 'question' : 'warning';
+            const color = esAnulada ? '#10b981' : '#ef4444';
+            const baseUrl = "{{ url('/') }}";
+
+            Swal.fire({
+                title: `¿${accion} Acta?`,
+                text: `¿Está seguro que desea ${accion.toLowerCase()} esta acta de monitoreo?`,
+                icon: icono,
+                showCancelButton: true,
+                confirmButtonText: `Sí, ${accion.toLowerCase()}`,
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: color,
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return fetch(`${baseUrl}/usuario/monitoreo/${id}/anular`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(r => {
+                        if (!r.ok) return r.json().then(e => { throw new Error(e.message); });
+                        return r.json();
+                    })
+                    .catch(error => Swal.showValidationMessage(`Error: ${error}`));
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: result.value.anulado ? '¡Acta Anulada!' : '¡Acta Reactivada!',
+                        text: result.value.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => window.location.reload());
                 }
             });
         }

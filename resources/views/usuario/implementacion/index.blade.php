@@ -61,6 +61,10 @@
                             <span class="text-2xl font-bold leading-none text-amber-400">{{ $countPendientes ?? 0 }}</span>
                             <span class="text-[0.65rem] uppercase tracking-widest text-amber-100 font-semibold mt-1">Pendientes</span>
                         </div>
+                        <div class="bg-slate-900 text-white rounded-xl px-5 py-2.5 shadow-lg border border-slate-700 flex flex-col items-center min-w-[100px]">
+                            <span class="text-2xl font-bold leading-none">{{ $countAnuladas ?? 0 }}</span>
+                            <span class="text-[0.65rem] uppercase tracking-widest text-slate-400 font-semibold mt-1">Anuladas</span>
+                        </div>
                     </div>
                 </div>
 
@@ -233,6 +237,7 @@
                         </td>
                         <td class="px-5 py-3 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end gap-2">
+                                @if(!$acta['anulado'])
                                 <button onclick="abrirModalSubir('{{ $acta['tipo_key'] }}', {{ $acta['id'] }})"
                                     class="p-1.5 rounded-lg {{ isset($acta['archivo_pdf']) && $acta['archivo_pdf'] ? 'text-emerald-500 bg-emerald-50' : 'text-slate-400 hover:bg-slate-50' }} transition-all" 
                                     title="Subir acta firmada">
@@ -256,7 +261,6 @@
                                 </a>
                                 @endif
                                 
-                                @if(!$acta['anulado'])
                                 <a href="{{ $acta['ruta_editar'] }}" 
                                     class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-200">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>

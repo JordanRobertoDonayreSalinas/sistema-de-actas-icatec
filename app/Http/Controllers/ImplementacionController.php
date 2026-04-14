@@ -123,9 +123,10 @@ class ImplementacionController extends Controller
                 ->filter()->unique()->sort()->values();
         }
 
-        $totalActas = $actasTodas->count();
-        $countCompletados = $actasTodas->whereNotNull('archivo_pdf')->count();
-        $countPendientes = $totalActas - $countCompletados;
+        $totalActas       = $actasTodas->count();
+        $countAnuladas    = $actasTodas->where('anulado', true)->count();
+        $countCompletados = $actasTodas->where('anulado', false)->whereNotNull('archivo_pdf')->count();
+        $countPendientes  = $actasTodas->where('anulado', false)->whereNull('archivo_pdf')->count();
 
         $page = $request->get('page', 1);
         $perPage = $request->get('perPage', 10);
@@ -147,6 +148,7 @@ class ImplementacionController extends Controller
             'implementadores' => $implementadoresUnicos,
             'countCompletados' => $countCompletados,
             'countPendientes' => $countPendientes,
+            'countAnuladas' => $countAnuladas,
             'totalActas' => $totalActas,
             'fecha_inicio' => $fecha_inicio,
             'fecha_fin' => $fecha_fin,

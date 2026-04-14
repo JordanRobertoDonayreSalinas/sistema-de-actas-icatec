@@ -60,19 +60,14 @@ class ActaController extends Controller
             $val = $request->input('estado_anulado');
             if ($val == 'anulado') {
                 $query->where('anulado', 1);
-            } else {
+            } elseif ($val == 'activo') {
                 $query->where(function ($q) {
                     $q->where('anulado', 0)->orWhereNull('anulado');
                 });
             }
-        } else {
-            // Por defecto ocultar anuladas en el listado inicial
-            if (!$request->filled('search')) {
-                $query->where(function ($q) {
-                    $q->where('anulado', 0)->orWhereNull('anulado');
-                });
-            }
+            // 'todos' = sin filtro adicional, muestra todo
         }
+        // Sin filtro seleccionado: muestra todo (incluye anuladas con estilo especial)
 
         // Fechas por defecto: primer día del año actual y hoy
         $fechaInicioDefault = Carbon::now()->startOfYear()->format('Y-m-d');

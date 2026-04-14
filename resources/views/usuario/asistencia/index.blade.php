@@ -150,9 +150,9 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Visibilidad</label>
                     <select name="estado_anulado" class="input-modern w-full uppercase">
+                        <option value="todos" {{ request('estado_anulado', 'todos') == 'todos' ? 'selected' : '' }}>Todas</option>
                         <option value="activo" {{ request('estado_anulado') == 'activo' ? 'selected' : '' }}>Activas</option>
                         <option value="anulado" {{ request('estado_anulado') == 'anulado' ? 'selected' : '' }}>Anuladas</option>
-                        <option value="todos" {{ request('estado_anulado') == 'todos' ? 'selected' : '' }}>Todas</option>
                     </select>
                 </div>
             </div>
@@ -252,12 +252,14 @@
   </td>
                                 <td class="px-3 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
+                                        @if(!$acta->anulado)
                                         <a href="{{ route('usuario.actas.generarPDF', $acta->id) }}" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="PDF"><i data-lucide="file-text" class="w-4 h-4"></i></a>
                                         <a href="{{ route('usuario.actas.edit', $acta->id) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+                                        @endif
                                         <button onclick="confirmarAnulacion('{{ $acta->id }}', {{ $acta->anulado ? 'true' : 'false' }})" 
-                                            class="p-1.5 rounded-lg {{ $acta->anulado ? 'text-emerald-500 hover:bg-emerald-50' : 'text-slate-400 hover:text-red-600 hover:bg-red-50' }} transition-all" 
-                                            title="{{ $acta->anulado ? 'Reactivar' : 'Anular' }}">
-                                            <i data-lucide="{{ $acta->anulado ? 'rotate-ccw' : 'trash-2' }}" class="w-4 h-4"></i>
+                                            class="p-1.5 {{ $acta->anulado ? 'text-emerald-500 hover:bg-emerald-50' : 'text-red-400 hover:bg-red-50' }} transition-all rounded-lg" 
+                                            title="{{ $acta->anulado ? 'Reactivar Acta' : 'Anular Acta' }}">
+                                            <i data-lucide="{{ $acta->anulado ? 'rotate-ccw' : 'ban' }}" class="w-4 h-4"></i>
                                         </button>
                                     </div>
                                 </td>

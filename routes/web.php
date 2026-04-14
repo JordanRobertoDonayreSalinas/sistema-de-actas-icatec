@@ -545,6 +545,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/pdf-consolidado', [MonitoreoController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
+            Route::post('/{id}/anular', [MonitoreoController::class, 'anular'])->name('anular');
         });
     });
 
