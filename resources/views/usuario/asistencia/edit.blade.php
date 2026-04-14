@@ -552,7 +552,7 @@
                                 <button type="button" onclick="detectarFirmasDigitales()" class="bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
                                     &#128269; Detectar en Banco
                                 </button>
-                                <a href="{{ route('usuario.actas.pdf', ['id' => $acta->id, 'digital' => 1]) }}" target="_blank" id="btn-generar-digital" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                                <a href="{{ route('usuario.actas.generarPDF', ['id' => $acta->id, 'digital' => 1]) }}" target="_blank" id="btn-generar-digital" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
                                     &#128196; Ver PDF con Firmas
                                 </a>
                             </div>
@@ -1278,4 +1278,3 @@
         }
     </script>
 @endpush
-@endsection
