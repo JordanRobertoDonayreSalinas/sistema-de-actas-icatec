@@ -94,7 +94,7 @@
                     </div>
 
                     @php
-                        $canEdit = (Auth::user()->role === 'admin' || $slug === 'infraestructura_3d');
+                        $canEdit = (Auth::user()->role === 'admin' || $slug === 'infraestructura_2d');
                     @endphp
 
                     <button @if($canEdit) @click="toggle('{{ $slug }}')" @endif 

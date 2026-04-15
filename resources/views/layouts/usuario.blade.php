@@ -163,6 +163,13 @@
                     <span class="font-medium">Documentos Administrativos</span>
                 </a>
 
+                {{-- BANCO DE FIRMAS --}}
+                <a href="{{ route('admin.firmas.index') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('admin.firmas.*') ? 'bg-indigo-600/10 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="signature" class="w-5 h-5"></i>
+                    <span class="font-medium">Banco de Firmas</span>
+                </a>
+
                 {{-- REPORTES (Desplegable) --}}
                 <div x-data="{ open: {{ request()->routeIs('usuario.reportes.*', 'usuario.auditoria.*') ? 'true' : 'false' }} }">
                     {{-- Botón Principal --}}

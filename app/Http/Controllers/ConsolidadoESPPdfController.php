@@ -44,7 +44,7 @@ class ConsolidadoESPPdfController extends Controller
 
             'toma_muestra' => 'MODULO: TOMA DE MUESTRAS',
             'farmacia_esp' => 'MODULO: FARMACIA',
-            'infraestructura_3d' => 'MODULO: INFRAESTRUCTURA Y CROQUIS 2D'
+            'infraestructura_2d' => 'MODULO: INFRAESTRUCTURA Y CROQUIS 2D'
         ];
 
         // 2. OBTENCIÓN DE DATOS CRUDOS (DESORDENADOS)
@@ -83,8 +83,8 @@ class ConsolidadoESPPdfController extends Controller
             ->unique();
 
         foreach ($nombresEnBd as $nombre) {
-            // FILTRO: Solo incluir si está habilitado en config_modulos, o si es infraestructura_3d
-            if (!in_array($nombre, $modulosHabilitados) && !in_array($nombre, ['config_modulos', 'infraestructura_3d'])) {
+            // FILTRO: Solo incluir si está habilitado en config_modulos, o si es infraestructura_2d
+            if (!in_array($nombre, $modulosHabilitados) && !in_array($nombre, ['config_modulos', 'infraestructura_2d'])) {
                 continue; // Saltar módulos deshabilitados
             }
 

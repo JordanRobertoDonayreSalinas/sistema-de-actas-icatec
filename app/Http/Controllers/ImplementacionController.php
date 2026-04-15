@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ActaImplementacionMail;
 use App\Services\RenipressService;
+use App\Services\SignatureService;
 
 
 class ImplementacionController extends Controller
@@ -56,16 +57,20 @@ class ImplementacionController extends Controller
                 }
             }
             
-            // Filtro por implementador mejorado
+            // Filtro por implementador: busca usando el mismo formato del select (AP AM, NOMBRES)
             if ($request->filled('implementador')) {
                 $query->whereHas('implementadores', function ($q) use ($request) {
-                    $search = $request->implementador;
+                    $search = trim($request->implementador);
                     $q->where(function ($sub) use ($search) {
                         $sub->where('nombres', 'like', '%' . $search . '%')
                             ->orWhere('apellido_paterno', 'like', '%' . $search . '%')
                             ->orWhere('apellido_materno', 'like', '%' . $search . '%')
-                            ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT(nombres, ' ', apellido_paterno, ' ', IFNULL(apellido_materno, ''))"), 'like', '%' . $search . '%')
-                            ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT(apellido_paterno, ' ', IFNULL(apellido_materno, ''), ' ', nombres)"), 'like', '%' . $search . '%');
+                            // Formato exacto que usa el <select>: "AP AM, NOMBRES"
+                            ->orWhere(\Illuminate\Support\Facades\DB::raw("TRIM(CONCAT(apellido_paterno, ' ', IFNULL(apellido_materno, ''), ', ', nombres))"), 'like', '%' . $search . '%')
+                            // Formato alternativo sin apellido materno: "AP, NOMBRES"
+                            ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT(apellido_paterno, ', ', nombres)"), 'like', '%' . $search . '%')
+                            // Búsqueda inversa: "NOMBRES AP AM"
+                            ->orWhere(\Illuminate\Support\Facades\DB::raw("CONCAT(nombres, ' ', apellido_paterno, ' ', IFNULL(apellido_materno, ''))"), 'like', '%' . $search . '%');
                     });
                 });
             }
@@ -113,18 +118,41 @@ class ImplementacionController extends Controller
         }
         $distritos = $distritos->filter()->unique()->sort()->values();
 
+        // Cargar implementadores de TODAS las actas (sin filtro de implementador)
+        // para que el dropdown siempre muestre todas las opciones disponibles.
         $implementadoresUnicos = collect();
-        if ($actasTodas->count() > 0) {
-            $implementadoresUnicos = $actasTodas->pluck('implementadores_data')->flatten()
-                ->map(function($i) { 
-                    return mb_strtoupper(trim($i->apellido_paterno . ' ' . ($i->apellido_materno ?? '') . ', ' . $i->nombres), 'UTF-8'); 
-                })
-                ->filter()->unique()->sort()->values();
-        }
+        foreach ($modulos as $key => $config) {
+            $modeloActa = $config['modelo'];
+            if (!class_exists($modeloActa)) continue;
+            if ($filtroModulo && $filtroModulo !== $key) continue;
 
-        $totalActas = $actasTodas->count();
-        $countCompletados = $actasTodas->whereNotNull('archivo_pdf')->count();
-        $countPendientes = $totalActas - $countCompletados;
+            $queryImpl = $modeloActa::with('implementadores')
+                ->whereBetween('fecha', [$fecha_inicio, $fecha_fin]);
+            if ($request->filled('provincia')) {
+                $queryImpl->where('provincia', $request->provincia);
+            }
+            if ($request->filled('distrito')) {
+                $queryImpl->where('distrito', $request->distrito);
+            }
+
+            $queryImpl->get()->each(function ($acta) use (&$implementadoresUnicos) {
+                $acta->implementadores->each(function ($imp) use (&$implementadoresUnicos) {
+                    $label = mb_strtoupper(
+                        trim($imp->apellido_paterno . ' ' . ($imp->apellido_materno ?? '') . ', ' . $imp->nombres),
+                        'UTF-8'
+                    );
+                    if ($label) {
+                        $implementadoresUnicos->push($label);
+                    }
+                });
+            });
+        }
+        $implementadoresUnicos = $implementadoresUnicos->filter()->unique()->sort()->values();
+
+        $totalActas       = $actasTodas->count();
+        $countAnuladas    = $actasTodas->where('anulado', true)->count();
+        $countCompletados = $actasTodas->where('anulado', false)->whereNotNull('archivo_pdf')->count();
+        $countPendientes  = $actasTodas->where('anulado', false)->whereNull('archivo_pdf')->count();
 
         $page = $request->get('page', 1);
         $perPage = $request->get('perPage', 10);
@@ -146,6 +174,7 @@ class ImplementacionController extends Controller
             'implementadores' => $implementadoresUnicos,
             'countCompletados' => $countCompletados,
             'countPendientes' => $countPendientes,
+            'countAnuladas' => $countAnuladas,
             'totalActas' => $totalActas,
             'fecha_inicio' => $fecha_inicio,
             'fecha_fin' => $fecha_fin,
@@ -547,7 +576,7 @@ class ImplementacionController extends Controller
     /**
      * Genera el PDF del acta.
      */
-    public function pdf($modulo, $id)
+    public function pdf(Request $request, $modulo, $id)
     {
         $modulos = ImplementacionHelper::getModulos();
         if (!isset($modulos[$modulo])) abort(404);
@@ -555,7 +584,7 @@ class ImplementacionController extends Controller
         $ModeloActa = $modulos[$modulo]['modelo'];
         $acta = $ModeloActa::with(['usuarios', 'implementadores'])->findOrFail($id);
 
-        // Cargar relaciones adicionales según el módulo (si existen en el modelo)
+        // Cargar relaciones adicionales según el módulo
         if ($modulo === 'ges_adm') {
             if (method_exists($acta, 'upss')) {
                 $acta->load('upss');
@@ -569,15 +598,44 @@ class ImplementacionController extends Controller
             }
         }
 
-        // Usar la vista específica de cada módulo (impresiones/{modulo})
+        // --- SISTEMA DE FIRMAS ---
+        $firmas = collect();
+        if ($request->get('digital') == '1') {
+            $service = app(SignatureService::class);
+            
+            // 1. Obtener DNI de todos los involucrados
+            $dnis = array_merge(
+                $acta->usuarios->pluck('dni')->toArray(),
+                $acta->implementadores->pluck('dni')->toArray()
+            );
+
+            // 2. Buscar firmas en el banco
+            $firmasResult = $service->getMultipleSignatures($dnis);
+            
+            // 3. Mapear por DNI para la vista
+            foreach ($firmasResult as $dni => $profesional) {
+                $firmas->put($dni, [
+                    'url' => Storage::disk('public')->path($profesional->firma_path), // Usar path absoluto para DomPDF
+                    'profesional' => $profesional->apellido_paterno . ' ' . $profesional->nombres
+                ]);
+            }
+        }
+
+        // Usar la vista específica de cada módulo
         $viewName = 'usuario.implementacion.impresiones.' . $modulo;
         if (!view()->exists($viewName)) {
-            // Fallback: vista genérica si no existe una específica para el módulo
             $viewName = 'usuario.implementacion.impresiones.triaje';
         }
 
-        $pdf = Pdf::loadView($viewName, ['acta' => $acta]);
+        $pdf = Pdf::loadView($viewName, [
+            'acta' => $acta,
+            'firmas' => $firmas,
+            'digital' => $request->get('digital') == '1'
+        ]);
+        
         $pdf->getDomPDF()->getOptions()->setIsPhpEnabled(true);
+        $pdf->getDomPDF()->getOptions()->setIsRemoteEnabled(true);
+        
         return $pdf->stream('AI Nº ' . $acta->id . '-' . $modulos[$modulo]['nombre'] . '-' . $acta->nombre_establecimiento . '.pdf');
     }
 

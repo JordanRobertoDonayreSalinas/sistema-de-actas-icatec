@@ -508,79 +508,88 @@
             <textarea name="observaciones" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl text-sm p-4 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300 transition-all resize-none" placeholder="Ingrese anotaciones u observaciones sobre la implementación...">{{ $acta->observaciones }}</textarea>
         </div>
 
-        {{-- === TARJETA 9: EVIDENCIA FOTOGRAFICA ================================== --}}
+        {{-- === TARJETA 10: GESTIÓN DE FIRMAS DIGITALES ========================== --}}
         <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d8">
-            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                <div class="bg-orange-500 p-2.5 rounded-xl text-white">
-                    <i data-lucide="camera" class="w-5 h-5"></i>
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl text-white">
+                        <i data-lucide="signature" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Gestión de Firmas Digitales</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Sincroniza rúbricas desde el banco centralizado</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Evidencia Fotográfica</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Adjunte hasta 2 fotografías como evidencia de la implementación</p>
+                <div class="flex gap-2">
+                    <button type="button" onclick="detectarFirmas()" class="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all border border-indigo-100">
+                        <i data-lucide="scan-face" class="w-3.5 h-3.5"></i>
+                        Detectar en Banco
+                    </button>
+                    <a href="{{ route('usuario.implementacion.pdf', ['modulo' => $moduloKey, 'id' => $acta->id, 'digital' => 1]) }}" target="_blank" id="btn-generar-digital" class="hidden flex items-center gap-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-100">
+                        <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+                        Ver PDF con Firmas
+                    </a>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {{-- FOTO 1 --}}
-                <div>
-                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Foto 1</p>
-                    @if($acta->foto1)
-                    <div class="relative group mb-3 rounded-2xl overflow-hidden border-2 border-orange-200" style="min-height:180px">
-                        <img src="{{ Storage::url($acta->foto1) }}" alt="Foto 1 actual" class="w-full h-48 object-cover">
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                            <span class="opacity-0 group-hover:opacity-100 text-white text-xs font-bold bg-black/60 px-3 py-1.5 rounded-full transition-all">Foto actual — sube otra para reemplazar</span>
-                        </div>
-                    </div>
-                    @endif
-                    <label for="foto1_input" class="group relative flex flex-col items-center justify-center gap-3 min-h-[140px] bg-orange-50/60 border-2 border-dashed border-orange-200 rounded-2xl cursor-pointer hover:bg-orange-50 hover:border-orange-400 transition-all overflow-hidden" id="foto1_label">
-                        <img id="foto1_preview" class="absolute inset-0 w-full h-full object-cover rounded-2xl hidden" alt="Nueva foto 1">
-                        <div id="foto1_placeholder" class="flex flex-col items-center gap-2 p-4 text-center z-10">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                <i data-lucide="image-plus" class="w-6 h-6 text-orange-400"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Participantes --}}
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado: Participantes</p>
+                    <div id="status-firmas-usuarios" class="space-y-2">
+                        @foreach($acta->usuarios as $usu)
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 dni-status-row" data-dni="{{ $usu->dni }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                                        <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-700">{{ $usu->apellido_paterno }} {{ $usu->nombres }}</p>
+                                        <p class="text-[10px] font-mono text-slate-400">{{ $usu->dni }}</p>
+                                    </div>
+                                </div>
+                                <div class="status-indicator">
+                                    <div class="animate-pulse w-4 h-4 bg-slate-200 rounded-full"></div>
+                                </div>
                             </div>
-                            <p class="text-sm font-bold text-slate-600">{{ $acta->foto1 ? 'Subir nueva foto 1 (reemplazará la actual)' : 'Haz clic para subir foto 1' }}</p>
-                            <p class="text-[10px] text-slate-400">JPG, PNG, WEBP — máx. 5 MB</p>
-                        </div>
-                    </label>
-                    <input type="file" id="foto1_input" name="foto1" accept="image/*" class="hidden"
-                        onchange="previewFotoEdit('foto1', this)">
-                    <div id="foto1_actions" class="hidden mt-2 flex justify-end">
-                        <button type="button" onclick="clearFotoEdit('foto1')" class="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
-                            <i data-lucide="x" class="w-3 h-3"></i> Quitar selección
-                        </button>
+                        @endforeach
                     </div>
                 </div>
 
-                {{-- FOTO 2 --}}
-                <div>
-                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Foto 2</p>
-                    @if($acta->foto2)
-                    <div class="relative group mb-3 rounded-2xl overflow-hidden border-2 border-orange-200" style="min-height:180px">
-                        <img src="{{ Storage::url($acta->foto2) }}" alt="Foto 2 actual" class="w-full h-48 object-cover">
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                            <span class="opacity-0 group-hover:opacity-100 text-white text-xs font-bold bg-black/60 px-3 py-1.5 rounded-full transition-all">Foto actual — sube otra para reemplazar</span>
-                        </div>
-                    </div>
-                    @endif
-                    <label for="foto2_input" class="group relative flex flex-col items-center justify-center gap-3 min-h-[140px] bg-orange-50/60 border-2 border-dashed border-orange-200 rounded-2xl cursor-pointer hover:bg-orange-50 hover:border-orange-400 transition-all overflow-hidden" id="foto2_label">
-                        <img id="foto2_preview" class="absolute inset-0 w-full h-full object-cover rounded-2xl hidden" alt="Nueva foto 2">
-                        <div id="foto2_placeholder" class="flex flex-col items-center gap-2 p-4 text-center z-10">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                <i data-lucide="image-plus" class="w-6 h-6 text-orange-400"></i>
+                {{-- Implementadores --}}
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado: Implementadores</p>
+                    <div id="status-firmas-implementadores" class="space-y-2">
+                        @foreach($acta->implementadores as $imp)
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 dni-status-row" data-dni="{{ $imp->dni }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                                        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-indigo-700">{{ $imp->apellido_paterno }} {{ $imp->nombres }}</p>
+                                        <p class="text-[10px] font-mono text-slate-400">{{ $imp->dni }}</p>
+                                    </div>
+                                </div>
+                                <div class="status-indicator">
+                                    <div class="animate-pulse w-4 h-4 bg-slate-200 rounded-full"></div>
+                                </div>
                             </div>
-                            <p class="text-sm font-bold text-slate-600">{{ $acta->foto2 ? 'Subir nueva foto 2 (reemplazará la actual)' : 'Haz clic para subir foto 2' }}</p>
-                            <p class="text-[10px] text-slate-400">JPG, PNG, WEBP — máx. 5 MB</p>
-                        </div>
-                    </label>
-                    <input type="file" id="foto2_input" name="foto2" accept="image/*" class="hidden"
-                        onchange="previewFotoEdit('foto2', this)">
-                    <div id="foto2_actions" class="hidden mt-2 flex justify-end">
-                        <button type="button" onclick="clearFotoEdit('foto2')" class="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
-                            <i data-lucide="x" class="w-3 h-3"></i> Quitar selección
-                        </button>
+                        @endforeach
                     </div>
                 </div>
+            </div>
 
+            <div class="mt-6 bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/50">
+                <div class="flex gap-3 items-start">
+                    <i data-lucide="info" class="w-5 h-5 text-indigo-500 mt-0.5"></i>
+                    <div>
+                        <p class="text-xs font-bold text-indigo-800">Sobre la Firma Digital</p>
+                        <p class="text-[11px] text-indigo-600 mt-1 leading-relaxed">
+                            Si todos los involucrados tienen su rúbrica cargada en el <a href="{{ route('admin.firmas.index') }}" target="_blank" class="font-black underline">Banco de Firmas</a>, podrá generar un PDF consolidado automáticamente. Caso contrario, deberá imprimir el documento y cargarlo escaneado en la sección de "Acta Firmada".
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1253,5 +1262,71 @@
             } catch (e) { console.error('Error loading RENIPRESS data:', e); }
         }
     });
+    // --- DETECTAR FIRMAS DIGITALES ---
+    async function detectarFirmas() {
+        const rows = document.querySelectorAll('.dni-status-row');
+        const btnGenerar = document.getElementById('btn-generar-digital');
+        let totalFirmas = 0;
+
+        for (const row of rows) {
+            const dni = row.getAttribute('data-dni');
+            const indicator = row.querySelector('.status-indicator');
+            indicator.innerHTML = '<div class="animate-spin w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full font-bold"></div>';
+            
+            try {
+                const response = await fetch(`/admin/banco-firmas/search-ajax?term=${dni}`);
+                const results = await response.json();
+                
+                // Buscar resultado exacto
+                const match = results.find(r => r.text.includes(dni));
+                
+                if (match && match.has_firma) {
+                    indicator.innerHTML = '<div class="flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-wider animate-in zoom-in"><i data-lucide="check" class="w-3 h-3"></i></div>';
+                    totalFirmas++;
+                } else {
+                    indicator.innerHTML = '<div class="flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-500 rounded-lg text-[10px] font-black uppercase tracking-wider animate-in zoom-in"><i data-lucide="x" class="w-3 h-3"></i></div>';
+                }
+            } catch (error) {
+                indicator.innerHTML = '<div class="w-4 h-4 bg-slate-200 rounded-full"></div>';
+            }
+            refreshLucide();
+        }
+
+        if (totalFirmas > 0) {
+            btnGenerar.classList.remove('hidden');
+            btnGenerar.classList.add('animate-in', 'slide-in-from-right-10', 'duration-500');
+            
+            if (totalFirmas === rows.length) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Firmas Completas!',
+                    text: 'Se han detectado las firmas de todos los participantes. Ya puede generar el PDF consolidado.',
+                    timer: 3000,
+                    showConfirmButton: false,
+                    customClass: { popup: 'rounded-3xl' }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Firmas Parciales',
+                    text: `Se detectaron ${totalFirmas} de ${rows.length} firmas. El PDF solo incluirá las firmas encontradas.`,
+                    customClass: { popup: 'rounded-3xl' }
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin Firmas',
+                text: 'No se encontraron firmas en el banco para los participantes de esta acta.',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        }
+    }
+
+    // Auto-ejecutar detección al cargar
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(detectarFirmas, 1000);
+    });
+
 </script>
 @endpush

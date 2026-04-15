@@ -8,19 +8,19 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 
-class Infraestructura3DPdfController extends Controller
+class Infraestructura2DPdfController extends Controller
 {
     /**
-     * Genera el reporte PDF del Módulo Infraestructura 3D (Croquis).
+     * Genera el reporte PDF del Módulo Infraestructura 2D (Croquis).
      */
     public function generar($id)
     {
         // 1. Cargar el acta con el establecimiento
         $acta = CabeceraMonitoreo::with('establecimiento')->findOrFail($id);
 
-        // 2. Cargar el detalle guardado para el módulo infraestructura_3d
+        // 2. Cargar el detalle guardado para el módulo infraestructura_2d
         $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                  ->where('modulo_nombre', 'infraestructura_3d')
+                                  ->where('modulo_nombre', 'infraestructura_2d')
                                   ->firstOrFail();
 
         // 3. Contenido del croquis (elementos y conexiones)
@@ -44,7 +44,7 @@ class Infraestructura3DPdfController extends Controller
         ];
 
         // 6. Cargar la vista PDF
-        $pdf = Pdf::loadView('usuario.monitoreo.pdf.infraestructura_3d_pdf', compact(
+        $pdf = Pdf::loadView('usuario.monitoreo.pdf.infraestructura_2d_pdf', compact(
             'acta',
             'modulo',
             'elementos',
@@ -79,6 +79,6 @@ class Infraestructura3DPdfController extends Controller
             $pdf->line(42, $pdf->get_height() - 50, $pdf->get_width() - 42, $pdf->get_height() - 50, [0.88, 0.91, 0.94], 1);
         ');
 
-        return $pdf->stream('19_Infraestructura3D_Acta_' . $acta->numero_acta . '.pdf');
+        return $pdf->stream('19_Infraestructura2D_Acta_' . $acta->numero_acta . '.pdf');
     }
 }

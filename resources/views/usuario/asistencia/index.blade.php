@@ -116,6 +116,10 @@
                         <span class="text-2xl font-bold leading-none">{{ $countPendientes }}</span>
                         <span class="text-[0.65rem] uppercase tracking-widest text-amber-100 font-semibold mt-1">Pendientes</span>
                     </div>
+                    <div class="bg-slate-800 text-white rounded-xl px-5 py-2.5 shadow-lg border border-slate-700 flex flex-col items-center min-w-[100px]">
+                        <span class="text-2xl font-bold leading-none">{{ $countAnuladas }}</span>
+                        <span class="text-[0.65rem] uppercase tracking-widest text-slate-400 font-semibold mt-1">Anuladas</span>
+                    </div>
                 </div>
                 <div class="flex items-center gap-3 w-full lg:w-auto justify-center lg:justify-end mt-2 lg:mt-0">
                     <button @click="open = !open" type="button" class="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg border border-white/20 text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm">
@@ -205,6 +209,15 @@
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Hasta</label>
                     <input type="date" name="fecha_fin" value="{{ $valFin }}" class="input-modern w-full">
                 </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Visibilidad</label>
+                    <select name="estado_anulado" class="input-modern w-full uppercase">
+                        <option value="todos" {{ request('estado_anulado', 'todos') == 'todos' ? 'selected' : '' }}>Todas</option>
+                        <option value="activo" {{ request('estado_anulado') == 'activo' ? 'selected' : '' }}>Activas</option>
+                        <option value="anulado" {{ request('estado_anulado') == 'anulado' ? 'selected' : '' }}>Anuladas</option>
+                    </select>
+                </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50 w-full">
@@ -241,7 +254,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
                         @forelse($actas as $acta)
-                            <tr class="hover:bg-emerald-50/30 transition-colors group">
+                            <tr class="hover:bg-emerald-50/30 transition-colors group {{ $acta->anulado ? 'bg-red-50/50 grayscale-[0.5]' : '' }}">
                                 <td class="px-3 py-3 font-mono font-bold text-center text-slate-400">{{ $acta->id }}</td>
                                 <td class="px-3 py-3 text-center font-bold">{{ \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y') }}</td>
                                 <td class="px-3 py-3 font-semibold text-slate-800">{{ $acta->establecimiento->nombre ?? '—' }}</td>
@@ -275,10 +288,11 @@
                                             </span>
                                         @endif
                                     </div>
-                                </td>
-                                <td class="px-3 py-3 text-center whitespace-nowrap">
+                                                               <td class="px-3 py-3 text-center whitespace-nowrap">
                                     <div class="flex items-center justify-center gap-1">
-                                        @if ($acta->firmado)
+                                        @if($acta->anulado)
+                                            <span class="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black bg-red-100 text-red-700 border border-red-200 uppercase">ANULADO</span>
+                                        @elseif ($acta->firmado)
                                             <span class="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase">Firmado</span>
                                             @if (!empty($acta->firmado_pdf))
                                                 <a href="{{ asset('storage/' . $acta->firmado_pdf) }}" target="_blank" class="text-slate-400 hover:text-emerald-600 p-1"><i data-lucide="eye" class="w-3.5 h-3.5"></i></a>
@@ -298,8 +312,10 @@
                                         @endif
                                     </div>
                                 </td>
+  </td>
                                 <td class="px-3 py-3 text-right">
                                     <div class="flex items-center justify-end gap-1">
+                                        @if(!$acta->anulado)
                                         <a href="{{ route('usuario.actas.generarPDF', $acta->id) }}" target="_blank" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="PDF"><i data-lucide="file-text" class="w-4 h-4"></i></a>
                                         @if($acta->firmado_pdf)
                                         <button onclick="confirmarEnvioCorreo({{ $acta->id }}, '{{ $acta->establecimiento->nombre ?? 'N/A' }}')" 
@@ -308,6 +324,12 @@
                                         </button>
                                         @endif
                                         <a href="{{ route('usuario.actas.edit', $acta->id) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all" title="Editar"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+                                        @endif
+                                        <button onclick="confirmarAnulacion('{{ $acta->id }}', {{ $acta->anulado ? 'true' : 'false' }})" 
+                                            class="p-1.5 {{ $acta->anulado ? 'text-emerald-500 hover:bg-emerald-50' : 'text-red-400 hover:bg-red-50' }} transition-all rounded-lg" 
+                                            title="{{ $acta->anulado ? 'Reactivar Acta' : 'Anular Acta' }}">
+                                            <i data-lucide="{{ $acta->anulado ? 'rotate-ccw' : 'ban' }}" class="w-4 h-4"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -338,6 +360,45 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => { if (window.lucide) window.lucide.createIcons(); });
+
+        function confirmarAnulacion(id, isAnulado) {
+            const action = isAnulado ? 'reactivar' : 'anular';
+            const color = isAnulado ? '#10b981' : '#ef4444';
+            const baseUrl = "{{ url('/') }}";
+
+            Swal.fire({
+                title: `¿Estás seguro de ${action} esta acta?`,
+                text: isAnulado ? "El acta volverá a estar activa y visible." : "El acta quedará marcada como anulada.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: `Sí, ${action}`,
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: color,
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return fetch(`${baseUrl}/usuario/listado-actas/${id}/anular`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) return data;
+                        throw new Error(data.message || 'Error en la operación');
+                    })
+                    .catch(error => Swal.showValidationMessage(`Fallo: ${error}`));
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ icon: 'success', title: '¡Hecho!', text: result.value.message, timer: 2000, showConfirmButton: false })
+                    .then(() => window.location.reload());
+                }
+            });
+        }
 
         function exportarExcel() {
             document.getElementById('excelForm').submit();

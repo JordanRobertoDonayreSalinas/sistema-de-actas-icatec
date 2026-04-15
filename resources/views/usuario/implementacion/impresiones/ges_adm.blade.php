@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -374,14 +374,14 @@
 
         @if($acta->foto1 || $acta->foto2)
     <div style="margin-top: 20px;">
-        <div class="section-header"><span style="color:#6b21a8;">&#9635;</span> EVIDENCIA FOTOGRÁFICA</div>
+        <div class="section-header"><span style="color:#6b21a8;">&#9635;</span> FOTOGRAF&#205;AS</div>
         <table class="foto-table">
             <tr>
                 @if($acta->foto1)
                 <td>
                     <div class="foto-wrapper">
                         <img src="{{ storage_path('app/public/' . $acta->foto1) }}">
-                        <div class="foto-caption">EVIDENCIA 01</div>
+                        <div class="foto-caption">FOTO 01</div>
                     </div>
                 </td>
                 @endif
@@ -389,7 +389,7 @@
                 <td>
                     <div class="foto-wrapper">
                         <img src="{{ storage_path('app/public/' . $acta->foto2) }}">
-                        <div class="foto-caption">EVIDENCIA 02</div>
+                        <div class="foto-caption">FOTO 02</div>
                     </div>
                 </td>
                 @endif
@@ -466,6 +466,11 @@
                 <div class="firmas-grid">
             @foreach ($firmantes as $f)
                 <div class="firma-card no-break">
+                    @if(isset($digital) && $digital && isset($firmas[$f['dni']]))
+                        <div style="height: 60px; margin-bottom: -35px; text-align: center;">
+                            <img src="{{ $firmas[$f['dni']]['url'] }}" style="max-height: 60px; max-width: 140px; object-contain: contain;">
+                        </div>
+                    @endif
                     <div class="linea-firma"></div>
                     <span class="nombre-firma">{{ $f['nombre'] }}</span>
                     <span class="cargo-firma">{{ $f['cargo'] }}</span>

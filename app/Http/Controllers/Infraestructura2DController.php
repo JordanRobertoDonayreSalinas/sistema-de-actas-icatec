@@ -7,21 +7,21 @@ use App\Models\MonitoreoModulos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class Infraestructura3DController extends Controller
+class Infraestructura2DController extends Controller
 {
     public function index($id)
     {
         $acta = CabeceraMonitoreo::findOrFail($id);
         
         $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-            ->where('modulo_nombre', 'infraestructura_3d')
+            ->where('modulo_nombre', 'infraestructura_2d')
             ->first();
 
         $contenido = $modulo ? $modulo->contenido : [
             'consultorios' => []
         ];
 
-        return view('usuario.monitoreo.modulos.infraestructura_3d', compact('acta', 'contenido'));
+        return view('usuario.monitoreo.modulos.infraestructura_2d', compact('acta', 'contenido'));
     }
 
     public function store(Request $request, $id)
@@ -29,7 +29,7 @@ class Infraestructura3DController extends Controller
         try {
             DB::beginTransaction();
 
-            $moduloNombre = 'infraestructura_3d';
+            $moduloNombre = 'infraestructura_2d';
             $contenido = $request->contenido;
 
             // Asegurar que el directorio de croquis existe

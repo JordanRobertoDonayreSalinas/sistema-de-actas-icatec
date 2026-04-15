@@ -1639,7 +1639,7 @@
                         this.draw();
 
                         try {
-                            const res = await fetch("{{ route('usuario.monitoreo.infraestructura-3d.store', $acta->id) }}", {
+                            const res = await fetch("{{ route('usuario.monitoreo.infraestructura-2d.store', $acta->id) }}", {
                                 method:  'POST',
                                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                                 body:    JSON.stringify({ 
@@ -2118,7 +2118,7 @@
                         Exportar PNG
                     </button>
                     {{-- Botón Exportar PDF --}}
-                    <a href="{{ route('usuario.monitoreo.infraestructura-3d.pdf', $acta->id) }}"
+                    <a href="{{ route('usuario.monitoreo.infraestructura-2d.pdf', $acta->id) }}"
                        target="_blank"
                        title="Exportar reporte a PDF"
                        class="px-5 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase hover:bg-rose-700 transition-all flex items-center gap-2 shadow-lg shadow-rose-100">

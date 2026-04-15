@@ -347,16 +347,20 @@
     <div class="section-header">{{ $i++ }}. FIRMA</div>
     
     <div class="signature-section">
-        <div class="signature-frame">
-            <div class="signature-box">
+        <div class="signature-frame" style="height: auto; padding: 20px;">
+            <div class="signature-box" style="position: static; border-top: none; width: 100%;">
                 @if($prof)
-                    <div style="font-weight: bold; font-size: 11px; color: #1e293b;">
-                        {{ $prof->apellido_paterno }} {{ $prof->apellido_materno }} {{ $prof->nombres }}
-                    </div>                
-                    <div style="font-size: 10px; color: #64748b; margin-top: 1px;">
-                        {{ $prof->tipo_doc }}: {{ $prof->doc }}
+                    @include('usuario.firmas.pdf_stamp', ['firma' => $firmaEntrevistado])
+                    
+                    <div style="border-top: 1px solid #000; margin-top: 10px; padding-top: 5px;">
+                        <div style="font-weight: bold; font-size: 11px; color: #1e293b;">
+                            {{ $prof->apellido_paterno }} {{ $prof->apellido_materno }} {{ $prof->nombres }}
+                        </div>                
+                        <div style="font-size: 10px; color: #64748b; margin-top: 1px;">
+                            {{ $prof->tipo_doc }}: {{ $prof->doc }}
+                        </div>
+                        <div style="font-weight: bold; font-size: 9px; margin-top: 4px;">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
                     </div>
-                    <div style="font-weight: bold; font-size: 9px; margin-top: 4px;">FIRMA DEL PROFESIONAL ENTREVISTADO</div>
                 @else
                     <div style="padding: 10px;">FIRMA PENDIENTE</div>
                 @endif
