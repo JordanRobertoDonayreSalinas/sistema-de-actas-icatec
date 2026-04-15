@@ -267,7 +267,8 @@
             'referencias'            => 'REFERENCIAS Y CONTRAREFERENCIAS',
             'refcon'                 => 'REFERENCIAS Y CONTRAREFERENCIAS', 
             'laboratorio'            => 'LABORATORIO',
-            'urgencias'              => 'URGENCIAS Y EMERGENCIAS'
+            'urgencias'              => 'URGENCIAS Y EMERGENCIAS',
+            'infraestructura_2d'     => 'INFRAESTRUCTURA Y CROQUIS 2D'
         ];
         
         $impresos = []; 
@@ -277,7 +278,7 @@
 
     @foreach($ordenEstricto as $nombreTecnico => $tituloPublico)
         @php 
-            $mod = $modulos->first(function($item) use ($nombreTecnico) {
+            $mod = collect($modulos)->first(function($item) use ($nombreTecnico) {
                 return strtolower($item->modulo_nombre) === strtolower($nombreTecnico);
             });
         @endphp
@@ -421,7 +422,7 @@
                             @endphp
                             @if($realPath && ($isFullUrl || file_exists($realPath)))
                                 @if(!$fotosEncontradas) 
-                                    <div class="sub-section">EVIDENCIAS FOTOGRÁFICAS</div><div class="foto-grid"> 
+                                    <div class="sub-section">FOTOGRAFÍAS</div><div class="foto-grid"> 
                                     @php $fotosEncontradas = true; @endphp
                                 @endif
                                 <div class="foto-wrapper"><img src="{{ $realPath }}"></div>
@@ -431,7 +432,7 @@
                     @endif
                     
                     @if(!$fotosEncontradas && (!empty($cont['foto_1']) || !empty($cont['foto_2'])))
-                        <div class="sub-section">EVIDENCIAS FOTOGRÁFICAS</div>
+                        <div class="sub-section">FOTOGRAFÍAS</div>
                         <div class="foto-grid">
                             @foreach(['foto_1', 'foto_2'] as $fKey)
                                 @php
@@ -490,25 +491,25 @@
     @endif
 
     <div class="no-break">
-        <div class="section-header">4. PANEL FOTOGRÁFICO DE EVIDENCIAS</div>
+        <div class="section-header">4. PANEL FOTOGRÁFICO</div>
         @if($acta->foto1 || $acta->foto2)
             <div class="foto-grid">
                 @if($acta->foto1 && file_exists(public_path('storage/' . $acta->foto1)))
                     <div class="foto-wrapper">
                         <img src="{{ public_path('storage/' . $acta->foto1) }}">
-                        <div class="foto-caption">EVIDENCIA 01 - REGISTRO DE MONITOREO</div>
+                        <div class="foto-caption">FOTO 01 - REGISTRO DE MONITOREO</div>
                     </div>
                 @endif
 
                 @if($acta->foto2 && file_exists(public_path('storage/' . $acta->foto2)))
                     <div class="foto-wrapper">
                         <img src="{{ public_path('storage/' . $acta->foto2) }}">
-                        <div class="foto-caption">EVIDENCIA 02 - REGISTRO DE MONITOREO</div>
+                        <div class="foto-caption">FOTO 02 - REGISTRO DE MONITOREO</div>
                     </div>
                 @endif
             </div>
         @else
-            <p style="padding-left: 10px; font-style: italic; color: #64748b; font-size: 9px;">No se adjuntaron fotografías de evidencia en esta acta.</p>
+            <p style="padding-left: 10px; font-style: italic; color: #64748b; font-size: 9px;">No se adjuntaron fotografías en esta acta.</p>
         @endif
     </div>
 

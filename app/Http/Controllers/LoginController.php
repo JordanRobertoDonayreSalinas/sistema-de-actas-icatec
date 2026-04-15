@@ -26,6 +26,9 @@ class LoginController extends Controller
             'password.required' => 'Debes ingresar tu contraseña.',
         ]);
 
+        // Agregar condición global de cuenta activa
+        $credentials['status'] = 'active';
+
         // Intentar loguear
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -35,6 +38,8 @@ class LoginController extends Controller
             // --- LÓGICA DE REDIRECCIÓN POR ROLES ---
             if ($user->role === 'admin') {
                 $rutaDestino = route('admin.users.index');
+            } elseif ($user->role === 'operador') {
+                $rutaDestino = route('usuario.monitoreo.index');
             } else {
                 $rutaDestino = route('usuario.mesa-ayuda.index');
             }

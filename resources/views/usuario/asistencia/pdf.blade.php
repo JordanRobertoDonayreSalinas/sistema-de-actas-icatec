@@ -232,7 +232,7 @@
         @if(count($imagenesSrc) > 0)
             <div style="page-break-inside: avoid;">
                 <h3>
-                    <span class="icon"><span class="icon-line"></span></span>Evidencias Fotográficas
+                    <span class="icon"><span class="icon-line"></span></span>Fotografías
                 </h3>
                 <table class="evidencias-table">
                     @foreach(array_chunk($imagenesSrc, 2) as $fila)
@@ -241,7 +241,7 @@
                                 <td>
                                     <div class="foto-item">
                                         <img src="{{ $src }}">
-                                        <div class="foto-caption">EVIDENCIA {{ $loop->parent->index * 2 + $loop->iteration }}</div>
+                                        <div class="foto-caption">FOTO {{ $loop->parent->index * 2 + $loop->iteration }}</div>
                                     </div>
                                 </td>
                             @endforeach
@@ -262,6 +262,15 @@
             <table class="firmas">
                 <tr>
                     <td>
+                        @php
+                            $profImpDet = \App\Models\Profesional::where('apellido_paterno', 'LIKE', '%' . explode(' ', $acta->implementador)[0] . '%')
+                                ->where('nombres', 'LIKE', '%' . (explode(', ', $acta->implementador)[1] ?? '') . '%')
+                                ->first();
+                            $dniImp = $profImpDet ? $profImpDet->doc : null;
+                        @endphp
+                        @if(isset($digital) && $digital && $dniImp && isset($firmas[$dniImp]))
+                            @include('usuario.firmas.pdf_stamp', ['firma' => $firmas[$dniImp]])
+                        @endif
                         <div class="linea-firma"></div>
                         <span class="nombre-firma">{{ $acta->implementador }}</span>
                         <span class="detalles-firma">IMPLEMENTADOR(A)</span>
@@ -277,12 +286,18 @@
                 @for ($i = 0; $i < count($participantes); $i += 2)
                     <tr>
                         <td>
+                            @if(isset($digital) && $digital && isset($firmas[$participantes[$i]->dni]))
+                                @include('usuario.firmas.pdf_stamp', ['firma' => $firmas[$participantes[$i]->dni]])
+                            @endif
                             <div class="linea-firma"></div>
                             <span class="nombre-firma">{{ $participantes[$i]->apellidos }} {{ $participantes[$i]->nombres }}</span>
                             <span class="detalles-firma">{{ $participantes[$i]->es_implementador ? 'IMPLEMENTADOR(A)' : ($participantes[$i]->modulo ?? 'PARTICIPANTE') }}</span>
                         </td>
                         @if(isset($participantes[$i+1]))
                             <td>
+                                @if(isset($digital) && $digital && isset($firmas[$participantes[$i+1]->dni]))
+                                    @include('usuario.firmas.pdf_stamp', ['firma' => $firmas[$participantes[$i+1]->dni]])
+                                @endif
                                 <div class="linea-firma"></div>
                                 <span class="nombre-firma">{{ $participantes[$i+1]->apellidos }} {{ $participantes[$i+1]->nombres }}</span>
                                 <span class="detalles-firma">{{ $participantes[$i+1]->es_implementador ? 'IMPLEMENTADOR(A)' : ($participantes[$i+1]->modulo ?? 'PARTICIPANTE') }}</span>

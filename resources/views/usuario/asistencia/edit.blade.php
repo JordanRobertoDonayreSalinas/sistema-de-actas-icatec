@@ -133,16 +133,34 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                             <div>
                                 <label class="lbl">Fecha</label>
-                                <input type="date" name="fecha" value="{{ old('fecha', date('Y-m-d')) }}" required class="inp">
+                                <input type="date" name="fecha" value="{{ old('fecha', $acta->fecha ? \Carbon\Carbon::parse($acta->fecha)->format('Y-m-d') : date('Y-m-d')) }}" required class="inp">
                             </div>
                             <div>
                                 <label class="lbl">Establecimiento</label>
-                                <input type="text" id="establecimiento" name="establecimiento"
-                                       placeholder="Código o nombre..." required autocomplete="off"
-                                       value="{{ old('establecimiento', $acta->establecimiento->nombre ?? '') }}"
-                                       class="inp">
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <input type="text" id="establecimiento" name="establecimiento"
+                                               placeholder="Código o nombre..." required autocomplete="off"
+                                               value="{{ old('establecimiento', $acta->establecimiento->nombre ?? '') }}"
+                                               class="inp pr-10">
+                                        <div id="establecimiento-spinner" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                                            <i data-lucide="loader-2" class="w-4 h-4 text-emerald-600 animate-spin"></i>
+                                        </div>
+                                    </div>
+                                    <button type="button" ontouchstart="syncEstablecimiento()" onclick="syncEstablecimiento()" id="btn-sync-renipress" 
+                                            class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-all flex items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Sincronizar con Susalud (Renipress)">
+                                        <i data-lucide="refresh-cw" class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500"></i>
+                                        <span class="hidden sm:inline text-xs font-bold uppercase tracking-wider">Sincronizar</span>
+                                    </button>
+                                </div>
                                 <input type="hidden" id="establecimiento_id" name="establecimiento_id"
                                        value="{{ old('establecimiento_id', $acta->establecimiento_id ?? '') }}">
+
+                                {{-- Campos para data Susalud (JSON) --}}
+                                <input type="hidden" name="servicios_renipress" id="servicios_renipress" value="{{ old('servicios_renipress', $acta->servicios_renipress ?? '') }}">
+                                <input type="hidden" name="especialidades_renipress" id="especialidades_renipress" value="{{ old('especialidades_renipress', $acta->especialidades_renipress ?? '') }}">
+                                <input type="hidden" name="cartera_renipress" id="cartera_renipress" value="{{ old('cartera_renipress', $acta->cartera_renipress ?? '') }}">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -520,6 +538,94 @@
                         <button type="button" id="agregar-observacion" class="btn-add mt-3">
                             &#43; Observación
                         </button>
+                    </div>
+                </div>
+
+                {{-- === GESTIÓN DE FIRMAS DIGITALES === --}}
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="flex items-center justify-between w-full">
+                            <div class="flex items-center gap-2">
+                                &#9997; Gestión de Firmas Digitales
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="detectarFirmasDigitales()" class="bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                                    &#128269; Detectar en Banco
+                                </button>
+                                <a href="{{ route('usuario.actas.generarPDF', ['id' => $acta->id, 'digital' => 1]) }}" target="_blank" id="btn-generar-digital" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5">
+                                    &#128196; Ver PDF con Firmas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Participantes --}}
+                            <div class="space-y-2">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado: Participantes</p>
+                                <div id="status-firmas-participantes" class="space-y-2">
+                                    @php
+                                        // Obtener implementador para filtrar luego
+                                        $implNombre = $acta->implementador;
+                                    @endphp
+                                    @foreach($acta->participantes as $p)
+                                        <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 dni-status-row" data-dni="{{ $p->dni }}">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                                                    <i class="text-slate-400 text-[10px] font-bold">👤</i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[11px] font-bold text-slate-700">{{ $p->apellidos }} {{ $p->nombres }}</p>
+                                                    <p class="text-[9px] font-mono text-slate-400">{{ $p->dni }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="status-indicator">
+                                                <div class="w-3 h-3 bg-slate-200 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- Implementador --}}
+                            <div class="space-y-2">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado: Implementador General</p>
+                                <div id="status-firmas-implementador" class="space-y-2">
+                                    @php
+                                        // Buscar DNI del implementador en mon_profesionales si es posible
+                                        $profImpDet = \App\Models\Profesional::where('apellido_paterno', 'LIKE', '%' . explode(' ', $acta->implementador)[0] . '%')
+                                            ->where('nombres', 'LIKE', '%' . (explode(', ', $acta->implementador)[1] ?? '') . '%')
+                                            ->first();
+                                    @endphp
+                                    @if($profImpDet)
+                                        <div class="flex items-center justify-between p-2.5 bg-indigo-50/50 rounded-xl border border-indigo-100/50 dni-status-row" data-dni="{{ $profImpDet->doc }}">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center border border-indigo-100 shadow-sm">
+                                                    <i class="text-indigo-400 text-[10px] font-bold">🛡️</i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[11px] font-bold text-indigo-700">{{ $acta->implementador }}</p>
+                                                    <p class="text-[9px] font-mono text-slate-400">{{ $profImpDet->doc }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="status-indicator">
+                                                <div class="w-3 h-3 bg-slate-200 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 text-[10px] text-amber-700">
+                                            ⚠️ No se encontró al implementador en el maestro de profesionales para validar su firma por DNI.
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <p class="text-[11px] text-indigo-700 leading-tight">
+                                <b>Nota:</b> El sistema busca automáticamente las firmas en el <a href="{{ route('admin.firmas.index') }}" target="_blank" class="font-bold underline">Banco de Firmas</a> usando el DNI. Si falta alguna, el PDF se generará solo con las firmas detectadas.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -1045,6 +1151,130 @@
                 })
                 .catch(() => { Swal.close(); Swal.fire({ icon:'error', title:'Error de conexión' }); });
         });
-    });
+
+        // --- GESTIÓN DE FIRMAS DIGITALES ---
+        window.detectarFirmasDigitales = async function() {
+            const rows = document.querySelectorAll('.dni-status-row');
+            const btnGenerar = document.getElementById('btn-generar-digital');
+            let totalEncontradas = 0;
+
+            for (const row of rows) {
+                const dni = row.getAttribute('data-dni');
+                const indicator = row.querySelector('.status-indicator');
+                indicator.innerHTML = '<div style="width:12px;height:12px;border:2px solid #6366f1;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite"></div>';
+                
+                try {
+                    const response = await fetch(`/admin/banco-firmas/search-ajax?term=${dni}`);
+                    const results = await response.json();
+                    const match = results.find(r => r.text.includes(dni));
+                    
+                    if (match && match.has_firma) {
+                        indicator.innerHTML = '<span style="color:#10b981;font-size:12px;font-weight:bold" title="Firma detectada">✓</span>';
+                        totalEncontradas++;
+                    } else {
+                        indicator.innerHTML = '<span style="color:#ef4444;font-size:12px;font-weight:bold" title="Sin firma">✗</span>';
+                    }
+                } catch (error) {
+                    indicator.innerHTML = '<div class="w-3 h-3 bg-slate-200 rounded-full"></div>';
+                }
+            }
+
+            if (totalEncontradas > 0) {
+                btnGenerar.classList.remove('hidden');
+                btnGenerar.classList.add('animate-fade-in');
+                
+                if (totalEncontradas === rows.length) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Firmas Detectadas!',
+                        text: 'Se han detectado las firmas de todos los participantes.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Firmas Parciales',
+                        text: `Se detectaron ${totalEncontradas} de ${rows.length} firmas.`,
+                        confirmButtonColor: '#4f46e5',
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin Firmas',
+                    text: 'No se encontraron firmas asociadas a los DNIs en el banco.',
+                    confirmButtonColor: '#4f46e5',
+                    customClass: { popup: 'rounded-2xl' }
+                });
+            }
+        };
+
+        // Auto-detectar al cargar
+        setTimeout(detectarFirmasDigitales, 1500);
+        });
+    </script>
+
+    <!-- Script Renipress Sync -->
+    <script>
+        async function syncEstablecimiento() {
+            const idEst = document.getElementById('establecimiento_id').value;
+            const btn = document.getElementById('btn-sync-renipress');
+            const spinner = document.getElementById('establecimiento-spinner');
+            const baseUrl = "{{ url('/') }}";
+
+            if (!idEst) {
+                Swal.fire({ icon: 'warning', title: 'Atención', text: 'Primero debe seleccionar un establecimiento de la lista.' });
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                spinner.classList.remove('hidden');
+
+                const texto = document.getElementById('establecimiento').value;
+                const match = texto.match(/\b\d{8}\b/);
+                const codigo = match ? match[0] : null;
+
+                if (!codigo) {
+                    throw new Error('No se pudo determinar el código Renipress del establecimiento seleccionado.');
+                }
+
+                const response = await fetch(`${baseUrl}/usuario/listado-actas/sync-renipress`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ codigo: codigo })
+                });
+
+                const data = await response.json();
+
+                if (data && !data.error) {
+                    document.getElementById('servicios_renipress').value = JSON.stringify(data.servicios || []);
+                    document.getElementById('especialidades_renipress').value = JSON.stringify(data.especialidades || []);
+                    document.getElementById('cartera_renipress').value = JSON.stringify(data.cartera || []);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sincronización Exitosa',
+                        text: `Se han obtenido ${data.servicios?.length || 0} servicios de Susalud.`,
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error(data.error || 'Error desconocido al sincronizar.');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error de Sincronización', text: error.message });
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        }
     </script>
 @endpush

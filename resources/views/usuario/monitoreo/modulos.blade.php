@@ -93,11 +93,15 @@
                         <i data-lucide="{{ $data['icon'] }}" class="w-7 h-7"></i>
                     </div>
 
-                    <button @click="toggle('{{ $slug }}')" 
+                    @php
+                        $canEdit = (Auth::user()->role === 'admin' || $slug === 'infraestructura_2d');
+                    @endphp
+
+                    <button @if($canEdit) @click="toggle('{{ $slug }}')" @endif 
                             :class="activos.includes('{{ $slug }}') ? 'bg-indigo-600' : 'bg-slate-400'"
-                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shadow-inner">
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none shadow-inner {{ !$canEdit ? 'cursor-not-allowed opacity-50' : '' }}">
                         <span :class="activos.includes('{{ $slug }}') ? 'translate-x-6' : 'translate-x-1'"
-                              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300"></span>
+                               class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300"></span>
                     </button>
                 </div>
 
@@ -105,14 +109,25 @@
                 <div class="flex-1">
                     <template x-if="activos.includes('{{ $slug }}')">
                         @if($hasRoute)
-                        <a href="{{ route($routeName, $acta->id) }}" class="block p-6 group/link">
-                            <h3 class="text-slate-800 text-sm font-black uppercase tracking-tight leading-tight mb-2 group-hover/link:text-indigo-600 transition-colors">
-                                {{ $data['nombre'] }}
-                            </h3>
-                            <span class="text-[9px] font-black uppercase tracking-widest {{ $isCompleted ? 'text-emerald-500' : 'text-indigo-500' }}">
-                                {{ $isCompleted ? '✓ Evaluación Registrada' : '● Módulo Habilitado' }}
-                            </span>
-                        </a>
+                            @if($canEdit)
+                            <a href="{{ route($routeName, $acta->id) }}" class="block p-6 group/link">
+                                <h3 class="text-slate-800 text-sm font-black uppercase tracking-tight leading-tight mb-2 group-hover/link:text-indigo-600 transition-colors">
+                                    {{ $data['nombre'] }}
+                                </h3>
+                                <span class="text-[9px] font-black uppercase tracking-widest {{ $isCompleted ? 'text-emerald-500' : 'text-indigo-500' }}">
+                                    {{ $isCompleted ? '✓ Evaluación Registrada' : '● Módulo Habilitado' }}
+                                </span>
+                            </a>
+                            @else
+                            <div class="block p-6 opacity-60">
+                                <h3 class="text-slate-500 text-sm font-black uppercase tracking-tight leading-tight mb-2">
+                                    {{ $data['nombre'] }}
+                                </h3>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">
+                                    Acceso restringido para su rol
+                                </span>
+                            </div>
+                            @endif
                         @else
                         <div class="p-6 opacity-50">
                             <h3 class="text-slate-500 text-sm font-black uppercase tracking-tight leading-tight mb-2">{{ $data['nombre'] }}</h3>

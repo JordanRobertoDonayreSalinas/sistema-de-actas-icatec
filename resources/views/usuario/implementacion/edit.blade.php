@@ -51,6 +51,7 @@
     <form action="{{ route('usuario.implementacion.update', ['modulo' => $moduloKey, 'id' => $acta->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
+        <input type="hidden" name="renipress_data" id="renipress_data_input" value="{{ json_encode($acta->renipress_data) }}">
 
         {{-- === TARJETA 1: MÓDULO ================================================== --}}
         <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d1">
@@ -89,8 +90,10 @@
                 </div>
             </div>
         </div>
-
-        {{-- === TARJETA 2: ESTABLECIMIENTO ======================================== --}}
+        {{-- Campo oculto para persistir los datos de RENIPRESS --}}
+        <input type="hidden" name="renipress_data" id="renipress_data_input" value="{{ json_encode($acta->renipress_data) }}">
+        
+        {{-- === TARJETA 2: DATOS DEL ESTABLECIMIENTO ============================= --}}
         <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d2">
             <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
                 <div class="bg-teal-600 p-2.5 rounded-xl text-white">
@@ -152,6 +155,132 @@
                         </div>
                         <input type="text" id="responsable" name="responsable" required value="{{ $acta->responsable }}" placeholder="Nombre del médico jefe o responsable"
                             class="block w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:border-teal-400 uppercase">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- === TARJETA 2.1: SERVICIOS RENIPRESS (AUTOMÁTICO) ===================== --}}
+        <div id="section_renipress" class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d2 {{ empty($acta->renipress_data) ? 'hidden' : '' }}">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2.5 rounded-xl text-white">
+                        <i data-lucide="info" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Servicios Autorizados (RENIPRESS)</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Información sincronizada desde SUSALUD - No editable</p>
+                    </div>
+                </div>
+                <div id="sync_status_container" class="flex items-center gap-3">
+                    <button type="button" onclick="toggleRenipressManual()" class="text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-lg border border-amber-200 transition-colors">
+                        <i data-lucide="zap" class="w-3 h-3 inline pb-0.5"></i> MODO MANUAL
+                    </button>
+                    <div id="sync_status" class="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-black">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        SINCRONIZADO
+                    </div>
+                </div>
+            </div>
+            
+            {{-- SECCIÓN DE CONTINGENCIA: PROCESADOR DE PEGADO INTELIGENTE (MEJORADO) --}}
+            <div id="renipress_fallback" class="mt-8 pt-6 border-t border-slate-100 hidden">
+                <div class="bg-amber-50 rounded-2xl p-6 border border-amber-100">
+                    <div class="flex items-start gap-3 mb-4">
+                        <div class="bg-amber-500 p-1.5 rounded-lg text-white mt-0.5">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-amber-800 uppercase">Procesador de Pegado Inteligente (Contingencia)</h3>
+                            <p class="text-xs text-amber-600 mt-1">
+                                SUSALUD ha bloqueado la consulta automática. Por favor, abre el 
+                                <a href="http://renipress.susalud.gob.pe:8080/wb-renipress/inicio.htm" target="_blank" class="font-bold underline hover:text-amber-700">Portal de SUSALUD</a>, 
+                                busca el establecimiento, copia la tabla de servicios y pégala aquí abajo.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <textarea id="renipress_paste_area" rows="3" 
+                        class="w-full bg-white border border-amber-200 rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 transition-all font-mono"
+                        placeholder="Pega aquí la tabla de servicios (UPSS o Servicios Autorizados) para procesarla automáticamente..."></textarea>
+                    
+                    <button type="button" onclick="smartParseRenipress()" 
+                        class="mt-3 w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-amber-200 flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i> PROCESAR TEXTO PEGADO
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {{-- UPSS --}}
+                <div class="space-y-3">
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> UPSS
+                    </p>
+                    <div class="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/50">
+                        <table class="w-full text-left text-[10px]">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase">
+                                <tr>
+                                    <th class="px-3 py-2">Cód.</th>
+                                    <th class="px-3 py-2">Nombre</th>
+                                </tr>
+                            </thead>
+                            <tbody id="renipress_upss_body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- UPS --}}
+                <div class="space-y-3">
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span> UPS (Servicios)
+                    </p>
+                    <div class="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/50">
+                        <table class="w-full text-left text-[10px]">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase">
+                                <tr>
+                                    <th class="px-3 py-2">Cód.</th>
+                                    <th class="px-3 py-2">Servicio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="renipress_ups_body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Especialidades --}}
+                <div class="space-y-3">
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-violet-500 rounded-full"></span> Especialidades
+                    </p>
+                    <div class="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/50">
+                        <table class="w-full text-left text-[10px]">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase">
+                                <tr>
+                                    <th class="px-3 py-2">Cód.</th>
+                                    <th class="px-3 py-2">Especialidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="renipress_especialidades_body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Cartera --}}
+                <div class="space-y-3">
+                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full"></span> Cartera de Servicios
+                    </p>
+                    <div class="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/50">
+                        <table class="w-full text-left text-[10px]">
+                            <thead class="bg-slate-100 text-slate-600 font-bold uppercase">
+                                <tr>
+                                    <th class="px-3 py-2">Cód.</th>
+                                    <th class="px-3 py-2">Servicio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="renipress_cartera_body" class="divide-y divide-slate-100"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -379,79 +508,88 @@
             <textarea name="observaciones" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl text-sm p-4 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300 transition-all resize-none" placeholder="Ingrese anotaciones u observaciones sobre la implementación...">{{ $acta->observaciones }}</textarea>
         </div>
 
-        {{-- === TARJETA 9: EVIDENCIA FOTOGRAFICA ================================== --}}
+        {{-- === TARJETA 10: GESTIÓN DE FIRMAS DIGITALES ========================== --}}
         <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d8">
-            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                <div class="bg-orange-500 p-2.5 rounded-xl text-white">
-                    <i data-lucide="camera" class="w-5 h-5"></i>
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl text-white">
+                        <i data-lucide="signature" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Gestión de Firmas Digitales</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Sincroniza rúbricas desde el banco centralizado</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">Evidencia Fotográfica</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Adjunte hasta 2 fotografías como evidencia de la implementación</p>
+                <div class="flex gap-2">
+                    <button type="button" onclick="detectarFirmas()" class="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all border border-indigo-100">
+                        <i data-lucide="scan-face" class="w-3.5 h-3.5"></i>
+                        Detectar en Banco
+                    </button>
+                    <a href="{{ route('usuario.implementacion.pdf', ['modulo' => $moduloKey, 'id' => $acta->id, 'digital' => 1]) }}" target="_blank" id="btn-generar-digital" class="hidden flex items-center gap-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-100">
+                        <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+                        Ver PDF con Firmas
+                    </a>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {{-- FOTO 1 --}}
-                <div>
-                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Foto 1</p>
-                    @if($acta->foto1)
-                    <div class="relative group mb-3 rounded-2xl overflow-hidden border-2 border-orange-200" style="min-height:180px">
-                        <img src="{{ Storage::url($acta->foto1) }}" alt="Foto 1 actual" class="w-full h-48 object-cover">
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                            <span class="opacity-0 group-hover:opacity-100 text-white text-xs font-bold bg-black/60 px-3 py-1.5 rounded-full transition-all">Foto actual — sube otra para reemplazar</span>
-                        </div>
-                    </div>
-                    @endif
-                    <label for="foto1_input" class="group relative flex flex-col items-center justify-center gap-3 min-h-[140px] bg-orange-50/60 border-2 border-dashed border-orange-200 rounded-2xl cursor-pointer hover:bg-orange-50 hover:border-orange-400 transition-all overflow-hidden" id="foto1_label">
-                        <img id="foto1_preview" class="absolute inset-0 w-full h-full object-cover rounded-2xl hidden" alt="Nueva foto 1">
-                        <div id="foto1_placeholder" class="flex flex-col items-center gap-2 p-4 text-center z-10">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                <i data-lucide="image-plus" class="w-6 h-6 text-orange-400"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Participantes --}}
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado: Participantes</p>
+                    <div id="status-firmas-usuarios" class="space-y-2">
+                        @foreach($acta->usuarios as $usu)
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 dni-status-row" data-dni="{{ $usu->dni }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                                        <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-700">{{ $usu->apellido_paterno }} {{ $usu->nombres }}</p>
+                                        <p class="text-[10px] font-mono text-slate-400">{{ $usu->dni }}</p>
+                                    </div>
+                                </div>
+                                <div class="status-indicator">
+                                    <div class="animate-pulse w-4 h-4 bg-slate-200 rounded-full"></div>
+                                </div>
                             </div>
-                            <p class="text-sm font-bold text-slate-600">{{ $acta->foto1 ? 'Subir nueva foto 1 (reemplazará la actual)' : 'Haz clic para subir foto 1' }}</p>
-                            <p class="text-[10px] text-slate-400">JPG, PNG, WEBP — máx. 5 MB</p>
-                        </div>
-                    </label>
-                    <input type="file" id="foto1_input" name="foto1" accept="image/*" class="hidden"
-                        onchange="previewFotoEdit('foto1', this)">
-                    <div id="foto1_actions" class="hidden mt-2 flex justify-end">
-                        <button type="button" onclick="clearFotoEdit('foto1')" class="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
-                            <i data-lucide="x" class="w-3 h-3"></i> Quitar selección
-                        </button>
+                        @endforeach
                     </div>
                 </div>
 
-                {{-- FOTO 2 --}}
-                <div>
-                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Foto 2</p>
-                    @if($acta->foto2)
-                    <div class="relative group mb-3 rounded-2xl overflow-hidden border-2 border-orange-200" style="min-height:180px">
-                        <img src="{{ Storage::url($acta->foto2) }}" alt="Foto 2 actual" class="w-full h-48 object-cover">
-                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                            <span class="opacity-0 group-hover:opacity-100 text-white text-xs font-bold bg-black/60 px-3 py-1.5 rounded-full transition-all">Foto actual — sube otra para reemplazar</span>
-                        </div>
-                    </div>
-                    @endif
-                    <label for="foto2_input" class="group relative flex flex-col items-center justify-center gap-3 min-h-[140px] bg-orange-50/60 border-2 border-dashed border-orange-200 rounded-2xl cursor-pointer hover:bg-orange-50 hover:border-orange-400 transition-all overflow-hidden" id="foto2_label">
-                        <img id="foto2_preview" class="absolute inset-0 w-full h-full object-cover rounded-2xl hidden" alt="Nueva foto 2">
-                        <div id="foto2_placeholder" class="flex flex-col items-center gap-2 p-4 text-center z-10">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                <i data-lucide="image-plus" class="w-6 h-6 text-orange-400"></i>
+                {{-- Implementadores --}}
+                <div class="space-y-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado: Implementadores</p>
+                    <div id="status-firmas-implementadores" class="space-y-2">
+                        @foreach($acta->implementadores as $imp)
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 dni-status-row" data-dni="{{ $imp->dni }}">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm">
+                                        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-indigo-700">{{ $imp->apellido_paterno }} {{ $imp->nombres }}</p>
+                                        <p class="text-[10px] font-mono text-slate-400">{{ $imp->dni }}</p>
+                                    </div>
+                                </div>
+                                <div class="status-indicator">
+                                    <div class="animate-pulse w-4 h-4 bg-slate-200 rounded-full"></div>
+                                </div>
                             </div>
-                            <p class="text-sm font-bold text-slate-600">{{ $acta->foto2 ? 'Subir nueva foto 2 (reemplazará la actual)' : 'Haz clic para subir foto 2' }}</p>
-                            <p class="text-[10px] text-slate-400">JPG, PNG, WEBP — máx. 5 MB</p>
-                        </div>
-                    </label>
-                    <input type="file" id="foto2_input" name="foto2" accept="image/*" class="hidden"
-                        onchange="previewFotoEdit('foto2', this)">
-                    <div id="foto2_actions" class="hidden mt-2 flex justify-end">
-                        <button type="button" onclick="clearFotoEdit('foto2')" class="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
-                            <i data-lucide="x" class="w-3 h-3"></i> Quitar selección
-                        </button>
+                        @endforeach
                     </div>
                 </div>
+            </div>
 
+            <div class="mt-6 bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/50">
+                <div class="flex gap-3 items-start">
+                    <i data-lucide="info" class="w-5 h-5 text-indigo-500 mt-0.5"></i>
+                    <div>
+                        <p class="text-xs font-bold text-indigo-800">Sobre la Firma Digital</p>
+                        <p class="text-[11px] text-indigo-600 mt-1 leading-relaxed">
+                            Si todos los involucrados tienen su rúbrica cargada en el <a href="{{ route('admin.firmas.index') }}" target="_blank" class="font-black underline">Banco de Firmas</a>, podrá generar un PDF consolidado automáticamente. Caso contrario, deberá imprimir el documento y cargarlo escaneado en la sección de "Acta Firmada".
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -541,6 +679,9 @@
                                 document.getElementById('responsable').value = est.responsable ?? '';
                                 inputEst.value = `${est.codigo_establecimiento} - ${est.nombre_establecimiento}`;
                                 listaEst.classList.add('hidden');
+
+                                // Sincronizar RENIPRESS
+                                syncRenipressData(est.codigo_establecimiento);
                             });
                             listaEst.appendChild(li);
                         });
@@ -555,6 +696,169 @@
 
     document.addEventListener('click', (e) => {
         if (!inputEst.contains(e.target) && !listaEst.contains(e.target)) listaEst.classList.add('hidden');
+    });
+
+    // --- SINCRONIZACIÓN RENIPRESS ---
+    async function syncRenipressData(codigo) {
+        const section = document.getElementById('section_renipress');
+        const status = document.getElementById('sync_status');
+        const hiddenInput = document.getElementById('renipress_data_input');
+        
+        section.classList.remove('hidden');
+        status.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i> SINCRONIZANDO...';
+        lucide.createIcons();
+
+        try {
+            const response = await fetch(`/usuario/implementacion/ajax/renipress-sync?codigo=${codigo}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const data = result.data;
+                hiddenInput.value = JSON.stringify(data);
+                
+                // Llenar tablas
+                fillRenipressTable('renipress_upss_body', data.upss);
+                fillRenipressTable('renipress_ups_body', data.servicios);
+                fillRenipressTable('renipress_especialidades_body', data.especialidades);
+                fillRenipressTable('renipress_cartera_body', data.cartera);
+                
+                status.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> SINCRONIZADO';
+                status.classList.replace('bg-red-50', 'bg-emerald-50');
+                status.classList.replace('bg-blue-50', 'bg-emerald-50');
+                status.classList.replace('text-red-600', 'text-emerald-600');
+                status.classList.replace('text-blue-600', 'text-emerald-600');
+                document.getElementById('renipress_fallback').classList.add('hidden');
+            } else {
+                status.innerHTML = '<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-500"></i> PROTECCIÓN ACTIVA';
+                status.classList.replace('bg-blue-50', 'bg-red-50');
+                status.classList.replace('bg-emerald-50', 'bg-red-50');
+                status.classList.replace('text-blue-600', 'text-red-600');
+                status.classList.replace('text-emerald-600', 'text-red-600');
+                document.getElementById('renipress_fallback').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error syncing Renipress:', error);
+            status.innerHTML = '<i data-lucide="x" class="w-3.5 h-3.5 text-red-500"></i> ERROR DE CONEXIÓN';
+            // Mostrar fallback incluso en error de red/servidor
+            document.getElementById('renipress_fallback').classList.remove('hidden');
+        } finally {
+            lucide.createIcons();
+        }
+    }
+
+    function smartParseRenipress() {
+        const text = document.getElementById('renipress_paste_area').value;
+        if(!text.trim()) return;
+
+        const lines = text.split('\n');
+        
+        const data = {
+            upss: [],
+            servicios: [],
+            especialidades: [],
+            cartera: []
+        };
+
+        let currentCategory = 'upss'; 
+        
+        const headerCategorizer = (line) => {
+            const up = line.toUpperCase().trim();
+            // UPSS es un encabezado exacto
+            if (up === 'UPSS') return 'upss';
+            
+            // Unidades Productoras de Servicios - UPS
+            // IMPORTANTE: Evitar que la palabra 'UPSS' dentro de una línea active la categoría 'UPS'
+            if (up.includes('UNIDADES PRODUCTORAS') || (up.includes('UPS') && !up.includes('UPSS'))) return 'servicios';
+            
+            if (up.includes('ESPECIALIDADES')) return 'especialidades';
+            if (up.includes('CARTERA')) return 'cartera';
+            return null;
+        };
+
+        const itemRegex = /^([\d\-]{1,15})\s+(.+)$/i;
+        const ignoreTerms = ['CÓDIGO', 'NOMBRE', 'ESTADO', 'SERVICIO', 'ESPECIALIDAD', 'REGISTROS:', 'ANTERIOR', 'SIGUIENTE', 'BUSCAR'];
+
+        lines.forEach(line => {
+            const cleanLine = line.trim();
+            if (!cleanLine) return;
+
+            const newCat = headerCategorizer(cleanLine);
+            if (newCat) {
+                currentCategory = newCat;
+                return;
+            }
+
+            if (ignoreTerms.some(term => cleanLine.toUpperCase().startsWith(term))) return;
+
+            const match = cleanLine.match(itemRegex);
+            if(match) {
+                let codigo = match[1].trim();
+                let nombre = match[2].trim();
+                nombre = nombre.replace(/\s+(ACTIVO|INACTIVO)$/i, '').trim();
+                data[currentCategory].push({ codigo, nombre });
+            }
+        });
+
+        const totalFound = data.upss.length + data.servicios.length + data.especialidades.length + data.cartera.length;
+
+        if(totalFound > 0) {
+            document.getElementById('renipress_data_input').value = JSON.stringify(data);
+            
+            fillRenipressTable('renipress_upss_body', data.upss);
+            fillRenipressTable('renipress_ups_body', data.servicios);
+            fillRenipressTable('renipress_especialidades_body', data.especialidades);
+            fillRenipressTable('renipress_cartera_body', data.cartera);
+            
+            Swal.fire({ 
+                icon: 'success', 
+                title: '¡Datos Procesados!', 
+                html: `<div class="text-left text-xs space-y-1">
+                        <p><b>UPSS:</b> ${data.upss.length}</p>
+                        <p><b>UPS:</b> ${data.servicios.length}</p>
+                        <p><b>Especialidades:</b> ${data.especialidades.length}</p>
+                        <p><b>Cartera:</b> ${data.cartera.length}</p>
+                       </div>`,
+                timer: 4000
+            });
+        } else {
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'No se detectaron datos', 
+                text: 'Asegúrate de incluir los encabezados y copiar las tablas completas.' 
+            });
+        }
+    }
+
+    function fillRenipressTable(id, list) {
+        const body = document.getElementById(id);
+        body.innerHTML = '';
+        if (!list || list.length === 0) {
+            body.innerHTML = '<tr><td colspan="2" class="p-3 text-center text-slate-300 italic">No registra</td></tr>';
+            return;
+        }
+        list.forEach(item => {
+            const row = document.createElement('tr');
+            const estadoHtml = item.estado ? `<span class="ml-2 px-1.5 py-0.5 text-[9px] rounded-md ${item.estado.includes('ACTIVO') ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${item.estado}</span>` : '';
+            row.innerHTML = `<td class="px-3 py-1.5 font-mono text-slate-400 font-bold">${item.codigo}</td>
+                             <td class="px-3 py-1.5 text-slate-600 font-black">${item.nombre} ${estadoHtml}</td>`;
+            body.appendChild(row);
+        });
+    }
+
+    // Cargar datos guardados al iniciar
+    document.addEventListener('DOMContentLoaded', () => {
+        const stored = document.getElementById('renipress_data_input').value;
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                if (data) {
+                    fillRenipressTable('renipress_upss_body', data.upss);
+                    fillRenipressTable('renipress_ups_body', data.ups);
+                    fillRenipressTable('renipress_especialidades_body', data.especialidades);
+                    fillRenipressTable('renipress_cartera_body', data.cartera);
+                }
+            } catch(e) {}
+        }
     });
 
     // --- PARTICIPANTES (nuevos) ---
@@ -809,5 +1113,220 @@
         document.getElementById(slot + '_placeholder').classList.remove('hidden');
         document.getElementById(slot + '_actions').classList.add('hidden');
     }
+
+    // --- LÓGICA RENIPRESS (EDIT) ---
+    function toggleRenipressManual() {
+        const fallback = document.getElementById('renipress_fallback');
+        if (fallback.classList.contains('hidden')) {
+            fallback.classList.remove('hidden');
+            document.getElementById('renipress_paste_area').focus();
+        } else {
+            fallback.classList.add('hidden');
+        }
+    }
+
+    function fillRenipressTable(tableId, data) {
+        const body = document.getElementById(tableId);
+        if (!body) return;
+        body.innerHTML = '';
+        if (!data || data.length === 0) {
+            body.innerHTML = '<tr><td colspan="2" class="px-3 py-4 text-center text-slate-400 italic">No se encontraron registros</td></tr>';
+            return;
+        }
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            const estadoHtml = item.estado ? `<span class="ml-2 px-1.5 py-0.5 text-[9px] rounded-md ${item.estado.includes('ACTIVO') ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${item.estado}</span>` : '';
+            row.innerHTML = `<td class="px-3 py-2 font-mono text-slate-500 font-bold">${item.codigo}</td>
+                             <td class="px-3 py-2 text-slate-700 font-black">${item.nombre}${estadoHtml}</td>`;
+            body.appendChild(row);
+        });
+    }
+
+    async function syncRenipressData(codigo) {
+        const section = document.getElementById('section_renipress');
+        const status = document.getElementById('sync_status');
+        const hiddenInput = document.getElementById('renipress_data_input');
+        
+        if (section) section.classList.remove('hidden');
+        if (status) {
+            status.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i> SINCRONIZANDO...';
+            lucide.createIcons();
+        }
+
+        try {
+            const response = await fetch(`/usuario/implementacion/ajax/renipress-sync?codigo=${codigo}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const data = result.data;
+                hiddenInput.value = JSON.stringify(data);
+                
+                fillRenipressTable('renipress_upss_body', data.upss);
+                fillRenipressTable('renipress_ups_body', data.servicios); 
+                fillRenipressTable('renipress_especialidades_body', data.especialidades);
+                fillRenipressTable('renipress_cartera_body', data.cartera);
+                
+                if (status) {
+                    status.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> SINCRONIZADO';
+                    status.className = 'flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100';
+                }
+                document.getElementById('renipress_fallback').classList.add('hidden');
+            } else {
+                if (status) {
+                    status.innerHTML = '<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-500"></i> MODO MANUAL ACTIVO';
+                    status.className = 'flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black border border-amber-100';
+                }
+                document.getElementById('renipress_fallback').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error syncing Renipress:', error);
+            if (status) status.innerHTML = '<i data-lucide="x" class="w-3.5 h-3.5 text-red-500"></i> ERROR DE CONEXIÓN';
+            document.getElementById('renipress_fallback').classList.remove('hidden');
+        } finally {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+
+    function smartParseRenipress() {
+        const text = document.getElementById('renipress_paste_area').value;
+        if(!text.trim()) return;
+
+        const lines = text.split('\n');
+        const data = { upss: [], servicios: [], especialidades: [], cartera: [] };
+        let currentCategory = 'upss'; 
+        
+        const headerCategorizer = (line) => {
+            const up = line.toUpperCase().trim();
+            if (up === 'UPSS') return 'upss';
+            if (up.includes('UNIDADES PRODUCTORAS') || (up.includes('UPS') && !up.includes('UPSS'))) return 'servicios';
+            if (up.includes('ESPECIALIDADES')) return 'especialidades';
+            if (up.includes('CARTERA')) return 'cartera';
+            return null;
+        };
+
+        const itemRegex = /^([\d\-]{1,15})\s+(.+)$/i;
+        const ignoreTerms = ['CÓDIGO', 'NOMBRE', 'ESTADO', 'SERVICIO', 'ESPECIALIDAD', 'REGISTROS:', 'ANTERIOR', 'SIGUIENTE', 'BUSCAR'];
+
+        lines.forEach(line => {
+            const cleanLine = line.trim();
+            if (!cleanLine) return;
+            const newCat = headerCategorizer(cleanLine);
+            if (newCat) {
+                currentCategory = newCat;
+                return;
+            }
+            if (ignoreTerms.some(term => cleanLine.toUpperCase().startsWith(term))) return;
+            const match = cleanLine.match(itemRegex);
+            if(match) {
+                let codigo = match[1].trim();
+                let nombre = match[2].trim();
+                nombre = nombre.replace(/\s+(ACTIVO|INACTIVO)$/i, '').trim();
+                data[currentCategory].push({ codigo, nombre });
+            }
+        });
+
+        const totalFound = data.upss.length + data.servicios.length + data.especialidades.length + data.cartera.length;
+        if(totalFound > 0) {
+            document.getElementById('renipress_data_input').value = JSON.stringify(data);
+            fillRenipressTable('renipress_upss_body', data.upss);
+            fillRenipressTable('renipress_ups_body', data.servicios);
+            fillRenipressTable('renipress_especialidades_body', data.especialidades);
+            fillRenipressTable('renipress_cartera_body', data.cartera);
+            
+            Swal.fire({ 
+                icon: 'success', 
+                title: '¡Datos Procesados!', 
+                html: `<div class="text-left text-xs space-y-1">
+                        <p><b>UPSS:</b> ${data.upss.length}</p>
+                        <p><b>UPS:</b> ${data.servicios.length}</p>
+                        <p><b>Especialidades:</b> ${data.especialidades.length}</p>
+                        <p><b>Cartera:</b> ${data.cartera.length}</p>
+                       </div>`,
+                timer: 4000
+            });
+        }
+    }
+
+    // Cargar datos guardados al iniciar
+    document.addEventListener('DOMContentLoaded', () => {
+        const stored = document.getElementById('renipress_data_input').value;
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                if (data) {
+                    fillRenipressTable('renipress_upss_body', data.upss);
+                    fillRenipressTable('renipress_ups_body', data.servicios || data.ups);
+                    fillRenipressTable('renipress_especialidades_body', data.especialidades);
+                    fillRenipressTable('renipress_cartera_body', data.cartera);
+                }
+            } catch (e) { console.error('Error loading RENIPRESS data:', e); }
+        }
+    });
+    // --- DETECTAR FIRMAS DIGITALES ---
+    async function detectarFirmas() {
+        const rows = document.querySelectorAll('.dni-status-row');
+        const btnGenerar = document.getElementById('btn-generar-digital');
+        let totalFirmas = 0;
+
+        for (const row of rows) {
+            const dni = row.getAttribute('data-dni');
+            const indicator = row.querySelector('.status-indicator');
+            indicator.innerHTML = '<div class="animate-spin w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full font-bold"></div>';
+            
+            try {
+                const response = await fetch(`/admin/banco-firmas/search-ajax?term=${dni}`);
+                const results = await response.json();
+                
+                // Buscar resultado exacto
+                const match = results.find(r => r.text.includes(dni));
+                
+                if (match && match.has_firma) {
+                    indicator.innerHTML = '<div class="flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-wider animate-in zoom-in"><i data-lucide="check" class="w-3 h-3"></i></div>';
+                    totalFirmas++;
+                } else {
+                    indicator.innerHTML = '<div class="flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-500 rounded-lg text-[10px] font-black uppercase tracking-wider animate-in zoom-in"><i data-lucide="x" class="w-3 h-3"></i></div>';
+                }
+            } catch (error) {
+                indicator.innerHTML = '<div class="w-4 h-4 bg-slate-200 rounded-full"></div>';
+            }
+            refreshLucide();
+        }
+
+        if (totalFirmas > 0) {
+            btnGenerar.classList.remove('hidden');
+            btnGenerar.classList.add('animate-in', 'slide-in-from-right-10', 'duration-500');
+            
+            if (totalFirmas === rows.length) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Firmas Completas!',
+                    text: 'Se han detectado las firmas de todos los participantes. Ya puede generar el PDF consolidado.',
+                    timer: 3000,
+                    showConfirmButton: false,
+                    customClass: { popup: 'rounded-3xl' }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Firmas Parciales',
+                    text: `Se detectaron ${totalFirmas} de ${rows.length} firmas. El PDF solo incluirá las firmas encontradas.`,
+                    customClass: { popup: 'rounded-3xl' }
+                });
+            }
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin Firmas',
+                text: 'No se encontraron firmas en el banco para los participantes de esta acta.',
+                customClass: { popup: 'rounded-3xl' }
+            });
+        }
+    }
+
+    // Auto-ejecutar detección al cargar
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(detectarFirmas, 1000);
+    });
+
 </script>
 @endpush

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -230,7 +230,68 @@
 
     
 
-    <div style="margin-top: 15px;">
+    
+    {{-- === SECCIÓN RENIPRESS (AUTOMÁTICO) === --}}
+    @if(!empty($acta->renipress_data))
+    <div class="section">
+        <div class="section-header"><span style="color:#6b21a8;">&#9432;</span> SERVICIOS AUTORIZADOS (RENIPRESS)</div>
+        <table style="table-layout: fixed;">
+            <tr>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">UPSS</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['upss'] ?? [] as $u)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $u['codigo'] }}</td><td style="font-size: 7px;">{{ $u['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">Servicios Autorizados</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['servicios'] ?? [] as $u)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $u['codigo'] }}</td><td style="font-size: 7px;">{{ $u['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">Especialidades</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['especialidades'] ?? [] as $e)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $e['codigo'] }}</td><td style="font-size: 7px;">{{ $e['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+                <td style="vertical-align: top; width: 50%; padding: 0;">
+                    <table style="margin-bottom: 0; border: none;">
+                        <thead><tr><th colspan="2" style="background-color: #f1f5f9; color: #475569;">Cartera de Servicios</th></tr></thead>
+                        <tbody>
+                            @forelse($acta->renipress_data['cartera'] ?? [] as $c)
+                                <tr><td style="width: 40px; font-family: monospace; color: #94a3b8; font-size: 7px;">{{ $c['codigo'] }}</td><td style="font-size: 7px;">{{ $c['nombre'] }}</td></tr>
+                            @empty
+                                <tr><td colspan="2" style="text-align: center; color: #cbd5e1; font-style: italic; font-size: 7px;">No registra</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+<div style="margin-top: 15px;">
         <div class="section-header"><span style="color:#6b21a8;">&#10004;</span> COMPROMISO</div>
         <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
             <tr>
@@ -268,14 +329,14 @@
 
         @if($acta->foto1 || $acta->foto2)
     <div style="margin-top: 20px;">
-        <div class="section-header"><span style="color:#6b21a8;">&#9635;</span> EVIDENCIA FOTOGRÁFICA</div>
+        <div class="section-header"><span style="color:#6b21a8;">&#9635;</span> FOTOGRAF&#205;AS</div>
         <table class="foto-table">
             <tr>
                 @if($acta->foto1)
                 <td>
                     <div class="foto-wrapper">
                         <img src="{{ storage_path('app/public/' . $acta->foto1) }}">
-                        <div class="foto-caption">EVIDENCIA 01</div>
+                        <div class="foto-caption">FOTO 01</div>
                     </div>
                 </td>
                 @endif
@@ -283,7 +344,7 @@
                 <td>
                     <div class="foto-wrapper">
                         <img src="{{ storage_path('app/public/' . $acta->foto2) }}">
-                        <div class="foto-caption">EVIDENCIA 02</div>
+                        <div class="foto-caption">FOTO 02</div>
                     </div>
                 </td>
                 @endif
@@ -360,6 +421,11 @@
                 <div class="firmas-grid">
             @foreach ($firmantes as $f)
                 <div class="firma-card no-break">
+                    @if(isset($digital) && $digital && isset($firmas[$f['dni']]))
+                        <div style="height: 60px; margin-bottom: -35px; text-align: center;">
+                            <img src="{{ $firmas[$f['dni']]['url'] }}" style="max-height: 60px; max-width: 140px; object-contain: contain;">
+                        </div>
+                    @endif
                     <div class="linea-firma"></div>
                     <span class="nombre-firma">{{ $f['nombre'] }}</span>
                     <span class="cargo-firma">{{ $f['cargo'] }}</span>

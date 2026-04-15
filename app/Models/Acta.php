@@ -20,6 +20,7 @@ class Acta extends Model
         'tipo',               // 'asistencia' o 'monitoreo'
         'firmado_pdf',
         'firmado',
+        'anulado',
         // Columnas para las 5 imágenes
         'imagen1',
         'imagen2',

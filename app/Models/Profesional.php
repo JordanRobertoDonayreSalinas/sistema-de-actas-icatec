@@ -29,7 +29,9 @@ class Profesional extends Model
         'email',
         'cargo',
         'telefono',
-        'cargo', // <--- CAMPO NUEVO AGREGADO
+        'firma_path',
+        'tipo_firma',
+        'ultima_actualizacion_firma',
     ];
 
     /**
