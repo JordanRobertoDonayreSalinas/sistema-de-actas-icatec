@@ -133,7 +133,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                             <div>
                                 <label class="lbl">Fecha</label>
-                                <input type="date" name="fecha" value="{{ old('fecha', date('Y-m-d')) }}" required class="inp">
+                                <input type="date" name="fecha" value="{{ old('fecha', $acta->fecha ? \Carbon\Carbon::parse($acta->fecha)->format('Y-m-d') : date('Y-m-d')) }}" required class="inp">
                             </div>
                             <div>
                                 <label class="lbl">Establecimiento</label>

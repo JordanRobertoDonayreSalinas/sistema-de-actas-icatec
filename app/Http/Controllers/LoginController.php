@@ -26,6 +26,9 @@ class LoginController extends Controller
             'password.required' => 'Debes ingresar tu contraseña.',
         ]);
 
+        // Agregar condición global de cuenta activa
+        $credentials['status'] = 'active';
+
         // Intentar loguear
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();

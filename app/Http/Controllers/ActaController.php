@@ -85,7 +85,7 @@ class ActaController extends Controller
         })->where('anulado', 0)->count();
         $countAnuladas = (clone $query)->where('anulado', 1)->count();
 
-        $actas = $query->orderByDesc('id')->paginate(10)->appends($request->query());
+        $actas = $query->orderByDesc('fecha')->orderByDesc('id')->paginate(10)->appends($request->query());
         $implementadores = Acta::distinct()->orderBy('implementador')->pluck('implementador');
 
         // Cargar provincias solo si tienen actas
