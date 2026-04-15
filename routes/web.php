@@ -143,6 +143,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{acta}', [ActaController::class, 'show'])->name('show');
             Route::get('/{id}/pdf', [ActaController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
+            Route::post('/{id}/enviar-correo', [ActaController::class, 'enviarCorreo'])->name('enviarCorreo');
+            Route::get('/{id}/emails', [ActaController::class, 'getParticipantesEmails'])->name('get-emails');
 
             // AJAX endpoints para filtros dinámicos
             Route::get('/ajax/distritos', [ActaController::class, 'ajaxGetDistritos'])->name('ajax.distritos');

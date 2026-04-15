@@ -129,7 +129,7 @@
     <footer>
         <table class="footer-table">
             <tr>
-                <td class="txt-left">SISTEMA DE ACTAS DE ASISTENCIAS TÉCNICAS</td>
+                <td class="txt-left">HERRAMIENTAS DE IMPLEMENTACIÓN SIHCE</td>
                 <td class="txt-right"><span class="page-info"></span></td>
             </tr>
         </table>

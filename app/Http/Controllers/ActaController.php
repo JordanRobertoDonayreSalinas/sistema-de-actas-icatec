@@ -12,6 +12,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ActaAsistenciaMail;
 
 class ActaController extends Controller
 {
@@ -321,5 +323,67 @@ class ActaController extends Controller
         }
         $establecimientos = $query->orderBy('nombre', 'asc')->get(['id', 'nombre']);
         return response()->json($establecimientos);
+    }
+
+    public function enviarCorreo(Request $request, $id)
+    {
+        $request->validate([
+            'correos' => 'required|string',
+        ]);
+
+        $acta = Acta::with('establecimiento')->findOrFail($id);
+
+        if (!$acta->firmado_pdf || !Storage::disk('public')->exists($acta->firmado_pdf)) {
+            return response()->json(['message' => 'El acta no tiene un PDF firmado subido.'], 422);
+        }
+
+        // Procesar correos (soportar comas, puntos y comas, espacios)
+        $rawEmails = preg_split('/[,; ]+/', $request->correos);
+        $emails = collect($rawEmails)->map(fn($e) => trim($e))->filter(fn($e) => filter_var($e, FILTER_VALIDATE_EMAIL))->unique();
+
+        if ($emails->isEmpty()) {
+            return response()->json(['message' => 'No se ingresaron correos válidos.'], 422);
+        }
+
+        $enviados = 0;
+        $errores = 0;
+
+        foreach ($emails as $email) {
+            try {
+                Mail::to($email)->send(new ActaAsistenciaMail($acta));
+                $enviados++;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Error enviando correo a {$email}: " . $e->getMessage());
+                $errores++;
+            }
+        }
+
+        if ($enviados > 0) {
+            return response()->json([
+                'message' => "Se enviaron {$enviados} correos correctamente." . ($errores > 0 ? " Hubo {$errores} errores." : '')
+            ]);
+        }
+
+        return response()->json(['message' => 'Hubo un error al enviar los correos.'], 500);
+    }
+
+    public function getParticipantesEmails($id)
+    {
+        $acta = Acta::with('participantes')->findOrFail($id);
+        
+        $dnis = $acta->participantes->pluck('dni')->filter()->unique();
+        
+        $emails = Profesional::whereIn('doc', $dnis)
+            ->whereNotNull('email')
+            ->pluck('email')
+            ->unique()
+            ->values();
+
+        return response()->json([
+            'emails' => $emails,
+            'tema' => $acta->tema,
+            'fecha' => Carbon::parse($acta->fecha)->format('d/m/Y'),
+            'establecimiento' => $acta->establecimiento->nombre ?? 'N/A'
+        ]);
     }
 }
