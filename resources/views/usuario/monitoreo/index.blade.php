@@ -204,7 +204,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-800">
                         <tr>
-                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">#</th>
+                            <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">N° Acta</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Fecha</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider">Establecimiento</th>
                             <th class="px-3 py-3 text-[10px] font-bold text-white uppercase tracking-wider text-center">Provincia/Distrito</th>
@@ -266,7 +266,7 @@
                             @endphp
 
                             <tr class="hover:bg-blue-50/30 transition-colors group {{ $monitoreo->anulado ? 'bg-slate-50 opacity-65 grayscale-[0.5]' : '' }}">
-                                <td class="px-3 py-3 font-mono font-bold text-slate-700">{{ $monitoreo->id }}</td>
+                                <td class="px-3 py-3 font-mono font-bold text-slate-700">{{ str_pad($monitoreo->numero_acta, 5, '0', STR_PAD_LEFT) }}</td>
                                 <td class="px-3 py-3 text-slate-600">{{ \Carbon\Carbon::parse($monitoreo->fecha)->format('d/m/Y') }}</td>
                                 <td class="px-3 py-3">
                                     <div class="flex flex-col">

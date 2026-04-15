@@ -70,6 +70,7 @@ class TriajePdfController extends Controller
         ];
 
         // 4. Preparar Firmas
+        $prof = $dbCapacitacion->profesional ?? null;
         $signatureService = app(\App\Services\SignatureService::class);
         $firmaEntrevistado = null;
         if ($prof && $prof->doc) {
