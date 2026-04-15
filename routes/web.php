@@ -119,6 +119,8 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('dashboard')->name('dashboard.')->middleware('is_admin')->group(function () {
             Route::get('/', [UsuarioController::class, 'index'])->name('general');
             Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
+            Route::get('/programacion-sectores', [UsuarioController::class, 'mapaProgramacion'])->name('programacion.sectores');
+            Route::put('/programacion-sectores/{id}/sector', [UsuarioController::class, 'actualizarSector'])->name('programacion.sectores.update');
         });
 
         // AJAX para Dashboard - Equipos de Cómputo (Protegidos)

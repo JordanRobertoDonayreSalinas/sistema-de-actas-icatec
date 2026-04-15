@@ -164,6 +164,146 @@ class UsuarioController extends Controller
     }
 
     /**
+     * MAPA DE PROGRAMACIÓN POR SECTORES
+     * Carga la programación desde BD, cruza con datos de progresión y pasa a la vista.
+     */
+    public function mapaProgramacion()
+    {
+        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
+
+        // ── Códigos con implementación ───────────────────────────────
+        $codigosConImplementacion = collect();
+        $modulosPorCodigo = [];
+        foreach ($modulos as $config) {
+            $modelo = $config['modelo'];
+            if (!class_exists($modelo)) continue;
+            $actas = $modelo::select('codigo_establecimiento')->get();
+            foreach ($actas as $acta) {
+                $cod = $acta->codigo_establecimiento;
+                if (!$cod) continue;
+                $codigosConImplementacion->push($cod);
+                if (!isset($modulosPorCodigo[$cod])) $modulosPorCodigo[$cod] = [];
+                if (!in_array($config['nombre'], $modulosPorCodigo[$cod])) {
+                    $modulosPorCodigo[$cod][] = $config['nombre'];
+                }
+            }
+        }
+        $codigosConImplementacion = $codigosConImplementacion->unique()->values();
+
+        // ── IDs con asistencia ───────────────────────────────────────
+        $idsConAsistencia   = Acta::where('tipo', 'asistencia')->distinct()->pluck('establecimiento_id')->toArray();
+        $totalAsistenciaPorId = Acta::where('tipo', 'asistencia')
+            ->select('establecimiento_id', DB::raw('count(*) as total'))
+            ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
+
+        // ── IDs con monitoreo ────────────────────────────────────────
+        $idsConMonitoreo    = \App\Models\CabeceraMonitoreo::distinct()->pluck('establecimiento_id')->toArray();
+        $totalMonitoreoPorId = \App\Models\CabeceraMonitoreo::select('establecimiento_id', DB::raw('count(*) as total'))
+            ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
+
+        // ── Índice de establecimientos por ID ────────────────────────
+        $establecimientosIdx = \App\Models\Establecimiento::all(['id','codigo','nombre','distrito','provincia',
+            'latitud','longitud','categoria','red','microred'])
+            ->keyBy('id');
+
+        // ── Cargar programación ──────────────────────────────────────
+        $programacion = \App\Models\ProgramacionSector::orderBy('sector')->orderBy('cuadril')->get();
+
+        $programacion = $programacion->map(function ($p) use (
+            $establecimientosIdx, $codigosConImplementacion, $modulosPorCodigo,
+            $idsConAsistencia, $totalAsistenciaPorId, $idsConMonitoreo, $totalMonitoreoPorId
+        ) {
+            $est = $p->establecimiento_id ? ($establecimientosIdx[$p->establecimiento_id] ?? null) : null;
+
+            $lat = null; $lon = null;
+            $tieneImpl = false; $tieneAsist = false; $tieneMonitoreo = false;
+            $etapa = 0; $modulos = []; $totalImpl = 0; $totalAsist = 0; $totalMon = 0;
+            $nombreDisplay = $p->nombre_pdf;
+            $distrito = null; $red = null; $microred = null; $categoria = null; $codigo = null;
+
+            if ($est) {
+                $lat = (float) $est->latitud;
+                $lon = (float) $est->longitud;
+                if (abs($lat) > 180) $lat /= 100000000;
+                if (abs($lon) > 180) $lon /= 100000000;
+
+                $nombreDisplay = $est->nombre;
+                $distrito      = $est->distrito;
+                $red           = $est->red;
+                $microred      = $est->microred;
+                $categoria     = $est->categoria;
+                $codigo        = $est->codigo;
+
+                $tieneImpl      = $codigosConImplementacion->contains($est->codigo);
+                $tieneAsist     = in_array($est->id, $idsConAsistencia);
+                $tieneMonitoreo = in_array($est->id, $idsConMonitoreo);
+
+                if ($tieneImpl && $tieneAsist && $tieneMonitoreo) $etapa = 4;
+                elseif ($tieneMonitoreo) $etapa = 3;
+                elseif ($tieneAsist)     $etapa = 2;
+                elseif ($tieneImpl)      $etapa = 1;
+
+                $modulos    = $modulosPorCodigo[$est->codigo] ?? [];
+                $totalImpl  = count($modulos);
+                $totalAsist = (int)($totalAsistenciaPorId[$est->id] ?? 0);
+                $totalMon   = (int)($totalMonitoreoPorId[$est->id] ?? 0);
+            }
+
+            return [
+                'id'              => $p->id,
+                'nombre_pdf'      => $p->nombre_pdf,
+                'nombre'          => $nombreDisplay,
+                'provincia'       => $est ? $est->provincia : $p->provincia,  // Provincia real de la BD
+                'provincia_pdf'   => $p->provincia,                            // Provincia del PDF (referencia)
+                'sector'          => $p->sector,
+                'cuadril'         => $p->cuadril,
+                'comienzo'        => $p->comienzo ? $p->comienzo->format('d/m/Y') : null,
+                'fin'             => $p->fin      ? $p->fin->format('d/m/Y')      : null,
+                'comienzo_iso'    => $p->comienzo ? $p->comienzo->format('Y-m-d') : null,
+                'fin_iso'         => $p->fin      ? $p->fin->format('Y-m-d')      : null,
+                'dias'            => $p->dias,
+                'lat'             => $lat && !is_nan($lat) ? $lat : null,
+                'lon'             => $lon && !is_nan($lon) ? $lon : null,
+                'tiene_est'       => !!$est,
+                'establecimiento_id' => $p->establecimiento_id,
+                'distrito'        => $distrito,
+                'red'             => $red,
+                'microred'        => $microred,
+                'categoria'       => $categoria,
+                'codigo'          => $codigo,
+                'etapa'           => $etapa,
+                'tiene_impl'      => $tieneImpl,
+                'tiene_asist'     => $tieneAsist,
+                'tiene_monitoreo' => $tieneMonitoreo,
+                'modulos_impl'    => $modulos,
+                'total_impl'      => $totalImpl,
+                'total_asistencias' => $totalAsist,
+                'total_monitoreos'  => $totalMon,
+            ];
+        })->values();
+
+        return view('usuario.dashboard.mapa_sectores', compact('programacion'));
+    }
+
+    /**
+     * AJAX: Actualizar el sector de un registro de programación
+     */
+    public function actualizarSector(\Illuminate\Http\Request $request, $id)
+    {
+        $request->validate([
+            'sector'  => 'required|integer|min:1|max:30',
+            'cuadril' => 'nullable|string|max:15',
+        ]);
+
+        $prog = \App\Models\ProgramacionSector::findOrFail($id);
+        $prog->sector  = $request->sector;
+        $prog->cuadril = $request->cuadril ?? $prog->cuadril;
+        $prog->save();
+
+        return response()->json(['success' => true, 'sector' => $prog->sector, 'cuadril' => $prog->cuadril]);
+    }
+
+    /**
      * Dashboard de Equipos de Cómputo
      */
     public function dashboardEquipos()

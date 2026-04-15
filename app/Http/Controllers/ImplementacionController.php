@@ -104,7 +104,9 @@ class ImplementacionController extends Controller
             $actasTodas = $actasTodas->merge($actasModulo);
         }
 
-        $actasTodas = $actasTodas->sortByDesc('created_at')->values();
+        $actasTodas = $actasTodas->sortByDesc(function ($acta) {
+            return $acta['fecha'] . '_' . sprintf('%06d', $acta['id']);
+        })->values();
         $provincias = $provinciasSet->filter()->unique()->sort()->values();
         
         $distritos = collect();

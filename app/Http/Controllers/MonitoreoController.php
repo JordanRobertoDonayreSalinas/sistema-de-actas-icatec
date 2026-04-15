@@ -98,7 +98,7 @@ class MonitoreoController extends Controller
 
         $query->whereBetween('fecha', [$fecha_inicio, $fecha_fin]);
 
-        $monitoreos = $query->orderByDesc('id')->paginate(10)->appends($request->query());
+        $monitoreos = $query->orderByDesc('fecha')->orderByDesc('id')->paginate(10)->appends($request->query());
 
         // Contadores optimizados
         $totalActas = $monitoreos->total();

@@ -115,6 +115,11 @@
                             <i data-lucide="monitor" class="w-4 h-4"></i>
                             <span class="text-sm font-medium">Equipos de Cómputo</span>
                         </a>
+                        <a href="{{ route('usuario.dashboard.programacion.sectores') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2 rounded-lg transition-all {{ request()->routeIs('usuario.dashboard.programacion.sectores') ? 'bg-indigo-600/10 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="map" class="w-4 h-4"></i>
+                            <span class="text-sm font-medium">Programación por Sectores</span>
+                        </a>
                     </div>
                 </div>
                 @endif
