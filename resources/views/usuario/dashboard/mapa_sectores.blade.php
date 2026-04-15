@@ -104,56 +104,75 @@
     </div>
 
     {{-- ══ FILTROS ══ --}}
-    <div id="seccion-filtros" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-        <div class="flex flex-wrap items-end gap-3">
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase">Provincia</label>
-                <select id="filtro-provincia" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[130px]">
-                    <option value="">Todas</option>
-                    {{-- Poblado por JS desde datos reales de BD --}}
-                </select>
+    <div id="seccion-filtros" class="bg-white rounded-2xl shadow-sm border border-slate-200 transition-all duration-300">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors" onclick="document.getElementById('filtros-content').classList.toggle('hidden'); document.getElementById('icon-filtros-toggle').classList.toggle('rotate-180');">
+            <div class="flex items-center gap-2">
+                <i data-lucide="filter" class="w-4 h-4 text-indigo-500"></i>
+                <h3 class="text-[11px] font-black text-slate-600 uppercase tracking-widest">Filtros de Búsqueda</h3>
             </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase">Distrito</label>
-                <select id="filtro-distrito" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[160px]">
-                    <option value="">Todos</option>
-                </select>
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase">Sector</label>
-                <select id="filtro-sector" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[170px]">
-                    <option value="">Todos</option>
-                </select>
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase">Categoría</label>
-                <select id="filtro-categoria" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[140px]">
-                    <option value="">Todas</option>
-                </select>
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase">Etapa de Progresión</label>
-                <select id="filtro-etapa" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50">
-                    <option value="">Todas</option>
-                    <option value="0">Sin Inicio</option>
-                    <option value="1">Implementado</option>
-                    <option value="2">Con Asistencia</option>
-                    <option value="3">Con Monitoreo</option>
-                    <option value="4">Ciclo Completo</option>
-                </select>
-            </div>
-            <div class="flex items-center gap-3 ml-auto">
-                <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5 flex items-center gap-2">
-                    <span class="text-[9px] font-black text-indigo-400 uppercase">Mostrando</span>
-                    <span id="badge-visible" class="text-sm font-black text-indigo-700">{{ $programacion->count() }}</span>
-                    <span class="text-[9px] font-black text-indigo-400 uppercase">EESS</span>
+            <button type="button" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i data-lucide="chevron-up" id="icon-filtros-toggle" class="w-4 h-4 transition-transform duration-300 rotate-180"></i>
+            </button>
+        </div>
+        
+        <div id="filtros-content" class="p-5 hidden">
+            <div class="flex flex-wrap items-end gap-3">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase">Provincia</label>
+                    <select id="filtro-provincia" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[130px]">
+                        <option value="">Todas</option>
+                        {{-- Poblado por JS desde datos reales de BD --}}
+                    </select>
                 </div>
-                {{-- BOTÓN MODO FOCO --}}
-                <button id="btn-foco" title="Ver solo mapa"
-                    class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide bg-slate-900 text-white hover:bg-indigo-600 transition-all shadow-sm">
-                    <svg id="icon-expand" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                    <span id="label-foco">Ver solo mapa</span>
-                </button>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase">Distrito</label>
+                    <select id="filtro-distrito" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[150px]">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <!-- NUEVO FILTRO DE ESTABLECIMIENTO -->
+                <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
+                    <label class="text-[9px] font-black text-slate-400 uppercase">Establecimiento</label>
+                    <select id="filtro-establecimiento" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 w-full">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase">Sector</label>
+                    <select id="filtro-sector" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[130px]">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase">Categoría</label>
+                    <select id="filtro-categoria" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50 min-w-[100px]">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase">Progresión</label>
+                    <select id="filtro-etapa" class="text-xs border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-700 bg-slate-50">
+                        <option value="">Todas</option>
+                        <option value="0">Sin Inicio</option>
+                        <option value="1">Implementado</option>
+                        <option value="2">Con Asistencia</option>
+                        <option value="3">Con Monitoreo</option>
+                        <option value="4">Ciclo Completo</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-3 w-full justify-end mt-2">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5 flex items-center gap-2">
+                        <span class="text-[9px] font-black text-indigo-400 uppercase">Mostrando</span>
+                        <span id="badge-visible" class="text-sm font-black text-indigo-700">{{ $programacion->count() }}</span>
+                        <span class="text-[9px] font-black text-indigo-400 uppercase">EESS</span>
+                    </div>
+                    {{-- BOTÓN MODO FOCO --}}
+                    <button id="btn-foco" title="Ver solo mapa"
+                        class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wide bg-slate-900 text-white hover:bg-indigo-600 transition-all shadow-sm">
+                        <svg id="icon-expand" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        <span id="label-foco">Ver solo mapa</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -425,8 +444,10 @@
             d.innerHTML = '<span class="w-3 h-3 rounded-full flex-shrink-0 border-2 border-white shadow-sm" style="background:' + color + '"></span>'
                 + '<div><p class="text-[10px] font-bold text-slate-700 leading-none">Sector ' + s + '</p><p class="text-[8px] text-slate-400">' + prov + ' · ' + cnt + ' EESS</p></div>';
             d.addEventListener('click', function() {
-                document.getElementById('filtro-sector').value = s;
-                applyFilters();
+                var sel = document.getElementById('filtro-sector');
+                sel.value = s;
+                // Disparar el evento change para que la cascada de establecimientos se actualice
+                sel.dispatchEvent(new Event('change'));
             });
             cont.appendChild(d);
         });
@@ -484,6 +505,29 @@
         sel.value = distritos.includes(prevVal) ? prevVal : '';
     }
     poblarDistritos(null);
+
+    /* Poblar establecimientos (en cascada con provincia, distrito y sector) */
+    function poblarEstablecimientos(filtProv, filtDist, filtSec) {
+        var sel = document.getElementById('filtro-establecimiento');
+        var prevVal = sel.value;
+        sel.innerHTML = '<option value="">Todos</option>';
+        var source = programacion;
+        if (filtProv) source = source.filter(function(p){ return p.provincia === filtProv; });
+        if (filtDist) source = source.filter(function(p){ return p.distrito === filtDist; });
+        if (filtSec)  source = source.filter(function(p){ return String(p.sector) === String(filtSec); });
+        
+        var establecimientos = [...new Set(
+            source.filter(function(p){ return p.nombre; }).map(function(p){ return p.nombre; })
+        )].sort();
+        
+        establecimientos.forEach(function(e) {
+            var opt = document.createElement('option');
+            opt.value = e; opt.textContent = e;
+            sel.appendChild(opt);
+        });
+        sel.value = establecimientos.includes(prevVal) ? prevVal : '';
+    }
+    poblarEstablecimientos(null, null, null);
 
     /* Poblar categorías */
     function poblarCategorias() {
@@ -563,7 +607,7 @@
     /* ══════════════════════════════════════════════════════
        FILTROS
     ══════════════════════════════════════════════════════ */
-    var filtroProv = '', filtroSec = '', filtroEtapa = '', filtroDistrito = '', filtroCategoria = '';
+    var filtroProv = '', filtroSec = '', filtroEtapa = '', filtroDistrito = '', filtroCategoria = '', filtroEst = '';
 
     function applyFilters() {
         var group    = L.featureGroup();
@@ -575,7 +619,8 @@
                   && (filtroSec       === '' || String(p.sector) === String(filtroSec))
                   && (filtroEtapa     === '' || String(p.etapa)  === String(filtroEtapa))
                   && (filtroDistrito  === '' || (p.distrito  || '') === filtroDistrito)
-                  && (filtroCategoria === '' || (p.categoria || '') === filtroCategoria);
+                  && (filtroCategoria === '' || (p.categoria || '') === filtroCategoria)
+                  && (filtroEst       === '' || (p.nombre    || '') === filtroEst);
             if (ok) {
                 if (!map.hasLayer(mObj.marker)) map.addLayer(mObj.marker);
                 group.addLayer(mObj.marker);
@@ -591,22 +636,30 @@
         var secsVis = [...new Set(filtered.map(function(m){ return m.item.sector; }))].sort(function(a,b){return a-b;});
         buildLeyenda(secsVis.length ? secsVis : null);
 
-        if (group.getLayers().length > 0 && (filtroProv || filtroSec || filtroEtapa || filtroDistrito || filtroCategoria)) {
+        if (group.getLayers().length > 0 && (filtroProv || filtroSec || filtroEtapa || filtroDistrito || filtroCategoria || filtroEst)) {
             map.fitBounds(group.getBounds(), { padding:[50,50], maxZoom:13 });
         }
     }
 
     document.getElementById('filtro-provincia').addEventListener('change', function() {
-        filtroProv = this.value; filtroSec = ''; filtroDistrito = '';
+        filtroProv = this.value; filtroSec = ''; filtroDistrito = ''; filtroEst = '';
         poblarSelectSectores(filtroProv || null);
         poblarDistritos(filtroProv || null);
+        poblarEstablecimientos(filtroProv || null, null, null);
         applyFilters();
     });
     document.getElementById('filtro-distrito').addEventListener('change', function() {
-        filtroDistrito = this.value; applyFilters();
+        filtroDistrito = this.value; filtroEst = '';
+        poblarEstablecimientos(filtroProv || null, filtroDistrito || null, filtroSec || null);
+        applyFilters();
+    });
+    document.getElementById('filtro-establecimiento').addEventListener('change', function() {
+        filtroEst = this.value; applyFilters();
     });
     document.getElementById('filtro-sector').addEventListener('change', function() {
-        filtroSec = this.value; applyFilters();
+        filtroSec = this.value; filtroEst = '';
+        poblarEstablecimientos(filtroProv || null, filtroDistrito || null, filtroSec || null);
+        applyFilters();
     });
     document.getElementById('filtro-categoria').addEventListener('change', function() {
         filtroCategoria = this.value; applyFilters();
