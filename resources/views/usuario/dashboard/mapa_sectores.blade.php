@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Programación por Sectores — ICATEC')
+@section('title', 'Sectorización Propuesta — ICATEC')
 
 @section('header-content')
     <h1 class="text-xl font-bold text-slate-800 tracking-tight">Mapa de Programación por Sectores</h1>
@@ -454,98 +454,125 @@
         });
     }
 
-    /* Poblar provincias desde datos reales de la BD */
+    /* ── POBLACIÓN DE SELECTS DINÁMICOS ── */
+    var filtroProv = '', filtroSec = '', filtroEtapa = '', filtroDistrito = '', filtroCategoria = '', filtroEst = '';
+
+    function getFilteredSource(excludeFilter) {
+        return programacion.filter(function(p) {
+            var ok = true;
+            if (excludeFilter !== 'prov'     && filtroProv      !== '') ok = ok && (p.provincia === filtroProv);
+            if (excludeFilter !== 'dist'     && filtroDistrito  !== '') ok = ok && (p.distrito  === filtroDistrito);
+            if (excludeFilter !== 'sec'      && filtroSec       !== '') ok = ok && (String(p.sector) === String(filtroSec));
+            if (excludeFilter !== 'etapa'    && filtroEtapa     !== '') ok = ok && (String(p.etapa)  === String(filtroEtapa));
+            if (excludeFilter !== 'cat'      && filtroCategoria !== '') ok = ok && (p.categoria === filtroCategoria);
+            if (excludeFilter !== 'est'      && filtroEst       !== '') ok = ok && (p.nombre === filtroEst);
+            return ok;
+        });
+    }
+
     function poblarProvincias() {
         var sel = document.getElementById('filtro-provincia');
+        var prevVal = sel.value;
         sel.innerHTML = '<option value="">Todas</option>';
-        var provs = [...new Set(
-            programacion.filter(function(p){ return p.provincia; }).map(function(p){ return p.provincia; })
-        )].sort();
+        var source = getFilteredSource('prov');
+        var provs = [...new Set(source.filter(function(p){ return p.provincia; }).map(function(p){ return p.provincia; }))].sort();
         provs.forEach(function(pv) {
-            var cnt = programacion.filter(function(p){ return p.provincia === pv; }).length;
+            var cnt = source.filter(function(p){ return p.provincia === pv; }).length;
             var opt = document.createElement('option');
             opt.value = pv;
             opt.textContent = pv.charAt(0) + pv.slice(1).toLowerCase() + ' (' + cnt + ')';
             sel.appendChild(opt);
         });
+        if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
     }
-    poblarProvincias();
 
-    function poblarSelectSectores(filtProv) {
+    function poblarSectores() {
         var sel = document.getElementById('filtro-sector');
+        var prevVal = sel.value;
         sel.innerHTML = '<option value="">Todos</option>';
-        var secs = filtProv
-            ? [...new Set(programacion.filter(function(p){return p.provincia===filtProv;}).map(function(p){return p.sector;}))]
-            : sectoresUnicos;
-        secs.sort(function(a,b){return a-b;}).forEach(function(s) {
-            var item = programacion.find(function(p){return p.sector===s;});
+        var source = getFilteredSource('sec');
+        var secs = [...new Set(source.map(function(p){ return p.sector; }))].sort(function(a,b){return a-b;});
+        secs.forEach(function(s) {
+            var item = source.find(function(p){ return p.sector === s; });
             var opt  = document.createElement('option');
             opt.value = s;
             opt.textContent = 'Sector ' + s + (item ? ' — ' + item.provincia : '');
             sel.appendChild(opt);
         });
+        if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
     }
-    poblarSelectSectores(null);
 
-    /* Poblar distritos (en cascada con provincia) */
-    function poblarDistritos(filtProv) {
+    function poblarDistritos() {
         var sel = document.getElementById('filtro-distrito');
         var prevVal = sel.value;
         sel.innerHTML = '<option value="">Todos</option>';
-        var source = filtProv
-            ? programacion.filter(function(p){ return p.provincia === filtProv; })
-            : programacion;
-        var distritos = [...new Set(
-            source.filter(function(p){ return p.distrito; }).map(function(p){ return p.distrito; })
-        )].sort();
+        var source = getFilteredSource('dist');
+        var distritos = [...new Set(source.filter(function(p){ return p.distrito; }).map(function(p){ return p.distrito; }))].sort();
         distritos.forEach(function(d) {
             var opt = document.createElement('option');
             opt.value = d; opt.textContent = d;
             sel.appendChild(opt);
         });
-        sel.value = distritos.includes(prevVal) ? prevVal : '';
+        if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
     }
-    poblarDistritos(null);
 
-    /* Poblar establecimientos (en cascada con provincia, distrito y sector) */
-    function poblarEstablecimientos(filtProv, filtDist, filtSec) {
+    function poblarEstablecimientos() {
         var sel = document.getElementById('filtro-establecimiento');
         var prevVal = sel.value;
         sel.innerHTML = '<option value="">Todos</option>';
-        var source = programacion;
-        if (filtProv) source = source.filter(function(p){ return p.provincia === filtProv; });
-        if (filtDist) source = source.filter(function(p){ return p.distrito === filtDist; });
-        if (filtSec)  source = source.filter(function(p){ return String(p.sector) === String(filtSec); });
-        
-        var establecimientos = [...new Set(
-            source.filter(function(p){ return p.nombre; }).map(function(p){ return p.nombre; })
-        )].sort();
-        
+        var source = getFilteredSource('est');
+        var establecimientos = [...new Set(source.filter(function(p){ return p.nombre; }).map(function(p){ return p.nombre; }))].sort();
         establecimientos.forEach(function(e) {
             var opt = document.createElement('option');
             opt.value = e; opt.textContent = e;
             sel.appendChild(opt);
         });
-        sel.value = establecimientos.includes(prevVal) ? prevVal : '';
+        if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
     }
-    poblarEstablecimientos(null, null, null);
 
-    /* Poblar categorías */
     function poblarCategorias() {
         var sel = document.getElementById('filtro-categoria');
         var prevVal = sel.value;
         sel.innerHTML = '<option value="">Todas</option>';
-        var categorias = [...new Set(
-            programacion.filter(function(p){ return p.categoria; }).map(function(p){ return p.categoria; })
-        )].sort();
+        var source = getFilteredSource('cat');
+        var categorias = [...new Set(source.filter(function(p){ return p.categoria; }).map(function(p){ return p.categoria; }))].sort();
         categorias.forEach(function(c) {
             var opt = document.createElement('option');
             opt.value = c; opt.textContent = c;
             sel.appendChild(opt);
         });
-        sel.value = categorias.includes(prevVal) ? prevVal : '';
+        if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
     }
-    poblarCategorias();
+
+    function syncAllSelects() {
+        poblarProvincias();
+        poblarSectores();
+        poblarDistritos();
+        poblarEstablecimientos();
+        poblarCategorias();
+    }
+
+    /* ── LISTENERS ── */
+    document.getElementById('filtro-provincia').addEventListener('change', function(){
+        filtroProv = this.value; syncAllSelects(); applyFilters();
+    });
+    document.getElementById('filtro-sector').addEventListener('change', function(){
+        filtroSec = this.value; syncAllSelects(); applyFilters();
+    });
+    document.getElementById('filtro-distrito').addEventListener('change', function(){
+        filtroDistrito = this.value; syncAllSelects(); applyFilters();
+    });
+    document.getElementById('filtro-establecimiento').addEventListener('change', function(){
+        filtroEst = this.value; syncAllSelects(); applyFilters();
+    });
+    document.getElementById('filtro-categoria').addEventListener('change', function(){
+        filtroCategoria = this.value; syncAllSelects(); applyFilters();
+    });
+    document.getElementById('filtro-etapa').addEventListener('change', function(){
+        filtroEtapa = this.value; syncAllSelects(); applyFilters();
+    });
+
+    syncAllSelects();
 
     /* ══════════════════════════════════════════════════════
        TABLA
