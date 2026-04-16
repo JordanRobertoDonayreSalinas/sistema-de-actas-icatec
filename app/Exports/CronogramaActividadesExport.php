@@ -151,7 +151,7 @@ class CronogramaActividadesExport implements WithEvents, WithTitle
                     $cellStyle = [
                         'fill' => [
                             'fillType'   => Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => 'D9EAD3'], // verde claro (como en la imagen)
+                            'startColor' => ['rgb' => 'FFFFFF'], // blanco
                         ],
                         'alignment' => [
                             'horizontal' => Alignment::HORIZONTAL_CENTER,

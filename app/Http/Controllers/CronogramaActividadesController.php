@@ -389,6 +389,9 @@ class CronogramaActividadesController extends Controller
         // Carga enriquecida con participantes e imágenes
         $actividades = $this->recopilarActividades($fechaInicio, $fechaFin, $filtroProv, $filtroTipo, true);
 
+        // Para el Excel ordenamos ascendente (fecha más antigua primero)
+        $actividades = $actividades->sortBy('fecha')->values();
+
         $filename = 'Cronograma_Actividades_' . date('Ymd_His') . '.xlsx';
 
         return Excel::download(new CronogramaActividadesExport($actividades), $filename);
