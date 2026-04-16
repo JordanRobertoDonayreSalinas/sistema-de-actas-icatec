@@ -520,7 +520,6 @@
     var etapaLabels = {0:'Sin Inicio',1:'Implementado',2:'Con Asistencia',3:'Con Monitoreo',4:'Ciclo Completo'};
     var etapaBadge  = {0:'etapa-badge-0',1:'etapa-badge-1',2:'etapa-badge-2',3:'etapa-badge-3',4:'etapa-badge-4'};
 
-    /* GANTT */
     function buildGantt() {
         var REF_START = new Date('2026-04-07');
         var REF_END   = new Date('2027-03-23');
@@ -554,45 +553,95 @@
         });
     }
 
-    /* FILTROS EVENTOS */
-    function poblarSelectSectores() {
+    /* ── POBLACIÓN DE SELECTS ── */
+    function poblarProvincias() {
+        var sel = document.getElementById('filtro-provincia');
+        sel.innerHTML = '<option value="">Todas</option>';
+        var provs = [...new Set(programacion.map(function(p){ return p.provincia; }))].sort();
+        provs.forEach(function(pr){ var opt=document.createElement('option'); opt.value=pr; opt.textContent=pr; sel.appendChild(opt); });
+    }
+
+    function poblarDistritos(filtProv) {
+        var sel = document.getElementById('filtro-distrito');
+        var prevVal = sel.value;
+        sel.innerHTML = '<option value="">Todos</option>';
+        var source = filtProv ? programacion.filter(function(p){ return p.provincia === filtProv; }) : programacion;
+        var distritos = [...new Set(source.filter(function(p){ return p.distrito; }).map(function(p){ return p.distrito; }))].sort();
+        distritos.forEach(function(d){ var opt=document.createElement('option'); opt.value=d; opt.textContent=d; sel.appendChild(opt); });
+        if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
+    }
+
+    function poblarEstablecimientos(filtProv, filtDist, filtSec) {
+        var sel = document.getElementById('filtro-establecimiento');
+        var prevVal = sel.value;
+        sel.innerHTML = '<option value="">Todos</option>';
+        var source = programacion;
+        if (filtProv) source = source.filter(function(p){ return p.provincia === filtProv; });
+        if (filtDist) source = source.filter(function(p){ return p.distrito === filtDist; });
+        if (filtSec)  source = source.filter(function(p){ return String(p.sector) === String(filtSec); });
+        var eess = [...new Set(source.map(function(p){ return p.nombre; }))].sort();
+        eess.forEach(function(e){ var opt=document.createElement('option'); opt.value=e; opt.textContent=e; sel.appendChild(opt); });
+        if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
+    }
+
+    function poblarCategorias() {
+        var sel = document.getElementById('filtro-categoria');
+        sel.innerHTML = '<option value="">Todas</option>';
+        var cats = [...new Set(programacion.filter(function(p){ return p.categoria; }).map(function(p){ return p.categoria; }))].sort();
+        cats.forEach(function(c){ var opt=document.createElement('option'); opt.value=c; opt.textContent=c; sel.appendChild(opt); });
+    }
+
+    function poblarSectores() {
         var sel = document.getElementById('filtro-sector');
         sel.innerHTML = '<option value="">Todos</option>';
         sectoresUnicos.forEach(function(s){ var opt=document.createElement('option'); opt.value=s; opt.textContent='Sector '+s; sel.appendChild(opt); });
     }
-    document.getElementById('filtro-provincia').addEventListener('change', function(){ filtroProv=this.value; applyFilters(); });
-    document.getElementById('filtro-sector').addEventListener('change', function(){ filtroSec=this.value; applyFilters(); });
 
-    /* MODAL */
-    var editingId = null;
-    window.openModal = function(id, nombre, sector, cuadril) {
-        editingId = id; document.getElementById('modal-nombre').textContent = nombre;
-        document.getElementById('modal-sector').value = sector; document.getElementById('modal-cuadril').value = cuadril || '';
-        document.getElementById('modal-edit').classList.add('active');
-    };
-    function closeModal(){ document.getElementById('modal-edit').classList.remove('active'); editingId=null; }
-    document.getElementById('modal-close').onclick = closeModal; document.getElementById('modal-cancel').onclick = closeModal;
+    /* ── LISTENERS ── */
+    document.getElementById('filtro-provincia').addEventListener('change', function(){
+        filtroProv = this.value;
+        poblarDistritos(filtroProv);
+        poblarEstablecimientos(filtroProv, filtroDistrito, filtroSec);
+        applyFilters();
+    });
 
-    document.getElementById('modal-form').onsubmit = function(e){
-        e.preventDefault();
-        var s = document.getElementById('modal-sector').value;
-        var c = document.getElementById('modal-cuadril').value;
-        fetch(updateUrl.replace('__ID__', editingId), {
-            method:'PUT', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrfToken},
-            body: JSON.stringify({sector:s, cuadril:c})
-        }).then(function(r){return r.json()}).then(function(data){
-            if(data.success){
-                var p = programacion.find(function(i){return i.id == editingId});
-                if(p){ p.sector = data.sector; p.cuadril = data.cuadril; }
-                var mObj = markersList.find(function(m){return m.item.id == editingId});
-                if(mObj){ mObj.marker.setStyle({fillColor:sectorColors[data.sector]}); mObj.marker.bindPopup(buildPopup(mObj.item)); }
-                applyFilters(true); closeModal();
-            }
-        });
+    document.getElementById('filtro-distrito').addEventListener('change', function(){
+        filtroDistrito = this.value;
+        poblarEstablecimientos(filtroProv, filtroDistrito, filtroSec);
+        applyFilters();
+    });
+
+    document.getElementById('filtro-establecimiento').addEventListener('change', function(){
+        filtroEst = this.value;
+        applyFilters();
+    });
+
+    document.getElementById('filtro-sector').addEventListener('change', function(){
+        filtroSec = this.value;
+        poblarEstablecimientos(filtroProv, filtroDistrito, filtroSec);
+        applyFilters();
+    });
+
+    document.getElementById('filtro-categoria').addEventListener('change', function(){
+        filtroCategoria = this.value;
+        applyFilters();
+    });
+
+    document.getElementById('filtro-etapa').addEventListener('change', function(){
+        filtroEtapa = this.value;
+        applyFilters();
+    });
+
+    function initFilters() {
+        poblarProvincias();
+        poblarDistritos(null);
+        poblarEstablecimientos(null, null, null);
+        poblarCategorias();
+        poblarSectores();
     }
 
     /* INICIALIZAR */
-    poblarSelectSectores();
+    initFilters();
     applyFilters();
     var allG = L.featureGroup(markersList.map(function(m){return m.marker}));
     if(allG.getLayers().length > 0) map.fitBounds(allG.getBounds(), {padding:[40,40]});
