@@ -116,6 +116,24 @@
                 <p class="text-slate-500 text-sm mt-2 max-w-2xl mx-auto">Complete todos los requerimientos para el registro del acta</p>
             </div>
 
+            @if ($errors->any())
+                <div class="max-w-4xl mx-auto mb-8 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm animate-pulse">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i data-lucide="alert-circle" class="h-5 w-5 text-red-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-bold text-red-800">Se encontraron errores de validación:</h3>
+                            <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <form id="actaForm"
                   action="{{ route('usuario.actas.update', $acta->id) }}"
                   method="POST"
@@ -288,6 +306,7 @@
                                         <th style="width:170px">Documento</th>
                                         <th>Apellidos</th>
                                         <th>Nombres</th>
+                                        <th>Correo electrónico</th>
                                         <th style="width:180px">Cargo</th>
                                         <th style="width:200px">Módulo</th>
                                         <th style="width:70px" title="¿Es Implementador?">¿Impl.?</th>
@@ -311,6 +330,7 @@
                                             </td>
                                             <td><input type="text" name="participantes[0][apellidos]" data-base="apellidos" placeholder="Apellidos" required></td>
                                             <td><input type="text" name="participantes[0][nombres]" data-base="nombres" placeholder="Nombres" required></td>
+                                            <td><input type="email" name="participantes[0][correo]" data-base="correo" placeholder="Correo electrónico"></td>
                                             <td><input type="text" name="participantes[0][cargo]" data-base="cargo" placeholder="Cargo"></td>
                                             <td>
                                                 <select name="participantes[0][modulo]" data-base="modulo">
@@ -337,6 +357,7 @@
                                                 </td>
                                                 <td><input type="text" name="participantes[{{ $i }}][apellidos]" data-base="apellidos" value="{{ $p['apellidos'] ?? $p->apellidos ?? '' }}" required></td>
                                                 <td><input type="text" name="participantes[{{ $i }}][nombres]" data-base="nombres" value="{{ $p['nombres'] ?? $p->nombres ?? '' }}" required></td>
+                                                <td><input type="email" name="participantes[{{ $i }}][correo]" data-base="correo" value="{{ $p['correo'] ?? $p->correo ?? '' }}" placeholder="Correo"></td>
                                                 <td><input type="text" name="participantes[{{ $i }}][cargo]" data-base="cargo" value="{{ $p['cargo'] ?? $p->cargo ?? '' }}"></td>
                                                 <td>
                                                     <select name="participantes[{{ $i }}][modulo]" data-base="modulo">
@@ -374,6 +395,7 @@
                         </td>
                         <td><input type="text" data-base="apellidos" placeholder="Apellidos" required></td>
                         <td><input type="text" data-base="nombres" placeholder="Nombres" required></td>
+                        <td><input type="email" data-base="correo" placeholder="Correo electrónico"></td>
                         <td><input type="text" data-base="cargo" placeholder="Cargo"></td>
                         <td>
                             <select data-base="modulo">
@@ -1111,6 +1133,7 @@
                             ((data.apellido_paterno || '') + ' ' + (data.apellido_materno || '')).trim()
                         );
                         fila.find('input[data-base="nombres"]').val(data.nombres || '');
+                        fila.find('input[data-base="correo"]').val(data.email || '');
                         fila.find('input[data-base="cargo"]').val(data.cargo || '');
                         Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:2500 })
                             .fire({ icon:'success', title:'Datos cargados correctamente' });

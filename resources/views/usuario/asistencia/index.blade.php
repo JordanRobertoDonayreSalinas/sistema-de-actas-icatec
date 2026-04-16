@@ -444,51 +444,75 @@
                 .then(data => {
                     const defaultEmails = data.emails || [];
                     const summary = `
-                        <div class="text-left mb-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Detalles del Acta</p>
-                            <div class="grid grid-cols-2 gap-2 text-[11px]">
-                                <div><span class="text-slate-500">🏥 Establ.:</span> <span class="font-bold">${data.establecimiento}</span></div>
-                                <div><span class="text-slate-500">📅 Fecha:</span> <span class="font-bold">${data.fecha}</span></div>
-                                <div class="col-span-2"><span class="text-slate-500">📝 Tema:</span> <span class="font-bold">${data.tema}</span></div>
+                        <div class="text-left mb-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Detalles del Acta</p>
+                            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                                <div><span class="text-slate-500">🏥</span> <span class="font-bold">${data.establecimiento}</span></div>
+                                <div><span class="text-slate-500">📅</span> <span class="font-bold">${data.fecha}</span></div>
+                                <div class="col-span-2"><span class="text-slate-500">📝</span> <span class="font-bold">${data.tema}</span></div>
                             </div>
                         </div>
                         <div class="text-left mb-2">
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Destinatarios</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Destinatarios</label>
+                                ${defaultEmails.length > 0 ? '<button type="button" id="btn-precargar" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 transition-all">⚡ Precargar participantes ('+defaultEmails.length+')</button>' : ''}
+                            </div>
                             <div id="chips-wrapper" class="email-chips-container">
-                                <input type="text" id="tag-input" class="email-chip-input" placeholder="Escriba correo y press ; o Enter">
+                                <input type="text" id="tag-input" class="email-chip-input" placeholder="Escriba un correo y presione Enter o ;">
                             </div>
                             <p class="text-[9px] text-slate-400 mt-1 italic">Use coma (,), punto y coma (;) o Enter para agregar.</p>
+                            <div id="chip-list-preview" class="mt-2 hidden">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">📋 Lista de envío:</p>
+                                <div id="chip-list-container" class="flex flex-wrap gap-1 max-h-16 overflow-y-auto"></div>
+                            </div>
                         </div>
                     `;
 
                     Swal.fire({
-                        title: 'Enviar Acta por Correo',
+                        title: '✉️ Enviar Acta por Correo',
                         html: summary,
                         showCancelButton: true,
                         confirmButtonText: '🚀 Enviar Ahora',
                         cancelButtonText: 'Cancelar',
                         confirmButtonColor: '#10b981',
-                        customClass: {
-                            container: 'swal-wide-container'
-                        },
+                        width: '520px',
                         didOpen: () => {
                             const wrapper = document.getElementById('chips-wrapper');
                             const input = document.getElementById('tag-input');
-                            const tags = new Set(defaultEmails);
+                            const listPreview = document.getElementById('chip-list-preview');
+                            const listContainer = document.getElementById('chip-list-container');
+                            const tags = new Set();
 
                             const renderTags = () => {
-                                // Limpiar chips actuales (excepto input)
                                 wrapper.querySelectorAll('.email-chip').forEach(c => c.remove());
+                                listContainer.innerHTML = '';
                                 tags.forEach(email => {
+                                    // Chip en el input area
                                     const chip = document.createElement('div');
                                     chip.className = 'email-chip';
                                     chip.innerHTML = `${email} <button type="button" data-email="${email}"><i data-lucide="x" class="w-3 h-3"></i></button>`;
                                     wrapper.insertBefore(chip, input);
+                                    // Item en la sublista
+                                    const item = document.createElement('span');
+                                    item.className = 'inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full';
+                                    item.innerHTML = `<i data-lucide="mail" class="w-2.5 h-2.5"></i> ${email}`;
+                                    listContainer.appendChild(item);
                                 });
+                                listPreview.classList.toggle('hidden', tags.size === 0);
                                 if (window.lucide) window.lucide.createIcons();
                             };
 
-                            renderTags();
+                            // Botón precargar participantes
+                            const btnPrecargar = document.getElementById('btn-precargar');
+                            if (btnPrecargar) {
+                                btnPrecargar.addEventListener('click', () => {
+                                    defaultEmails.forEach(e => tags.add(e.toLowerCase()));
+                                    renderTags();
+                                    btnPrecargar.disabled = true;
+                                    btnPrecargar.textContent = '✅ Participantes cargados';
+                                    btnPrecargar.className = 'text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1';
+                                });
+                            }
 
                             wrapper.addEventListener('click', () => input.focus());
 
@@ -520,7 +544,6 @@
                                 }
                             });
 
-                            // Guardar tags en el objeto Swal para preConfirm
                             window._currentTags = tags;
                         },
                         preConfirm: () => {
@@ -553,7 +576,7 @@
                         if (result.isConfirmed) {
                             Swal.fire({
                                 icon: 'success',
-                                title: '¡Envío Exitoso!',
+                                title: '✅ ¡Envío Exitoso!',
                                 text: result.value.message,
                                 confirmButtonColor: '#10b981'
                             });

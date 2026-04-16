@@ -138,10 +138,16 @@ class ActaController extends Controller
             'fecha' => 'required|date',
             'establecimiento_id' => 'required|exists:establecimientos,id',
             'responsable' => 'required|string',
-            'tema' => 'required',
-            'modalidad' => 'required',
-            'implementador' => 'required',
+            'modalidad' => 'required|string',
+            'implementador' => 'required|string',
+            'tema' => 'required|string',
+            'acuerdos' => 'required|array|min:1',
+            'acuerdos.*.descripcion' => 'required|string',
             'imagenes.*' => 'image|mimes:jpeg,png,jpg|max:2048'
+        ], [
+            'acuerdos.required' => 'Debe registrar al menos un acuerdo.',
+            'acuerdos.min' => 'Debe registrar al menos un acuerdo.',
+            'acuerdos.*.descripcion.required' => 'La descripción de todos los acuerdos es obligatoria.'
         ]);
 
         try {
@@ -177,22 +183,20 @@ class ActaController extends Controller
                 foreach ($request->participantes as $p) {
                     $acta->participantes()->create($p);
 
-                    // Auto-guardar en maestro mon_profesionales si no existe
+                    // Auto-actualizar/guardar en maestro mon_profesionales
                     $docNum = trim($p['dni'] ?? '');
                     if ($docNum !== '') {
-                        $existeEnMaestro = Profesional::where('doc', $docNum)->exists();
-                        if (!$existeEnMaestro) {
-                            Profesional::create([
+                        Profesional::updateOrCreate(
+                            ['doc' => $docNum],
+                            [
                                 'tipo_doc'         => 'DNI',
-                                'doc'              => $docNum,
                                 'apellido_paterno' => $p['apellidos'] ?? '',
-                                'apellido_materno' => '',
+                                'apellido_materno' => '', // Asistencia Técnica usa campo único 'apellidos'
                                 'nombres'          => $p['nombres'] ?? '',
                                 'cargo'            => $p['cargo'] ?? null,
-                                'email'            => null,
-                                'telefono'         => null,
-                            ]);
-                        }
+                                'email'            => $p['correo'] ?? null,
+                            ]
+                        );
                     }
                 }
             }
@@ -203,13 +207,23 @@ class ActaController extends Controller
             }
             if ($request->has('acuerdos')) {
                 foreach ($request->acuerdos as $ac) {
-                    $acta->acuerdos()->create($ac);
+                    if (!empty($ac['descripcion'])) {
+                        $acta->acuerdos()->create($ac);
+                    }
                 }
             }
-            if ($request->has('observaciones')) {
-                foreach ($request->observaciones as $obs) {
+
+            // Manejo de Observaciones: Si no hay ninguna o están vacías, poner "SIN OBSERVACIONES"
+            $observaciones = $request->get('observaciones', []);
+            $hayObservacion = false;
+            foreach ($observaciones as $obs) {
+                if (!empty(trim($obs['descripcion'] ?? ''))) {
                     $acta->observaciones()->create($obs);
+                    $hayObservacion = true;
                 }
+            }
+            if (!$hayObservacion) {
+                $acta->observaciones()->create(['descripcion' => 'SIN OBSERVACIONES']);
             }
 
             DB::commit();
@@ -233,7 +247,17 @@ class ActaController extends Controller
         $request->validate([
             'fecha' => 'required|date',
             'establecimiento_id' => 'required|exists:establecimientos,id',
+            'responsable' => 'required|string',
+            'modalidad' => 'required|string',
+            'implementador' => 'required|string',
+            'tema' => 'required|string',
+            'acuerdos' => 'required|array|min:1',
+            'acuerdos.*.descripcion' => 'required|string',
             'imagenes.*' => 'image|mimes:jpeg,png,jpg|max:2048'
+        ], [
+            'acuerdos.required' => 'Debe registrar al menos un acuerdo.',
+            'acuerdos.min' => 'Debe registrar al menos un acuerdo.',
+            'acuerdos.*.descripcion.required' => 'La descripción de todos los acuerdos es obligatoria.'
         ]);
 
         try {
@@ -280,6 +304,22 @@ class ActaController extends Controller
             if ($request->has('participantes')) {
                 foreach ($request->participantes as $p) {
                     $acta->participantes()->create($p);
+
+                    // Sincronizar con el maestro
+                    $docNum = trim($p['dni'] ?? '');
+                    if ($docNum !== '') {
+                        Profesional::updateOrCreate(
+                            ['doc' => $docNum],
+                            [
+                                'tipo_doc'         => 'DNI',
+                                'apellido_paterno' => $p['apellidos'] ?? '',
+                                'apellido_materno' => '', 
+                                'nombres'          => $p['nombres'] ?? '',
+                                'cargo'            => $p['cargo'] ?? null,
+                                'email'            => $p['correo'] ?? null,
+                            ]
+                        );
+                    }
                 }
             }
             $acta->actividades()->delete();
@@ -291,14 +331,23 @@ class ActaController extends Controller
             $acta->acuerdos()->delete();
             if ($request->has('acuerdos')) {
                 foreach ($request->acuerdos as $ac) {
-                    $acta->acuerdos()->create($ac);
+                    if (!empty($ac['descripcion'])) {
+                        $acta->acuerdos()->create($ac);
+                    }
                 }
             }
+
             $acta->observaciones()->delete();
-            if ($request->has('observaciones')) {
-                foreach ($request->observaciones as $obs) {
+            $observaciones = $request->get('observaciones', []);
+            $hayObservacion = false;
+            foreach ($observaciones as $obs) {
+                if (!empty(trim($obs['descripcion'] ?? ''))) {
                     $acta->observaciones()->create($obs);
+                    $hayObservacion = true;
                 }
+            }
+            if (!$hayObservacion) {
+                $acta->observaciones()->create(['descripcion' => 'SIN OBSERVACIONES']);
             }
 
             DB::commit();
@@ -430,16 +479,24 @@ class ActaController extends Controller
         
         $dnis = $acta->participantes->pluck('dni')->filter()->unique();
         
-        $emails = Profesional::whereIn('doc', $dnis)
+        // 1. Correos desde la tabla participantes
+        $emailsPart = $acta->participantes->pluck('correo')->filter()->unique()->toArray();
+        
+        // 2. Correos desde el maestro de profesionales
+        $emailsProf = Profesional::whereIn('doc', $dnis)
             ->whereNotNull('email')
             ->pluck('email')
             ->unique()
-            ->values();
+            ->toArray();
+            
+        // Combinar y limpiar duplicados
+        $todas = array_unique(array_merge($emailsPart, $emailsProf));
+        $emailsFinal = collect($todas)->values();
 
         return response()->json([
-            'emails' => $emails,
+            'emails' => $emailsFinal,
             'tema' => $acta->tema,
-            'fecha' => Carbon::parse($acta->fecha)->format('d/m/Y'),
+            'fecha' => \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y'),
             'establecimiento' => $acta->establecimiento->nombre ?? 'N/A'
         ]);
     }
