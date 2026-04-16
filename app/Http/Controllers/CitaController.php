@@ -30,7 +30,7 @@ class CitaController extends Controller
 
             $contenidoJson = $moduloJson->contenido ?? [];
             $registro->tipo_conectividad = $contenidoJson['tipo_conectividad'] ?? null;
-            $registro->wifi_fuente       = $contenidoJson['wifi_fuente'] ?? null;
+            $registro->wifi_fuente = $contenidoJson['wifi_fuente'] ?? null;
             $registro->operador_servicio = $contenidoJson['operador_servicio'] ?? null;
 
             $registro->capacitacion_entes = $contenidoJson['capacitacion_entes'] ?? [];
@@ -83,7 +83,7 @@ class CitaController extends Controller
 
             // 3. Actualizar Nombres (Separación Inteligente)
             if (!empty($input['personal_nombre'])) {
-                $nombreCompleto = mb_mb_strtoupper(trim($input['personal_nombre'], 'UTF-8'), 'UTF-8');
+                $nombreCompleto = mb_strtoupper(trim($input['personal_nombre'], 'UTF-8'), 'UTF-8');
 
                 // Solo procesamos si el nombre cambió o es un registro nuevo
                 $nombreActual = trim(($profesional->apellido_paterno ?? '') . ' ' . ($profesional->apellido_materno ?? '') . ' ' . ($profesional->nombres ?? ''));
@@ -96,17 +96,17 @@ class CitaController extends Controller
                         // Caso: PEREZ LOPEZ JUAN CARLOS (4 o más)
                         $profesional->apellido_paterno = array_shift($partes); // PEREZ
                         $profesional->apellido_materno = array_shift($partes); // LOPEZ
-                        $profesional->nombres          = implode(' ', $partes); // JUAN CARLOS
+                        $profesional->nombres = implode(' ', $partes); // JUAN CARLOS
                     } elseif ($num == 3) {
                         // Caso: PEREZ LOPEZ JUAN
                         $profesional->apellido_paterno = $partes[0];
                         $profesional->apellido_materno = $partes[1];
-                        $profesional->nombres          = $partes[2];
+                        $profesional->nombres = $partes[2];
                     } elseif ($num == 2) {
                         // Caso: PEREZ JUAN (Asumimos Paterno y Nombre)
                         $profesional->apellido_paterno = $partes[0];
                         $profesional->apellido_materno = '';
-                        $profesional->nombres          = $partes[1];
+                        $profesional->nombres = $partes[1];
                     } else {
                         // Caso raro: JUAN
                         $profesional->nombres = $nombreCompleto;
@@ -125,47 +125,47 @@ class CitaController extends Controller
             // Personal
             'fecha_registro' => $input['fecha_registro'] ?? $registro->fecha_registro ?? date('Y-m-d'),
             'personal_nombre' => $input['personal_nombre'] ?? null,
-            'personal_dni'    => $input['personal_dni'] ?? null,
-            'personal_turno'  => $input['personal_turno'] ?? null,
-            'personal_roles'  => $input['personal_rol'] ?? [],
+            'personal_dni' => $input['personal_dni'] ?? null,
+            'personal_turno' => $input['personal_turno'] ?? null,
+            'personal_roles' => $input['personal_rol'] ?? [],
 
-            'personal_correo'   => $input['personal_correo'] ?? null,
-            'personal_celular'  => $input['personal_celular'] ?? null,
-            'personal_cargo'    => $input['personal_cargo'] ?? null,
+            'personal_correo' => $input['personal_correo'] ?? null,
+            'personal_celular' => $input['personal_celular'] ?? null,
+            'personal_cargo' => $input['personal_cargo'] ?? null,
 
-            'utiliza_sihce'          => $input['utiliza_sihce'] ?? 'NO',
-            'firma_dj'               => $input['firma_dj'] ?? null,
+            'utiliza_sihce' => $input['utiliza_sihce'] ?? 'NO',
+            'firma_dj' => $input['firma_dj'] ?? null,
             'firma_confidencialidad' => $input['firma_confidencialidad'] ?? null,
-            'tipo_dni_fisico'        => $input['tipo_dni_fisico'] ?? null,
-            'dnie_version'           => $input['dnie_version'] ?? null,
-            'firma_sihce'            => $input['firma_sihce'] ?? null,
+            'tipo_dni_fisico' => $input['tipo_dni_fisico'] ?? null,
+            'dnie_version' => $input['dnie_version'] ?? null,
+            'firma_sihce' => $input['firma_sihce'] ?? null,
 
-            'capacitacion_recibida'      => $input['capacitacion'] ?? null,
+            'capacitacion_recibida' => $input['capacitacion'] ?? null,
             'capacitacion_entes' => isset($input['capacitacion_ente']) && $input['capacitacion_ente'] !== null
                 ? [$input['capacitacion_ente']]
                 : [],
 
             // Logística
-            'insumos_disponibles'   => $input['insumos'] ?? [],
-            'equipos_listado'       => array_values($input['equipos'] ?? []),
+            'insumos_disponibles' => $input['insumos'] ?? [],
+            'equipos_listado' => array_values($input['equipos'] ?? []),
             'equipos_observaciones' => $input['equipos_observaciones'] ?? null,
 
             // Gestión
-            'nro_ventanillas'    => $input['nro_ventanillas'] ?? 0,
+            'nro_ventanillas' => $input['nro_ventanillas'] ?? 0,
             'produccion_listado' => array_values($input['produccion'] ?? []),
 
-            'calidad_tiempo_espera'       => $input['calidad']['espera'] ?? null,
+            'calidad_tiempo_espera' => $input['calidad']['espera'] ?? null,
             'calidad_paciente_satisfecho' => $input['calidad']['satisfaccion'] ?? null,
-            'calidad_usa_reportes'        => $input['calidad']['reportes'] ?? null,
-            'calidad_socializa_con'       => $input['calidad']['reportes_socializa'] ?? null,
+            'calidad_usa_reportes' => $input['calidad']['reportes'] ?? null,
+            'calidad_socializa_con' => $input['calidad']['reportes_socializa'] ?? null,
 
             'dificultad_comunica_a' => $input['dificultades']['comunica'] ?? null,
-            'dificultad_medio_uso'  => $input['dificultades']['medio'] ?? null,
+            'dificultad_medio_uso' => $input['dificultades']['medio'] ?? null,
 
             // Conectividad
-            'tipo_conectividad'  => $input['tipo_conectividad'] ?? null,
-            'wifi_fuente'        => $input['wifi_fuente'] ?? null,
-            'operador_servicio'  => $input['operador_servicio'] ?? null,
+            'tipo_conectividad' => $input['tipo_conectividad'] ?? null,
+            'wifi_fuente' => $input['wifi_fuente'] ?? null,
+            'operador_servicio' => $input['operador_servicio'] ?? null,
 
             // Evidencias
             'fotos_evidencia' => $rutasFotos,
@@ -185,7 +185,7 @@ class CitaController extends Controller
         \App\Models\MonitoreoModulos::updateOrCreate(
             [
                 'cabecera_monitoreo_id' => $idActa,
-                'modulo_nombre'         => 'citas'
+                'modulo_nombre' => 'citas'
             ],
             [
                 'contenido' => $datosCita,
@@ -203,12 +203,12 @@ class CitaController extends Controller
         foreach ($datosEquipos as $item) {
             \App\Models\EquipoComputo::create([
                 'cabecera_monitoreo_id' => $idActa,
-                'modulo'      => 'citas',
+                'modulo' => 'citas',
                 'descripcion' => $item['nombre'] ?? 'Desconocido',
-                'cantidad'    => 1,
-                'estado'      => $item['estado'] ?? 'Regular',
-                'nro_serie'   => $item['serie'] ?? null,
-                'propio'      => $item['propiedad'] ?? '',
+                'cantidad' => 1,
+                'estado' => $item['estado'] ?? 'Regular',
+                'nro_serie' => $item['serie'] ?? null,
+                'propio' => $item['propiedad'] ?? '',
                 'observacion' => $item['observaciones'] ?? null,
             ]);
         }
@@ -219,14 +219,14 @@ class CitaController extends Controller
         \App\Models\RespuestaEntrevistado::updateOrCreate(
             [
                 'cabecera_monitoreo_id' => $idActa,
-                'modulo'                => 'citas'
+                'modulo' => 'citas'
             ],
             [
-                'doc_profesional'       => $datosCita['personal_dni'],
-                'recibio_capacitacion'  => $datosCita['capacitacion_recibida'],
-                'inst_que_lo_capacito'  => !empty($datosCita['capacitacion_entes']) ? implode(', ', $datosCita['capacitacion_entes']) : null,
+                'doc_profesional' => $datosCita['personal_dni'],
+                'recibio_capacitacion' => $datosCita['capacitacion_recibida'],
+                'inst_que_lo_capacito' => !empty($datosCita['capacitacion_entes']) ? implode(', ', $datosCita['capacitacion_entes']) : null,
                 'inst_a_quien_comunica' => $datosCita['dificultad_comunica_a'],
-                'medio_que_utiliza'     => $datosCita['dificultad_medio_uso'],
+                'medio_que_utiliza' => $datosCita['dificultad_medio_uso'],
             ]
         );
 
@@ -289,7 +289,7 @@ class CitaController extends Controller
             ->first();
         $contenidoJson = $moduloJson->contenido ?? [];
         $registro->tipo_conectividad = $contenidoJson['tipo_conectividad'] ?? null;
-        $registro->wifi_fuente       = $contenidoJson['wifi_fuente'] ?? null;
+        $registro->wifi_fuente = $contenidoJson['wifi_fuente'] ?? null;
         $registro->operador_servicio = $contenidoJson['operador_servicio'] ?? null;
 
         // 2. Lógica de Imágenes a Base64
@@ -377,7 +377,8 @@ class CitaController extends Controller
         $tipoDoc = $request->get('tipo_doc'); // 'DNI' o 'CE'
 
         // Si no hay valor, devolver array vacío
-        if (!$valor) return response()->json([]);
+        if (!$valor)
+            return response()->json([]);
 
         if ($tipo === 'doc') {
             // Busqueda Local (por DNI y Tipo de Documento, si se envía)
@@ -401,26 +402,30 @@ class CitaController extends Controller
                 $result = $decolecta->consultarDni($valor);
 
                 if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
-                    return response()->json([[
-                        'exists_external' => false,
-                        'quota_exceeded' => true,
-                        'message' => 'Límite mensual de validaciones en RENIEC excedido.'
-                    ]]);
+                    return response()->json([
+                        [
+                            'exists_external' => false,
+                            'quota_exceeded' => true,
+                            'message' => 'Límite mensual de validaciones en RENIEC excedido.'
+                        ]
+                    ]);
                 }
 
                 if (isset($result['success']) && $result['success']) {
                     $data = $result['data'];
-                    return response()->json([[
-                        'exists_external'  => true,
-                        'tipo_doc'         => 'DNI',
-                        'doc'              => $valor,
-                        'apellido_paterno' => $data['apellido_paterno'],
-                        'apellido_materno' => $data['apellido_materno'],
-                        'nombres'          => $data['nombres'],
-                        'email'            => '',
-                        'telefono'         => '',
-                        'remaining_tokens' => $data['remaining_tokens'] ?? null,
-                    ]]);
+                    return response()->json([
+                        [
+                            'exists_external' => true,
+                            'tipo_doc' => 'DNI',
+                            'doc' => $valor,
+                            'apellido_paterno' => $data['apellido_paterno'],
+                            'apellido_materno' => $data['apellido_materno'],
+                            'nombres' => $data['nombres'],
+                            'email' => '',
+                            'telefono' => '',
+                            'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                        ]
+                    ]);
                 }
             }
 

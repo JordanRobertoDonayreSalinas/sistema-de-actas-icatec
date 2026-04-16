@@ -19,12 +19,12 @@ class ConsultaMedicinaController extends Controller
         $modulo = 'consulta_medicina';
 
         $equipos = EquipoComputo::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo', $modulo)
-                                ->get();
+            ->where('modulo', $modulo)
+            ->get();
 
         $detalle = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                    ->where('modulo_nombre', $modulo)
-                    ->first();
+            ->where('modulo_nombre', $modulo)
+            ->first();
 
         return view('usuario.monitoreo.modulos.consulta_medicina', compact('acta', 'detalle', 'equipos'));
     }
@@ -52,9 +52,9 @@ class ConsultaMedicinaController extends Controller
                 if (is_string($value)) {
                     // EXCEPCIÓN A: El campo 'email' se queda tal cual (o lo forzamos a minúsculas luego)
                     if ($key === 'email') {
-                        return; 
+                        return;
                     }
-                    
+
                     // EXCEPCIÓN B: Rutas de imágenes (detectamos por extensión o carpeta)
                     // Esto protege 'foto_evidencia' si viniera como texto, aunque se procesa aparte
                     if (str_contains($value, 'evidencias_monitoreo/') || preg_match('/\.(jpg|jpeg|png)$/i', $value)) {
@@ -62,44 +62,44 @@ class ConsultaMedicinaController extends Controller
                     }
 
                     // TODO LO DEMÁS -> A MAYÚSCULAS
-                    $value = mb_mb_strtoupper(trim($value, 'UTF-8'), 'UTF-8');
+                    $value = mb_strtoupper(trim($value, 'UTF-8'), 'UTF-8');
                 }
             });
 
             // ---------------------------------------------------------
             // 2. APLICAR REGLAS DE NEGOCIO (LIMPIEZA DE NULOS)
             // ---------------------------------------------------------
-            
+
             // REGLA A: Si NO utiliza SIHCE -> Limpiar campos administrativos y soporte
             if (($datos['utiliza_sihce'] ?? '') === 'NO') {
-                $datos['firmo_dj']               = null;
+                $datos['firmo_dj'] = null;
                 $datos['firmo_confidencialidad'] = null;
-                $datos['recibio_capacitacion']   = null;
-                $datos['inst_capacitacion']      = null;
-                $datos['comunica_a']             = null;
-                $datos['medio_soporte']          = null;
+                $datos['recibio_capacitacion'] = null;
+                $datos['inst_capacitacion'] = null;
+                $datos['comunica_a'] = null;
+                $datos['medio_soporte'] = null;
             }
 
             // REGLA B: Si el Doc NO es DNI -> Limpiar campos de DNIe físico
             // Nota: Como ya corrimos el paso 1, comparamos con 'DNI' en mayúscula
             $tipoDoc = $datos['profesional']['tipo_doc'] ?? '';
             if ($tipoDoc !== 'DNI') {
-                $datos['tipo_dni_fisico']  = null;
-                $datos['dnie_version']     = null;
+                $datos['tipo_dni_fisico'] = null;
+                $datos['dnie_version'] = null;
                 $datos['dnie_firma_sihce'] = null;
-                $datos['dni_observacion']  = null;
+                $datos['dni_observacion'] = null;
             }
 
             // REGLA C: Si NO recibió capacitación -> Limpiar institución
             if (($datos['recibio_capacitacion'] ?? '') === 'NO') {
                 $datos['inst_capacitacion'] = null;
             }
-            
+
             // REGLA E: Si NO se seleccionó tipo de conectividad -> Limpiar campos dependientes
             if (empty($datos['tipo_conectividad'])) {
-                $datos['tipo_conectividad']  = null;
-                $datos['wifi_fuente']        = null;
-                $datos['operador_servicio']  = null;
+                $datos['tipo_conectividad'] = null;
+                $datos['wifi_fuente'] = null;
+                $datos['operador_servicio'] = null;
             }
 
             // REGLA D:LÓGICA DE LIMPIEZA DE DATOS (DNI AZUL vs DNI ELECTRÓNICO)
@@ -118,12 +118,12 @@ class ConsultaMedicinaController extends Controller
                 Profesional::updateOrCreate(
                     ['doc' => trim($datos['profesional']['doc'])],
                     [
-                        'tipo_doc'         => $datos['profesional']['tipo_doc'] ?? 'DNI',
-                        'apellido_paterno' => mb_mb_strtoupper(trim($datos['profesional']['apellido_paterno'], 'UTF-8'), 'UTF-8'),
-                        'apellido_materno' => mb_mb_strtoupper(trim($datos['profesional']['apellido_materno'], 'UTF-8'), 'UTF-8'),
-                        'nombres'          => mb_mb_strtoupper(trim($datos['profesional']['nombres'], 'UTF-8'), 'UTF-8'),
-                        'email'            => isset($datos['profesional']['email']) ? strtolower(trim($datos['profesional']['email'])) : null,
-                        'telefono'         => $datos['profesional']['telefono'] ?? null,
+                        'tipo_doc' => $datos['profesional']['tipo_doc'] ?? 'DNI',
+                        'apellido_paterno' => mb_strtoupper(trim($datos['profesional']['apellido_paterno'], 'UTF-8'), 'UTF-8'),
+                        'apellido_materno' => mb_strtoupper(trim($datos['profesional']['apellido_materno'], 'UTF-8'), 'UTF-8'),
+                        'nombres' => mb_strtoupper(trim($datos['profesional']['nombres'], 'UTF-8'), 'UTF-8'),
+                        'email' => isset($datos['profesional']['email']) ? strtolower(trim($datos['profesional']['email'])) : null,
+                        'telefono' => $datos['profesional']['telefono'] ?? null,
                     ]
                 );
             }
@@ -132,19 +132,19 @@ class ConsultaMedicinaController extends Controller
             // 4. GESTIÓN DE EQUIPOS (TABLA EXTERNA)
             // ---------------------------------------------------------
             EquipoComputo::where('cabecera_monitoreo_id', $id)->where('modulo', $modulo)->delete();
-            
+
             if ($request->has('equipos') && is_array($request->equipos)) {
                 foreach ($request->equipos as $eq) {
                     if (!empty($eq['descripcion'])) {
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
-                            'modulo'      => $modulo,
-                            'descripcion' => mb_mb_strtoupper(trim($eq['descripcion'], 'UTF-8'), 'UTF-8'),
-                            'cantidad'    => (int)($eq['cantidad'] ?? 1),
-                            'estado'      => $eq['estado'] ?? 'OPERATIVO',
-                            'nro_serie'   => isset($eq['nro_serie']) ? mb_mb_strtoupper(trim($eq['nro_serie'], 'UTF-8'), 'UTF-8') : null,
-                            'propio'      => $eq['propio'] ?? 'SERVICIO',
-                            'observacion' => isset($eq['observacion']) ? mb_mb_strtoupper(trim($eq['observacion'], 'UTF-8'), 'UTF-8') : null,
+                            'modulo' => $modulo,
+                            'descripcion' => mb_strtoupper(trim($eq['descripcion'], 'UTF-8'), 'UTF-8'),
+                            'cantidad' => (int) ($eq['cantidad'] ?? 1),
+                            'estado' => $eq['estado'] ?? 'OPERATIVO',
+                            'nro_serie' => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie'], 'UTF-8'), 'UTF-8') : null,
+                            'propio' => $eq['propio'] ?? 'SERVICIO',
+                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion'], 'UTF-8'), 'UTF-8') : null,
                         ]);
                     }
                 }
@@ -154,8 +154,8 @@ class ConsultaMedicinaController extends Controller
             // 5. GESTIÓN DE ARCHIVOS (FOTOS)
             // ---------------------------------------------------------
             $registroPrevio = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                ->where('modulo_nombre', $modulo)
-                                ->first();
+                ->where('modulo_nombre', $modulo)
+                ->first();
 
             $fotosFinales = [];
             // Recuperar fotos existentes del JSON previo
@@ -197,7 +197,7 @@ class ConsultaMedicinaController extends Controller
 
             DB::commit();
             return redirect()->route('usuario.monitoreo.modulos', $id)
-                             ->with('success', 'Módulo 04 (Consulta Medicina) sincronizado correctamente.');
+                ->with('success', 'Módulo 04 (Consulta Medicina) sincronizado correctamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
