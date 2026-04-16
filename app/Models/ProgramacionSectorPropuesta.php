@@ -22,6 +22,11 @@ class ProgramacionSectorPropuesta extends Model
         'dias'
     ];
 
+    protected $casts = [
+        'comienzo' => 'date',
+        'fin'      => 'date',
+    ];
+
     public function establecimiento()
     {
         return $this->belongsTo(Establecimiento::class);

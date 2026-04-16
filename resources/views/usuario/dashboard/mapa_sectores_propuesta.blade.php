@@ -330,7 +330,8 @@
         6:'#06b6d4', 7:'#eab308', 8:'#ec4899', 9:'#14b8a6', 10:'#6366f1',
         11:'#84cc16', 12:'#f43f5e', 13:'#0ea5e9', 14:'#d946ef', 15:'#10b981',
         16:'#f59e0b', 17:'#4338ca', 18:'#be185d', 19:'#166534', 20:'#c2410c',
-        21:'#1e40af', 22:'#86198f', 23:'#4d7c0f'
+        21:'#1e40af', 22:'#86198f', 23:'#4d7c0f', 24:'#9f1239', 25:'#0e7490',
+        26:'#b45309', 27:'#1d4ed8', 28:'#047857', 29:'#6b21a8', 30:'#8b5cf6'
     };
 
     var etapaConfig = {
@@ -347,6 +348,13 @@
     /* ══════════════════════════════════════════════════════
        POPUP
     ══════════════════════════════════════════════════════ */
+    function check(ok, label) {
+        return '<div class="flex items-center gap-2"><span class="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 '
+            + (ok ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-300')
+            + '">' + (ok ? '✓' : '○') + '</span><span class="text-[10px] font-semibold '
+            + (ok ? 'text-slate-700' : 'text-slate-400') + '">' + label + '</span></div>';
+    }
+
     function buildPopup(p) {
         var secColor = sectorColors[p.sector] || '#6366f1';
         var etCfg    = etapaConfig[p.etapa];
@@ -358,11 +366,16 @@
             +     '<span class="w-6 h-6 rounded-full text-white text-[9px] font-black flex items-center justify-center flex-shrink-0" style="background:' + secColor + '">S' + p.sector + '</span>'
             +     '<h4 class="font-black text-slate-800 text-[12px] leading-tight">' + p.nombre + '</h4>'
             +   '</div>'
-            +   '<p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">' + p.provincia + ' — Sec ' + p.sector + '</p>'
+            +   '<p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">' + (p.distrito||'') + ' — ' + p.provincia + '</p>'
             +   '<div class="flex gap-1.5 mt-1.5">'
-            +     '<span class="text-[9px] font-black px-2 py-0.5 rounded-full text-white" style="background:' + secColor + '">Cuad. ' + (p.cuadril||'—') + '</span>'
+            +     '<span class="text-[9px] font-black px-2 py-0.5 rounded-full text-white" style="background:' + secColor + '">' + (p.cuadril||'S/C') + '</span>'
             +     '<span class="text-[9px] font-black px-2 py-0.5 rounded-full ' + etLabels[p.etapa] + '">' + etCfg.label + '</span>'
             +   '</div>'
+            + '</div>'
+            + '<div class="px-4 py-3 space-y-1.5">'
+            +   check(p.etapa >= 1, 'Implementación')
+            +   check(p.etapa >= 2 || p.etapa == 4, 'Asistencia Técnica')
+            +   check(p.etapa >= 3 || p.etapa == 4, 'Monitoreo')
             + '</div>'
             + '<div class="px-4 py-3 border-t border-slate-50 pt-2">'
             +   '<div class="flex justify-between text-[10px] mb-1"><span class="text-slate-500 font-semibold italic">Programado:</span><span class="font-black text-slate-700 underline">' + (p.comienzo||'—') + ' al ' + (p.fin||'—') + '</span></div>'

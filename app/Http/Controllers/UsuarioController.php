@@ -315,7 +315,6 @@ class UsuarioController extends Controller
         ]);
 
         $prog = ProgramacionSector::findOrFail($id);
-        $totalSectores = ProgramacionSector::distinct()->count('sector');
         $prog->sector  = $request->sector;
         $prog->cuadril = $request->cuadril ?? $prog->cuadril;
         $prog->save();
