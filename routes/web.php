@@ -121,6 +121,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
             Route::get('/programacion-sectores', [UsuarioController::class, 'mapaProgramacion'])->name('programacion.sectores');
             Route::put('/programacion-sectores/{id}/sector', [UsuarioController::class, 'actualizarSector'])->name('programacion.sectores.update');
+
+            // --- SECTORIZACION PROPUESTA (BORRADOR INDEPENDIENTE) ---
+            Route::get('/programacion-sectorizacion-propuesta', [UsuarioController::class, 'mapaProgramacionPropuesta'])->name('programacion.propuesta');
+            Route::put('/programacion-sectorizacion-propuesta/{id}/sector', [UsuarioController::class, 'actualizarSectorPropuesta'])->name('programacion.propuesta.update');
         });
 
         // AJAX para Dashboard - Equipos de Cómputo (Protegidos)

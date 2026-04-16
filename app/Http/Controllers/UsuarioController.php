@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Acta;
 use App\Models\Establecimiento;
 use App\Models\CabeceraMonitoreo;
+use App\Models\ProgramacionSector;
+use App\Models\ProgramacionSectorPropuesta;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\DB as DBFacade;
 use Illuminate\Support\Facades\Hash;
@@ -224,7 +226,7 @@ class UsuarioController extends Controller
             ->keyBy('id');
 
         // ── Cargar programación ──────────────────────────────────────
-        $programacion = \App\Models\ProgramacionSector::orderBy('sector')->orderBy('cuadril')->get();
+        $programacion = ProgramacionSector::orderBy('sector')->orderBy('cuadril')->get();
 
         $programacion = $programacion->map(function ($p) use (
             $establecimientosIdx, $codigosConImplementacion, $modulosPorCodigo,
@@ -312,7 +314,8 @@ class UsuarioController extends Controller
             'cuadril' => 'nullable|string|max:15',
         ]);
 
-        $prog = \App\Models\ProgramacionSector::findOrFail($id);
+        $prog = ProgramacionSector::findOrFail($id);
+        $totalSectores = ProgramacionSector::distinct()->count('sector');
         $prog->sector  = $request->sector;
         $prog->cuadril = $request->cuadril ?? $prog->cuadril;
         $prog->save();
@@ -956,9 +959,6 @@ class UsuarioController extends Controller
         }
     }
 
-    /**
-     * Helper: Obtener nombre del mes en español
-     */
     private function getNombreMes($numeroMes)
     {
         $meses = [
@@ -976,5 +976,131 @@ class UsuarioController extends Controller
             12 => 'Diciembre'
         ];
         return $meses[$numeroMes] ?? '';
+    }
+
+    /* ══════════════════════════════════════════════════════
+       MAPA PROGRAMACIÓN PROPUESTA (CLONADO / BORRADOR)
+    ══════════════════════════════════════════════════════ */
+
+    public function mapaProgramacionPropuesta()
+    {
+        // 1. Verificar si la tabla de propuesta esta vacia
+        $conteo = ProgramacionSectorPropuesta::count();
+
+        // 2. Si esta vacia, clonar todo de la tabla oficial para tener una base
+        if ($conteo === 0) {
+            $oficial = ProgramacionSector::all();
+            foreach ($oficial as $item) {
+                ProgramacionSectorPropuesta::create([
+                    'establecimiento_id' => $item->establecimiento_id,
+                    'nombre_pdf'         => $item->nombre_pdf,
+                    'provincia'          => $item->provincia,
+                    'sector'             => $item->sector,
+                    'cuadril'            => $item->cuadril,
+                    'comienzo'           => $item->comienzo,
+                    'fin'                => $item->fin,
+                    'dias'               => $item->dias,
+                ]);
+            }
+        }
+
+        $programacion = $this->getProgramacionPropuestaData();
+        return view('usuario.dashboard.mapa_sectores_propuesta', compact('programacion'));
+    }
+
+    private function getProgramacionPropuestaData()
+    {
+        $modulosConfig = \App\Helpers\ImplementacionHelper::getModulos();
+        $codigosConImplementacion = collect();
+        $modulosPorCodigo = [];
+        
+        foreach ($modulosConfig as $config) {
+            $modelo = $config['modelo'];
+            if (class_exists($modelo)) {
+                $items = $modelo::select('codigo_establecimiento')->get();
+                foreach ($items as $item) {
+                    $cod = $item->codigo_establecimiento;
+                    if ($cod) {
+                        $codigosConImplementacion->push($cod);
+                        if (!isset($modulosPorCodigo[$cod])) $modulosPorCodigo[$cod] = [];
+                        if (!in_array($config['nombre'], $modulosPorCodigo[$cod])) {
+                            $modulosPorCodigo[$cod][] = $config['nombre'];
+                        }
+                    }
+                }
+            }
+        }
+        $codigosConImplementacion = $codigosConImplementacion->unique()->values();
+
+        $idsConAsistencia = Acta::where('tipo', 'asistencia')->distinct()->pluck('establecimiento_id')->toArray();
+        $idsConMonitoreo  = CabeceraMonitoreo::distinct()->pluck('establecimiento_id')->toArray();
+
+        $establecimientosIdx = Establecimiento::all(['id','codigo','nombre','distrito','provincia','latitud','longitud','categoria','red','microred'])->keyBy('id');
+
+        return ProgramacionSectorPropuesta::orderBy('sector')->orderBy('cuadril')->get()
+            ->map(function ($p) use ($establecimientosIdx, $codigosConImplementacion, $idsConAsistencia, $idsConMonitoreo) {
+                $est = $p->establecimiento_id ? ($establecimientosIdx[$p->establecimiento_id] ?? null) : null;
+                $lat = null; $lon = null; $etapa = 0; $tiene_est = false;
+                $provincia = $p->provincia;
+                $nombre = $p->nombre_pdf;
+                $distrito = null;
+                $categoria = null;
+
+                if ($est) {
+                    $tiene_est = true;
+                    $lat = (float) $est->latitud;
+                    $lon = (float) $est->longitud;
+                    if (abs($lat) > 180) $lat /= 100000000;
+                    if (abs($lon) > 180) $lon /= 100000000;
+
+                    $nombre = $est->nombre;
+                    $provincia = $est->provincia ?? $p->provincia;
+                    $distrito = $est->distrito;
+                    $categoria = $est->categoria;
+
+                    $tieneImpl = $codigosConImplementacion->contains($est->codigo);
+                    $tieneAsist = in_array($est->id, $idsConAsistencia);
+                    $tieneMon = in_array($est->id, $idsConMonitoreo);
+
+                    if ($tieneMon) $etapa = 3;
+                    elseif ($tieneAsist) $etapa = 2;
+                    elseif ($tieneImpl) $etapa = 1;
+
+                    if ($tieneImpl && $tieneAsist && $tieneMon) $etapa = 4;
+                }
+
+                return (object) [
+                    'id'           => $p->id,
+                    'nombre'       => $nombre,
+                    'provincia'    => $provincia,
+                    'distrito'     => $distrito,
+                    'categoria'    => $categoria,
+                    'sector'       => $p->sector,
+                    'cuadril'      => $p->cuadril,
+                    'comienzo'     => $p->comienzo ? $p->comienzo->format('d/m/Y') : null,
+                    'fin'          => $p->fin ? $p->fin->format('d/m/Y') : null,
+                    'comienzo_iso' => $p->comienzo ? $p->comienzo->format('Y-m-d') : null,
+                    'fin_iso'      => $p->fin ? $p->fin->format('Y-m-d') : null,
+                    'dias'         => $p->dias,
+                    'lat'          => $lat,
+                    'lon'          => $lon,
+                    'etapa'        => $etapa,
+                    'tiene_est'    => $tiene_est,
+                ];
+            });
+    }
+
+    public function actualizarSectorPropuesta(Request $request, $id)
+    {
+        $prog = ProgramacionSectorPropuesta::findOrFail($id);
+        $prog->sector  = $request->sector;
+        $prog->cuadril = strtoupper($request->cuadril);
+        $prog->save();
+
+        return response()->json([
+            'success' => true,
+            'sector'  => $prog->sector,
+            'cuadril' => $prog->cuadril
+        ]);
     }
 }
