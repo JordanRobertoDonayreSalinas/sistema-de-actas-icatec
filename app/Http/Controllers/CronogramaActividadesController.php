@@ -398,6 +398,31 @@ class CronogramaActividadesController extends Controller
     }
 
     /**
+     * Exporta el cronograma a PDF con orientación horizontal.
+     */
+    public function exportarPdf(Request $request)
+    {
+        $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
+        $fechaFin    = $request->input('fecha_fin',    now()->endOfMonth()->format('Y-m-d'));
+        $filtroProv  = $request->input('provincia');
+        $filtroTipo  = $request->input('tipo_acta');
+
+        // Carga enriquecida con participantes e imágenes
+        $actividades = $this->recopilarActividades($fechaInicio, $fechaFin, $filtroProv, $filtroTipo, true);
+
+        // Para el PDF ordenamos ascendente (fecha más antigua primero)
+        $actividades = $actividades->sortBy('fecha')->values();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('usuario.reportes.cronograma_pdf', compact('actividades'))
+            ->setOptions(['isRemoteEnabled' => true])
+            ->setPaper('a4', 'landscape');
+
+        $filename = 'Cronograma_Actividades_' . date('Ymd_His') . '.pdf';
+
+        return $pdf->stream($filename);
+    }
+
+    /**
      * Helper: Provincias únicas de los tres módulos.
      */
     protected function getProvincias()

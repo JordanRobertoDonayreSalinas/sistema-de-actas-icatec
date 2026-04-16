@@ -209,6 +209,7 @@ Route::middleware(['auth'])->group(function () {
             // Cronograma de Actividades (Asistencia + Monitoreo + Implementación)
             Route::get('/cronograma-actividades', [CronogramaActividadesController::class, 'index'])->name('cronograma');
             Route::post('/cronograma-actividades/excel', [CronogramaActividadesController::class, 'exportarExcel'])->name('cronograma.excel');
+            Route::match(['get', 'post'], '/cronograma-actividades/pdf', [CronogramaActividadesController::class, 'exportarPdf'])->name('cronograma.pdf');
             Route::get('/cronograma-actividades/ajax/provincias', [CronogramaActividadesController::class, 'ajaxGetProvincias'])->name('cronograma.ajax.provincias');
         });
 

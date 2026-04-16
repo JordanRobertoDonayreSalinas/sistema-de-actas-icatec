@@ -172,7 +172,11 @@
                    class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl flex items-center gap-2 transition-all">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i> LIMPIAR
                 </a>
-                <div class="ml-auto">
+                <div class="ml-auto flex items-center gap-2">
+                    <button type="button" onclick="exportarPdf()"
+                            class="px-5 py-2.5 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-xs rounded-xl flex items-center gap-2 transition-all border border-red-200">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> EXPORTAR PDF
+                    </button>
                     <button type="button" onclick="exportarExcel()"
                             class="px-5 py-2.5 bg-green-50 text-green-700 hover:bg-green-100 font-bold text-xs rounded-xl flex items-center gap-2 transition-all border border-green-200">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> EXPORTAR EXCEL
@@ -342,8 +346,16 @@
 
 </div>
 
-{{-- Formulario oculto para exportar Excel --}}
+{{-- Formularios ocultos para exportar --}}
 <form id="excelForm" method="POST" action="{{ route('usuario.reportes.cronograma.excel') }}" style="display:none;">
+    @csrf
+    <input type="hidden" name="fecha_inicio" value="{{ $fechaInicio }}">
+    <input type="hidden" name="fecha_fin"    value="{{ $fechaFin }}">
+    <input type="hidden" name="provincia"    value="{{ request('provincia') }}">
+    <input type="hidden" name="tipo_acta"    value="{{ request('tipo_acta') }}">
+</form>
+
+<form id="pdfForm" method="POST" action="{{ route('usuario.reportes.cronograma.pdf') }}" target="_blank" style="display:none;">
     @csrf
     <input type="hidden" name="fecha_inicio" value="{{ $fechaInicio }}">
     <input type="hidden" name="fecha_fin"    value="{{ $fechaFin }}">
@@ -358,6 +370,10 @@
 
     function exportarExcel() {
         document.getElementById('excelForm').submit();
+    }
+
+    function exportarPdf() {
+        document.getElementById('pdfForm').submit();
     }
 </script>
 @endpush
