@@ -45,7 +45,7 @@
     <div class="max-w-7xl mx-auto space-y-5">
 
         {{-- ══ PANEL SUPERIOR: KPIs de Progresión ══ --}}
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 
             {{-- Etapa 0 --}}
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
@@ -68,37 +68,37 @@
                     <span class="w-2 h-2 rounded-full bg-slate-300"></span>
                 </div>
                 <div id="stats-etapa0" class="text-2xl font-black text-slate-400 group-hover:text-slate-500 transition-colors">{{ $contadores['etapa0'] }}</div>
-                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Sin Inicio</div>
+                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1">Sin Inicio</div>
             </div>
 
             {{-- Etapa 1 --}}
             <div class="bg-white rounded-2xl border border-blue-100 p-5 shadow-sm group">
                 <div class="flex items-center justify-between mb-3">
-                    <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Implementados</span>
+                    <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Implementado</span>
                     <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                 </div>
                 <div id="stats-etapa1" class="text-2xl font-black text-blue-500 group-hover:text-blue-600 transition-colors">{{ $contadores['etapa1'] }}</div>
-                <div class="text-[9px] font-bold text-blue-400 uppercase tracking-tight">Implementado</div>
+                <div class="text-[9px] font-bold text-blue-400 uppercase tracking-tight mt-1">Total EESS</div>
             </div>
 
             {{-- Etapa 2 --}}
             <div class="bg-white rounded-2xl border border-amber-100 p-5 shadow-sm group">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[9px] font-black text-amber-500 uppercase tracking-widest">Asistencia</span>
-                    <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm"></span>
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                 </div>
-                <div id="stats-etapa2" class="text-3xl font-black text-amber-500 group-hover:text-amber-600 transition-colors">{{ $contadores['etapa2'] }}</div>
-                <div class="text-[10px] text-amber-400 mt-1">con asistencia</div>
+                <div id="stats-etapa2" class="text-2xl font-black text-amber-500 group-hover:text-amber-600 transition-colors">{{ $contadores['etapa2'] }}</div>
+                <div class="text-[9px] font-bold text-amber-500 uppercase tracking-tight mt-1">Total EESS</div>
             </div>
 
             {{-- Etapa 3 --}}
             <div class="bg-white rounded-2xl border border-violet-100 p-5 shadow-sm group">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[9px] font-black text-violet-500 uppercase tracking-widest">Monitoreo</span>
-                    <span class="w-3 h-3 rounded-full bg-violet-500 shadow-sm"></span>
+                    <span class="w-2 h-2 rounded-full bg-violet-500"></span>
                 </div>
-                <div id="stats-etapa3" class="text-3xl font-black text-violet-500 group-hover:text-violet-600 transition-colors">{{ $contadores['etapa3'] }}</div>
-                <div class="text-[10px] text-violet-400 mt-1">monitoreo activo</div>
+                <div id="stats-etapa3" class="text-2xl font-black text-violet-500 group-hover:text-violet-600 transition-colors">{{ $contadores['etapa3'] }}</div>
+                <div class="text-[9px] font-bold text-violet-500 uppercase tracking-tight mt-1">Total EESS</div>
             </div>
 
             {{-- Etapa 4 --}}
@@ -108,7 +108,7 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 </div>
                 <div id="stats-etapa4" class="text-2xl font-black text-emerald-500 group-hover:text-emerald-600 transition-colors">{{ $contadores['etapa4'] }}</div>
-                <div class="text-[9px] font-bold text-emerald-500 uppercase tracking-tight">Ciclo Completo</div>
+                <div class="text-[9px] font-bold text-emerald-500 uppercase tracking-tight mt-1">Total EESS</div>
             </div>
         </div>
 
@@ -399,10 +399,12 @@
         function applyFilters() {
             var group      = L.featureGroup();
             var visibleCnt = 0;
+            var totalGeografico = 0;
             var counts = { 0:0, 1:0, 2:0, 3:0, 4:0 };
 
             markers.forEach(function (m) {
                 var matchEtapa = (filtroEtapa === '' || String(m.etapa) === filtroEtapa);
+
                 var matchRed   = (filtroRed   === '' || m.red   === filtroRed);
                 var matchMRed  = (filtroMicrored === '' || m.microred === filtroMicrored);
                 var matchProv  = (filtroProvincia === '' || m.provincia === filtroProvincia);
@@ -414,19 +416,25 @@
                     if (!map.hasLayer(m.marker)) map.addLayer(m.marker);
                     group.addLayer(m.marker);
                     visibleCnt++;
-                    if (m.etapa === 0) counts[0]++;
-                    if (m.tiene_impl) counts[1]++;
-                    if (m.tiene_asist) counts[2]++;
-                    if (m.tiene_monitoreo) counts[3]++;
-                    if (m.etapa === 4) counts[4]++;
                 } else {
                     if (map.hasLayer(m.marker)) map.removeLayer(m.marker);
                     group.removeLayer(m.marker);
                 }
+                
+                // Los counts superiores en modo exclusivo SIEMPRE se calculan independientemente del botón de etapa presionado
+                // esto evita que las demás tarjetas se pongan en cero al clickear una, para poder saltar libremente
+                if (matchRed && matchMRed && matchProv && matchDist && matchCat && matchEst) {
+                    totalGeografico++;
+                    if (m.etapa === 0) counts[0]++;
+                    if (m.etapa === 1) counts[1]++;
+                    if (m.etapa === 2) counts[2]++;
+                    if (m.etapa === 3) counts[3]++;
+                    if (m.etapa === 4) counts[4]++;
+                }
             });
 
             // Actualizar números en cards Superiores
-            document.getElementById('stats-total').textContent  = visibleCnt;
+            document.getElementById('stats-total').textContent  = totalGeografico;
             document.getElementById('stats-etapa0').textContent = counts[0];
             document.getElementById('stats-etapa1').textContent = counts[1];
             document.getElementById('stats-etapa2').textContent = counts[2];

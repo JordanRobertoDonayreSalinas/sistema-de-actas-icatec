@@ -147,6 +147,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{acta}', [ActaController::class, 'show'])->name('show');
             Route::get('/{id}/pdf', [ActaController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
+            Route::post('/{id}/enviar-correo', [ActaController::class, 'enviarCorreo'])->name('enviarCorreo');
+            Route::get('/{id}/emails', [ActaController::class, 'getParticipantesEmails'])->name('get-emails');
             Route::post('/{id}/anular', [ActaController::class, 'anular'])->name('anular');
             Route::post('/sync-renipress', [ActaController::class, 'syncRenipress'])->name('sync-renipress');
 
@@ -246,6 +248,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{modulo}/{id}/pdf', [ImplementacionController::class, 'pdf'])->name('pdf');
             Route::post('/{modulo}/{id}/subir-pdf', [ImplementacionController::class, 'subirPdf'])->name('subirPdf');
             Route::post('/{modulo}/{id}/enviar-correo', [ImplementacionController::class, 'enviarCorreo'])->name('enviarCorreo');
+            Route::get('/{modulo}/{id}/emails', [ImplementacionController::class, 'getParticipantesEmails'])->name('get-emails');
             Route::post('/{modulo}/{id}/cambiar-modulo', [ImplementacionController::class, 'cambiar_modulo'])->name('cambiar_modulo');
             Route::post('/{modulo}/{id}/anular', [ImplementacionController::class, 'anular'])->name('anular');
 
@@ -554,6 +557,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
             Route::post('/{id}/anular', [MonitoreoController::class, 'anular'])->name('anular');
+            Route::get('/{id}/emails', [MonitoreoController::class, 'getEquipoEmails'])->name('get-emails');
+            Route::post('/{id}/enviar-correo', [MonitoreoController::class, 'enviarCorreo'])->name('enviarCorreo');
         });
     });
 

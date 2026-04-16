@@ -119,9 +119,9 @@ class ConsultaNutricionController extends Controller
                     ['doc' => trim($datos['profesional']['doc'])],
                     [
                         'tipo_doc'         => $datos['profesional']['tipo_doc'] ?? 'DNI',
-                        'apellido_paterno' => mb_strtoupper(trim($datos['profesional']['apellido_paterno']), 'UTF-8'),
-                        'apellido_materno' => mb_strtoupper(trim($datos['profesional']['apellido_materno']), 'UTF-8'),
-                        'nombres'          => mb_strtoupper(trim($datos['profesional']['nombres']), 'UTF-8'),
+                        'apellido_paterno' => mb_mb_strtoupper(trim($datos['profesional']['apellido_paterno'], 'UTF-8'), 'UTF-8'),
+                        'apellido_materno' => mb_mb_strtoupper(trim($datos['profesional']['apellido_materno'], 'UTF-8'), 'UTF-8'),
+                        'nombres'          => mb_mb_strtoupper(trim($datos['profesional']['nombres'], 'UTF-8'), 'UTF-8'),
                         'email'            => isset($datos['profesional']['email']) ? strtolower(trim($datos['profesional']['email'])) : null,
                         'telefono'         => $datos['profesional']['telefono'] ?? null,
                     ]
@@ -139,12 +139,12 @@ class ConsultaNutricionController extends Controller
                         EquipoComputo::create([
                             'cabecera_monitoreo_id' => $id,
                             'modulo'      => $modulo,
-                            'descripcion' => mb_strtoupper(trim($eq['descripcion']), 'UTF-8'),
+                            'descripcion' => mb_mb_strtoupper(trim($eq['descripcion'], 'UTF-8'), 'UTF-8'),
                             'cantidad'    => (int)($eq['cantidad'] ?? 1),
                             'estado'      => $eq['estado'] ?? 'OPERATIVO',
-                            'nro_serie'   => isset($eq['nro_serie']) ? mb_strtoupper(trim($eq['nro_serie']), 'UTF-8') : null,
+                            'nro_serie'   => isset($eq['nro_serie']) ? mb_mb_strtoupper(trim($eq['nro_serie'], 'UTF-8'), 'UTF-8') : null,
                             'propio'      => $eq['propio'] ?? 'SERVICIO',
-                            'observacion' => isset($eq['observacion']) ? mb_strtoupper(trim($eq['observacion']), 'UTF-8') : null,
+                            'observacion' => isset($eq['observacion']) ? mb_mb_strtoupper(trim($eq['observacion'], 'UTF-8'), 'UTF-8') : null,
                         ]);
                     }
                 }

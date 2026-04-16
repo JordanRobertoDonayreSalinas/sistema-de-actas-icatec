@@ -62,7 +62,7 @@
             border: 1px solid rgba(255,255,255,0.9); padding: 14px 20px; max-width: 94vw; width: auto; }
 
         body.modo-foco #btn-salir-foco { display: flex !important; }
-        #btn-salir-foco { display: none; position: fixed; bottom: 24px; right: 24px;
+        #btn-salir-foco { display: none; position: fixed; top: 28px; right: 24px;
             z-index: 901; background: #1e293b; color: #fff; border: none;
             border-radius: 50px; padding: 10px 20px; font-size: 11px; font-weight: 900;
             cursor: pointer; box-shadow: 0 8px 32px rgba(0,0,0,0.35);
@@ -186,7 +186,7 @@
             <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                 <i data-lucide="map-pin" class="w-3 h-3"></i> Sectores
             </h4>
-            <div id="leyenda-sectores" class="space-y-1 max-h-60 overflow-y-auto pr-1"></div>
+            <div id="leyenda-sectores" class="space-y-1 max-h-[450px] overflow-y-auto pr-1"></div>
         </div>
 
         {{-- LEYENDA ETAPAS --}}
@@ -203,10 +203,7 @@
             </div>
         </div>
 
-        {{-- Badge top --}}
-        <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-xl shadow-lg border border-slate-100">
-            <span class="text-[9px] font-black text-slate-400 uppercase">Programación de Visitas — vs3 · 07/04/2026 → 23/03/2027</span>
-        </div>
+
     </div>
 
     {{-- ══ CRONOGRAMA GANTT ══ --}}
@@ -318,14 +315,14 @@
     var updateUrl    = "{{ route('usuario.dashboard.programacion.sectores.update', ['id' => '__ID__']) }}";
     var csrfToken    = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    /* ── Paleta de colores por sector ── */
+    /* ── Paleta de colores distintivos por sector (Altamente contrastada) ── */
     var sectorColors = {
-        1:'#818cf8', 2:'#6366f1', 3:'#4f46e5', 4:'#4338ca', 5:'#3730a3',
-        6:'#312e81', 7:'#6366f1', 8:'#4f46e5', 9:'#818cf8', 10:'#6366f1',
-        11:'#a78bfa',12:'#8b5cf6',13:'#7c3aed',14:'#6d28d9',
-        15:'#f472b6',16:'#ec4899',17:'#db2777',18:'#be185d',
-        19:'#fbbf24',20:'#f59e0b',
-        21:'#34d399',22:'#10b981',23:'#059669'
+        1:'#ef4444', 2:'#3b82f6', 3:'#22c55e', 4:'#a855f7', 5:'#f97316',
+        6:'#06b6d4', 7:'#eab308', 8:'#ec4899', 9:'#14b8a6', 10:'#6366f1',
+        11:'#84cc16', 12:'#f43f5e', 13:'#0ea5e9', 14:'#d946ef', 15:'#10b981',
+        16:'#f59e0b', 17:'#4338ca', 18:'#be185d', 19:'#166534', 20:'#c2410c',
+        21:'#1e40af', 22:'#86198f', 23:'#4d7c0f', 24:'#9f1239', 25:'#0e7490',
+        26:'#b45309', 27:'#1d4ed8', 28:'#047857', 29:'#6b21a8', 30:'#8b5cf6'
     };
 
     /* ── Configuración etapas (borde del marcador) ── */
@@ -431,16 +428,20 @@
     ══════════════════════════════════════════════════════ */
     var sectoresUnicos = [...new Set(programacion.map(function(p){ return p.sector; }))].sort(function(a,b){return a-b;});
 
-    function buildLeyenda(visibles) {
+    function buildLeyenda(filteredMarkers) {
         var cont = document.getElementById('leyenda-sectores');
         cont.innerHTML = '';
-        var secs = visibles || sectoresUnicos;
-        secs.forEach(function(s) {
+        var markersToCount = filteredMarkers || markersList;
+        
+        sectoresUnicos.forEach(function(s) {
             var color = sectorColors[s] || '#6366f1';
             var prov  = (programacion.find(function(p){ return p.sector === s; }) || {}).provincia || '';
-            var cnt   = markersList.filter(function(m){ return m.item.sector === s; }).length;
+            // Contamos los establecimientos que están siendo visibles actualmente en ese sector
+            var cnt   = markersToCount.filter(function(m){ return m.item.sector === s; }).length;
+            
             var d = document.createElement('div');
-            d.className = 'flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity py-0.5';
+            // Atenuamos el div si el contador del sector está en 0 para el filtro actual
+            d.className = 'flex items-center gap-2 cursor-pointer transition-opacity py-0.5 hover:opacity-100 ' + (cnt === 0 ? 'opacity-30 grayscale' : 'opacity-100');
             d.innerHTML = '<span class="w-3 h-3 rounded-full flex-shrink-0 border-2 border-white shadow-sm" style="background:' + color + '"></span>'
                 + '<div><p class="text-[10px] font-bold text-slate-700 leading-none">Sector ' + s + '</p><p class="text-[8px] text-slate-400">' + prov + ' · ' + cnt + ' EESS</p></div>';
             d.addEventListener('click', function() {
@@ -633,8 +634,7 @@
         document.getElementById('badge-visible').textContent = filtered.length;
         updateTabla(filtered);
 
-        var secsVis = [...new Set(filtered.map(function(m){ return m.item.sector; }))].sort(function(a,b){return a-b;});
-        buildLeyenda(secsVis.length ? secsVis : null);
+        buildLeyenda(filtered);
 
         if (group.getLayers().length > 0 && (filtroProv || filtroSec || filtroEtapa || filtroDistrito || filtroCategoria || filtroEst)) {
             map.fitBounds(group.getBounds(), { padding:[50,50], maxZoom:13 });

@@ -831,22 +831,29 @@ class ImplementacionController extends Controller
                 return response()->json(['success' => false, 'message' => 'No se puede enviar el acta porque no tiene un archivo firmado cargado.'], 400);
             }
 
-            // 2. Filtrar correos de participantes registrados
-            $correos = $acta->usuarios->pluck('correo')->filter(function ($email) {
-                return !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
-            })->unique();
-
-            if ($correos->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No se encontraron participantes con correos electrónicos válidos.'], 400);
+            // 2. Obtener correos: si vienen en el request (chips) los usamos, sino se usan los de la BD
+            if ($request->filled('correos')) {
+                $rawEmails = preg_split('/[,;\s]+/', $request->correos);
+                $correos = collect($rawEmails)
+                    ->map(fn($e) => trim(strtolower($e)))
+                    ->filter(fn($e) => filter_var($e, FILTER_VALIDATE_EMAIL))
+                    ->unique();
+            } else {
+                $correos = $acta->usuarios->pluck('correo')->filter(function ($email) {
+                    return !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+                })->unique();
             }
 
-            // 3. Ejecutar envío individual (como en Mesa de Ayuda)
+            if ($correos->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No se encontraron correos válidos para enviar.'], 400);
+            }
+
+            // 3. Ejecutar envío individual
             $enviados = 0;
+            $errores  = 0;
             foreach ($correos as $correo) {
                 try {
-                    // Log previo (útil si el mailer es 'log')
                     \Illuminate\Support\Facades\Log::info("📨 Preparando envío de acta {$config['nombre']} #{$acta->id} para: {$correo}");
-                    
                     Mail::to($correo)->send(new ActaImplementacionMail($acta, $config['nombre']));
                     $enviados++;
                 } catch (\Throwable $mailEx) {
@@ -855,14 +862,15 @@ class ImplementacionController extends Controller
                         'acta'    => $acta->id,
                         'email'   => $correo
                     ]);
+                    $errores++;
                 }
             }
 
             if ($enviados > 0) {
                 return response()->json([
                     'success' => true,
-                    'message' => "✅ Proceso completado: se enviaron {$enviados} correos exitosamente.",
-                    'destinatarios' => $correos
+                    'message' => "✅ Se enviaron {$enviados} correo(s) exitosamente." . ($errores > 0 ? " ({$errores} fallaron)" : ''),
+                    'destinatarios' => $correos->values()
                 ]);
             }
 
@@ -875,6 +883,57 @@ class ImplementacionController extends Controller
                 'file'  => $e->getFile()
             ]);
             return response()->json(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+    /**
+     * Devuelve los correos de los participantes de un acta de implementación.
+     * Combina correos registrados en el acta con los del maestro de profesionales.
+     */
+    public function getParticipantesEmails(Request $request, $modulo, $id)
+    {
+        try {
+            $modulos = ImplementacionHelper::getModulos();
+            if (!isset($modulos[$modulo])) {
+                return response()->json(['emails' => [], 'establecimiento' => 'N/A', 'fecha' => '', 'modulo' => '']);
+            }
+
+            $ModeloActa = $modulos[$modulo]['modelo'];
+            $acta = $ModeloActa::with('usuarios')->findOrFail($id);
+
+            // Correos directos en el acta (campo correo del participante)
+            $correosDirectos = $acta->usuarios
+                ->pluck('correo')
+                ->filter(fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL))
+                ->unique()
+                ->values()
+                ->toArray();
+
+            // Correos desde la tabla global de profesionales por DNI
+            $dnis = $acta->usuarios->pluck('dni')->filter()->unique();
+            $correosGlobales = \App\Models\Profesional::whereIn('doc', $dnis)
+                ->whereNotNull('email')
+                ->where('email', '!=', '')
+                ->pluck('email')
+                ->unique()
+                ->values()
+                ->toArray();
+
+            $emails = collect(array_merge($correosDirectos, $correosGlobales))
+                ->unique()
+                ->filter(fn($e) => filter_var($e, FILTER_VALIDATE_EMAIL))
+                ->values();
+
+            return response()->json([
+                'emails'          => $emails,
+                'establecimiento' => $acta->nombre_establecimiento ?? 'N/A',
+                'fecha'           => \Carbon\Carbon::parse($acta->fecha)->format('d/m/Y'),
+                'modulo'          => $modulos[$modulo]['nombre'],
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json(['emails' => [], 'establecimiento' => 'N/A', 'fecha' => '', 'modulo' => '']);
         }
     }
 
