@@ -24,7 +24,7 @@ class CitaController extends Controller
         // Inyectar datos de conectividad desde el JSON de MonitoreoModulos
         // ya que esos campos no existen como columnas en mon_modulo_citas
         if ($registro) {
-            $moduloJson = \App\Models\MonitoreoModulos::where('cabecera_monitoreo_id', $id)
+            $moduloJson = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
                 ->where('modulo_nombre', 'citas')
                 ->first();
 
@@ -67,7 +67,7 @@ class CitaController extends Controller
 
         if ($dni) {
             // 1. Buscar o Instanciar
-            $profesional = \App\Models\Profesional::firstOrNew(['doc' => $dni]);
+            $profesional = Profesional::firstOrNew(['doc' => $dni]);
 
             // 2. Actualizar datos de contacto y tipo de documento siempre
             $profesional->tipo_doc = $input['personal_tipo_doc'] ?? 'DNI';
@@ -83,7 +83,7 @@ class CitaController extends Controller
 
             // 3. Actualizar Nombres (Separación Inteligente)
             if (!empty($input['personal_nombre'])) {
-                $nombreCompleto = mb_strtoupper(trim($input['personal_nombre'], 'UTF-8'), 'UTF-8');
+                $nombreCompleto = mb_strtoupper(trim($input['personal_nombre']), 'UTF-8');
 
                 // Solo procesamos si el nombre cambió o es un registro nuevo
                 $nombreActual = trim(($profesional->apellido_paterno ?? '') . ' ' . ($profesional->apellido_materno ?? '') . ' ' . ($profesional->nombres ?? ''));
@@ -174,7 +174,7 @@ class CitaController extends Controller
         // =========================================================================
         // PASO 2: Guardar en ModuloCita (Tabla principal)
         // =========================================================================
-        \App\Models\ModuloCita::updateOrCreate(
+        ModuloCita::updateOrCreate(
             ['monitoreo_id' => $idActa],
             $datosCita
         );
@@ -182,7 +182,7 @@ class CitaController extends Controller
         // =========================================================================
         // PASO 3: Guardar en MonitoreoModulos (JSON)
         // =========================================================================
-        \App\Models\MonitoreoModulos::updateOrCreate(
+        MonitoreoModulos::updateOrCreate(
             [
                 'cabecera_monitoreo_id' => $idActa,
                 'modulo_nombre' => 'citas'
@@ -198,10 +198,10 @@ class CitaController extends Controller
         // =========================================================================
         $datosEquipos = $input['equipos'] ?? [];
         // Ojo: verifica si $request->id es correcto, usualmente sería $idActa si esa es la FK
-        \App\Models\EquipoComputo::where('cabecera_monitoreo_id', $idActa)->where('modulo', 'citas')->delete();
+        EquipoComputo::where('cabecera_monitoreo_id', $idActa)->where('modulo', 'citas')->delete();
 
         foreach ($datosEquipos as $item) {
-            \App\Models\EquipoComputo::create([
+            EquipoComputo::create([
                 'cabecera_monitoreo_id' => $idActa,
                 'modulo' => 'citas',
                 'descripcion' => $item['nombre'] ?? 'Desconocido',
@@ -216,7 +216,7 @@ class CitaController extends Controller
         // =========================================================================
         // PASO 5: Guardar en RespuestaEntrevistado
         // =========================================================================
-        \App\Models\RespuestaEntrevistado::updateOrCreate(
+        RespuestaEntrevistado::updateOrCreate(
             [
                 'cabecera_monitoreo_id' => $idActa,
                 'modulo' => 'citas'
@@ -284,7 +284,7 @@ class CitaController extends Controller
         $registro = ModuloCita::where('monitoreo_id', $idActa)->firstOrFail();
 
         // Inyectar datos de conectividad desde el JSON de MonitoreoModulos
-        $moduloJson = \App\Models\MonitoreoModulos::where('cabecera_monitoreo_id', $idActa)
+        $moduloJson = MonitoreoModulos::where('cabecera_monitoreo_id', $idActa)
             ->where('modulo_nombre', 'citas')
             ->first();
         $contenidoJson = $moduloJson->contenido ?? [];
@@ -328,7 +328,7 @@ class CitaController extends Controller
             }
         }
 
-        $profesional = \App\Models\Profesional::where('doc', $registro->personal_dni)->first();
+        $profesional = Profesional::where('doc', $registro->personal_dni)->first();
 
         // ---------------------------------------------------------
         // 4. GENERACIÓN DEL PDF (CORREGIDO)
@@ -348,7 +348,7 @@ class CitaController extends Controller
 
         // Configuración de fuente
         $fontMetrics = $dom_pdf->getFontMetrics();
-        $font = $fontMetrics->get_font("Helvetica", "bold");
+        $font = $fontMetrics->getFont("Helvetica", "bold");
 
         // --- CAMBIOS DE AJUSTE FINO ---
         $size = 8; // Igualamos a 8pt del CSS para que se vean idénticos
