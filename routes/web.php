@@ -77,6 +77,7 @@ use App\Http\Controllers\ReporteEquiposController;
 use App\Http\Controllers\ReporteActasController;
 use App\Http\Controllers\ReporteMonitoreoController;
 use App\Http\Controllers\ReporteImplementacionController;
+use App\Http\Controllers\CronogramaActividadesController;
 use App\Http\Controllers\ImplementacionController;
 use App\Http\Controllers\Infraestructura2DController;
 use App\Http\Controllers\Infraestructura2DPdfController;
@@ -121,6 +122,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/equipos', [UsuarioController::class, 'dashboardEquipos'])->name('equipos');
             Route::get('/programacion-sectores', [UsuarioController::class, 'mapaProgramacion'])->name('programacion.sectores');
             Route::put('/programacion-sectores/{id}/sector', [UsuarioController::class, 'actualizarSector'])->name('programacion.sectores.update');
+
+            // --- SECTORIZACION PROPUESTA (BORRADOR INDEPENDIENTE) ---
+            Route::get('/programacion-sectorizacion-propuesta', [UsuarioController::class, 'mapaProgramacionPropuesta'])->name('programacion.propuesta');
+            Route::put('/programacion-sectorizacion-propuesta/{id}/sector', [UsuarioController::class, 'actualizarSectorPropuesta'])->name('programacion.propuesta.update');
         });
 
         // AJAX para Dashboard - Equipos de Cómputo (Protegidos)
@@ -146,6 +151,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{acta}', [ActaController::class, 'show'])->name('show');
             Route::get('/{id}/pdf', [ActaController::class, 'generarPDF'])->name('generarPDF');
             Route::post('/{id}/subir-pdf', [ActaController::class, 'subirPDF'])->name('subirPDF');
+            Route::post('/{id}/enviar-correo', [ActaController::class, 'enviarCorreo'])->name('enviarCorreo');
+            Route::get('/{id}/emails', [ActaController::class, 'getParticipantesEmails'])->name('get-emails');
             Route::post('/{id}/anular', [ActaController::class, 'anular'])->name('anular');
             Route::post('/sync-renipress', [ActaController::class, 'syncRenipress'])->name('sync-renipress');
 
@@ -198,6 +205,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/actas-implementacion', [ReporteImplementacionController::class, 'index'])->name('actas.implementacion');
             Route::post('/actas-implementacion/excel', [ReporteImplementacionController::class, 'exportarExcel'])->name('actas.implementacion.excel');
             Route::get('/actas-implementacion/ajax/distritos', [ReporteImplementacionController::class, 'getDistritos'])->name('actas.implementacion.ajax.distritos');
+
+            // Cronograma de Actividades (Asistencia + Monitoreo + Implementación)
+            Route::get('/cronograma-actividades', [CronogramaActividadesController::class, 'index'])->name('cronograma');
+            Route::post('/cronograma-actividades/excel', [CronogramaActividadesController::class, 'exportarExcel'])->name('cronograma.excel');
+            Route::get('/cronograma-actividades/ajax/provincias', [CronogramaActividadesController::class, 'ajaxGetProvincias'])->name('cronograma.ajax.provincias');
         });
 
         // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA (Protegida) ---
@@ -240,6 +252,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{modulo}/{id}/pdf', [ImplementacionController::class, 'pdf'])->name('pdf');
             Route::post('/{modulo}/{id}/subir-pdf', [ImplementacionController::class, 'subirPdf'])->name('subirPdf');
             Route::post('/{modulo}/{id}/enviar-correo', [ImplementacionController::class, 'enviarCorreo'])->name('enviarCorreo');
+            Route::get('/{modulo}/{id}/emails', [ImplementacionController::class, 'getParticipantesEmails'])->name('get-emails');
             Route::post('/{modulo}/{id}/cambiar-modulo', [ImplementacionController::class, 'cambiar_modulo'])->name('cambiar_modulo');
             Route::post('/{modulo}/{id}/anular', [ImplementacionController::class, 'anular'])->name('anular');
 
@@ -549,6 +562,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/subir-consolidado-final', [MonitoreoController::class, 'subirPDF'])->name('subirConsolidado');
             Route::get('/ver-detalle/{monitoreo}', [MonitoreoController::class, 'show'])->name('show');
             Route::post('/{id}/anular', [MonitoreoController::class, 'anular'])->name('anular');
+            Route::get('/{id}/emails', [MonitoreoController::class, 'getEquipoEmails'])->name('get-emails');
+            Route::post('/{id}/enviar-correo', [MonitoreoController::class, 'enviarCorreo'])->name('enviarCorreo');
         });
     });
 

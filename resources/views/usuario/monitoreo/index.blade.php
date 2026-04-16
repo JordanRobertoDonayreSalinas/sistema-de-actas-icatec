@@ -32,6 +32,62 @@
             height: 100%;
             transition: width 0.5s ease-in-out;
         }
+        /* Chips de correo */
+        .email-chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background-color: #f8fafc;
+            min-height: 45px;
+            cursor: text;
+        }
+        .email-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background-color: #1d4ed8;
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            animation: chip-in 0.2s ease-out;
+        }
+        .email-chip button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.15);
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            transition: background 0.2s;
+        }
+        .email-chip button:hover { background: rgba(255,255,255,0.2); }
+        .email-chip-input {
+            flex: 1;
+            min-width: 120px;
+            border: none !important;
+            background: transparent !important;
+            padding: 2px 5px !important;
+            font-size: 0.75rem !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        @keyframes chip-in {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
     </style>
 @endpush
 
@@ -387,6 +443,11 @@
                                             title="Ver acta consolidada firmada">
                                                 <i data-lucide="file-check-2" class="w-4 h-4"></i>
                                             </a>
+                                            <button onclick="confirmarEnvioCorreoMonitoreo({{ $monitoreo->id }})"
+                                                class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-all"
+                                                title="Enviar Acta por Correo">
+                                                <i data-lucide="mail" class="w-4 h-4"></i>
+                                            </button>
                                         @endif
 
                                         <a href="{{ route('usuario.monitoreo.edit', $monitoreo->id) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all" title="Editar acta">
@@ -537,6 +598,156 @@
                     }).then(() => location.reload());
                 }
             });
+        }
+
+        function confirmarEnvioCorreoMonitoreo(id) {
+            Swal.fire({
+                title: 'Preparando envío...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            const baseUrl = "{{ url('/') }}";
+            fetch(`${baseUrl}/usuario/monitoreo/${id}/emails`)
+                .then(r => r.json())
+                .then(data => {
+                    const defaultEmails = data.emails || [];
+                    const html = `
+                        <div class="text-left mb-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Detalles del Acta</p>
+                            <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                                <div><span class="text-slate-500">🔢</span> <span class="font-bold">N° ${data.numero}</span></div>
+                                <div><span class="text-slate-500">📅</span> <span class="font-bold">${data.fecha}</span></div>
+                                <div class="col-span-2"><span class="text-slate-500">🏥</span> <span class="font-bold">${data.establecimiento}</span></div>
+                            </div>
+                        </div>
+                        <div class="text-left mb-2">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Destinatarios</label>
+                                ${defaultEmails.length > 0 ? '<button type="button" id="mon-btn-precargar" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 transition-all">⚡ Precargar profesionales ('+defaultEmails.length+')</button>' : '<span class="text-[10px] text-slate-400 italic">Sin correos en los módulos</span>'}
+                            </div>
+                            <div id="mon-chips-wrapper" class="email-chips-container">
+                                <input type="text" id="mon-tag-input" class="email-chip-input" placeholder="Escriba un correo y presione Enter o ;">
+                            </div>
+                            <p class="text-[9px] text-slate-400 mt-1 italic">Use coma (,), punto y coma (;) o Enter para agregar.</p>
+                            <div id="mon-list-preview" class="mt-2 hidden">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">📋 Lista de envío:</p>
+                                <div id="mon-list-container" class="flex flex-wrap gap-1 max-h-16 overflow-y-auto"></div>
+                            </div>
+                        </div>
+                    `;
+
+                    Swal.fire({
+                        title: '✉️ Enviar Acta por Correo',
+                        html: html,
+                        showCancelButton: true,
+                        confirmButtonText: '🚀 Enviar Ahora',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#1d4ed8',
+                        width: '520px',
+                        didOpen: () => {
+                            const wrapper = document.getElementById('mon-chips-wrapper');
+                            const input = document.getElementById('mon-tag-input');
+                            const listPreview = document.getElementById('mon-list-preview');
+                            const listContainer = document.getElementById('mon-list-container');
+                            const tags = new Set();
+
+                            const renderTags = () => {
+                                wrapper.querySelectorAll('.email-chip').forEach(c => c.remove());
+                                listContainer.innerHTML = '';
+                                tags.forEach(email => {
+                                    const chip = document.createElement('div');
+                                    chip.className = 'email-chip';
+                                    chip.innerHTML = `${email} <button type="button" data-email="${email}"><i data-lucide="x" class="w-3 h-3"></i></button>`;
+                                    wrapper.insertBefore(chip, input);
+                                    const item = document.createElement('span');
+                                    item.className = 'inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full';
+                                    item.innerHTML = `<i data-lucide="mail" class="w-2.5 h-2.5"></i> ${email}`;
+                                    listContainer.appendChild(item);
+                                });
+                                listPreview.classList.toggle('hidden', tags.size === 0);
+                                if (window.lucide) window.lucide.createIcons();
+                            };
+
+                            const btnPrecargar = document.getElementById('mon-btn-precargar');
+                            if (btnPrecargar) {
+                                btnPrecargar.addEventListener('click', () => {
+                                    defaultEmails.forEach(e => tags.add(e.toLowerCase()));
+                                    renderTags();
+                                    btnPrecargar.disabled = true;
+                                    btnPrecargar.textContent = '✅ Equipo cargado';
+                                    btnPrecargar.className = 'text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1';
+                                });
+                            }
+
+                            wrapper.addEventListener('click', () => input.focus());
+
+                            input.addEventListener('keydown', (e) => {
+                                if ([';', ',', 'Enter'].includes(e.key)) {
+                                    e.preventDefault();
+                                    const val = input.value.trim().toLowerCase();
+                                    if (val && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                                        tags.add(val);
+                                        input.value = '';
+                                        renderTags();
+                                    } else if (val) {
+                                        input.classList.add('shake');
+                                        setTimeout(() => input.classList.remove('shake'), 300);
+                                    }
+                                }
+                                if (e.key === 'Backspace' && !input.value && tags.size > 0) {
+                                    const last = Array.from(tags).pop();
+                                    tags.delete(last);
+                                    renderTags();
+                                }
+                            });
+
+                            wrapper.addEventListener('click', (e) => {
+                                const btn = e.target.closest('button');
+                                if (btn && btn.dataset.email) {
+                                    tags.delete(btn.dataset.email);
+                                    renderTags();
+                                }
+                            });
+
+                            window._monCurrentTags = tags;
+                        },
+                        preConfirm: () => {
+                            const tags = Array.from(window._monCurrentTags);
+                            if (tags.length === 0) {
+                                Swal.showValidationMessage('Debe ingresar al menos un correo válido');
+                                return false;
+                            }
+                            return fetch(`${baseUrl}/usuario/monitoreo/${id}/enviar-correo`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ correos: tags.join(',') })
+                            })
+                            .then(r => {
+                                if (!r.ok) return r.json().then(e => { throw new Error(e.message || 'Error al enviar'); });
+                                return r.json();
+                            })
+                            .catch(error => Swal.showValidationMessage(`Error: ${error.message}`));
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '✅ ¡Correos Enviados!',
+                                text: result.value.message || 'El acta ha sido enviada exitosamente.',
+                                confirmButtonColor: '#1d4ed8'
+                            });
+                        }
+                    });
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'No se pudieron obtener los datos del acta.', 'error');
+                });
         }
 
         function confirmarAnulacion(id, esAnulada) {

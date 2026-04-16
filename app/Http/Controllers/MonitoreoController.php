@@ -12,8 +12,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Carbon\Carbon;
+use App\Mail\ActaMonitoreoMail;
 
 class MonitoreoController extends Controller
 {
@@ -636,6 +638,125 @@ class MonitoreoController extends Controller
                 ], 500);
             }
             return back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Devuelve los correos del equipo de monitoreo registrados en mon_profesionales.
+     */
+    public function getEquipoEmails($id)
+    {
+        $monitoreo = CabeceraMonitoreo::with(['establecimiento', 'equipo', 'detalles'])->findOrFail($id);
+
+        // 1. Recolectar correos del equipo de monitoreo (desde mon_profesionales)
+        $docs = $monitoreo->equipo->pluck('doc')->filter()->unique();
+        $emailsTeam = \App\Models\Profesional::whereIn('doc', $docs)
+            ->whereNotNull('email')
+            ->where('email', '!=', '')
+            ->pluck('email')
+            ->unique()
+            ->toArray();
+
+        // 2. Recolectar correos dentro de los módulos (JSON contenido)
+        $emailsModules = [];
+        foreach ($monitoreo->detalles as $detalle) {
+            if ($detalle->modulo_nombre === 'config_modulos') continue;
+            
+            $c = $detalle->contenido;
+            if (!$c || !is_array($c)) continue;
+
+            // Arreglo de llaves donde solemos guardar datos del profesional
+            $keysToSearch = ['personal', 'profesional', 'rrhh', 'entrevistado'];
+            
+            // Búsqueda en primer nivel
+            if (!empty($c['personal_correo'])) $emailsModules[] = $c['personal_correo'];
+            if (!empty($c['email'])) $emailsModules[] = $c['email'];
+            if (!empty($c['correo'])) $emailsModules[] = $c['correo'];
+
+            // Búsqueda en segundo nivel (objetos comunes)
+            foreach ($keysToSearch as $key) {
+                if (!empty($c[$key]) && is_array($c[$key])) {
+                    if (!empty($c[$key]['email'])) $emailsModules[] = $c[$key]['email'];
+                    if (!empty($c[$key]['correo'])) $emailsModules[] = $c[$key]['correo'];
+                    // Algunos usan 'personal_correo' dentro también por error o legado
+                    if (!empty($c[$key]['personal_correo'])) $emailsModules[] = $c[$key]['personal_correo'];
+                }
+            }
+        }
+
+        // 3. Unificar, limpiar y validar
+        $finalEmails = collect($emailsModules)
+            ->map(fn($e) => trim(strtolower($e)))
+            ->filter(fn($e) => filter_var($e, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values();
+
+        return response()->json([
+            'emails'          => $finalEmails,
+            'establecimiento' => $monitoreo->establecimiento->nombre ?? 'N/A',
+            'fecha'           => Carbon::parse($monitoreo->fecha)->format('d/m/Y'),
+            'numero'          => str_pad($monitoreo->numero_acta ?? $monitoreo->id, 5, '0', STR_PAD_LEFT),
+        ]);
+    }
+
+    /**
+     * Envía el acta consolidada firmada por correo.
+     */
+    public function enviarCorreo(Request $request, $id)
+    {
+        try {
+            $request->validate(['correos' => 'required|string']);
+
+            $monitoreo = CabeceraMonitoreo::with(['establecimiento'])->findOrFail($id);
+
+            if (!$monitoreo->firmado_pdf || !Storage::disk('public')->exists($monitoreo->firmado_pdf)) {
+                return response()->json(['success' => false, 'message' => 'El acta no tiene un PDF firmado subido.'], 400);
+            }
+
+            // Procesar correos (tag chips + texto manual)
+            $rawEmails = preg_split('/[,;\s]+/', $request->correos);
+            $emails = collect($rawEmails)
+                ->map(fn($e) => trim(strtolower($e)))
+                ->filter(fn($e) => filter_var($e, FILTER_VALIDATE_EMAIL))
+                ->unique();
+
+            if ($emails->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No se ingresaron correos válidos.'], 422);
+            }
+
+            $enviados = 0;
+            $errores  = 0;
+
+            foreach ($emails as $email) {
+                try {
+                    Log::info("📨 Enviando acta monitoreo #{$id} a {$email}");
+                    Mail::to($email)->send(new ActaMonitoreoMail($monitoreo));
+                    $enviados++;
+                } catch (\Throwable $mailEx) {
+                    Log::warning('⚠️ No se pudo enviar correo de acta de monitoreo', [
+                        'error' => $mailEx->getMessage(),
+                        'acta'  => $id,
+                        'email' => $email,
+                    ]);
+                    $errores++;
+                }
+            }
+
+            if ($enviados > 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "✅ Se enviaron {$enviados} correo(s) exitosamente." . ($errores > 0 ? " ({$errores} fallaron)" : ''),
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'No se pudo enviar ningún correo.'], 500);
+
+        } catch (\Throwable $e) {
+            Log::error('❌ Error crítico en MonitoreoController@enviarCorreo', [
+                'error' => $e->getMessage(),
+                'line'  => $e->getLine(),
+            ]);
+            return response()->json(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()], 500);
         }
     }
 }

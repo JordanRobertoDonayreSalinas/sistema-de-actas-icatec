@@ -19,6 +19,7 @@ class Participante extends Model
         'nombres',
         'cargo',
         'modulo',
+        'correo',
         'es_implementador',
         'unidad_ejecutora', // ⚠ agregado para que se guarde correctamente
     ];
