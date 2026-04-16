@@ -20,12 +20,12 @@ class Infraestructura2DPdfController extends Controller
 
         // 2. Cargar el detalle guardado para el módulo infraestructura_2d
         $modulo = MonitoreoModulos::where('cabecera_monitoreo_id', $id)
-                                  ->where('modulo_nombre', 'infraestructura_2d')
-                                  ->firstOrFail();
+            ->where('modulo_nombre', 'infraestructura_2d')
+            ->firstOrFail();
 
         // 3. Contenido del croquis (elementos y conexiones)
         $contenido = $modulo->contenido ?? [];
-        $elementos  = $contenido['elementos']  ?? [];
+        $elementos = $contenido['elementos'] ?? [];
         $conexiones = $contenido['conexiones'] ?? [];
 
         // 4. Agrupar elementos por tipo para el reporte
@@ -38,8 +38,8 @@ class Infraestructura2DPdfController extends Controller
         // 5. Captura del monitor autenticado
         $user = Auth::user();
         $monitor = [
-            'nombre'    => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
-            'tipo_doc'  => $user->tipo_documento ?? 'DNI',
+            'nombre' => mb_strtoupper("{$user->apellido_paterno} {$user->apellido_materno}, {$user->name}", 'UTF-8'),
+            'tipo_doc' => $user->tipo_documento ?? 'DNI',
             'documento' => $user->documento ?? $user->username ?? '________',
         ];
 
@@ -47,6 +47,7 @@ class Infraestructura2DPdfController extends Controller
         $pdf = Pdf::loadView('usuario.monitoreo.pdf.infraestructura_2d_pdf', compact(
             'acta',
             'modulo',
+            'contenido',
             'elementos',
             'conexiones',
             'grupos',
@@ -60,18 +61,18 @@ class Infraestructura2DPdfController extends Controller
         $pdf->render();
 
         // 9. Dibujar pie de página en todas las páginas
-        $dompdf      = $pdf->getDomPDF();
-        $canvas      = $dompdf->get_canvas();
-        $h           = $canvas->get_height();
-        $w           = $canvas->get_width();
+        $dompdf = $pdf->getDomPDF();
+        $canvas = $dompdf->get_canvas();
+        $h = $canvas->get_height();
+        $w = $canvas->get_width();
         $fontMetrics = $dompdf->getFontMetrics();
-        $font        = $fontMetrics->get_font('Helvetica', 'normal');
-        $size        = 8;
-        $color       = [0.39, 0.45, 0.54]; // Slate-500
+        $font = $fontMetrics->get_font('Helvetica', 'normal');
+        $size = 8;
+        $color = [0.39, 0.45, 0.54]; // Slate-500
 
         $canvas->page_text(42, $h - 40, 'SISTEMA DE ACTAS · INFRAESTRUCTURA 2D', $font, $size, $color);
 
-        $textPag  = 'PAG. {PAGE_NUM} / {PAGE_COUNT}';
+        $textPag = 'PAG. {PAGE_NUM} / {PAGE_COUNT}';
         $widthPag = $fontMetrics->getTextWidth('PAG. 00 / 00', $font, $size);
         $canvas->page_text($w - 42 - $widthPag, $h - 40, $textPag, $font, $size, $color);
 

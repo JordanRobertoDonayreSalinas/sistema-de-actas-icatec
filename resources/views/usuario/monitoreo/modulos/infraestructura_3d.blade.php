@@ -188,9 +188,6 @@
                     _toastVisible: false,        // Visibilidad del toast
                     _toastTimer: null,           // Timer para auto-ocultar el toast
 
-                    /* ─ Datos de módulos (sincronización) ─ */
-                    modulosData: @json($modulosData ?? []),  // [{ slug, label, equipos[], utiliza_sihce, tipo_conectividad }]
-
                     /* ─── Lifecycle ─── */
                     init() {
                         this.$nextTick(() => {
@@ -475,20 +472,9 @@
                         const ry = dropY !== null
                             ? Math.max(0, Math.round((dropY - h / 2) / GRID) * GRID)
                             : Math.round((Math.random() * (lh - h - 20) + 10) / GRID) * GRID;
-                        
-                        let parentId = null;
-                        if (type === 'hardware' || type === 'sistema') {
-                            const p = [...this.elements].reverse().find(e => 
-                                e.type === 'ambiente' && e.piso === this.currentPiso &&
-                                rx >= e.x && ry >= e.y && rx + w <= e.x + e.w && ry + h <= e.y + e.h
-                            );
-                            if (p) parentId = p.id;
-                        }
-
                         const newEl = {
                             id: crypto.randomUUID(),
                             type,
-                            parentId,
                             piso: this.currentPiso,
                             subtype: type === 'ambiente' ? this.roomSubtype : (type === 'hardware' ? this.hwType : (type === 'puerta' ? this.doorSubtype : (type === 'calle' ? this.calleSubtype : (type === 'sistema' ? this.sistemaType : null)))),
                             name: this.name || (type === 'hardware' ? this.hwType.toUpperCase() : (type === 'ambiente' ? (this.roomSubtype?.toUpperCase() || 'AMBIENTE') : (type === 'puerta' ? '' : (type === 'calle' ? (this.calleSubtype === 'avenida' ? 'Av. ' : (this.calleSubtype === 'jiron' ? 'Jr. ' : 'Psj. ')) : (type === 'sistema' ? this.sistemaType.toUpperCase() : type.toUpperCase()))))),
@@ -1207,8 +1193,11 @@
                                 }
                                 break;
                             case 'pozo':
+                                /* Standard earth ground symbol */
                                 ctx.strokeStyle = '#059669'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+                                /* Vertical stem */
                                 ctx.beginPath(); ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy - 2); ctx.stroke();
+                                /* Horizontal lines (decreasing width) */
                                 [0, 5, 10].forEach((off, i) => {
                                     const hw = 14 - i * 4;
                                     ctx.lineWidth = 2.5 - i * 0.5;
@@ -1217,104 +1206,26 @@
                                     ctx.lineTo(cx + hw, cy - 2 + off);
                                     ctx.stroke();
                                 });
+                                /* Green dot at center */
                                 ctx.beginPath(); ctx.arc(cx, cy - 12, 3, 0, Math.PI * 2);
                                 ctx.fillStyle = '#059669'; ctx.fill();
                                 break;
                             case 'punto_red':
+                                /* Wall network socket symbol */
                                 ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+                                /* Square frame */
                                 ctx.strokeRect(cx - 10, cy - 8, 20, 16);
+                                /* RJ45-like cut */
                                 ctx.strokeRect(cx - 3.5, cy - 1, 7, 5);
                                 ctx.beginPath();
                                 ctx.moveTo(cx - 4.5, cy + 4); ctx.lineTo(cx - 4.5, cy + 6.5);
                                 ctx.lineTo(cx + 4.5, cy + 6.5); ctx.lineTo(cx + 4.5, cy + 4);
                                 ctx.stroke();
+                                /* Plug pins */
                                 ctx.lineWidth = 1;
                                 [cx - 2, cx, cx + 2].forEach(px => {
                                     ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, cy + 3); ctx.stroke();
                                 });
-                                break;
-
-                            /* ══ Equipos de consultorio (sincronización de módulos) ══ */
-                            case 'pc':
-                                /* Torre CPU */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 6, cy - 12, 12, 18); // cuerpo
-                                ctx.beginPath(); ctx.arc(cx, cy - 1, 2, 0, Math.PI * 2); ctx.stroke(); // botón
-                                ctx.beginPath(); ctx.moveTo(cx - 3, cy + 5); ctx.lineTo(cx + 3, cy + 5); ctx.stroke(); // ranura USB
-                                break;
-                            case 'laptop':
-                                /* Laptop: tapa + base */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 12, cy - 10, 24, 14); // pantalla
-                                ctx.beginPath(); ctx.moveTo(cx - 14, cy + 4); ctx.lineTo(cx + 14, cy + 4); ctx.lineTo(cx + 14, cy + 7); ctx.lineTo(cx - 14, cy + 7); ctx.closePath(); ctx.stroke(); // teclado base
-                                break;
-                            case 'tablet':
-                                /* Tablet: rect fino vertical */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 8, cy - 12, 16, 20);
-                                ctx.beginPath(); ctx.arc(cx, cy + 11, 2, 0, Math.PI * 2); ctx.stroke(); // botón home
-                                break;
-                            case 'monitor':
-                                /* Monitor: pantalla + soporte */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 13, cy - 11, 26, 16); // pantalla
-                                ctx.beginPath(); ctx.moveTo(cx, cy + 5); ctx.lineTo(cx, cy + 9); ctx.stroke(); // palo
-                                ctx.beginPath(); ctx.moveTo(cx - 5, cy + 9); ctx.lineTo(cx + 5, cy + 9); ctx.stroke(); // base
-                                break;
-                            case 'teclado':
-                                /* Teclado: rect plano con teclas */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.5;
-                                ctx.strokeRect(cx - 14, cy - 5, 28, 10);
-                                for (let ki = 0; ki < 5; ki++) {
-                                    ctx.strokeRect(cx - 11 + ki * 5.5, cy - 3, 4, 3);
-                                }
-                                break;
-                            case 'mouse':
-                                /* Mouse: cuerpo ovalado + botones */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.beginPath();
-                                ctx.ellipse(cx, cy, 6, 10, 0, 0, Math.PI * 2);
-                                ctx.stroke();
-                                ctx.beginPath(); ctx.moveTo(cx - 6, cy - 2); ctx.lineTo(cx + 6, cy - 2); ctx.stroke();
-                                ctx.beginPath(); ctx.moveTo(cx, cy - 10); ctx.lineTo(cx, cy - 2); ctx.stroke();
-                                break;
-                            case 'impresora':
-                                /* Impresora: caja con ranura de papel */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 13, cy - 7, 26, 14);
-                                // ranura papel
-                                ctx.beginPath(); ctx.moveTo(cx - 8, cy - 7); ctx.lineTo(cx - 8, cy - 12); ctx.moveTo(cx + 8, cy - 7); ctx.lineTo(cx + 8, cy - 12);
-                                ctx.beginPath(); ctx.rect(cx - 8, cy - 12, 16, 2); ctx.fillStyle='#dbeafe'; ctx.fill(); ctx.stroke();
-                                // botón panel
-                                ctx.beginPath(); ctx.arc(cx + 9, cy + 1, 2, 0, Math.PI*2); ctx.fillStyle='#2563eb'; ctx.fill();
-                                break;
-                            case 'ticketera':
-                                /* Ticketera: caja pequeña cuadrada con papel saliendo */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 8, cy - 5, 16, 12);
-                                ctx.beginPath(); ctx.moveTo(cx - 4, cy - 5); ctx.lineTo(cx - 4, cy - 10); ctx.moveTo(cx + 4, cy - 5); ctx.lineTo(cx + 4, cy - 10); ctx.stroke();
-                                ctx.beginPath(); ctx.rect(cx - 4, cy - 11, 8, 2); ctx.fillStyle='#dbeafe'; ctx.fill(); ctx.stroke();
-                                break;
-                            case 'escaner':
-                                /* Escaner / Lectora DNIe: placa plana */
-                                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 13, cy - 4, 26, 8);
-                                // chip rectangle en centro
-                                ctx.fillStyle = '#dbeafe';
-                                ctx.fillRect(cx - 5, cy - 2, 10, 4);
-                                ctx.strokeRect(cx - 5, cy - 2, 10, 4);
-                                break;
-                            case 'ups':
-                                /* UPS / Estabilizador: caja con rayo */
-                                ctx.strokeStyle = '#059669'; ctx.lineWidth = 1.8;
-                                ctx.strokeRect(cx - 12, cy - 10, 24, 18);
-                                ctx.fillStyle = '#d1fae5';
-                                ctx.fillRect(cx - 10, cy - 8, 20, 14);
-                                ctx.strokeStyle = '#059669';
-                                ctx.beginPath();
-                                ctx.moveTo(cx + 2, cy - 7); ctx.lineTo(cx - 3, cy - 0.5); ctx.lineTo(cx + 1, cy - 0.5); ctx.lineTo(cx - 2, cy + 7);
-                                ctx.lineTo(cx + 4, cy + 0); ctx.lineTo(cx - 0.5, cy + 0); ctx.closePath();
-                                ctx.fillStyle = '#059669'; ctx.fill();
                                 break;
                             default:
                                 /* generic box */
@@ -1754,23 +1665,8 @@
                         }
 
                         if (isDragging && dragTarget) {
-                            const newX = Math.round((x - offset.x) / GRID) * GRID;
-                            const newY = Math.round((y - offset.y) / GRID) * GRID;
-                            const dx = newX - dragTarget.x;
-                            const dy = newY - dragTarget.y;
-
-                            dragTarget.x = newX;
-                            dragTarget.y = newY;
-
-                            if (dx !== 0 || dy !== 0) {
-                                this.elements.forEach(el => {
-                                    if (el.parentId === dragTarget.id) {
-                                        el.x += dx;
-                                        el.y += dy;
-                                    }
-                                });
-                            }
-
+                            dragTarget.x = Math.round((x - offset.x) / GRID) * GRID;
+                            dragTarget.y = Math.round((y - offset.y) / GRID) * GRID;
                             this.draw();
                             return;
                         }
@@ -1881,28 +1777,6 @@
                         if (el) {
                             this._snapshot();
                             el[prop] = Math.max(20, +val);
-                            el._ts = Date.now();
-                            this.draw();
-                        }
-                    },
-
-                    toggleSelectedAttr(prop) {
-                        const el = this.elements.find(e => e.id === this.selectedId);
-                        if (el) {
-                            if (!el.attrs) el.attrs = {};
-                            this._snapshot();
-                            el.attrs[prop] = !el.attrs[prop];
-                            el._ts = Date.now();
-                            this.draw();
-                        }
-                    },
-
-                    changeSelectedAttrCount(prop, delta) {
-                        const el = this.elements.find(e => e.id === this.selectedId);
-                        if (el) {
-                            if (!el.attrs) el.attrs = {};
-                            this._snapshot();
-                            el.attrs[prop] = Math.max(0, (el.attrs[prop] || 0) + delta);
                             el._ts = Date.now();
                             this.draw();
                         }
@@ -2323,13 +2197,13 @@
                             target: document.getElementById('tablet-editor-container'),
                             title: '¡Plano A1 exportado!',
                             html: `<div style="text-align:left;font-size:13px;line-height:1.6">
-                                                                            <p>✅ Archivo <strong>SVG vectorial A1 horizontal</strong> descargado.</p>
-                                                                            <p style="margin-top:8px;color:#64748b;font-size:12px;">
-                                                                                Ábrelo en <strong>Inkscape</strong> (gratis), <strong>Adobe Illustrator</strong>
-                                                                                o imprímelo directamente en tu <strong>plotter A1</strong>.<br>
-                                                                                El SVG es totalmente vectorial: sin pixelado a cualquier escala.
-                                                                            </p>
-                                                                        </div>`,
+                                                                        <p>✅ Archivo <strong>SVG vectorial A1 horizontal</strong> descargado.</p>
+                                                                        <p style="margin-top:8px;color:#64748b;font-size:12px;">
+                                                                            Ábrelo en <strong>Inkscape</strong> (gratis), <strong>Adobe Illustrator</strong>
+                                                                            o imprímelo directamente en tu <strong>plotter A1</strong>.<br>
+                                                                            El SVG es totalmente vectorial: sin pixelado a cualquier escala.
+                                                                        </p>
+                                                                    </div>`,
                             icon: 'success',
                             confirmButtonColor: '#4f46e5',
                         });
@@ -2424,211 +2298,6 @@
                         this.mapOffsetX = 0;
                         this.mapOffsetY = 0;
                         this.draw();
-                    },
-
-                    /* ─── Fetch AJAX de modulos ─── */
-                    async fetchAndSyncModulos() {
-                        const btn = document.getElementById('btn-sync');
-                        try {
-                            if (btn) btn.classList.add('opacity-50', 'pointer-events-none');
-                            
-                            const res = await fetch(`{{ route('usuario.monitoreo.infraestructura-2d.sync-data', $acta->id) }}`, {
-                                cache: 'no-cache'
-                            });
-                            if (!res.ok) throw new Error('Error al sincronizar');
-                            
-                            const data = await res.json();
-                            this.modulosData = data;
-                            
-                            if (btn) btn.classList.remove('opacity-50', 'pointer-events-none');
-
-                            if (!this.modulosData || this.modulosData.length === 0) {
-                                Swal.fire({ title: 'Sin datos de módulos', text: 'No hay módulos registrados en la base de datos.', icon: 'info' });
-                                return;
-                            }
-
-                            const result = await Swal.fire({
-                                title: '⚡ Sincronizar desde Módulos',
-                                html: `<p class='text-sm text-slate-600 mb-4'>Se obtuvieron <strong>${this.modulosData.length}</strong> consultorios desde el servidor.</p>
-                                    <div class='flex flex-col gap-3'>
-                                        <label class='flex items-start gap-3 cursor-pointer p-3 border-2 border-indigo-200 rounded-xl hover:bg-indigo-50 transition-all'>
-                                        <input type='radio' name='sync_mode' value='agregar' checked class='mt-0.5 accent-indigo-600'>
-                                        <div class='text-left'><p class='font-bold text-xs text-slate-800'>Agregar a lo existente</p><p class='text-[10px] text-slate-500'>Solo añade equipos nuevos detectados y consultorios faltantes.</p></div>
-                                        </label>
-                                        <label class='flex items-start gap-3 cursor-pointer p-3 border-2 border-rose-200 rounded-xl hover:bg-rose-50 transition-all'>
-                                        <input type='radio' name='sync_mode' value='limpiar' class='mt-0.5 accent-rose-600'>
-                                        <div class='text-left'><p class='font-bold text-xs text-slate-800'>Limpiar y reemplazar</p><p class='text-[10px] text-slate-500'>Borra TODO el croquis actual y lo genera desde cero.</p></div>
-                                        </label>
-                                    </div>`,
-                                showCancelButton: true,
-                                confirmButtonText: '⚡ Sincronizar',
-                                cancelButtonText: 'Cancelar',
-                                confirmButtonColor: '#4f46e5',
-                                cancelButtonColor: '#94a3b8',
-                                customClass: { popup: 'rounded-[2rem]' },
-                                preConfirm: () => document.querySelector('input[name=sync_mode]:checked')?.value || 'agregar'
-                            });
-
-                            if (result.isConfirmed) {
-                                this.prepopularModulos(result.value === 'limpiar');
-                            }
-                        } catch (e) {
-                            console.error(e);
-                            if (btn) btn.classList.remove('opacity-50', 'pointer-events-none');
-                            Swal.fire({title: 'Error', text: 'No se pudieron actualizar los datos del servidor.', icon: 'error'});
-                        }
-                    },
-
-                    /* ─── Pre-cargar desde módulos ─── */
-                    prepopularModulos(modoLimpiar = false) {
-                        if (!this.modulosData || this.modulosData.length === 0) {
-                            Swal.fire({ title: 'Sin datos de módulos', text: 'No hay módulos registrados con equipos para sincronizar.', icon: 'info', confirmButtonColor: '#4f46e5' });
-                            return;
-                        }
-
-                        /* Mapa: descripción del equipo → subtype del canvas */
-                        const EQUIPO_MAP = {
-                            'ALL IN ONE': 'pc', 'CPU': 'pc', 'LAPTOP': 'laptop', 'TABLET': 'tablet',
-                            'IMPRESORA': 'impresora', 'TICKETERA': 'ticketera',
-                            'LECTORA DE DNIE': 'escaner', 'SCANNER': 'escaner', 'ESCANER': 'escaner',
-                            'ESTABILIZADOR': 'ups', 'STABILIZADOR': 'ups', 'UPS': 'ups',
-                        };
-
-                        // IDs de ambientes que ya existen (por label/slug) para no duplicar
-                        const existingLabels = new Set(
-                            this.elements.filter(e => e.type === 'ambiente').map(e => (e.name || '').toUpperCase())
-                        );
-
-                        this._snapshot();
-                        if (modoLimpiar) {
-                            this.elements = [];
-                            this.connections = [];
-                        }
-
-                        /* Layout automático: 3 columnas, filas dinámicas */
-                        const COL = 3;
-                        const RW  = 240, RH = 200;   // tamaño del ambiente
-                        const GAP = 30;               // espacio entre ambientes
-                        const STARTX = 60, STARTY = 60;
-
-                        let idx = 0;
-                        this.modulosData.forEach(modulo => {
-                            const cantidadStr = modulo.cantidad || 1;
-                            const cantidad = parseInt(cantidadStr, 10);
-                            
-                            for (let i = 0; i < cantidad; i++) {
-                                const labelStr = modulo.label + (cantidad > 1 ? ` ${i + 1}` : '');
-                                const labelUp = labelStr.toUpperCase();
-                                let isNew = false;
-                                let ambId, rx, ry;
-
-                                if (!modoLimpiar && existingLabels.has(labelUp)) {
-                                    const existRoom = this.elements.find(e => e.type === 'ambiente' && (e.name || '').toUpperCase() === labelUp);
-                                    if (!existRoom) continue; // Fallback
-                                    ambId = existRoom.id;
-                                    rx = existRoom.x;
-                                    ry = existRoom.y;
-                                } else {
-                                    isNew = true;
-                                    const col = idx % COL;
-                                    const row = Math.floor(idx / COL);
-                                    rx  = STARTX + col * (RW + GAP);
-                                    ry  = STARTY + row * (RH + GAP);
-                                    ambId = 'mod_' + modulo.slug + '_' + i + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-
-                                    /* ── 1. Crear ambiente (consultorio) ── */
-                                    const hasWifi = modulo.tipo_conectividad === 'WIFI';
-                                    this.elements.push({
-                                        id: ambId,
-                                        type: 'ambiente',
-                                        subtype: 'consultorio_fisico',
-                                        x: rx, y: ry, w: RW, h: RH,
-                                        name: labelStr,
-                                        rotation: 0,
-                                        attrs: { wifi: hasWifi, light: true, red: modulo.tipo_conectividad === 'CABLEADO' ? 1 : 0 },
-                                        piso: this.currentPiso,
-                                        _ts: Date.now(),
-                                        _synced: true,
-                                    });
-                                    idx++;
-                                }
-
-                                /* ── 2. Agregar hardware dentro del consultorio ── */
-                                let hwCol = 0, hwRow = 0;
-                                const HW = 36, HWGAP = 6;
-                                const HW_STARTX = rx + 12, HW_STARTY = ry + 36;
-                                const HW_COLS = 4;
-
-                                const addHw = (subtype, label) => {
-                                    if (!modoLimpiar && this.elements.some(e => e.parentId === ambId && e.type === 'hardware' && e.subtype === subtype)) {
-                                        return; // Ya existe este equipo dentro del cuarto
-                                    }
-                                    const hx = HW_STARTX + hwCol * (HW + HWGAP);
-                                    const hy = HW_STARTY + hwRow * (HW + HWGAP);
-                                    this.elements.push({
-                                        id: 'hw_' + ambId + '_' + subtype + '_' + Math.random().toString(36).slice(2,5),
-                                        type: 'hardware', subtype,
-                                        parentId: ambId,
-                                        x: hx, y: hy, w: HW, h: HW,
-                                        name: label,
-                                        rotation: 0,
-                                        piso: this.currentPiso,
-                                        _ts: Date.now(),
-                                        _synced: true,
-                                    });
-                                    hwCol++;
-                                    if (hwCol >= HW_COLS) { hwCol = 0; hwRow++; }
-                                    
-                                    if (!isNew && !modoLimpiar) idx++; // Incrementar op para notificar
-                                };
-
-                                /* Iterar equipos y mapear a subtypes */
-                                const added = new Set();
-                                modulo.equipos.forEach(eq => {
-                                    const key = Object.keys(EQUIPO_MAP).find(k => eq.includes(k));
-                                    if (key) {
-                                        const sub = EQUIPO_MAP[key];
-                                        const dedupeKey = ['pc','laptop','tablet','monitor'].includes(sub) ? sub + '_' + added.size : sub;
-                                        if (!added.has(dedupeKey)) {
-                                            added.add(dedupeKey);
-                                            addHw(sub, eq);
-                                        }
-                                    }
-                                });
-
-                                /* ── 4. Ícono SIHCE si lo usa ── */
-                                if (modulo.utiliza_sihce === 'SI') {
-                                    this.sistemaType = 'sihce';
-                                    if (modoLimpiar || !this.elements.some(e => e.parentId === ambId && e.subtype === 'sihce')) {
-                                        this.elements.push({
-                                            id: 'sis_' + ambId + '_sihce_' + i + '_' + Math.random().toString(36).slice(2,5),
-                                            type: 'sistema', subtype: 'sihce',
-                                            parentId: ambId,
-                                            x: rx + RW - 44, y: ry + 12, w: 36, h: 36,
-                                            name: 'SIHCE',
-                                            rotation: 0,
-                                            piso: this.currentPiso,
-                                            _ts: Date.now(),
-                                            _synced: true,
-                                        });
-                                        if (!isNew && !modoLimpiar) idx++;
-                                    }
-                                }
-                            }
-                        });
-
-                        this.draw();
-                        this._refreshIcons();
-
-                        if (idx === 0 && !modoLimpiar) {
-                            Swal.fire({ title: 'Ya sincronizado', text: 'Todos los módulos con datos ya están representados en el croquis.', icon: 'info', confirmButtonColor: '#4f46e5' });
-                        } else {
-                            Swal.fire({
-                                title: '¡Sincronizado!',
-                                html: `<p>${idx} consultorio(s) pre-cargado(s) desde los módulos de monitoreo.</p><p class="text-xs text-slate-400 mt-2">Puedes moverlos y editarlos libremente. Recuerda guardar el croquis.</p>`,
-                                icon: 'success', showConfirmButton: true, confirmButtonColor: '#4f46e5', confirmButtonText: 'Perfecto'
-                            });
-                        }
                     },
 
                     /* ─── Save ─── */
@@ -2814,72 +2483,72 @@
                         navigator.sendBeacon(this._leaveUrl, fd);
                     },
 
-        /** Dibuja los cursores remotos encima del canvas (llamado desde draw()) */
-        _drawRemoteCursors() {
-            if (!ctx || !this.colaboradores || this.colaboradores.length === 0) return;
+                    /** Dibuja los cursores remotos encima del canvas (llamado desde draw()) */
+                    _drawRemoteCursors() {
+                        if (!ctx || !this.colaboradores || this.colaboradores.length === 0) return;
 
-            const z = this.canvasZoom || 1;
-            const lw = this.logicalW;
-            const lh = this.logicalH;
+                        const z = this.canvasZoom || 1;
+                        const lw = this.logicalW;
+                        const lh = this.logicalH;
 
-            this.colaboradores.forEach(colab => {
-                const rawX = colab.cursor_x;
-                const rawY = colab.cursor_y;
-                if (rawX === 0 && rawY === 0) return; /* Sin posición aún */
+                        this.colaboradores.forEach(colab => {
+                            const rawX = colab.cursor_x;
+                            const rawY = colab.cursor_y;
+                            if (rawX === 0 && rawY === 0) return; /* Sin posición aún */
 
-                /* Screen-space → logical canvas-space (usar helper de cámara) */
-                const { x: cx, y: cy } = this._screenToCanvas(rawX, rawY);
+                            /* Screen-space → logical canvas-space (usar helper de cámara) */
+                            const { x: cx, y: cy } = this._screenToCanvas(rawX, rawY);
 
-                const color = colab.color || '#ef4444';
-                const name = (colab.user_name || '?').substring(0, 20);
+                            const color = colab.color || '#ef4444';
+                            const name = (colab.user_name || '?').substring(0, 20);
 
-                ctx.save();
+                            ctx.save();
 
-                /* ── Forma del cursor (flecha SVG clásica) ── */
-                ctx.fillStyle = color;
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 1.5;
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = color + '80';
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(cx, cy + 18);
-                ctx.lineTo(cx + 4, cy + 13);
-                ctx.lineTo(cx + 9, cy + 20);
-                ctx.lineTo(cx + 11, cy + 19);
-                ctx.lineTo(cx + 6, cy + 12);
-                ctx.lineTo(cx + 12, cy + 12);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-                ctx.shadowBlur = 0;
+                            /* ── Forma del cursor (flecha SVG clásica) ── */
+                            ctx.fillStyle = color;
+                            ctx.strokeStyle = 'white';
+                            ctx.lineWidth = 1.5;
+                            ctx.shadowBlur = 8;
+                            ctx.shadowColor = color + '80';
+                            ctx.beginPath();
+                            ctx.moveTo(cx, cy);
+                            ctx.lineTo(cx, cy + 18);
+                            ctx.lineTo(cx + 4, cy + 13);
+                            ctx.lineTo(cx + 9, cy + 20);
+                            ctx.lineTo(cx + 11, cy + 19);
+                            ctx.lineTo(cx + 6, cy + 12);
+                            ctx.lineTo(cx + 12, cy + 12);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.stroke();
+                            ctx.shadowBlur = 0;
 
-                /* ── Etiqueta con nombre ── */
-                ctx.font = 'bold 9px Inter, Arial';
-                const tw = ctx.measureText(name).width;
-                const pw = tw + 10;
-                const ph = 14;
-                const lx = cx + 13;
-                const ly = cy + 2;
+                            /* ── Etiqueta con nombre ── */
+                            ctx.font = 'bold 9px Inter, Arial';
+                            const tw = ctx.measureText(name).width;
+                            const pw = tw + 10;
+                            const ph = 14;
+                            const lx = cx + 13;
+                            const ly = cy + 2;
 
-                /* Fondo redondeado */
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.roundRect(lx, ly, pw, ph, 4);
-                ctx.fill();
+                            /* Fondo redondeado */
+                            ctx.fillStyle = color;
+                            ctx.beginPath();
+                            ctx.roundRect(lx, ly, pw, ph, 4);
+                            ctx.fill();
 
-                /* Texto */
-                ctx.fillStyle = 'white';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(name, lx + 5, ly + ph / 2 + 0.5);
+                            /* Texto */
+                            ctx.fillStyle = 'white';
+                            ctx.textAlign = 'left';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(name, lx + 5, ly + ph / 2 + 0.5);
 
-                ctx.restore();
-            });
-        },
-                                };
-                            });
+                            ctx.restore();
                         });
+                    },
+                };
+            });
+        });
     </script>
 
     <div id="tablet-editor-container" class="h-screen flex flex-col bg-slate-100 overflow-hidden font-sans"
@@ -3060,7 +2729,6 @@
 
                 <!-- Capas Toggle -->
                 <div class="flex items-center gap-4 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
-                    <span class="text-[8px] font-bold text-slate-400 uppercase flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3"></i> Filtros de Vista:</span>
                     <label class="flex items-center gap-2 cursor-pointer group">
                         <input type="checkbox" x-model="layers.furniture" @change="draw()" class="rounded text-indigo-600">
                         <span
@@ -3069,7 +2737,7 @@
                     <label class="flex items-center gap-2 cursor-pointer group">
                         <input type="checkbox" x-model="layers.network" @change="draw()" class="rounded text-blue-600">
                         <span
-                            class="text-[8px] font-black uppercase text-slate-500 group-hover:text-blue-600 transition-colors">Conexiones</span>
+                            class="text-[8px] font-black uppercase text-slate-500 group-hover:text-blue-600 transition-colors">Internet</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer group">
                         <input type="checkbox" x-model="layers.power" @change="draw()" class="rounded text-amber-500">
@@ -3145,26 +2813,30 @@
                         <i :data-lucide="isFullscreen ? 'minimize' : 'maximize'" class="w-4 h-4"></i>
                         <span x-text="isFullscreen ? 'Salir' : 'Pantalla Completa'"></span>
                     </button>
-                    {{-- ⚡ Botón Sincronizar desde Módulos --}}
-                    <button id="btn-sync" @click="fetchAndSyncModulos()"
-                        class="relative px-4 py-2 bg-violet-600 text-white rounded-xl text-[10px] font-black uppercase hover:bg-violet-700 transition-all flex items-center gap-2 shadow-lg shadow-violet-200">
-                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full text-[8px] flex items-center justify-center font-black text-slate-900 shadow" x-text="modulosData ? modulosData.length : 0"></span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        Sync Módulos
-                    </button>
                     {{-- Botón Exportar Imagen --}}
                     <button @click="exportImage()" title="Exportar croquis como imagen PNG"
-                        class="px-5 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-100">
+                        @mouseenter="$el.style.backgroundColor='#047857'" @mouseleave="$el.style.backgroundColor='#059669'"
+                        class="px-5 py-2 text-white rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2 shadow-lg"
+                        style="background-color:#059669; box-shadow:0 4px 12px rgba(5,150,105,0.3);">
                         <i data-lucide="image" class="w-4 h-4"></i>
                         Exportar PNG
                     </button>
+                    {{-- Botón Plano A1 SVG --}}
+                    <button @click="exportPlano()" title="Exportar plano vectorial A1 para plotter (SVG)"
+                        @mouseenter="$el.style.backgroundColor='#5b21b6'" @mouseleave="$el.style.backgroundColor='#7c3aed'"
+                        class="px-5 py-2 text-white rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2 shadow-lg"
+                        style="background-color:#7c3aed; box-shadow:0 4px 12px rgba(124,58,237,0.35);">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        Plano A1
+                    </button>
                     {{-- Botón Exportar PDF --}}
-                    <a href="{{ route('usuario.monitoreo.infraestructura-2d.pdf', $acta->id) }}" target="_blank"
-                        title="Exportar reporte a PDF"
-                        class="px-5 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase hover:bg-rose-700 transition-all flex items-center gap-2 shadow-lg shadow-rose-100">
+                    <button @click="exportPdf()" title="Guarda el croquis y genera el reporte PDF"
+                        @mouseenter="$el.style.backgroundColor='#b91c1c'" @mouseleave="$el.style.backgroundColor='#dc2626'"
+                        class="px-5 py-2 text-white rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2 shadow-lg"
+                        style="background-color:#dc2626; box-shadow:0 4px 12px rgba(220,38,38,0.3);">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                         Exportar PDF
-                    </a>
+                    </button>
                     <button @click="saveData()" :class="isSaving ? 'btn-saving' : ''"
                         class="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-indigo-600 transition-all flex items-center gap-2 shadow-lg shadow-slate-200">
                         <i :data-lucide="isSaving ? 'loader' : 'save'" :class="isSaving ? 'animate-spin' : ''"
@@ -3177,9 +2849,9 @@
                         <i data-lucide="arrow-left" class="w-5 h-5"></i>
                     </a>
                     <button @click="panelVisible = false"
-                        class="px-3 h-10 bg-rose-50 hover:bg-rose-100 text-rose-500 text-[10px] uppercase font-black tracking-wide rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
-                        title="Ocultar Panel Superior">
-                        <i data-lucide="chevron-up" class="w-4 h-4"></i> Ocultar
+                        class="w-10 h-10 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl flex items-center justify-center transition-all"
+                        title="Minimizar herramientas">
+                        <i data-lucide="minimize-2" class="w-5 h-5"></i>
                     </button>
                 </div>
             </div>
@@ -3233,8 +2905,8 @@
                                     <div x-show="roomSubtype === 'consultorio_fisico' || roomSubtype === 'consultorio_funcional'"
                                         class="p-3 rounded-xl text-[8px] leading-relaxed"
                                         :class="roomSubtype === 'consultorio_funcional'
-                                                                                                             ? 'bg-amber-50 text-amber-700 border border-amber-100'
-                                                                                                             : 'bg-emerald-50 text-emerald-700 border border-emerald-100'">
+                                                                                                         ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                                                                         : 'bg-emerald-50 text-emerald-700 border border-emerald-100'">
                                         <span x-show="roomSubtype === 'consultorio_fisico'">🏥 <strong>Físico:</strong>
                                             Espacio permanente, de uso exclusivo para atención clínica. Borde sólido
                                             verde.</span>
@@ -3581,10 +3253,10 @@
                                 <!-- Info contextual -->
                                 <div class="mb-4 p-3 rounded-xl text-[8px] leading-relaxed"
                                     :style="sistemaType === 'tua'          ? 'background:#f5f3ff;color:#5b21b6;border:1px solid #ede9fe;' :
-                                                                                                             sistemaType === 'sihce'        ? 'background:#eff6ff;color:#1e40af;border:1px solid #dbeafe;' :
-                                                                                                             sistemaType === 'sismed'       ? 'background:#f0fdfa;color:#134e4a;border:1px solid #ccfbf1;' :
-                                                                                                             sistemaType === 'hisminsa'     ? 'background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;' :
-                                                                                                                                              'background:#eff6ff;color:#1e40af;border:1px solid #dbeafe;'">
+                                                                                                         sistemaType === 'sihce'        ? 'background:#eff6ff;color:#1e40af;border:1px solid #dbeafe;' :
+                                                                                                         sistemaType === 'sismed'       ? 'background:#f0fdfa;color:#134e4a;border:1px solid #ccfbf1;' :
+                                                                                                         sistemaType === 'hisminsa'     ? 'background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;' :
+                                                                                                                                          'background:#eff6ff;color:#1e40af;border:1px solid #dbeafe;'">
                                     <span x-show="sistemaType === 'tua'">🖥️ <strong>TUA:</strong> Sistema de turnos y citas
                                         únicas de atención.</span>
                                     <span x-show="sistemaType === 'sihce'">📋 <strong>SIHCE:</strong> Historia clínica
@@ -3618,47 +3290,6 @@
                                     <input type="text" x-model="selectedElName" placeholder="Nombre..."
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-300">
                                 </div>
-
-                                <!-- Propiedades (solo si es ambiente) -->
-                                <template x-if="selectedEl && selectedEl.type === 'ambiente'">
-                                    <div class="mb-4 bg-slate-50 rounded-2xl p-3 border border-slate-100">
-                                        <p class="text-[8px] font-black uppercase text-slate-400 mb-2 flex items-center gap-1">
-                                            <i data-lucide="settings" class="w-3 h-3"></i> Propiedades
-                                        </p>
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <button @click="toggleSelectedAttr('wifi')"
-                                                :class="selectedEl.attrs?.wifi ? 'bg-blue-600 text-white shadow-indigo-200' : 'bg-white border-slate-200 text-slate-400'"
-                                                class="p-4 rounded-xl flex flex-col items-center gap-2 transition-all shadow-sm border">
-                                                <i data-lucide="wifi" class="w-4 h-4"></i>
-                                                <span class="text-[8px] font-black uppercase">Wifi</span>
-                                            </button>
-                                            <button @click="toggleSelectedAttr('light')"
-                                                :class="selectedEl.attrs?.light ? 'bg-amber-500 text-white shadow-amber-200' : 'bg-white border-slate-200 text-slate-400'"
-                                                class="p-4 rounded-xl flex flex-col items-center gap-2 transition-all shadow-sm border">
-                                                <i data-lucide="zap" class="w-4 h-4"></i>
-                                                <span class="text-[8px] font-black uppercase">Luz</span>
-                                            </button>
-                                        </div>
-                                        <div class="mt-2 bg-white p-2 rounded-xl border border-slate-100 flex items-center justify-between">
-                                            <div class="flex items-center gap-2 ml-2">
-                                                <i data-lucide="share-2" class="w-4 h-4 text-emerald-500"></i>
-                                                <span class="text-[9px] font-black text-slate-500 uppercase">Puntos Red</span>
-                                            </div>
-                                            <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-200">
-                                                <button @click="changeSelectedAttrCount('red', -1)"
-                                                    class="w-6 h-6 flex justify-center items-center rounded bg-white text-slate-400 shadow-sm hover:text-emerald-600 font-bold transition-colors">
-                                                    -
-                                                </button>
-                                                <span class="w-4 text-center text-[10px] font-black text-slate-600"
-                                                    x-text="selectedEl.attrs?.red || 0"></span>
-                                                <button @click="changeSelectedAttrCount('red', 1)"
-                                                    class="w-6 h-6 flex justify-center items-center rounded bg-emerald-500 text-white shadow-sm hover:bg-emerald-600 font-bold transition-colors">
-                                                    +
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
 
                                 <!-- Tamaño numérico -->
                                 <div class="mb-4 bg-slate-50 rounded-2xl p-3 border border-slate-100">
@@ -3746,8 +3377,8 @@
                                         <template x-for="n in pisoRange()" :key="n">
                                             <button @click="moveSelectedToPiso(n)"
                                                 :class="selectedEl && (selectedEl.piso || 1) === n
-                                                                                                                        ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
-                                                                                                                        : 'bg-white text-slate-500 hover:bg-violet-100 hover:text-violet-700'"
+                                                                                                                    ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
+                                                                                                                    : 'bg-white text-slate-500 hover:bg-violet-100 hover:text-violet-700'"
                                                 class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all border border-violet-100"
                                                 :title="'Mover al Piso ' + n" x-text="'P' + n">
                                             </button>
@@ -3797,8 +3428,8 @@
 
                             <button @click="goToPiso(piso)" :title="'Ir al Piso ' + piso"
                                 :class="piso === currentPiso
-                                                                                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-300 scale-105 z-10'
-                                                                                                        : 'bg-white/95 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'"
+                                                                                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-300 scale-105 z-10'
+                                                                                                    : 'bg-white/95 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'"
                                 class="w-12 flex flex-col items-center justify-center py-2 transition-all duration-150 border-b border-slate-100 relative">
                                 <!-- Icono edificio mini -->
                                 <svg :class="piso === currentPiso ? 'text-indigo-200' : 'text-slate-300'"
@@ -3818,9 +3449,9 @@
                             <!-- Tooltip al hover (izquierda) -->
                             <div
                                 class="absolute right-full mr-2 top-1/2 -translate-y-1/2
-                                                                                                        bg-slate-900 text-white text-[8px] font-bold px-2 py-1 rounded-lg
-                                                                                                        whitespace-nowrap pointer-events-none shadow-xl
-                                                                                                        opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                                                                                    bg-slate-900 text-white text-[8px] font-bold px-2 py-1 rounded-lg
+                                                                                                    whitespace-nowrap pointer-events-none shadow-xl
+                                                                                                    opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                                 <span x-text="'Piso ' + piso + ' · ' + countInPiso(piso) + ' elementos'"></span>
                             </div>
                         </div>
@@ -3851,7 +3482,7 @@
 
                 <!-- ══ Panel Zoom + Opacidad del Croquis ══ -->
                 <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3
-                                                                                             bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl px-4 py-2.5"
+                                                                                         bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl px-4 py-2.5"
                     style="pointer-events:auto;">
 
                     <!-- Zoom -->
@@ -4070,10 +3701,10 @@
                     /* Marcador tipo pin */
                     const icon = L.divIcon({
                         html: `<div style="
-                                                                                                                            width:24px;height:24px;background:#4f46e5;
-                                                                                                                            border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-                                                                                                                            border:3px solid white;box-shadow:0 3px 10px rgba(79,70,229,0.5);
-                                                                                                                        "></div>`,
+                                                                                                                    width:24px;height:24px;background:#4f46e5;
+                                                                                                                    border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+                                                                                                                    border:3px solid white;box-shadow:0 3px 10px rgba(79,70,229,0.5);
+                                                                                                                "></div>`,
                         iconSize: [24, 24],
                         iconAnchor: [12, 24],
                         className: ''
@@ -4082,7 +3713,7 @@
                     const marker = L.marker([LAT, LNG], { icon, draggable: false }).addTo(map);
                     marker.bindPopup(
                         `<strong style="font-size:11px">${NAME}</strong><br>
-                                                                                                                        <span style="color:#64748b;font-size:10px">${LAT.toFixed(6)}, ${LNG.toFixed(6)}</span>`,
+                                                                                                                <span style="color:#64748b;font-size:10px">${LAT.toFixed(6)}, ${LNG.toFixed(6)}</span>`,
                         { offset: [0, -8] }
                     ).openPopup();
 
@@ -4094,7 +3725,7 @@
                         marker.setLatLng([pendingLat, pendingLng]);
                         marker.getPopup()
                             .setContent(`<strong style="font-size:11px">${NAME}</strong><br>
-                                                                                                                                <span style="color:#e11d48;font-size:10px">📍 Nueva: ${pendingLat.toFixed(6)}, ${pendingLng.toFixed(6)}</span>`)
+                                                                                                                        <span style="color:#e11d48;font-size:10px">📍 Nueva: ${pendingLat.toFixed(6)}, ${pendingLng.toFixed(6)}</span>`)
                             .update();
                         document.getElementById('minimap-coords').textContent =
                             `${pendingLat.toFixed(6)}, ${pendingLng.toFixed(6)}`;
@@ -4130,7 +3761,7 @@
                         marker.setLatLng([LAT, LNG]);
                         marker.getPopup()
                             .setContent(`<strong style="font-size:11px">${NAME}</strong><br>
-                                                                                                                                <span style="color:#64748b;font-size:10px">${LAT.toFixed(6)}, ${LNG.toFixed(6)}</span>`)
+                                                                                                                        <span style="color:#64748b;font-size:10px">${LAT.toFixed(6)}, ${LNG.toFixed(6)}</span>`)
                             .update();
                         document.getElementById('minimap-coords').textContent = `${LAT.toFixed(6)}, ${LNG.toFixed(6)}`;
                         document.getElementById('minimap-save-banner').classList.add('hidden');
@@ -4162,7 +3793,7 @@
                                 /* Reiniciar el popup con las coords definitivas */
                                 marker.getPopup()
                                     .setContent(`<strong style="font-size:11px">${NAME}</strong><br>
-                                                                                                                                        <span style="color:#64748b;font-size:10px">${pendingLat.toFixed(6)}, ${pendingLng.toFixed(6)}</span>`)
+                                                                                                                                <span style="color:#64748b;font-size:10px">${pendingLat.toFixed(6)}, ${pendingLng.toFixed(6)}</span>`)
                                     .update();
                             } else {
                                 Swal.fire({ target: document.getElementById('tablet-editor-container'), title: 'Error', text: data.mensaje || 'No se pudo guardar.', icon: 'error' });
