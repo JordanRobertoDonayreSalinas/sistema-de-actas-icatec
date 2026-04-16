@@ -77,6 +77,7 @@ use App\Http\Controllers\ReporteEquiposController;
 use App\Http\Controllers\ReporteActasController;
 use App\Http\Controllers\ReporteMonitoreoController;
 use App\Http\Controllers\ReporteImplementacionController;
+use App\Http\Controllers\CronogramaActividadesController;
 use App\Http\Controllers\ImplementacionController;
 use App\Http\Controllers\Infraestructura2DController;
 use App\Http\Controllers\Infraestructura2DPdfController;
@@ -204,6 +205,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/actas-implementacion', [ReporteImplementacionController::class, 'index'])->name('actas.implementacion');
             Route::post('/actas-implementacion/excel', [ReporteImplementacionController::class, 'exportarExcel'])->name('actas.implementacion.excel');
             Route::get('/actas-implementacion/ajax/distritos', [ReporteImplementacionController::class, 'getDistritos'])->name('actas.implementacion.ajax.distritos');
+
+            // Cronograma de Actividades (Asistencia + Monitoreo + Implementación)
+            Route::get('/cronograma-actividades', [CronogramaActividadesController::class, 'index'])->name('cronograma');
+            Route::post('/cronograma-actividades/excel', [CronogramaActividadesController::class, 'exportarExcel'])->name('cronograma.excel');
+            Route::get('/cronograma-actividades/ajax/provincias', [CronogramaActividadesController::class, 'ajaxGetProvincias'])->name('cronograma.ajax.provincias');
         });
 
         // --- SECCIÓN: AUDITORÍA DE CONSISTENCIA (Protegida) ---

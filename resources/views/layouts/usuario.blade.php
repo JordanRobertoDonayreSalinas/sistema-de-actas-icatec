@@ -207,7 +207,12 @@
                             <span class="font-medium text-sm">Equipos de Cómputo</span>
                         </a>
 
-
+                        {{-- Cronograma de Actividades --}}
+                        <a href="{{ route('usuario.reportes.cronograma') }}"
+                            class="group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all {{ request()->routeIs('usuario.reportes.cronograma') ? 'bg-purple-600/10 text-purple-300' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                            <span class="font-medium text-sm">Cronograma de Actividades</span>
+                        </a>
 
                         {{-- Auditoría de Consistencia SIHCE --}}
                         <a href="{{ route('usuario.auditoria.index') }}"

@@ -62,7 +62,7 @@ class ConsultaMedicinaController extends Controller
                     }
 
                     // TODO LO DEMÁS -> A MAYÚSCULAS
-                    $value = mb_strtoupper(trim($value, 'UTF-8'), 'UTF-8');
+                    $value = mb_strtoupper(trim($value), 'UTF-8');
                 }
             });
 
