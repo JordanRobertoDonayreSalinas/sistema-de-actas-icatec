@@ -6,10 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Acta;
 use App\Models\Establecimiento;
+use App\Models\CabeceraMonitoreo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB as DBFacade;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rules\Password;
 use Carbon\Carbon;
 
@@ -20,7 +23,7 @@ class UsuarioController extends Controller
      * Muestra en qué etapa del proceso se encuentra cada establecimiento.
      * Sirve como Dashboard General.
      */
-    public function index(\Illuminate\Http\Request $request)
+    public function index(Request $request)
     {
         $anioFiltro = $request->input('anio', 'todos');
         $modulos = \App\Helpers\ImplementacionHelper::getModulos();
@@ -28,7 +31,7 @@ class UsuarioController extends Controller
         // Años disponibles (incluyendo monitoreo, asistencia y TODOS los módulos de implementación)
         $aniosCollector = collect([date('Y')]);
         
-        $aniosMonitoreo = \App\Models\CabeceraMonitoreo::whereNotNull('fecha')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
+        $aniosMonitoreo = CabeceraMonitoreo::whereNotNull('fecha')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
         $aniosAsistencia = Acta::whereNotNull('fecha')->where('tipo', 'asistencia')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
         
         $aniosCollector = $aniosCollector->merge($aniosMonitoreo)->merge($aniosAsistencia);
@@ -52,6 +55,11 @@ class UsuarioController extends Controller
             if (!class_exists($modelo)) continue;
             
             $query = $modelo::select('codigo_establecimiento', 'nombre_establecimiento');
+            if (Schema::hasColumn((new $modelo)->getTable(), 'anulado')) {
+                $query->where(function($q) {
+                    $q->where('anulado', 0)->orWhereNull('anulado');
+                });
+            }
             if ($anioFiltro !== 'todos') {
                 $query->whereYear('fecha', '<=', $anioFiltro);
             }
@@ -70,26 +78,35 @@ class UsuarioController extends Controller
         $codigosConImplementacion = $codigosConImplementacion->unique()->values();
 
         // ── 2. IDs que tienen al menos 1 acta de asistencia técnica ──────────
-        $queryAsistencia = Acta::where('tipo', 'asistencia');
+        $queryAsistencia = Acta::where('tipo', 'asistencia')
+                            ->where(function($q) {
+                                $q->where('anulado', 0)->orWhereNull('anulado');
+                            });
         if ($anioFiltro !== 'todos') {
             $queryAsistencia->whereYear('fecha', '<=', $anioFiltro);
         }
         $idsConAsistencia = $queryAsistencia->distinct()->pluck('establecimiento_id')->toArray();
 
-        $queryTotalAsistencia = Acta::where('tipo', 'asistencia')->select('establecimiento_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))->groupBy('establecimiento_id');
+        $queryTotalAsistencia = Acta::where('tipo', 'asistencia')
+                            ->where(function($q) {
+                                $q->where('anulado', 0)->orWhereNull('anulado');
+                            })
+                            ->select('establecimiento_id', DB::raw('count(*) as total'))->groupBy('establecimiento_id');
         if ($anioFiltro !== 'todos') {
             $queryTotalAsistencia->whereYear('fecha', '<=', $anioFiltro);
         }
         $totalAsistenciaPorId = $queryTotalAsistencia->pluck('total', 'establecimiento_id');
 
         // ── 3. IDs que tienen al menos 1 acta de monitoreo ───────────────────
-        $queryMonitoreo = \App\Models\CabeceraMonitoreo::query();
+        $queryMonitoreo = CabeceraMonitoreo::where(function($q) {
+                                $q->where('anulado', 0)->orWhereNull('anulado');
+                            });
         if ($anioFiltro !== 'todos') {
             $queryMonitoreo->whereYear('fecha', '<=', $anioFiltro);
         }
         $idsConMonitoreo = $queryMonitoreo->distinct()->pluck('establecimiento_id')->toArray();
 
-        $queryTotalMonitoreo = \App\Models\CabeceraMonitoreo::select('establecimiento_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))->groupBy('establecimiento_id');
+        $queryTotalMonitoreo = CabeceraMonitoreo::select('establecimiento_id', DB::raw('count(*) as total'))->where(function($q) { $q->where('anulado', 0)->orWhereNull('anulado'); })->groupBy('establecimiento_id');
         if ($anioFiltro !== 'todos') {
             $queryTotalMonitoreo->whereYear('fecha', '<=', $anioFiltro);
         }
@@ -132,13 +149,13 @@ class UsuarioController extends Controller
                 return $est;
             });
 
-        // ── 5. Contadores acumulativos por etapa ──────────────────────────────
+        // ── 5. Contadores ESTRICTAMENTE EXCLUYENTES por etapa ──────────────────────────────
         $contadores = [
             'total'     => $establecimientosMap->count(),
             'etapa0'    => $establecimientosMap->where('etapa', 0)->count(),
-            'etapa1'    => $establecimientosMap->where('tiene_impl', true)->count(),
-            'etapa2'    => $establecimientosMap->where('tiene_asist', true)->count(),
-            'etapa3'    => $establecimientosMap->where('tiene_monitoreo', true)->count(),
+            'etapa1'    => $establecimientosMap->where('etapa', 1)->count(),
+            'etapa2'    => $establecimientosMap->where('etapa', 2)->count(),
+            'etapa3'    => $establecimientosMap->where('etapa', 3)->count(),
             'etapa4'    => $establecimientosMap->where('etapa', 4)->count(),
         ];
 
@@ -197,12 +214,12 @@ class UsuarioController extends Controller
             ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
 
         // ── IDs con monitoreo ────────────────────────────────────────
-        $idsConMonitoreo    = \App\Models\CabeceraMonitoreo::distinct()->pluck('establecimiento_id')->toArray();
-        $totalMonitoreoPorId = \App\Models\CabeceraMonitoreo::select('establecimiento_id', DB::raw('count(*) as total'))
+        $idsConMonitoreo    = CabeceraMonitoreo::distinct()->pluck('establecimiento_id')->toArray();
+        $totalMonitoreoPorId = CabeceraMonitoreo::select('establecimiento_id', DB::raw('count(*) as total'))
             ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
 
         // ── Índice de establecimientos por ID ────────────────────────
-        $establecimientosIdx = \App\Models\Establecimiento::all(['id','codigo','nombre','distrito','provincia',
+        $establecimientosIdx = Establecimiento::all(['id','codigo','nombre','distrito','provincia',
             'latitud','longitud','categoria','red','microred'])
             ->keyBy('id');
 
@@ -288,7 +305,7 @@ class UsuarioController extends Controller
     /**
      * AJAX: Actualizar el sector de un registro de programación
      */
-    public function actualizarSector(\Illuminate\Http\Request $request, $id)
+    public function actualizarSector(Request $request, $id)
     {
         $request->validate([
             'sector'  => 'required|integer|min:1|max:30',
@@ -309,7 +326,7 @@ class UsuarioController extends Controller
     public function dashboardEquipos()
     {
         // Obtener años disponibles
-        $aniosDisponibles = \App\Models\CabeceraMonitoreo::selectRaw('DISTINCT YEAR(fecha) as anio')
+        $aniosDisponibles = CabeceraMonitoreo::selectRaw('DISTINCT YEAR(fecha) as anio')
             ->orderBy('anio', 'desc')
             ->pluck('anio');
 
@@ -321,11 +338,11 @@ class UsuarioController extends Controller
             ->distinct()
             ->pluck('cabecera_monitoreo_id');
 
-        $establecimientosIds = \App\Models\CabeceraMonitoreo::whereIn('id', $establecimientosConEquipos)
+        $establecimientosIds = CabeceraMonitoreo::whereIn('id', $establecimientosConEquipos)
             ->pluck('establecimiento_id')
             ->unique();
 
-        $provincias = \App\Models\Establecimiento::select('provincia')
+        $provincias = Establecimiento::select('provincia')
             ->distinct()
             ->whereNotNull('provincia')
             ->whereIn('id', $establecimientosIds)
@@ -333,7 +350,7 @@ class UsuarioController extends Controller
             ->pluck('provincia');
 
         // Obtener establecimientos (solo los que tienen equipos)
-        $establecimientos = \App\Models\Establecimiento::select('id', 'nombre', 'codigo')
+        $establecimientos = Establecimiento::select('id', 'nombre', 'codigo')
             ->whereIn('id', $establecimientosIds)
             ->orderBy('nombre')
             ->get();
@@ -858,12 +875,12 @@ class UsuarioController extends Controller
 
             // Obtener IDs de cabeceras y establecimientos con equipos filtrados
             $cabecerasIds = (clone $query)->pluck('cabecera_monitoreo_id')->unique();
-            $establecimientosIds = \App\Models\CabeceraMonitoreo::whereIn('id', $cabecerasIds)
+            $establecimientosIds = CabeceraMonitoreo::whereIn('id', $cabecerasIds)
                 ->pluck('establecimiento_id')
                 ->unique();
 
             // Obtener provincias disponibles
-            $provincias = \App\Models\Establecimiento::select('provincia')
+            $provincias = Establecimiento::select('provincia')
                 ->distinct()
                 ->whereNotNull('provincia')
                 ->whereIn('id', $establecimientosIds)
@@ -872,7 +889,7 @@ class UsuarioController extends Controller
                 ->values();
 
             // Obtener distritos disponibles (filtrados por provincia si aplica)
-            $distritosQuery = \App\Models\Establecimiento::select('distrito')
+            $distritosQuery = Establecimiento::select('distrito')
                 ->distinct()
                 ->whereNotNull('distrito')
                 ->whereIn('id', $establecimientosIds)
@@ -883,7 +900,7 @@ class UsuarioController extends Controller
             $distritos = $distritosQuery->pluck('distrito')->values();
 
             // Obtener establecimientos disponibles
-            $establecimientos = \App\Models\Establecimiento::select('id', 'nombre', 'codigo')
+            $establecimientos = Establecimiento::select('id', 'nombre', 'codigo')
                 ->whereIn('id', $establecimientosIds)
                 ->orderBy('nombre')
                 ->get()
