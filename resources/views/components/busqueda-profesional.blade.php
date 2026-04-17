@@ -359,10 +359,17 @@
                                     document.getElementById('paterno_' + prefix).value = dataExt.apellido_paterno || '';
                                     document.getElementById('materno_' + prefix).value = dataExt.apellido_materno || '';
                                     document.getElementById('tipo_' + prefix).value = dataExt.tipo_doc || 'DNI';
-                                    
-                                    // Limpiar y preparar cargo
-                                    document.getElementById('email_' + prefix).value = '';
-                                    document.getElementById('tel_' + prefix).value = '';
+
+                                    // Si la fuente es MPI Engineers y trae email/teléfono, rellenamos
+                                    if (dataExt.fuente === 'mpi_engineers') {
+                                        document.getElementById('email_' + prefix).value = dataExt.email || '';
+                                        document.getElementById('tel_' + prefix).value = dataExt.telefono || '';
+                                    } else {
+                                        document.getElementById('email_' + prefix).value = '';
+                                        document.getElementById('tel_' + prefix).value = '';
+                                    }
+
+                                    // Limpiar cargo y dejar que el usuario lo complete
                                     document.getElementById('cargo_select_' + prefix).value = '';
                                     syncCargo(prefix);
                                     
@@ -373,10 +380,14 @@
                                         timer: 4000,
                                         timerProgressBar: true
                                     });
-                                    let tokenMsg = dataExt.remaining_tokens !== undefined ? ` (Tokens restantes: ${dataExt.remaining_tokens})` : '';
+
+                                    const fuente = dataExt.fuente === 'mpi_engineers' ? 'fuente alternativa' : 'RENIEC';
+                                    let tokenMsg = (dataExt.remaining_tokens !== undefined && dataExt.remaining_tokens !== null)
+                                        ? ` (Tokens restantes: ${dataExt.remaining_tokens})`
+                                        : '';
                                     Toast.fire({
                                         icon: 'info',
-                                        title: 'Nombres encontrados en RENIEC.' + tokenMsg + ' Complete los demás datos.'
+                                        title: `Nombres encontrados en ${fuente}.${tokenMsg} Complete los demás datos.`
                                     });
 
                                 } else {

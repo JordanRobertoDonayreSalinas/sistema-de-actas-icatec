@@ -24,6 +24,16 @@ class DecolectaService
     protected $token = 'sk_13873.CXgdZqvgVRb7PK2BOOsMhRhQHmYRIDn7';
 
     /**
+     * @var string Token Bearer para la API de MPI Engineers
+     */
+    protected $mpiToken = '1|5ISaGX6k8S7hT6q2CAdOVzSPOWqp6a5jS41JGfknab348846';
+
+    /**
+     * @var string URL base de la API de MPI Engineers
+     */
+    protected $mpiBaseUrl = 'https://mpi-engineers.systemperu.digital/api/v1/dni/';
+
+    /**
      * Realiza la consulta a RENIEC a través de Decolecta administrando el cupo mensual.
      *
      * @param string $doc Número de documento (DNI)
@@ -97,6 +107,51 @@ class DecolectaService
             }
         } catch (\Exception $e) {
             Log::error("Error consultando API externa DNI {$doc}: " . $e->getMessage());
+        }
+
+        return ['success' => false];
+    }
+
+    /**
+     * Consulta datos de un DNI a través de la API de MPI Engineers.
+     * Se usa como fuente de respaldo cuando Decolecta falla o excede su cupo.
+     *
+     * @param string $doc Número de documento (DNI de 8 dígitos)
+     * @return array|null Retorna array con datos normalizados o null si falla
+     */
+    public function consultarMpiEngineers(string $doc): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'Accept'        => 'application/json',
+                'Authorization' => 'Bearer ' . $this->mpiToken,
+            ])
+            ->withoutVerifying()
+            ->timeout(10)
+            ->get($this->mpiBaseUrl . $doc);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                $data = $json['data'] ?? null;
+
+                if ($data && !empty($data['nombres'])) {
+                    return [
+                        'success' => true,
+                        'data'    => [
+                            'exists_external'  => true,
+                            'tipo_doc'         => $data['tipo_documento'] ?? 'DNI',
+                            'apellido_paterno' => mb_strtoupper(trim($data['apellido_paterno'] ?? ''), 'UTF-8'),
+                            'apellido_materno' => mb_strtoupper(trim($data['apellido_materno'] ?? ''), 'UTF-8'),
+                            'nombres'          => mb_strtoupper(trim($data['nombres'] ?? ''), 'UTF-8'),
+                            'email'            => $data['correo'] ?? '',
+                            'telefono'         => $data['celular'] ?? '',
+                            'remaining_tokens' => null,
+                        ],
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Error consultando MPI Engineers para DNI {$doc}: " . $e->getMessage());
         }
 
         return ['success' => false];

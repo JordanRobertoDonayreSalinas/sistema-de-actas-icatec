@@ -1045,8 +1045,9 @@
                                             ((ext.apellido_paterno || '') + ' ' + (ext.apellido_materno || '')).trim()
                                         );
                                         fila.find('input[data-base="nombres"]').val(ext.nombres || '');
+                                        const fuente = ext.fuente === 'mpi_engineers' ? 'Fuente alternativa' : 'RENIEC';
                                         Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:3000 })
-                                            .fire({ icon:'info', title:'Encontrado en RENIEC. Complete el cargo.' });
+                                            .fire({ icon:'info', title:`Encontrado en ${fuente}. Complete el cargo.` });
                                     } else {
                                         Swal.fire({ icon:'info', title:'No encontrado', text:'No figura en RENIEC. Ingrese datos manualmente.', confirmButtonColor:'#4f46e5' });
                                     }

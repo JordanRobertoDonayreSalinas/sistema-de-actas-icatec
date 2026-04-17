@@ -40,25 +40,22 @@ class GestionAdministrativaController extends Controller
             return response()->json(['exists' => false, 'exists_external' => false]);
         }
 
-        // Si no existe localmente, y es un DNI (8 dígitos), buscar en API externa
+        // Si no existe localmente, y es un DNI (8 dígitos), buscar en APIs externas
         if (preg_match('/^\d{8}$/', $doc)) {
-            $decolecta = new \App\Services\DecolectaService();
+            $decolecta     = new \App\Services\DecolectaService();
+            $quotaExceeded = false;
+
+            // --- Fuente 1: Decolecta ---
             $result = $decolecta->consultarDni($doc);
 
             if (isset($result['error']) && $result['error'] === 'quota_exceeded') {
-                return response()->json([
-                    'exists' => false,
-                    'exists_external' => false,
-                    'quota_exceeded' => true,
-                    'message' => 'Límite mensual de validaciones en RENIEC excedido.'
-                ]);
-            }
-
-            if (isset($result['success']) && $result['success']) {
+                $quotaExceeded = true; // cupo agotado, pero seguimos con MPI Engineers
+            } elseif (isset($result['success']) && $result['success']) {
                 $data = $result['data'];
                 return response()->json([
                     'exists'           => false,
                     'exists_external'  => true,
+                    'fuente'           => 'decolecta',
                     'tipo_doc'         => 'DNI',
                     'apellido_paterno' => $data['apellido_paterno'],
                     'apellido_materno' => $data['apellido_materno'],
@@ -66,6 +63,35 @@ class GestionAdministrativaController extends Controller
                     'email'            => '',
                     'telefono'         => '',
                     'remaining_tokens' => $data['remaining_tokens'] ?? null,
+                ]);
+            }
+
+            // --- Fuente 2: MPI Engineers (fallback) ---
+            $mpiResult = $decolecta->consultarMpiEngineers($doc);
+
+            if (isset($mpiResult['success']) && $mpiResult['success']) {
+                $data = $mpiResult['data'];
+                return response()->json([
+                    'exists'           => false,
+                    'exists_external'  => true,
+                    'fuente'           => 'mpi_engineers',
+                    'tipo_doc'         => $data['tipo_doc'],
+                    'apellido_paterno' => $data['apellido_paterno'],
+                    'apellido_materno' => $data['apellido_materno'],
+                    'nombres'          => $data['nombres'],
+                    'email'            => $data['email'] ?? '',
+                    'telefono'         => $data['telefono'] ?? '',
+                    'remaining_tokens' => null,
+                ]);
+            }
+
+            // Si ambas APIs fallaron y Decolecta tenía el cupo excedido, informar al frontend
+            if ($quotaExceeded) {
+                return response()->json([
+                    'exists'          => false,
+                    'exists_external' => false,
+                    'quota_exceeded'  => true,
+                    'message'         => 'Límite mensual de validaciones en RENIEC excedido y no se pudo obtener datos de fuente alternativa.',
                 ]);
             }
         }
