@@ -82,6 +82,12 @@
                         <span class="text-[0.6rem] uppercase tracking-widest text-slate-300 font-bold mt-1">Total Actividades</span>
                     </div>
 
+                    {{-- Implementacion --}}
+                    <div class="bg-violet-500/20 backdrop-blur-md rounded-xl px-4 py-3 border border-violet-400/30 flex flex-col items-center min-w-[100px]">
+                        <span class="text-2xl font-black leading-none">{{ $countImplementacion }}</span>
+                        <span class="text-[0.6rem] uppercase tracking-widest text-violet-200 font-bold mt-1">Implementación</span>
+                    </div>
+
                     {{-- Asistencia --}}
                     <div class="bg-emerald-500/20 backdrop-blur-md rounded-xl px-4 py-3 border border-emerald-400/30 flex flex-col items-center min-w-[100px]">
                         <span class="text-2xl font-black leading-none">{{ $countAsistencia }}</span>
@@ -92,12 +98,6 @@
                     <div class="bg-blue-500/20 backdrop-blur-md rounded-xl px-4 py-3 border border-blue-400/30 flex flex-col items-center min-w-[100px]">
                         <span class="text-2xl font-black leading-none">{{ $countMonitoreo }}</span>
                         <span class="text-[0.6rem] uppercase tracking-widest text-blue-200 font-bold mt-1">Monitoreo</span>
-                    </div>
-
-                    {{-- Implementacion --}}
-                    <div class="bg-violet-500/20 backdrop-blur-md rounded-xl px-4 py-3 border border-violet-400/30 flex flex-col items-center min-w-[100px]">
-                        <span class="text-2xl font-black leading-none">{{ $countImplementacion }}</span>
-                        <span class="text-[0.6rem] uppercase tracking-widest text-violet-200 font-bold mt-1">Implementación</span>
                     </div>
 
                     {{-- Firmadas --}}

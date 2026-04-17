@@ -413,7 +413,7 @@ class CronogramaActividadesController extends Controller
         // Para el PDF ordenamos ascendente (fecha más antigua primero)
         $actividades = $actividades->sortBy('fecha')->values();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('usuario.reportes.cronograma_pdf', compact('actividades'))
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('usuario.reportes.cronograma_pdf', compact('actividades', 'fechaInicio', 'fechaFin'))
             ->setOptions(['isRemoteEnabled' => true])
             ->setPaper('a4', 'landscape');
 

@@ -15,7 +15,11 @@
     </style>
 </head>
 <body>
-    <h2 style="text-align: center; color: #1E3A5F; margin-bottom: 20px;">CRONOGRAMA DE ACTIVIDADES</h2>
+    @php
+        $inicioFmt = \Carbon\Carbon::parse($fechaInicio)->format('d/m/Y');
+        $finFmt = \Carbon\Carbon::parse($fechaFin)->format('d/m/Y');
+    @endphp
+    <h2 style="text-align: center; color: #1E3A5F; margin-bottom: 20px;">CRONOGRAMA DE ACTIVIDADES DEL {{ $inicioFmt }} AL {{ $finFmt }}</h2>
     
     <table>
         <thead>
