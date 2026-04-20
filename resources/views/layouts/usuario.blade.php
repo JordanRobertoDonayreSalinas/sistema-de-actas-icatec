@@ -153,6 +153,13 @@
                     <i data-lucide="file-text" class="w-5 h-5"></i>
                     <span class="font-medium">Actas de Asistencia Técnica</span>
                 </a>
+
+                {{-- ACTAS DE REUNIÓN --}}
+                <a href="{{ route('usuario.reuniones.index') }}"
+                    class="group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('usuario.reuniones.*') ? 'bg-indigo-500/10 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="font-medium">Actas de Reunión</span>
+                </a>
                 @endif
 
                 @if(Auth::user()->role === 'admin' || Auth::user()->role === 'operador')

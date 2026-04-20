@@ -84,6 +84,7 @@ use App\Http\Controllers\Infraestructura2DPdfController;
 use App\Http\Controllers\MesaAyudaController;
 use App\Http\Controllers\CroquisColaboracionController;
 use App\Http\Controllers\SignatureBankController;
+use App\Http\Controllers\ReunionController;
 
 
 // --- CONFIGURACIÓN DE VERBOS ---
@@ -159,6 +160,17 @@ Route::middleware(['auth'])->group(function () {
             // AJAX endpoints para filtros dinámicos
             Route::get('/ajax/distritos', [ActaController::class, 'ajaxGetDistritos'])->name('ajax.distritos');
             Route::get('/ajax/establecimientos', [ActaController::class, 'ajaxGetEstablecimientos'])->name('ajax.establecimientos');
+        });
+
+        // --- SECCIÓN: ACTAS DE REUNIÓN ---
+        Route::prefix('actas-reunion')->name('reuniones.')->middleware('is_admin')->group(function () {
+            Route::get('/', [ReunionController::class, 'index'])->name('index');
+            Route::get('/crear', [ReunionController::class, 'create'])->name('create');
+            Route::post('/', [ReunionController::class, 'store'])->name('store');
+            Route::get('/{reunion}/editar', [ReunionController::class, 'edit'])->name('edit');
+            Route::put('/{reunion}', [ReunionController::class, 'update'])->name('update');
+            Route::post('/{id}/anular', [ReunionController::class, 'anular'])->name('anular');
+            Route::get('/{reunion}/pdf', [ReunionController::class, 'pdf'])->name('pdf');
         });
 
         // --- SECCIÓN: DOCUMENTOS ADMINISTRATIVOS ---
