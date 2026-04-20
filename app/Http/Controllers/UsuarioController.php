@@ -30,12 +30,10 @@ class UsuarioController extends Controller
         $anioFiltro = $request->input('anio', 'todos');
         $modulos = \App\Helpers\ImplementacionHelper::getModulos();
 
-        // Años disponibles (incluyendo monitoreo, asistencia y TODOS los módulos de implementación)
+        // Años disponibles
         $aniosCollector = collect([date('Y')]);
-        
         $aniosMonitoreo = CabeceraMonitoreo::whereNotNull('fecha')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
         $aniosAsistencia = Acta::whereNotNull('fecha')->where('tipo', 'asistencia')->selectRaw('YEAR(fecha) as anio')->distinct()->pluck('anio');
-        
         $aniosCollector = $aniosCollector->merge($aniosMonitoreo)->merge($aniosAsistencia);
         
         foreach ($modulos as $mod) {
@@ -45,87 +43,19 @@ class UsuarioController extends Controller
                 $aniosCollector = $aniosCollector->merge($aniosMod);
             }
         }
-        
         $aniosDisponibles = $aniosCollector->filter()->unique()->sortDesc()->values();
 
-        // ── 1. Códigos que tienen al menos 1 acta de implementación ──────────
-        $codigosConImplementacion = collect();
-        $modulosPorCodigo = [];   // ['COD' => ['Medicina', 'Citas', ...]]
+        // ── Contexto de Progresión ──────────────────────────────────────────
+        $ctx = $this->getProgressionContext($anioFiltro);
 
-        foreach ($modulos as $key => $config) {
-            $modelo = $config['modelo'];
-            if (!class_exists($modelo)) continue;
-            
-            $query = $modelo::select('codigo_establecimiento', 'nombre_establecimiento');
-            if (Schema::hasColumn((new $modelo)->getTable(), 'anulado')) {
-                $query->where(function($q) {
-                    $q->where('anulado', 0)->orWhereNull('anulado');
-                });
-            }
-            if ($anioFiltro !== 'todos') {
-                $query->whereYear('fecha', '<=', $anioFiltro);
-            }
-            
-            $actas = $query->get();
-            foreach ($actas as $acta) {
-                $cod = $acta->codigo_establecimiento;
-                if (!$cod) continue;
-                $codigosConImplementacion->push($cod);
-                if (!isset($modulosPorCodigo[$cod])) $modulosPorCodigo[$cod] = [];
-                if (!in_array($config['nombre'], $modulosPorCodigo[$cod])) {
-                    $modulosPorCodigo[$cod][] = $config['nombre'];
-                }
-            }
-        }
-        $codigosConImplementacion = $codigosConImplementacion->unique()->values();
-
-        // ── 2. IDs que tienen al menos 1 acta de asistencia técnica ──────────
-        $queryAsistencia = Acta::where('tipo', 'asistencia')
-                            ->where(function($q) {
-                                $q->where('anulado', 0)->orWhereNull('anulado');
-                            });
-        if ($anioFiltro !== 'todos') {
-            $queryAsistencia->whereYear('fecha', '<=', $anioFiltro);
-        }
-        $idsConAsistencia = $queryAsistencia->distinct()->pluck('establecimiento_id')->toArray();
-
-        $queryTotalAsistencia = Acta::where('tipo', 'asistencia')
-                            ->where(function($q) {
-                                $q->where('anulado', 0)->orWhereNull('anulado');
-                            })
-                            ->select('establecimiento_id', DB::raw('count(*) as total'))->groupBy('establecimiento_id');
-        if ($anioFiltro !== 'todos') {
-            $queryTotalAsistencia->whereYear('fecha', '<=', $anioFiltro);
-        }
-        $totalAsistenciaPorId = $queryTotalAsistencia->pluck('total', 'establecimiento_id');
-
-        // ── 3. IDs que tienen al menos 1 acta de monitoreo ───────────────────
-        $queryMonitoreo = CabeceraMonitoreo::where(function($q) {
-                                $q->where('anulado', 0)->orWhereNull('anulado');
-                            });
-        if ($anioFiltro !== 'todos') {
-            $queryMonitoreo->whereYear('fecha', '<=', $anioFiltro);
-        }
-        $idsConMonitoreo = $queryMonitoreo->distinct()->pluck('establecimiento_id')->toArray();
-
-        $queryTotalMonitoreo = CabeceraMonitoreo::select('establecimiento_id', DB::raw('count(*) as total'))->where(function($q) { $q->where('anulado', 0)->orWhereNull('anulado'); })->groupBy('establecimiento_id');
-        if ($anioFiltro !== 'todos') {
-            $queryTotalMonitoreo->whereYear('fecha', '<=', $anioFiltro);
-        }
-        $totalMonitoreoPorId = $queryTotalMonitoreo->pluck('total', 'establecimiento_id');
-
-        // ── 4. Unificar en establecimientos con coordenadas ───────────────────
+        // ── Unificar en establecimientos con coordenadas ───────────────────
         $establecimientosMap = Establecimiento::whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->get(['id', 'codigo', 'nombre', 'distrito', 'provincia', 'categoria', 'red', 'microred', 'latitud', 'longitud'])
-            ->map(function ($est) use (
-                $codigosConImplementacion, $modulosPorCodigo,
-                $idsConAsistencia, $totalAsistenciaPorId,
-                $idsConMonitoreo, $totalMonitoreoPorId
-            ) {
-                $tieneImpl      = $codigosConImplementacion->contains($est->codigo);
-                $tieneAsist     = in_array($est->id, $idsConAsistencia);
-                $tieneMonitoreo = in_array($est->id, $idsConMonitoreo);
+            ->map(function ($est) use ($ctx) {
+                $tieneImpl      = $ctx->codigosConImplementacion->contains($est->codigo);
+                $tieneAsist     = in_array($est->id, $ctx->idsConAsistencia);
+                $tieneMonitoreo = in_array($est->id, $ctx->idsConMonitoreo);
 
                 // Etapa de progresión (0-4)
                 if ($tieneImpl && $tieneAsist && $tieneMonitoreo) {
@@ -144,14 +74,14 @@ class UsuarioController extends Controller
                 $est->tiene_impl         = $tieneImpl;
                 $est->tiene_asist        = $tieneAsist;
                 $est->tiene_monitoreo    = $tieneMonitoreo;
-                $est->modulos_impl       = $modulosPorCodigo[$est->codigo] ?? [];
+                $est->modulos_impl       = $ctx->modulosPorCodigo[$est->codigo] ?? [];
                 $est->total_impl         = count($est->modulos_impl);
-                $est->total_asistencias  = (int)($totalAsistenciaPorId[$est->id] ?? 0);
-                $est->total_monitoreos   = (int)($totalMonitoreoPorId[$est->id] ?? 0);
+                $est->total_asistencias  = (int)($ctx->totalAsistenciaPorId[$est->id] ?? 0);
+                $est->total_monitoreos   = (int)($ctx->totalMonitoreoPorId[$est->id] ?? 0);
                 return $est;
             });
 
-        // ── 5. Contadores ESTRICTAMENTE EXCLUYENTES por etapa ──────────────────────────────
+        // ── Contadores ESTRICTAMENTE EXCLUYENTES por etapa ──────────────────────────────
         $contadores = [
             'total'     => $establecimientosMap->count(),
             'etapa0'    => $establecimientosMap->where('etapa', 0)->count(),
@@ -161,13 +91,14 @@ class UsuarioController extends Controller
             'etapa4'    => $establecimientosMap->where('etapa', 4)->count(),
         ];
 
-        // ── 6. Filtros ────────────────────────────────────────────────────────
-        $provincias = Establecimiento::whereNotNull('latitud')->whereNotNull('longitud')
-            ->whereNotNull('provincia')->distinct()->orderBy('provincia')->pluck('provincia');
-        $redes      = Establecimiento::whereNotNull('red')->distinct()->orderBy('red')->pluck('red');
-        $microredes = Establecimiento::whereNotNull('microred')->distinct()->orderBy('microred')->pluck('microred');
-        $categorias = Establecimiento::whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
-        $distritos  = Establecimiento::whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
+        // ── Filtros ────────────────────────────────────────────────────────
+        $baseFiltros = Establecimiento::whereNotNull('latitud')->whereNotNull('longitud');
+        
+        $provincias = (clone $baseFiltros)->whereNotNull('provincia')->distinct()->orderBy('provincia')->pluck('provincia');
+        $redes      = (clone $baseFiltros)->whereNotNull('red')->distinct()->orderBy('red')->pluck('red');
+        $microredes = (clone $baseFiltros)->whereNotNull('microred')->distinct()->orderBy('microred')->pluck('microred');
+        $categorias = (clone $baseFiltros)->whereNotNull('categoria')->distinct()->orderBy('categoria')->pluck('categoria');
+        $distritos  = (clone $baseFiltros)->whereNotNull('distrito')->distinct()->orderBy('distrito')->pluck('distrito');
 
         return view('usuario.dashboard.mapa_progresion', compact(
             'establecimientosMap',
@@ -188,37 +119,7 @@ class UsuarioController extends Controller
      */
     public function mapaProgramacion()
     {
-        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
-
-        // ── Códigos con implementación ───────────────────────────────
-        $codigosConImplementacion = collect();
-        $modulosPorCodigo = [];
-        foreach ($modulos as $config) {
-            $modelo = $config['modelo'];
-            if (!class_exists($modelo)) continue;
-            $actas = $modelo::select('codigo_establecimiento')->get();
-            foreach ($actas as $acta) {
-                $cod = $acta->codigo_establecimiento;
-                if (!$cod) continue;
-                $codigosConImplementacion->push($cod);
-                if (!isset($modulosPorCodigo[$cod])) $modulosPorCodigo[$cod] = [];
-                if (!in_array($config['nombre'], $modulosPorCodigo[$cod])) {
-                    $modulosPorCodigo[$cod][] = $config['nombre'];
-                }
-            }
-        }
-        $codigosConImplementacion = $codigosConImplementacion->unique()->values();
-
-        // ── IDs con asistencia ───────────────────────────────────────
-        $idsConAsistencia   = Acta::where('tipo', 'asistencia')->distinct()->pluck('establecimiento_id')->toArray();
-        $totalAsistenciaPorId = Acta::where('tipo', 'asistencia')
-            ->select('establecimiento_id', DB::raw('count(*) as total'))
-            ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
-
-        // ── IDs con monitoreo ────────────────────────────────────────
-        $idsConMonitoreo    = CabeceraMonitoreo::distinct()->pluck('establecimiento_id')->toArray();
-        $totalMonitoreoPorId = CabeceraMonitoreo::select('establecimiento_id', DB::raw('count(*) as total'))
-            ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
+        $ctx = $this->getProgressionContext();
 
         // ── Índice de establecimientos por ID ────────────────────────
         $establecimientosIdx = Establecimiento::all(['id','codigo','nombre','distrito','provincia',
@@ -228,77 +129,8 @@ class UsuarioController extends Controller
         // ── Cargar programación ──────────────────────────────────────
         $programacion = ProgramacionSector::orderBy('sector')->orderBy('cuadril')->get();
 
-        $programacion = $programacion->map(function ($p) use (
-            $establecimientosIdx, $codigosConImplementacion, $modulosPorCodigo,
-            $idsConAsistencia, $totalAsistenciaPorId, $idsConMonitoreo, $totalMonitoreoPorId
-        ) {
-            $est = $p->establecimiento_id ? ($establecimientosIdx[$p->establecimiento_id] ?? null) : null;
-
-            $lat = null; $lon = null;
-            $tieneImpl = false; $tieneAsist = false; $tieneMonitoreo = false;
-            $etapa = 0; $modulos = []; $totalImpl = 0; $totalAsist = 0; $totalMon = 0;
-            $nombreDisplay = $p->nombre_pdf;
-            $distrito = null; $red = null; $microred = null; $categoria = null; $codigo = null;
-
-            if ($est) {
-                $lat = (float) $est->latitud;
-                $lon = (float) $est->longitud;
-                if (abs($lat) > 180) $lat /= 100000000;
-                if (abs($lon) > 180) $lon /= 100000000;
-
-                $nombreDisplay = $est->nombre;
-                $distrito      = $est->distrito;
-                $red           = $est->red;
-                $microred      = $est->microred;
-                $categoria     = $est->categoria;
-                $codigo        = $est->codigo;
-
-                $tieneImpl      = $codigosConImplementacion->contains($est->codigo);
-                $tieneAsist     = in_array($est->id, $idsConAsistencia);
-                $tieneMonitoreo = in_array($est->id, $idsConMonitoreo);
-
-                if ($tieneImpl && $tieneAsist && $tieneMonitoreo) $etapa = 4;
-                elseif ($tieneMonitoreo) $etapa = 3;
-                elseif ($tieneAsist)     $etapa = 2;
-                elseif ($tieneImpl)      $etapa = 1;
-
-                $modulos    = $modulosPorCodigo[$est->codigo] ?? [];
-                $totalImpl  = count($modulos);
-                $totalAsist = (int)($totalAsistenciaPorId[$est->id] ?? 0);
-                $totalMon   = (int)($totalMonitoreoPorId[$est->id] ?? 0);
-            }
-
-            return [
-                'id'              => $p->id,
-                'nombre_pdf'      => $p->nombre_pdf,
-                'nombre'          => $nombreDisplay,
-                'provincia'       => $est ? $est->provincia : $p->provincia,  // Provincia real de la BD
-                'provincia_pdf'   => $p->provincia,                            // Provincia del PDF (referencia)
-                'sector'          => $p->sector,
-                'cuadril'         => $p->cuadril,
-                'comienzo'        => $p->comienzo ? $p->comienzo->format('d/m/Y') : null,
-                'fin'             => $p->fin      ? $p->fin->format('d/m/Y')      : null,
-                'comienzo_iso'    => $p->comienzo ? $p->comienzo->format('Y-m-d') : null,
-                'fin_iso'         => $p->fin      ? $p->fin->format('Y-m-d')      : null,
-                'dias'            => $p->dias,
-                'lat'             => $lat && !is_nan($lat) ? $lat : null,
-                'lon'             => $lon && !is_nan($lon) ? $lon : null,
-                'tiene_est'       => !!$est,
-                'establecimiento_id' => $p->establecimiento_id,
-                'distrito'        => $distrito,
-                'red'             => $red,
-                'microred'        => $microred,
-                'categoria'       => $categoria,
-                'codigo'          => $codigo,
-                'etapa'           => $etapa,
-                'tiene_impl'      => $tieneImpl,
-                'tiene_asist'     => $tieneAsist,
-                'tiene_monitoreo' => $tieneMonitoreo,
-                'modulos_impl'    => $modulos,
-                'total_impl'      => $totalImpl,
-                'total_asistencias' => $totalAsist,
-                'total_monitoreos'  => $totalMon,
-            ];
+        $programacion = $programacion->map(function ($p) use ($establecimientosIdx, $ctx) {
+            return $this->formatProgramacionItem($p, $ctx, $establecimientosIdx);
         })->values();
 
         return view('usuario.dashboard.mapa_sectores', compact('programacion'));
@@ -1006,86 +838,16 @@ class UsuarioController extends Controller
         $programacion = $this->getProgramacionPropuestaData();
         return view('usuario.dashboard.mapa_sectores_propuesta', compact('programacion'));
     }
-
     private function getProgramacionPropuestaData()
     {
-        $modulosConfig = \App\Helpers\ImplementacionHelper::getModulos();
-        $codigosConImplementacion = collect();
-        $modulosPorCodigo = [];
-        
-        foreach ($modulosConfig as $config) {
-            $modelo = $config['modelo'];
-            if (class_exists($modelo)) {
-                $items = $modelo::select('codigo_establecimiento')->get();
-                foreach ($items as $item) {
-                    $cod = $item->codigo_establecimiento;
-                    if ($cod) {
-                        $codigosConImplementacion->push($cod);
-                        if (!isset($modulosPorCodigo[$cod])) $modulosPorCodigo[$cod] = [];
-                        if (!in_array($config['nombre'], $modulosPorCodigo[$cod])) {
-                            $modulosPorCodigo[$cod][] = $config['nombre'];
-                        }
-                    }
-                }
-            }
-        }
-        $codigosConImplementacion = $codigosConImplementacion->unique()->values();
-
-        $idsConAsistencia = Acta::where('tipo', 'asistencia')->distinct()->pluck('establecimiento_id')->toArray();
-        $idsConMonitoreo  = CabeceraMonitoreo::distinct()->pluck('establecimiento_id')->toArray();
+        $ctx = $this->getProgressionContext();
 
         $establecimientosIdx = Establecimiento::all(['id','codigo','nombre','distrito','provincia','latitud','longitud','categoria','red','microred'])->keyBy('id');
 
         return ProgramacionSectorPropuesta::orderBy('sector')->orderBy('cuadril')->get()
-            ->map(function ($p) use ($establecimientosIdx, $codigosConImplementacion, $idsConAsistencia, $idsConMonitoreo) {
-                $est = $p->establecimiento_id ? ($establecimientosIdx[$p->establecimiento_id] ?? null) : null;
-                $lat = null; $lon = null; $etapa = 0; $tiene_est = false;
-                $provincia = $p->provincia;
-                $nombre = $p->nombre_pdf;
-                $distrito = null;
-                $categoria = null;
-
-                if ($est) {
-                    $tiene_est = true;
-                    $lat = (float) $est->latitud;
-                    $lon = (float) $est->longitud;
-                    if (abs($lat) > 180) $lat /= 100000000;
-                    if (abs($lon) > 180) $lon /= 100000000;
-
-                    $nombre = $est->nombre;
-                    $provincia = $est->provincia ?? $p->provincia;
-                    $distrito = $est->distrito;
-                    $categoria = $est->categoria;
-
-                    $tieneImpl = $codigosConImplementacion->contains($est->codigo);
-                    $tieneAsist = in_array($est->id, $idsConAsistencia);
-                    $tieneMon = in_array($est->id, $idsConMonitoreo);
-
-                    if ($tieneMon) $etapa = 3;
-                    elseif ($tieneAsist) $etapa = 2;
-                    elseif ($tieneImpl) $etapa = 1;
-
-                    if ($tieneImpl && $tieneAsist && $tieneMon) $etapa = 4;
-                }
-
-                return (object) [
-                    'id'           => $p->id,
-                    'nombre'       => $nombre,
-                    'provincia'    => $provincia,
-                    'distrito'     => $distrito,
-                    'categoria'    => $categoria,
-                    'sector'       => $p->sector,
-                    'cuadril'      => $p->cuadril,
-                    'comienzo'     => $p->comienzo ? $p->comienzo->format('d/m/Y') : null,
-                    'fin'          => $p->fin ? $p->fin->format('d/m/Y') : null,
-                    'comienzo_iso' => $p->comienzo ? $p->comienzo->format('Y-m-d') : null,
-                    'fin_iso'      => $p->fin ? $p->fin->format('Y-m-d') : null,
-                    'dias'         => $p->dias,
-                    'lat'          => $lat,
-                    'lon'          => $lon,
-                    'etapa'        => $etapa,
-                    'tiene_est'    => $tiene_est,
-                ];
+            ->map(function ($p) use ($establecimientosIdx, $ctx) {
+                $item = $this->formatProgramacionItem($p, $ctx, $establecimientosIdx);
+                return (object) $item;
             });
     }
 
@@ -1101,5 +863,153 @@ class UsuarioController extends Controller
             'sector'  => $prog->sector,
             'cuadril' => $prog->cuadril
         ]);
+    }
+
+    /**
+     * Centraliza el cálculo de datos para un item de programación.
+     */
+    private function formatProgramacionItem($p, $ctx, $establecimientosIdx)
+    {
+        $est = $p->establecimiento_id ? ($establecimientosIdx[$p->establecimiento_id] ?? null) : null;
+
+        $lat = null; $lon = null;
+        $tieneImpl = false; $tieneAsist = false; $tieneMonitoreo = false;
+        $etapa = 0; $modulos = []; $totalImpl = 0; $totalAsist = 0; $totalMon = 0;
+        $nombreDisplay = $p->nombre_pdf;
+        $distrito = null; $red = null; $microred = null; $categoria = null; $codigo = null;
+        $provincia = $p->provincia;
+
+        if ($est) {
+            $lat = (float) $est->latitud;
+            $lon = (float) $est->longitud;
+            if (abs($lat) > 180) $lat /= 100000000;
+            if (abs($lon) > 180) $lon /= 100000000;
+
+            $nombreDisplay = $est->nombre;
+            $provincia     = $est->provincia ?? $p->provincia;
+            $distrito      = $est->distrito;
+            $red           = $est->red;
+            $microred      = $est->microred;
+            $categoria     = $est->categoria;
+            $codigo        = $est->codigo;
+
+            $tieneImpl      = $ctx->codigosConImplementacion->contains($est->codigo);
+            $tieneAsist     = in_array($est->id, $ctx->idsConAsistencia);
+            $tieneMonitoreo = in_array($est->id, $ctx->idsConMonitoreo);
+
+            if ($tieneImpl && $tieneAsist && $tieneMonitoreo) $etapa = 4;
+            elseif ($tieneMonitoreo) $etapa = 3;
+            elseif ($tieneAsist)     $etapa = 2;
+            elseif ($tieneImpl)      $etapa = 1;
+
+            $modulos    = $ctx->modulosPorCodigo[$est->codigo] ?? [];
+            $totalImpl  = count($modulos);
+            $totalAsist = (int)($ctx->totalAsistenciaPorId[$est->id] ?? 0);
+            $totalMon   = (int)($ctx->totalMonitoreoPorId[$est->id] ?? 0);
+        }
+
+        return [
+            'id'              => $p->id,
+            'nombre_pdf'      => $p->nombre_pdf,
+            'nombre'          => $nombreDisplay,
+            'provincia'       => $provincia,
+            'provincia_pdf'   => $p->provincia,
+            'sector'          => $p->sector,
+            'cuadril'         => $p->cuadril,
+            'comienzo'        => $p->comienzo ? $p->comienzo->format('d/m/Y') : null,
+            'fin'             => $p->fin      ? $p->fin->format('d/m/Y')      : null,
+            'comienzo_iso'    => $p->comienzo ? $p->comienzo->format('Y-m-d') : null,
+            'fin_iso'         => $p->fin      ? $p->fin->format('Y-m-d')      : null,
+            'dias'            => $p->dias,
+            'lat'             => $lat && !is_nan($lat) ? $lat : null,
+            'lon'             => $lon && !is_nan($lon) ? $lon : null,
+            'tiene_est'       => !!$est,
+            'establecimiento_id' => $p->establecimiento_id,
+            'distrito'        => $distrito,
+            'red'             => $red,
+            'microred'        => $microred,
+            'categoria'       => $categoria,
+            'codigo'          => $codigo,
+            'etapa'           => $etapa,
+            'tiene_impl'      => $tieneImpl,
+            'tiene_asist'     => $tieneAsist,
+            'tiene_monitoreo' => $tieneMonitoreo,
+            'modulos_impl'    => $modulos,
+            'total_impl'      => $totalImpl,
+            'total_asistencias' => $totalAsist,
+            'total_monitoreos'  => $totalMon,
+        ];
+    }
+
+    /**
+     * Obtiene el contexto de progresión de todos los establecimientos.
+     * Centraliza la lógica para evitar redundancia y resolver problemas de inferencia de tipos.
+     */
+    private function getProgressionContext($anioFiltro = 'todos')
+    {
+        $modulos = \App\Helpers\ImplementacionHelper::getModulos();
+        $codigosConImplementacion = collect();
+        $modulosPorCodigo = [];
+
+        foreach ($modulos as $config) {
+            $modelo = $config['modelo'];
+            if (!class_exists($modelo)) continue;
+
+            $query = $modelo::select('codigo_establecimiento');
+            if (Schema::hasColumn((new $modelo)->getTable(), 'anulado')) {
+                $query->where(function($q) {
+                    $q->where('anulado', 0)->orWhereNull('anulado');
+                });
+            }
+            if ($anioFiltro !== 'todos') {
+                $query->whereYear('fecha', '<=', $anioFiltro);
+            }
+
+            $actas = $query->get();
+            foreach ($actas as $acta) {
+                $cod = $acta->codigo_establecimiento;
+                if (!$cod) continue;
+                $codigosConImplementacion->push($cod);
+                if (!isset($modulosPorCodigo[$cod])) $modulosPorCodigo[$cod] = [];
+                if (!in_array($config['nombre'], $modulosPorCodigo[$cod])) {
+                    $modulosPorCodigo[$cod][] = $config['nombre'];
+                }
+            }
+        }
+
+        $codigosConImplementacion = $codigosConImplementacion->unique()->values();
+
+        // Asistencia
+        $queryAsist = Acta::where('tipo', 'asistencia')->where(function($q) {
+            $q->where('anulado', 0)->orWhereNull('anulado');
+        });
+        if ($anioFiltro !== 'todos') {
+            $queryAsist->whereYear('fecha', '<=', $anioFiltro);
+        }
+        
+        $idsConAsistencia = (clone $queryAsist)->distinct()->pluck('establecimiento_id')->toArray();
+        $totalAsistenciaPorId = (clone $queryAsist)->select('establecimiento_id', DB::raw('count(*) as total'))
+            ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
+
+        // Monitoreo
+        $queryMon = CabeceraMonitoreo::where(function($q) {
+            $q->where('anulado', 0)->orWhereNull('anulado');
+        });
+        if ($anioFiltro !== 'todos') {
+            $queryMon->whereYear('fecha', '<=', $anioFiltro);
+        }
+
+        $idsConMonitoreo = (clone $queryMon)->distinct()->pluck('establecimiento_id')->toArray();
+        $totalMonitoreoPorId = (clone $queryMon)->select('establecimiento_id', DB::raw('count(*) as total'))
+            ->groupBy('establecimiento_id')->pluck('total', 'establecimiento_id');
+
+        return (object) [
+            'codigosConImplementacion' => $codigosConImplementacion,
+            'modulosPorCodigo' => $modulosPorCodigo,
+            'idsConAsistencia' => $idsConAsistencia,
+            'totalAsistenciaPorId' => $totalAsistenciaPorId,
+            'idsConMonitoreo' => $idsConMonitoreo,
+            'totalMonitoreoPorId' => $totalMonitoreoPorId
+        ];
     }
 }
