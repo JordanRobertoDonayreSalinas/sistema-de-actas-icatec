@@ -4,17 +4,20 @@
     <meta charset="UTF-8">
     <title>Acta de Reunión Nº {{ str_pad($reunion->id, 4, '0', STR_PAD_LEFT) }}</title>
     <style>
+        @page {
+            margin: 25px 45px 35px 45px; 
+        }
         body {
             font-family: Arial, sans-serif;
             font-size: 10.5px;
             color: #000;
             margin: 0;
-            padding: 10px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border: 1px solid #000;
         }
         td, th {
@@ -31,7 +34,7 @@
         .text-center { text-align: center; }
         .font-bold { font-weight: bold; }
         .title {
-            font-size: 12px;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
             margin-bottom: 8px;
@@ -79,7 +82,7 @@
             <td class="bg-blue">INFORMACIÓN GENERAL</td>
         </tr>
         <tr>
-            <td style="text-align: justify; padding: 10px; font-size: 11.5px;"> <!-- 1 punto más -->
+            <td style="text-align: justify; padding: 10px; font-size: 12px;"> <!-- 1 punto más -->
                 {{ $reunion->descripcion_general }}
             </td>
         </tr>
@@ -101,7 +104,7 @@
         @else
             @foreach($reunion->participantes as $p)
             <tr>
-                <td>{{ mb_strtoupper(($p['apellidos'] ?? '') . ' ' . ($p['nombres'] ?? ''), 'UTF-8') }}</td>
+                <td>{{ mb_strtoupper(($p['dni'] ?? '').' - '.($p['apellidos'] ?? '') . ' ' . ($p['nombres'] ?? ''), 'UTF-8') }}</td>
                 <td class="text-center">{{ mb_strtoupper($p['cargo'] ?? '', 'UTF-8') }}</td>
                 <td class="text-center">{{ mb_strtoupper($p['institucion'] ?? '', 'UTF-8') }}</td>
                 <td style="padding: 12px;"></td>
@@ -116,11 +119,11 @@
             <td class="bg-blue">ACUERDOS</td>
         </tr>
         <tr>
-            <td style="text-align: justify; padding: 10px;">
+            <td style="text-align: justify; padding: 10px; font-size: 12px;">
                 @if(!empty($reunion->acuerdos))
                     <ol>
                         @foreach($reunion->acuerdos as $ac)
-                            <li>{{ mb_strtoupper($ac['descripcion'] ?? '', 'UTF-8') }}</li>
+                            <li>{{ $ac['descripcion'] }}</li>
                         @endforeach
                     </ol>
                 @else
@@ -133,14 +136,14 @@
     <!-- OBSERVACIONES -->
     <table>
         <tr>
-            <td class="bg-blue">OBSERVACIONES</td>
+            <td class="bg-blue">COMENTARIOS / OBSERVACIONES</td>
         </tr>
         <tr>
-            <td style="text-align: justify; padding: 10px;">
+            <td style="text-align: justify; padding: 10px; font-size: 12px;">
                 @if(!empty($reunion->comentarios_observaciones))
                     <ol>
                         @foreach($reunion->comentarios_observaciones as $ob)
-                            <li>{{ mb_strtoupper($ob['descripcion'] ?? '', 'UTF-8') }}</li>
+                            <li>{{ $ob['descripcion'] }}</li>
                         @endforeach
                     </ol>
                 @else
@@ -156,9 +159,18 @@
         $imagenesSrc = [];
         foreach ($imageFields as $field) {
             if (!empty($reunion->$field)) {
+                $fotoPath = $reunion->$field;
+                
+                // Si por algún motivo el nombre de la foto se guardó solo como archivo, sin el directorio
+                if (strpos($fotoPath, '/') === false) {
+                    $fotoPath = 'storage/reuniones/' . $fotoPath;
+                }
+                
                 $posiblesRutas = [
-                    public_path($reunion->$field), 
-                    storage_path('app/public/' . str_replace('storage/', '', $reunion->$field))
+                    public_path($fotoPath), // Si el symlink existe en public/storage/...
+                    storage_path('app/public/' . str_replace('storage/', '', $fotoPath)), // Local en storage/app/public/...
+                    storage_path('app/private/public/reuniones/' . basename($fotoPath)), // Archivos ocultos que se guardaron accidentalmente aquí
+                    storage_path('app/public/reuniones/' . basename($fotoPath)) // Fallback seguro
                 ];
                 
                 $rutaEncontrada = null;
@@ -179,28 +191,60 @@
     @endphp
 
     @if(count($imagenesSrc) > 0)
-    <div style="page-break-inside: avoid;">
-        <table>
-            <tr>
-                <td class="bg-blue">EVIDENCIA FOTOGRÁFICA</td>
-            </tr>
-            <tr>
-                <td class="text-center" style="padding: 15px;">
+    <div style="margin-top: 10px; page-break-inside: avoid;">
+        <div class="bg-blue" style="border: 1px solid #000; border-bottom: none; padding: 4px 6px;">EVIDENCIA FOTOGRÁFICA</div>
+        <div class="text-center" style="border: 1px solid #000; padding: 10px;">
+            <table style="width: 100%; border: none; margin: 0; padding: 0;">
+                <tr>
                     @foreach($imagenesSrc as $src)
-                        <img src="{{ $src }}" style="max-width: 45%; max-height: 250px; margin: 0 10px; display: inline-block;">
+                        <td style="width: 50%; text-align: center; border: none; padding: 5px;">
+                            <img src="{{ $src }}" style="width: 95%; height: 200px; vertical-align: top;">
+                        </td>
                     @endforeach
-                </td>
-            </tr>
-            @if($reunion->hora_finalizada_reunion)
-            <tr>
-                <td style="border-top: 1px solid #000; padding: 5px; font-size: 10px;">
-                    Siendo las {{ \Carbon\Carbon::parse($reunion->hora_finalizada_reunion)->format('h:i A') }}, se da por concluida la reunión, firmando los presentes.
-                </td>
-            </tr>
-            @endif
-        </table>
+                </tr>
+            </table>
+        </div>
+        @if($reunion->hora_finalizada_reunion)
+        @php
+            $fmt = new \NumberFormatter('es', \NumberFormatter::SPELLOUT);
+            $hCb = \Carbon\Carbon::parse($reunion->hora_finalizada_reunion);
+            $hNum = (int)$hCb->format('g');
+            $mNum = (int)$hCb->format('i');
+            $hAmPm = $hCb->format('A');
+            
+            $hTxt = $hNum == 1 ? 'una' : $fmt->format($hNum);
+            $art = $hNum == 1 ? 'la' : 'las';
+            
+            $mTxt = $mNum > 0 ? ' y ' . $fmt->format($mNum) . ' minutos' : ' en punto';
+            $pTxt = $hAmPm == 'AM' ? ' de la mañana' : ($hNum >= 6 && $hNum != 12 ? ' de la noche' : ' de la tarde');
+            if ($hNum == 12 && $hAmPm == 'PM') {
+                $pTxt = ' del mediodía';
+                if ($mNum == 0) $mTxt = '';
+            }
+            $textoHora = trim("$art $hTxt$mTxt$pTxt");
+        @endphp
+        <div style="border: 1px solid #000; border-top: none; padding: 5px; font-size: 12px;">
+            Siendo {{ $textoHora }}, se da por concluida la reunión, firmando los presentes.
+        </div>
+        @endif
     </div>
     @endif
 
+
+    <script type="text/php">
+        if (isset($pdf)) {
+            $x = $pdf->get_width() - 85; 
+            $y = $pdf->get_height() - 25; // Subido ligeramente para que no se pierda al imprimir
+            $text = "Página {PAGE_NUM} de {PAGE_COUNT}";
+            $font = $fontMetrics->get_font("Arial", "bold");
+            $size = 10;
+            
+            // Lado izquierdo
+            $pdf->page_text(45, $y, "ACTA DE REUNIÓN", $font, $size);
+            
+            // Lado derecho
+            $pdf->page_text($x, $y, "{PAGE_NUM}/{PAGE_COUNT}", $font, $size);
+        }
+    </script>
 </body>
 </html>

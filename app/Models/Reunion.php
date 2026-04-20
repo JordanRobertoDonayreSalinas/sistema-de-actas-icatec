@@ -29,4 +29,15 @@ class Reunion extends Model
         'participantes' => 'array',
         'anulado' => 'boolean'
     ];
+
+    /**
+     * Encode the given value as JSON.
+     *
+     * @param  mixed  $value
+     * @return string
+     */
+    protected function asJson($value, $flags = 0)
+    {
+        return json_encode($value, JSON_UNESCAPED_UNICODE | $flags);
+    }
 }

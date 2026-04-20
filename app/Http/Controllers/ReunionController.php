@@ -83,9 +83,9 @@ class ReunionController extends Controller
                 $updates = [];
                 for ($i = 0; $i < min(2, count($files)); $i++) {
                     $file = $files[$i];
-                    $path = $file->store('public/reuniones');
-                    // Retener solo la parte sin public/ para la BDD o guardarla completa, generalmente se guarda public/ o la ruta relativa
-                    $updates['foto_' . ($i + 1)] = str_replace('public/', 'storage/', $path);
+                    $path = $file->store('reuniones', 'public');
+                    // Retener la ruta relativa para la DB incluyendo 'storage/'
+                    $updates['foto_' . ($i + 1)] = 'storage/' . $path;
                 }
                 
                 if (!empty($updates)) {
@@ -153,13 +153,13 @@ class ReunionController extends Controller
             // Eliminar fotos si se solicita
             if ($request->input('quitar_foto_1') == '1' && $reunion->foto_1) {
                 // Eliminar archivo
-                $filePath = str_replace('storage/', 'public/', $reunion->foto_1);
-                Storage::delete($filePath);
+                $filePath = str_replace('storage/', '', $reunion->foto_1); // Queda 'reuniones/xyz.jpg'
+                Storage::disk('public')->delete($filePath);
                 $data['foto_1'] = null;
             }
             if ($request->input('quitar_foto_2') == '1' && $reunion->foto_2) {
-                $filePath = str_replace('storage/', 'public/', $reunion->foto_2);
-                Storage::delete($filePath);
+                $filePath = str_replace('storage/', '', $reunion->foto_2);
+                Storage::disk('public')->delete($filePath);
                 $data['foto_2'] = null;
             }
 
@@ -172,26 +172,32 @@ class ReunionController extends Controller
                     
                     // Buscar hueco (si foto_1 esta vacia o se la acaba de vaciar)
                     if (empty($data['foto_1']) && empty($reunion->foto_1)) {
-                        $path = $file->store('public/reuniones');
-                        $data['foto_1'] = str_replace('public/', 'storage/', $path);
+                        $path = $file->store('reuniones', 'public');
+                        $data['foto_1'] = 'storage/' . $path;
                     } else if (empty($data['foto_2']) && empty($reunion->foto_2)) {
-                        $path = $file->store('public/reuniones');
-                        $data['foto_2'] = str_replace('public/', 'storage/', $path);
+                        $path = $file->store('reuniones', 'public');
+                        $data['foto_2'] = 'storage/' . $path;
                     } else if (isset($data['foto_1']) && empty($data['foto_1'])) {
                         // Si decidio quitar la foto 1, podemos llenarlo aqui
-                        $path = $file->store('public/reuniones');
-                        $data['foto_1'] = str_replace('public/', 'storage/', $path);
+                        $path = $file->store('reuniones', 'public');
+                        $data['foto_1'] = 'storage/' . $path;
                     } else if (isset($data['foto_2']) && empty($data['foto_2'])) {
-                        $path = $file->store('public/reuniones');
-                        $data['foto_2'] = str_replace('public/', 'storage/', $path);
+                        $path = $file->store('reuniones', 'public');
+                        $data['foto_2'] = 'storage/' . $path;
                     } else {
                         // Si ambas estan llenas y manda nuevas, podemos omitir o sobreescribir. Sobreescribamos la 1 y 2
                         if ($indice_libre == 1) {
-                            $path = $file->store('public/reuniones');
-                            $data['foto_1'] = str_replace('public/', 'storage/', $path);
+                            if (!empty($reunion->foto_1)) {
+                                Storage::disk('public')->delete(str_replace('storage/', '', $reunion->foto_1));
+                            }
+                            $path = $file->store('reuniones', 'public');
+                            $data['foto_1'] = 'storage/' . $path;
                         } else {
-                            $path = $file->store('public/reuniones');
-                            $data['foto_2'] = str_replace('public/', 'storage/', $path);
+                            if (!empty($reunion->foto_2)) {
+                                Storage::disk('public')->delete(str_replace('storage/', '', $reunion->foto_2));
+                            }
+                            $path = $file->store('reuniones', 'public');
+                            $data['foto_2'] = 'storage/' . $path;
                         }
                     }
                     $indice_libre++;
@@ -228,7 +234,7 @@ class ReunionController extends Controller
         $reunion = Reunion::findOrFail($id);
         
         $pdf = Pdf::loadView('usuario.reuniones.pdf', compact('reunion'))
-                  ->setOptions(['isRemoteEnabled' => true])
+                  ->setOptions(['isRemoteEnabled' => true, 'isPhpEnabled' => true])
                   ->setPaper('a4', 'portrait');
                   
         $titulo = mb_strtoupper($reunion->titulo_reunion, 'UTF-8');

@@ -308,12 +308,12 @@
     });
 
     $('#agregar-acuerdo').click(function() {
-        $('#tabla-acuerdos').append(`<tr><td class="text-center font-bold text-indigo-600"></td><td><input type="text" name="" required class="inp" style="padding:0.35rem 0.45rem;"></td><td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td></tr>`);
+        $('#tabla-acuerdos').append(`<tr><td class="text-center font-bold text-indigo-600"></td><td><input type="text" data-base="descripcion" name="" required class="inp" style="padding:0.35rem 0.45rem;"></td><td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td></tr>`);
         reindexRows('#tabla-acuerdos');
     });
 
     $('#agregar-observacion').click(function() {
-        $('#tabla-observaciones').append(`<tr><td class="text-center font-bold text-indigo-600"></td><td><input type="text" name="" required class="inp" style="padding:0.35rem 0.45rem;"></td><td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td></tr>`);
+        $('#tabla-observaciones').append(`<tr><td class="text-center font-bold text-indigo-600"></td><td><input type="text" data-base="descripcion" name="" required class="inp" style="padding:0.35rem 0.45rem;"></td><td class="text-center"><button type="button" class="btn-del eliminar-fila-generica">&#10006;</button></td></tr>`);
         reindexRows('#tabla-observaciones');
     });
 
