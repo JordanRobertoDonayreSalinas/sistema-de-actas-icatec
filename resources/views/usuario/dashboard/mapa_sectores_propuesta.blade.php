@@ -1,4 +1,4 @@
-ñ@extends('layouts.usuario')
+@extends('layouts.usuario')
 
 @section('title', 'Sectorización Propuesta — ICATEC')
 

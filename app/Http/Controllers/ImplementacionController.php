@@ -287,7 +287,7 @@ class ImplementacionController extends Controller
             $actaData['modalidad'] = mb_strtoupper($request->modalidad, 'UTF-8');
         }
 
-        if ($request->filled('renipress_data')) {
+        if ($moduloKey === 'ges_adm' && $request->filled('renipress_data')) {
             $actaData['renipress_data'] = json_decode($request->renipress_data, true);
         }
 
@@ -437,7 +437,7 @@ class ImplementacionController extends Controller
             $actaData['modalidad'] = mb_strtoupper($request->modalidad, 'UTF-8');
         }
 
-        if ($request->filled('renipress_data')) {
+        if ($modulo === 'ges_adm' && $request->filled('renipress_data')) {
             $actaData['renipress_data'] = json_decode($request->renipress_data, true);
         }
 

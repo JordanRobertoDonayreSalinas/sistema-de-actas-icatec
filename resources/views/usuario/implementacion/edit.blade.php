@@ -160,6 +160,7 @@
             </div>
         </div>
 
+        @if($moduloKey === 'ges_adm')
         {{-- === TARJETA 2.1: SERVICIOS RENIPRESS (AUTOMÁTICO) ===================== --}}
         <div id="section_renipress" class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d2 {{ empty($acta->renipress_data) ? 'hidden' : '' }}">
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
@@ -285,6 +286,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         {{-- === TARJETA 3: MODALIDAD (solo Citas) ================================= --}}
         @if($moduloKey === 'citas')
@@ -307,56 +309,6 @@
                     <label for="modal_seleccion">
                         <i data-lucide="mouse-pointer-click" class="w-4 h-4"></i> Por Selección (Exclusividad)
                     </label>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        {{-- === TARJETA 4: UPSS/UPS (solo Ges. Adm.) ============================= --}}
-        @if($moduloKey === 'ges_adm')
-        <div class="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 slide-up-d3">
-            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                <div class="bg-cyan-600 p-2.5 rounded-xl text-white">
-                    <i data-lucide="building-2" class="w-5 h-5"></i>
-                </div>
-                <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide">3. UPSS / UPS</h2>
-            </div>
-            <div id="seccion-upss" class="space-y-5">
-                {{-- Tabla 1: Renipress SUSALUD --}}
-                <div>
-                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Renipress SUSALUD (UPS / UPSS)</p>
-                    <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
-                        <table class="w-full text-left text-xs text-slate-600">
-                            <thead class="bg-cyan-600 text-white font-semibold">
-                                <tr>
-                                    <th class="p-3">UPSS</th>
-                                    <th class="p-3 border-l border-cyan-500">Estado UPSS</th>
-                                    <th class="p-3 border-l border-cyan-500">UPS</th>
-                                    <th class="p-3 border-l border-cyan-500">Estado UPS</th>
-                                </tr>
-                            </thead>
-                            <tbody id="upss-establecimiento-body">
-                                <tr><td colspan="4" class="p-4 text-center text-slate-400 italic">UPSS del establecimiento (Cargando / Visual)</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {{-- Tabla 2: Regularizar --}}
-                <div>
-                    <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">(UPSS/UPS) Regularizar en Renipress SUSALUD</p>
-                    <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4">
-                        <div class="relative mb-3">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i data-lucide="search" class="h-4 w-4 text-slate-400"></i>
-                            </div>
-                            <input type="text" id="upss-search-input" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-300 transition-all" placeholder="Escriba código o descripción de UPSS/UPS..." onkeyup="buscarUpsGlobal(this)">
-                            <div id="upss_global_results" class="absolute z-50 w-full bg-white border border-slate-200 shadow-xl mt-1 rounded-xl hidden max-h-60 overflow-y-auto"></div>
-                        </div>
-                        <button type="button" onclick="agregarUpssManual()" class="flex items-center gap-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-xl transition-colors mb-3">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar UPSS/UPS Manual
-                        </button>
-                        <div id="upss-container" class="space-y-2"></div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -681,7 +633,9 @@
                                 listaEst.classList.add('hidden');
 
                                 // Sincronizar RENIPRESS
-                                syncRenipressData(est.codigo_establecimiento);
+                                if ("{{ $moduloKey }}" === 'ges_adm') {
+                                    syncRenipressData(est.codigo_establecimiento);
+                                }
                             });
                             listaEst.appendChild(li);
                         });
@@ -912,61 +866,6 @@
         idxUsu++;
     }
 
-
-    // ====== LÓGICA VISUAL UPSS ======
-    let upssIndex = 0;
-
-    async function buscarUpsGlobal(input) {
-        const val = input.value.toLowerCase();
-        const resultsDiv = document.getElementById('upss_global_results');
-        if (val.length < 3) { resultsDiv.classList.add('hidden'); return; }
-        try {
-            const response = await fetch(`{{ route('usuario.implementacion.ajax.upss') }}?q=${val}`);
-            const data = await response.json();
-            let html = '';
-            data.forEach(item => {
-                const codUpss = item.codigo_upss || item.codigo_ups.substring(0,2) + '0000';
-                const nombreUpss = item.descripcion_upss || 'UPSS PREDETERMINADA';
-                html += `<div class="p-3 border-b border-slate-100 hover:bg-teal-50 cursor-pointer transition-colors"
-                     onclick="agregarFilaUpss('${codUpss}', '${nombreUpss}', '${item.codigo_ups}', '${item.descripcion_ups}')">
-                    <div class="text-xs font-semibold text-slate-700">${item.codigo_ups} - ${item.descripcion_ups}</div>
-                    <div class="text-[10px] text-slate-400 font-bold">${codUpss} - ${nombreUpss}</div>
-                </div>`;
-            });
-            if(html) {
-                resultsDiv.innerHTML = html;
-                resultsDiv.classList.remove('hidden');
-            } else {
-                resultsDiv.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">No se encontraron resultados</div>';
-                resultsDiv.classList.remove('hidden');
-            }
-        } catch(error) { console.error('Error buscando UPSS', error); }
-    }
-
-    function agregarFilaUpss(c_upss, n_upss, c_ups, n_ups) {
-        const container = document.getElementById('upss-container');
-        const div = document.createElement('div');
-        div.className = "flex flex-wrap lg:flex-nowrap gap-2 p-3 bg-white border border-slate-200 rounded-xl upss-row items-center";
-        div.innerHTML = `
-            <input type="text" name="upss_regularizar[${upssIndex}][codigo_upss]" value="${c_upss}" class="w-full lg:w-32 border border-slate-200 bg-slate-50 rounded-lg text-xs p-2 outline-none" placeholder="UPSS" readonly>
-            <input type="text" name="upss_regularizar[${upssIndex}][nombre_ups]" value="${c_ups} - ${n_ups}" class="flex-1 border border-slate-200 bg-slate-50 rounded-lg text-xs p-2 outline-none" placeholder="UPS Nombre" readonly>
-            <input type="hidden" name="upss_regularizar[${upssIndex}][codigo_ups]" value="${c_ups}">
-            <button type="button" onclick="this.closest('.upss-row').remove()" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors whitespace-nowrap">
-                × Eliminar
-            </button>`;
-        container.appendChild(div);
-        upssIndex++;
-        document.getElementById('upss-search-input').value = '';
-        document.getElementById('upss_global_results').classList.add('hidden');
-    }
-
-    function agregarUpssManual() {
-        agregarFilaUpss('', '', '', '');
-        const container = document.getElementById('upss-container');
-        const rows = container.querySelectorAll('.upss-row');
-        const lastRow = rows[rows.length - 1];
-        lastRow.querySelectorAll('input').forEach(input => input.removeAttribute('readonly'));
-    }
 
     // --- IMPLEMENTADORES (nuevos) ---
     let idxImp = {{ $acta->implementadores->count() }};

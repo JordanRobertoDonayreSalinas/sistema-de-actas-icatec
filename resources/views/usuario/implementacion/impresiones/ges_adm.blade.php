@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -189,51 +189,7 @@
         </table>
     </div>
 
-    <div class="section">
-        <div class="section-header">Renipress SUSALUD (UPS / UPSS)</div>
-        <table>
-            <thead>
-                <tr>
-                    <th class="bg-label">UPSS</th>
-                    <th class="bg-label">Estado UPSS</th>
-                    <th class="bg-label">UPS</th>
-                    <th class="bg-label">Estado UPS</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($acta->upss as $item)
-                <tr>
-                    <td>{{ $item->codigo_upss }} - {{ $item->nombre_upss }}</td>
-                    <td>{{ $item->estado_upss }}</td>
-                    <td>{{ $item->codigo_ups }} - {{ $item->nombre_ups }}</td>
-                    <td>{{ $item->estado_ups }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
 
-    @if($acta->sugeridas->count())
-    <div class="section">
-        <div class="section-header">Regularizar UPSS/UPS en Renipress SUSALUD</div>
-        <table>
-            <thead>
-                <tr>
-                    <th class="bg-label">UPSS</th>
-                    <th class="bg-label">UPS</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($acta->sugeridas as $sug)
-                <tr>
-                    <td>{{ $sug->codigo_upss }} - {{ $sug->nombre_upss }}</td>
-                    <td>{{ $sug->codigo_ups }} - {{ $sug->nombre_ups }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    @endif
 
 
     <div class="section">
@@ -342,9 +298,8 @@
                 <td style="border: 1px solid #000; padding: 10px; min-height: 60px;">
                     <b>El jefe del establecimiento se compromete:</b>   <br>
 
-                    1. ACTUALIZAR en Renipress SUSALUD las UPPS y UPS añadidas para el funcionamiento del modulo en virtud a contar con profesionales que realizan la actividad. <br>
-                    2. Garantizará la continuidad de lo implementado, en caso de presentarse inconvenientes comunicará al equipo implementador de la Unidad Ejecutora. <br>
-                    3. Brindar las facilidades que se requieran que garanticen la carga de la programación de turnos y consultorios con 03 meses de anticipación de acuerdo a ley. <br><br>
+                    1. Garantizará la continuidad de lo implementado, en caso de presentarse inconvenientes comunicará al equipo implementador de la Unidad Ejecutora. <br>
+                    2. Brindar las facilidades que se requieran que garanticen la carga de la programación de turnos y consultorios con 03 meses de anticipación de acuerdo a ley. <br><br>
 
                     
 

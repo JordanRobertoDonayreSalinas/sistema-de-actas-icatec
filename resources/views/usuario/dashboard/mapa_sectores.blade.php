@@ -1,6 +1,6 @@
 @extends('layouts.usuario')
 
-@section('title', 'Sectorización Propuesta — ICATEC')
+@section('title', 'Sectorización Oficial — ICATEC')
 
 @section('header-content')
     <h1 class="text-xl font-bold text-slate-800 tracking-tight">Mapa de Programación por Sectores</h1>
