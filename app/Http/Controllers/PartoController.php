@@ -44,7 +44,7 @@ class PartoController extends Controller
             if ($request->hasFile('fotos')) {
                 foreach ($request->file('fotos') as $foto) {
                     $path = $foto->store('evidencias_parto', 'public');
-                    $rutasFotos[] = asset('storage/' . $path);
+                    $rutasFotos[] = $path;
                 }
             }
             $rutasFotos = array_slice($rutasFotos, 0, 2);
@@ -345,18 +345,23 @@ class PartoController extends Controller
         $fotosBase64 = [];
         if (!empty($registro->fotos_evidencia)) {
             foreach ($registro->fotos_evidencia as $url) {
+                // Caso A: Es una URL absoluta (Legacy o Guardado con asset)
                 if (str_starts_with($url, 'http')) {
-                    $fotosBase64[] = $url;
-                } else {
                     $rutaRelativa = str_replace(url('/'), '', $url);
-                    $path = public_path($rutaRelativa);
+                    $rutaRelativa = ltrim($rutaRelativa, '/');
+                    // Si la URL contenía 'storage/', lo removemos para concatenar con storage_path
+                    $rutaRelativa = str_replace('storage/', '', $rutaRelativa);
+                    $path = storage_path('app/public/' . $rutaRelativa);
+                } else {
+                    // Caso B: Es una ruta relativa (Nuevo Estándar)
+                    $path = storage_path('app/public/' . $url);
+                }
 
-                    if (file_exists($path)) {
-                        $type = pathinfo($path, PATHINFO_EXTENSION);
-                        $data = file_get_contents($path);
-                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                        $fotosBase64[] = $base64;
-                    }
+                if (file_exists($path)) {
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                    $fotosBase64[] = $base64;
                 }
             }
         }

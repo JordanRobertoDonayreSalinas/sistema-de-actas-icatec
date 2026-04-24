@@ -1397,10 +1397,14 @@
             cont.querySelectorAll('.group').forEach(e => e.remove());
             document.getElementById('empty-state').style.display = evidenceList.length ? 'none' : 'block';
             evidenceList.forEach(i => {
+                const displayUrl = (i.type === 'server' && !i.url.startsWith('http')) 
+                    ? `{{ asset('storage') }}/${i.url}` 
+                    : i.url;
+
                 const d = document.createElement('div');
                 d.className = "relative group h-96 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white animate-fade-in";
                 d.innerHTML =
-                    `<img src="${i.url}" class="w-full h-full object-cover rounded-xl shadow-inner shadow-black/10 transition-transform duration-500 group-hover:scale-105"><button type="button" onclick="removeImage(${i.id})" class="absolute top-2 right-2 bg-red-500/80 backdrop-blur-sm text-white p-1.5 rounded-full shadow-lg hover:bg-red-600 transition-all z-20"><i data-lucide="x" class="w-3.5 h-3.5"></i></button><div class="absolute top-2 left-2 ${i.type=='local'?'bg-indigo-600/90':'bg-emerald-600/90'} backdrop-blur-sm text-white text-[9px] font-black tracking-widest px-3 py-1 rounded-full shadow-lg z-20 uppercase"><span>${i.type}</span></div>`;
+                    `<img src="${displayUrl}" class="w-full h-full object-cover rounded-xl shadow-inner shadow-black/10 transition-transform duration-500 group-hover:scale-105"><button type="button" onclick="removeImage(${i.id})" class="absolute top-2 right-2 bg-red-500/80 backdrop-blur-sm text-white p-1.5 rounded-full shadow-lg hover:bg-red-600 transition-all z-20"><i data-lucide="x" class="w-3.5 h-3.5"></i></button><div class="absolute top-2 left-2 ${i.type=='local'?'bg-indigo-600/90':'bg-emerald-600/90'} backdrop-blur-sm text-white text-[9px] font-black tracking-widest px-3 py-1 rounded-full shadow-lg z-20 uppercase"><span>${i.type}</span></div>`;
                 cont.appendChild(d);
             });
             if (countDisplay) countDisplay.innerText = `${evidenceList.length} / ${MAX_PHOTOS}`;
