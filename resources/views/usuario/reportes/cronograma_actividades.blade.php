@@ -33,6 +33,9 @@
     .badge-implementacion {
         background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe;
     }
+    .badge-reunion {
+        background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;
+    }
     .badge-anulado {
         background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa;
     }
@@ -100,6 +103,12 @@
                         <span class="text-[0.6rem] uppercase tracking-widest text-blue-200 font-bold mt-1">Monitoreo</span>
                     </div>
 
+                    {{-- Reunión --}}
+                    <div class="bg-rose-500/20 backdrop-blur-md rounded-xl px-4 py-3 border border-rose-400/30 flex flex-col items-center min-w-[100px]">
+                        <span class="text-2xl font-black leading-none">{{ $countReunion }}</span>
+                        <span class="text-[0.6rem] uppercase tracking-widest text-rose-200 font-bold mt-1">Reunión</span>
+                    </div>
+
                     {{-- Firmadas --}}
                     <div class="bg-white/20 backdrop-blur-md rounded-xl px-4 py-3 border border-white/30 flex flex-col items-center min-w-[100px]">
                         <span class="text-2xl font-black leading-none">{{ $totalFirmadas }}</span>
@@ -148,6 +157,7 @@
                         <option value="asistencia"     {{ request('tipo_acta') === 'asistencia'     ? 'selected' : '' }}>Asistencia Técnica</option>
                         <option value="monitoreo"      {{ request('tipo_acta') === 'monitoreo'      ? 'selected' : '' }}>Monitoreo</option>
                         <option value="implementacion" {{ request('tipo_acta') === 'implementacion' ? 'selected' : '' }}>Implementación</option>
+                        <option value="reunion"        {{ request('tipo_acta') === 'reunion'        ? 'selected' : '' }}>Reunión</option>
                     </select>
                 </div>
 
@@ -197,6 +207,9 @@
         </span>
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold badge-implementacion">
             <i data-lucide="pen-tool" class="w-3 h-3"></i> Implementación
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold badge-reunion">
+            <i data-lucide="users" class="w-3 h-3"></i> Reunión
         </span>
     </div>
 
@@ -273,6 +286,11 @@
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold badge-monitoreo">
                                     <i data-lucide="activity" class="w-3 h-3"></i>
                                     Monitoreo
+                                </span>
+                            @elseif($fila['tipo_key'] === 'reunion')
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold badge-reunion">
+                                    <i data-lucide="users" class="w-3 h-3"></i>
+                                    Reunión
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold badge-implementacion">

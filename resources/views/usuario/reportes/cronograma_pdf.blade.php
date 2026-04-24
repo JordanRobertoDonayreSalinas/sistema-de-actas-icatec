@@ -153,17 +153,29 @@
                                 }
                             } elseif ($fila['tipo_key'] === 'monitoreo') {
                                 $descripcion = 'Monitoreo de Uso del SIHCE MINSA - Presencial';
+                            } elseif ($fila['tipo_key'] === 'reunion') {
+                                $actividadTxt = $fila['actividad'] !== '—' ? $fila['actividad'] : '';
+                                $descripcion  = mb_convert_case(mb_strtolower($actividadTxt, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
                             } else {
                                 $descripcion = 'Implementación Módulo de ' . $fila['actividad'];
                             }
 
-                            $categoria   = strtoupper(trim($fila['categoria_establecimiento'] ?? ''));
-                            $prefijo     = in_array($categoria, ['I-1','I-2']) ? 'P.S.' : (in_array($categoria, ['I-3','I-4']) ? 'C.S.' : '');
-                            $nombreEstab = $fila['establecimiento'];
-                            if (mb_strtoupper($nombreEstab, 'UTF-8') === $nombreEstab) {
-                                $nombreEstab = mb_convert_case($nombreEstab, MB_CASE_TITLE, 'UTF-8');
+                            if ($fila['tipo_key'] === 'reunion') {
+                                // Para reuniones: solo nombre_institucion, sin prefijo ni provincia
+                                $nombreEstab = $fila['establecimiento'];
+                                if (mb_strtoupper($nombreEstab, 'UTF-8') === $nombreEstab) {
+                                    $nombreEstab = mb_convert_case($nombreEstab, MB_CASE_TITLE, 'UTF-8');
+                                }
+                                $estabTxt = $nombreEstab;
+                            } else {
+                                $categoria   = strtoupper(trim($fila['categoria_establecimiento'] ?? ''));
+                                $prefijo     = in_array($categoria, ['I-1','I-2']) ? 'P.S.' : (in_array($categoria, ['I-3','I-4']) ? 'C.S.' : '');
+                                $nombreEstab = $fila['establecimiento'];
+                                if (mb_strtoupper($nombreEstab, 'UTF-8') === $nombreEstab) {
+                                    $nombreEstab = mb_convert_case($nombreEstab, MB_CASE_TITLE, 'UTF-8');
+                                }
+                                $estabTxt = ($prefijo ? $prefijo . ' ' : '') . $nombreEstab . ' - ' . $fila['provincia'];
                             }
-                            $estabTxt = ($prefijo ? $prefijo . ' ' : '') . $nombreEstab . ' - ' . $fila['provincia'];
 
                             $participantesTxt = $fila['participantes_txt'] ?? $fila['responsable'];
                             $actaTxt          = $fila['nombre_acta'] ?? ('Acta de ' . $fila['tipo']);
@@ -201,20 +213,39 @@
                             <td class="text-center">{{ $estabTxt }}</td>
                             <td>{!! nl2br(e($participantesTxt)) !!}</td>
                             <td>
-                                <div style="margin-bottom: 8px;">{{ $actaTxt }}</div>
-                                @if(!empty($fila['imagenes_paths']) && is_array($fila['imagenes_paths']))
-                                    <div class="evidencia-container">
-                                        @foreach($fila['imagenes_paths'] as $imgPath)
-                                            @if(file_exists($imgPath))
-                                                @php
-                                                    $type   = pathinfo($imgPath, PATHINFO_EXTENSION);
-                                                    $data   = file_get_contents($imgPath);
-                                                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                                                @endphp
-                                                <img src="{{ $base64 }}" class="evidencia-img">
-                                            @endif
-                                        @endforeach
-                                    </div>
+                                @if($fila['tipo_key'] === 'reunion')
+                                    {{-- Para reuniones: texto en parte superior, fotos abajo --}}
+                                    <div style="text-align:center; margin-bottom:6px;">{{ $actaTxt }}</div>
+                                    @if(!empty($fila['imagenes_paths']) && is_array($fila['imagenes_paths']))
+                                        <div style="text-align:center;">
+                                            @foreach($fila['imagenes_paths'] as $imgPath)
+                                                @if(file_exists($imgPath))
+                                                    @php
+                                                        $type   = pathinfo($imgPath, PATHINFO_EXTENSION);
+                                                        $data   = file_get_contents($imgPath);
+                                                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                                    @endphp
+                                                    <img src="{{ $base64 }}" style="max-width:120px; max-height:90px; margin:2px; border:1px solid #ccc;">
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @else
+                                    <div style="margin-bottom: 8px;">{{ $actaTxt }}</div>
+                                    @if(!empty($fila['imagenes_paths']) && is_array($fila['imagenes_paths']))
+                                        <div class="evidencia-container">
+                                            @foreach($fila['imagenes_paths'] as $imgPath)
+                                                @if(file_exists($imgPath))
+                                                    @php
+                                                        $type   = pathinfo($imgPath, PATHINFO_EXTENSION);
+                                                        $data   = file_get_contents($imgPath);
+                                                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                                    @endphp
+                                                    <img src="{{ $base64 }}" class="evidencia-img">
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 @endif
                             </td>
                         </tr>

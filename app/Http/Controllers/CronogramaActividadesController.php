@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Acta;
+use App\Models\Reunion;
 use App\Models\CabeceraMonitoreo;
 use App\Models\Establecimiento;
 use App\Helpers\ImplementacionHelper;
@@ -317,6 +318,76 @@ class CronogramaActividadesController extends Controller
             }
         }
 
+        // ============================================================
+        // 4. ACTAS DE REUNIÓN
+        // ============================================================
+        if (!$filtroTipo || $filtroTipo === 'reunion') {
+            $queryReu = Reunion::query()
+                ->where(fn($q) => $q->where('anulado', false)->orWhereNull('anulado'))
+                ->whereDate('fecha_reunion', '>=', $fechaInicio)
+                ->whereDate('fecha_reunion', '<=', $fechaFin);
+
+            // Reuniones no tienen provincia directa; filtramos por nombre_institucion si filtroProv existe
+            // (no aplica filtro de provincia para reuniones ya que no tienen establecimiento ligado)
+
+            $queryReu->get()->each(function ($reunion) use (&$actividades, $enriquecido) {
+
+                $participantesTxt = '—';
+                $imagenesPaths    = [];
+
+                if ($enriquecido) {
+                    $lineas = [];
+
+                    $cargoMayus = fn(string $s): string => mb_strtoupper(trim($s), 'UTF-8');
+                    $titleCase  = fn(string $s): string =>
+                        mb_convert_case(mb_strtolower(trim($s), 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+
+                    $participantesJson = $reunion->participantes ?? [];
+                    foreach ($participantesJson as $p) {
+                        $nombre = trim(($p['apellidos'] ?? '') . ' ' . ($p['nombres'] ?? ''));
+                        if ($nombre) {
+                            $cargoFmt = !empty(trim($p['cargo'] ?? ''))
+                                ? $cargoMayus($p['cargo']) . ': '
+                                : '';
+                            $lineas[] = $cargoFmt . $titleCase($nombre);
+                        }
+                    }
+
+                    $participantesTxt = implode("\n", $lineas) ?: '—';
+
+                    // Fotos del acta de reunión (guardadas como 'storage/reuniones/...')
+                    foreach (['foto_1', 'foto_2'] as $campo) {
+                        if (!empty($reunion->$campo)) {
+                            // La ruta en BD es 'storage/reuniones/...' → convertir a ruta absoluta
+                            $relativePath = str_replace('storage/', '', $reunion->$campo);
+                            $path = storage_path('app/public/' . $relativePath);
+                            if (file_exists($path)) {
+                                $imagenesPaths[] = $path;
+                            }
+                        }
+                    }
+                }
+
+                $actividades->push([
+                    'fecha'                     => $reunion->fecha_reunion,
+                    'tipo'                      => 'Acta de Reunión',
+                    'tipo_key'                  => 'reunion',
+                    'establecimiento'           => $reunion->nombre_institucion ?? '—',
+                    'categoria_establecimiento' => '',
+                    'provincia'                 => '—',
+                    'responsable'               => '—',
+                    'actividad'                 => $reunion->titulo_reunion ?? '—',
+                    'modalidad'                 => '—',
+                    'firmado'                   => false,
+                    'anulado'                   => $reunion->anulado ?? false,
+                    'nombre_acta'               => 'Locación Presencial',
+                    'num_acta'                  => $reunion->id,
+                    'participantes_txt'         => $participantesTxt,
+                    'imagenes_paths'            => $imagenesPaths,
+                ]);
+            });
+        }
+
         return $actividades->sortByDesc('fecha')->values();
     }
 
@@ -354,6 +425,7 @@ class CronogramaActividadesController extends Controller
         $countAsistencia     = $actividades->where('tipo_key', 'asistencia')->count();
         $countMonitoreo      = $actividades->where('tipo_key', 'monitoreo')->count();
         $countImplementacion = $actividades->where('tipo_key', 'implementacion')->count();
+        $countReunion        = $actividades->where('tipo_key', 'reunion')->count();
 
         // Paginación manual
         $page    = $request->get('page', 1);
@@ -372,7 +444,7 @@ class CronogramaActividadesController extends Controller
             'actasPaginadas', 'provincias',
             'fechaInicio', 'fechaFin',
             'totalActividades', 'totalFirmadas', 'totalPendientes', 'totalAnuladas',
-            'countAsistencia', 'countMonitoreo', 'countImplementacion'
+            'countAsistencia', 'countMonitoreo', 'countImplementacion', 'countReunion'
         ));
     }
 

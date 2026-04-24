@@ -221,43 +221,79 @@ class CronogramaActividadesExport implements WithEvents, WithTitle
                                 }
                             } elseif ($fila['tipo_key'] === 'monitoreo') {
                                 $descripcion = 'Monitoreo de Uso del SIHCE MINSA - Presencial';
+                            } elseif ($fila['tipo_key'] === 'reunion') {
+                                $actividadTxt = $fila['actividad'] !== '—' ? $fila['actividad'] : '';
+                                $actividadTxt = mb_convert_case(mb_strtolower($actividadTxt, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                                $descripcion  = $actividadTxt;
                             } else {
                                 $descripcion = 'Implementación Módulo de ' . $fila['actividad'];
                             }
                             $sheet->setCellValue("C{$rowNum}", $descripcion);
 
-                            $categoria   = strtoupper(trim($fila['categoria_establecimiento'] ?? ''));
-                            $prefijo     = in_array($categoria, ['I-1', 'I-2']) ? 'P.S.' : (in_array($categoria, ['I-3', 'I-4']) ? 'C.S.' : '');
-                            $nombreEstab = $fila['establecimiento'];
-                            if (mb_strtoupper($nombreEstab, 'UTF-8') === $nombreEstab) {
-                                $nombreEstab = mb_convert_case($nombreEstab, MB_CASE_TITLE, 'UTF-8');
+                            if ($fila['tipo_key'] === 'reunion') {
+                                // Para reuniones: establecimiento = nombre_institucion tal como viene (ya en mayúsculas)
+                                $nombreEstab = $fila['establecimiento'];
+                                if (mb_strtoupper($nombreEstab, 'UTF-8') === $nombreEstab) {
+                                    $nombreEstab = mb_convert_case($nombreEstab, MB_CASE_TITLE, 'UTF-8');
+                                }
+                                $sheet->setCellValue("D{$rowNum}", $nombreEstab);
+                            } else {
+                                $categoria   = strtoupper(trim($fila['categoria_establecimiento'] ?? ''));
+                                $prefijo     = in_array($categoria, ['I-1', 'I-2']) ? 'P.S.' : (in_array($categoria, ['I-3', 'I-4']) ? 'C.S.' : '');
+                                $nombreEstab = $fila['establecimiento'];
+                                if (mb_strtoupper($nombreEstab, 'UTF-8') === $nombreEstab) {
+                                    $nombreEstab = mb_convert_case($nombreEstab, MB_CASE_TITLE, 'UTF-8');
+                                }
+                                $sheet->setCellValue("D{$rowNum}", ($prefijo ? $prefijo . ' ' : '') . $nombreEstab . ' - ' . $fila['provincia']);
                             }
-                            $sheet->setCellValue("D{$rowNum}", ($prefijo ? $prefijo . ' ' : '') . $nombreEstab . ' - ' . $fila['provincia']);
 
                             $sheet->setCellValue("E{$rowNum}", $fila['participantes_txt'] ?? $fila['responsable']);
-                            $sheet->setCellValue("F{$rowNum}", $fila['nombre_acta'] ?? ('Acta de ' . $fila['tipo']));
+
+                            if ($fila['tipo_key'] === 'reunion') {
+                                // Columna F: "Locación Presencial"
+                                $sheet->setCellValue("F{$rowNum}", $fila['nombre_acta'] ?? 'Locación Presencial');
+                                // Columna G: fotos del acta de reunión
+                                $offsetX = 4;
+                                if (!empty($fila['imagenes_paths']) && is_array($fila['imagenes_paths'])) {
+                                    foreach ($fila['imagenes_paths'] as $imgPath) {
+                                        try {
+                                            $drawing = new Drawing();
+                                            $drawing->setPath($imgPath);
+                                            $drawing->setCoordinates("G{$rowNum}");
+                                            $drawing->setOffsetX($offsetX);
+                                            $drawing->setOffsetY(8);
+                                            $drawing->setWidth(160);
+                                            $drawing->setHeight(80);
+                                            $drawing->setWorksheet($sheet);
+                                            $offsetX += 166;
+                                        } catch (\Exception $e) {}
+                                    }
+                                }
+                            } else {
+                                $sheet->setCellValue("F{$rowNum}", $fila['nombre_acta'] ?? ('Acta de ' . $fila['tipo']));
+
+                                $offsetX = 4;
+                                if (!empty($fila['imagenes_paths']) && is_array($fila['imagenes_paths'])) {
+                                    foreach ($fila['imagenes_paths'] as $imgPath) {
+                                        try {
+                                            $drawing = new Drawing();
+                                            $drawing->setPath($imgPath);
+                                            $drawing->setCoordinates("G{$rowNum}");
+                                            $drawing->setOffsetX($offsetX);
+                                            $drawing->setOffsetY(8);
+                                            $drawing->setWidth(160);
+                                            $drawing->setHeight(80);
+                                            $drawing->setWorksheet($sheet);
+                                            $offsetX += 166;
+                                        } catch (\Exception $e) {}
+                                    }
+                                }
+                            }
 
                             $sheet->getRowDimension($rowNum)->setRowHeight(self::ROW_HEIGHT);
                             $sheet->getStyle("A{$rowNum}:G{$rowNum}")->applyFromArray($cellStyle);
                             $sheet->getStyle("C{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setVertical(Alignment::VERTICAL_CENTER);
                             $sheet->getStyle("E{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT)->setVertical(Alignment::VERTICAL_CENTER);
-
-                            $offsetX = 4;
-                            if (!empty($fila['imagenes_paths']) && is_array($fila['imagenes_paths'])) {
-                                foreach ($fila['imagenes_paths'] as $imgPath) {
-                                    try {
-                                        $drawing = new Drawing();
-                                        $drawing->setPath($imgPath);
-                                        $drawing->setCoordinates("G{$rowNum}");
-                                        $drawing->setOffsetX($offsetX);
-                                        $drawing->setOffsetY(8);
-                                        $drawing->setWidth(160);
-                                        $drawing->setHeight(80);
-                                        $drawing->setWorksheet($sheet);
-                                        $offsetX += 166;
-                                    } catch (\Exception $e) {}
-                                }
-                            }
 
                             $rowNum++;
                         }
