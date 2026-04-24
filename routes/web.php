@@ -193,6 +193,7 @@ Route::middleware(['auth'])->group(function () {
             // Reportes de Equipos de Cómputo
             Route::get('/equipos', [ReporteEquiposController::class, 'index'])->name('equipos');
             Route::post('/equipos/excel', [ReporteEquiposController::class, 'exportarExcel'])->name('equipos.excel');
+            Route::post('/equipos/ficha-42', [ReporteEquiposController::class, 'exportarFicha42'])->name('equipos.ficha42');
 
             // AJAX endpoints para filtros dinámicos
             Route::get('/equipos/ajax/establecimientos', [ReporteEquiposController::class, 'getEstablecimientos'])->name('equipos.ajax.establecimientos');

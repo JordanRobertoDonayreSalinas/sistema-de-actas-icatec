@@ -67,6 +67,14 @@ class CabeceraMonitoreo extends Model
     }
 
     /**
+     * Equipos de cómputo registrados en este monitoreo.
+     */
+    public function equipos(): HasMany
+    {
+        return $this->hasMany(EquipoComputo::class, 'cabecera_monitoreo_id');
+    }
+
+    /**
      * Relación con el usuario del sistema que creó el registro.
      */
     public function user(): BelongsTo

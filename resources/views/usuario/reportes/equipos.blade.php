@@ -130,7 +130,11 @@
                         @if($equipos->count() > 0)
                             <button type="button" onclick="exportarExcel()"
                                 class="px-4 py-2 bg-green-50 text-green-600 text-xs font-bold rounded-lg hover:bg-green-100 transition-all flex items-center gap-2">
-                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> EXCEL
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> EXCEL GENERAL
+                            </button>
+                            <button type="button" onclick="exportarFicha42()"
+                                class="px-4 py-2 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100 transition-all flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> FICHA 42 (CM 42)
                             </button>
                         @endif
                     </div>
@@ -236,6 +240,17 @@
         <input type="hidden" name="modulo" value="{{ request('modulo') }}">
         <input type="hidden" name="tipo" value="{{ request('tipo') }}">
     </form>
+
+    <form id="ficha42Form" method="POST" action="{{ route('usuario.reportes.equipos.ficha42') }}" style="display: none;">
+        @csrf
+        <input type="hidden" name="fecha_inicio" value="{{ $fechaInicio }}">
+        <input type="hidden" name="fecha_fin" value="{{ $fechaFin }}">
+        <input type="hidden" name="establecimiento_id" value="{{ request('establecimiento_id') }}">
+        <input type="hidden" name="provincia" value="{{ request('provincia') }}">
+        <input type="hidden" name="distrito" value="{{ request('distrito') }}">
+        <input type="hidden" name="modulo" value="{{ request('modulo') }}">
+        <input type="hidden" name="tipo" value="{{ request('tipo') }}">
+    </form>
 @endsection
 
 @push('scripts')
@@ -243,6 +258,7 @@
         lucide.createIcons();
 
         function exportarExcel() { document.getElementById('excelForm').submit(); }
+        function exportarFicha42() { document.getElementById('ficha42Form').submit(); }
 
         const tipoSelect = document.getElementById('tipo');
         const provinciaSelect = document.getElementById('provincia');

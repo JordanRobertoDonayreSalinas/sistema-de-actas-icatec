@@ -8,6 +8,7 @@ use App\Models\Establecimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\EquiposExport;
+use App\Exports\Ficha42Export;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 
@@ -205,6 +206,175 @@ class ReporteEquiposController extends Controller
         $filename = 'Reporte_Equipos_Computo_' . date('Y-m-d_His') . '.xlsx';
 
         return Excel::download(new EquiposExport($equipos), $filename);
+    }
+
+    /**
+     * Exporta la Ficha 42 (Anexo 1) a Excel.
+     */
+    public function exportarFicha42(Request $request)
+    {
+        // 1. Identificar las últimas visitas (cabeceras) por establecimiento en el rango de fechas y con los filtros aplicados
+        $subQuery = DB::table('mon_cabecera_monitoreo as c')
+            ->join('establecimientos as e', 'c.establecimiento_id', '=', 'e.id')
+            ->select('c.establecimiento_id', DB::raw('MAX(c.id) as max_id'))
+            ->when($request->filled('fecha_inicio'), fn($q) => $q->whereDate('c.fecha', '>=', $request->fecha_inicio))
+            ->when($request->filled('fecha_fin'), fn($q) => $q->whereDate('c.fecha', '<=', $request->fecha_fin))
+            ->when($request->filled('establecimiento_id'), fn($q) => $q->where('c.establecimiento_id', $request->establecimiento_id))
+            ->when($request->filled('provincia'), fn($q) => $q->where('e.provincia', $request->provincia))
+            ->when($request->filled('tipo'), function($q) use ($request) {
+                // Si el filtro de tipo (ESP/NO ESP) está activo
+                $codigosCSMC = ['25933', '28653', '27197', '34021', '25977', '33478', '27199', '30478'];
+                if ($request->tipo == 'ESPECIALIZADO') {
+                    $q->whereIn('e.codigo', $codigosCSMC);
+                } else {
+                    $q->whereNotIn('e.codigo', $codigosCSMC);
+                }
+            })
+            ->groupBy('c.establecimiento_id');
+
+        $latestCabecerasIds = $subQuery->pluck('max_id');
+
+        // 2. Obtener las cabeceras con su relación de equipos y detalles (de ambas tablas)
+        $cabeceras = CabeceraMonitoreo::with(['establecimiento', 'equipos'])
+            ->whereIn('id', $latestCabecerasIds)
+            ->get();
+
+        // 3. Definir los tipos de equipo a reportar (Basado en la Ficha 42 / Anexo 1)
+        $tiposReporte = [
+            '01' => '01. PC (CPU + MONITOR) (CANTIDAD)',
+            '02' => '02. IMPRESORA (CANTIDAD)',
+            '03' => '03. IMPRESORA TIKETERA TERMICA (CANTIDAD)',
+            '04' => '04. LECTORA DE DNI (CANTIDAD)',
+            '05' => '05. LECTOR DE HUELLAS DACTILARES (CANTIDAD)',
+            '06' => '06. SWITCH (CANTIDAD)',
+            '07' => '07. RJ45 (CANTIDAD)',
+            '08' => '08. CABLEADO (SI / NO)',
+            '09' => '09. OPERADOR (CLARO, MOVISTAR, BITEL, E...)',
+            '10' => '10. ANCHO DE BANDA EN (MB)',
+            '11' => '11. FIBRA (SI / NO)',
+            '12' => '12. COBRE (SI / NO)',
+        ];
+
+        // 4. Procesar cada cabecera para el reporte
+        $rows = [];
+        foreach ($cabeceras as $cabecera) {
+            $est = $cabecera->establecimiento;
+            if (!$est) continue;
+
+            // Unificar detalles (Nuevos + Antiguos)
+            $allDetalles = DB::table('mon_detalle_modulos')->where('cabecera_monitoreo_id', $cabecera->id)->get()
+                ->keyBy('modulo_nombre')
+                ->merge(DB::table('mon_monitoreo_modulos')->where('cabecera_monitoreo_id', $cabecera->id)->get()->keyBy('modulo_nombre'))
+                ->values();
+            
+            // Recolectar Equipos (SQL + JSON Fallback)
+            $listaEquipos = collect();
+            foreach ($cabecera->equipos as $e) { $listaEquipos->push($e); }
+            if ($listaEquipos->isEmpty()) {
+                foreach ($allDetalles as $det) {
+                    $cont = is_string($det->contenido) ? json_decode($det->contenido, true) : $det->contenido;
+                    $equiposJson = $cont['equipos_data'] ?? ($cont['inventario'] ?? ($cont['equipos'] ?? ($cont['equipos_de_computo'] ?? [])));
+                    if (is_array($equiposJson)) {
+                        foreach ($equiposJson as $ej) {
+                            $obj = new \stdClass();
+                            $obj->modulo = $det->modulo_nombre;
+                            $obj->descripcion = $ej['descripcion'] ?? ($ej['nombre'] ?? 'PC');
+                            $obj->cantidad = $ej['cantidad'] ?? 1;
+                            $listaEquipos->push($obj);
+                        }
+                    }
+                }
+            }
+
+            // Generar los registros por cada tipo de equipo
+            foreach ($tiposReporte as $key => $label) {
+                $row = [
+                    'categoria' => ($key === '01') ? $est->categoria : '',
+                    'codigo' => ($key === '01') ? $est->codigo : '',
+                    'nombre' => ($key === '01') ? $est->nombre : '',
+                    'tipo_equipo' => $label,
+                    'triaje' => 0,
+                    'consultorio' => 0,
+                    'admision' => 0,
+                    'programacion' => 0,
+                    'red' => 0,
+                    'internet' => 0,
+                ];
+
+                if (in_array($key, ['01', '02', '03', '04', '05', '06', '07'])) {
+                    // Lógica de conteo por tipo
+                    foreach ($listaEquipos as $equipo) {
+                        $desc = strtoupper(trim($equipo->descripcion));
+                        $match = false;
+                        
+                        switch($key) {
+                            case '01': $match = in_array($desc, ['CPU', 'LAPTOP', 'ALL IN ONE', 'ALL-IN-ONE', '.CPU', 'CP', 'PC']); break;
+                            case '02': $match = str_contains($desc, 'IMPRESORA') && !str_contains($desc, 'TICKETERA'); break;
+                            case '03': $match = str_contains($desc, 'TICKETERA'); break;
+                            case '04': $match = str_contains($desc, 'LECTOR') && (str_contains($desc, 'DNI') || str_contains($desc, 'DNIE')); break;
+                            case '05': $match = str_contains($desc, 'HUELLA') || str_contains($desc, 'BIOMETRICO'); break;
+                            case '06': $match = str_contains($desc, 'SWITCH'); break;
+                            case '07': $match = str_contains($desc, 'RJ45') || str_contains($desc, 'PUNTO DE RED'); break;
+                        }
+
+                        if ($match) {
+                            $modulo = strtolower(trim($equipo->modulo));
+                            if (in_array($modulo, ['triaje', 'triaje_esp'])) $row['triaje'] += $equipo->cantidad;
+                            elseif (in_array($modulo, ['citas', 'citas_esp'])) $row['admision'] += $equipo->cantidad;
+                            elseif (in_array($modulo, ['gestion_administrativa', 'gestion_admin_esp'])) $row['programacion'] += $equipo->cantidad;
+                            else $row['consultorio'] += $equipo->cantidad;
+                        }
+                    }
+                } else {
+                    // Lógica para Conectividad (08-12)
+                    foreach ($allDetalles as $detalle) {
+                        $cont = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : $detalle->contenido;
+                        if (!is_array($cont)) continue;
+                        
+                        $tipoConect = strtoupper($cont['tipo_conectividad'] ?? ($cont['tipo'] ?? ''));
+                        $operador = strtoupper($cont['operador_servicio'] ?? ($cont['operador'] ?? ''));
+                        $val = '';
+
+                        switch($key) {
+                            case '08': $val = (!empty($tipoConect) && $tipoConect !== 'NINGUNA') ? 'SI' : 'NO'; break;
+                            case '09': $val = $operador ?: '-'; break;
+                            case '10': $val = $cont['ancho_banda'] ?? ($cont['velocidad'] ?? '-'); break;
+                            case '11': $val = str_contains($tipoConect, 'FIBRA') ? 'SI' : 'NO'; break;
+                            case '12': $val = (str_contains($tipoConect, 'COBRE') || str_contains($tipoConect, 'HFC')) ? 'SI' : 'NO'; break;
+                        }
+
+                        if ($val && $val !== 'NO' && $val !== '-') {
+                            // Asignamos el valor al módulo correspondiente (simplificado: si está en el módulo, se marca)
+                            $modulo = strtolower(trim($detalle->modulo_nombre));
+                            $col = 'consultorio';
+                            if (in_array($modulo, ['triaje', 'triaje_esp'])) $col = 'triaje';
+                            elseif (in_array($modulo, ['citas', 'citas_esp'])) $col = 'admision';
+                            elseif (in_array($modulo, ['gestion_administrativa', 'gestion_admin_esp'])) $col = 'programacion';
+                            
+                            $row[$col] = $val;
+                        }
+                    }
+                }
+
+                // Solo para la primera fila del EESS (01. PC) mostramos el estado general de red/internet
+                if ($key === '01') {
+                    foreach ($allDetalles as $detalle) {
+                        $cont = is_string($detalle->contenido) ? json_decode($detalle->contenido, true) : $detalle->contenido;
+                        if (is_array($cont)) {
+                            $tc = strtoupper($cont['tipo_conectividad'] ?? ($cont['tipo'] ?? ''));
+                            $op = strtoupper($cont['operador_servicio'] ?? ($cont['operador'] ?? ''));
+                            if ($tc && $tc !== 'NINGUNA' && $tc !== 'N/A') $row['red'] = 1;
+                            if ($op && $op !== 'NINGUNA' && $op !== 'N/A') $row['internet'] = 1;
+                        }
+                    }
+                }
+
+                $rows[] = $row;
+            }
+        }
+
+        $filename = 'Ficha_42_Anexo1_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new Ficha42Export(collect($rows)), $filename);
     }
 
     /**
